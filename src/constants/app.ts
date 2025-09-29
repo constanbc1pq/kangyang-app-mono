@@ -20,24 +20,30 @@ export const APP_CONFIG = {
 };
 
 export const COLORS = {
-  primary: '#2E7D32', // Health green
-  secondary: '#4CAF50',
-  accent: '#8BC34A',
-  background: '#FAFAFA',
-  surface: '#FFFFFF',
-  text: '#212121',
-  textSecondary: '#757575',
-  error: '#F44336',
-  warning: '#FF9800',
-  success: '#4CAF50',
-  info: '#2196F3',
-  // Health-specific colors
-  heartRate: '#E91E63',
-  bloodPressure: '#9C27B0',
-  bloodSugar: '#FF5722',
-  weight: '#3F51B5',
-  sleep: '#673AB7',
-  steps: '#009688',
+  primary: '#7C3AED', // 主紫色
+  secondary: '#2C7A7B', // 主青色
+  accent: '#A855F7', // 亮紫色
+  background: '#FAFAFA', // 明亮背景
+  surface: '#FFFFFF', // 纯白表面
+  text: '#18181B', // 深色文字
+  textSecondary: '#71717A', // 次要文字
+  error: '#DC2626', // 错误红色
+  warning: '#F59E0B', // 警告橙色
+  success: '#16A34A', // 成功绿色
+  info: '#0EA5E9', // 信息蓝色
+
+  // 健康数据专用颜色 - 紫青色调
+  heartRate: '#EC4899', // 粉紫色心率
+  bloodPressure: '#8B5CF6', // 紫色血压
+  bloodSugar: '#06B6D4', // 青色血糖
+  weight: '#3B82F6', // 蓝色体重
+  sleep: '#6366F1', // 靛紫色睡眠
+  steps: '#10B981', // 绿青色步数
+
+  // 渐变色
+  gradientPrimary: ['#7C3AED', '#A855F7'], // 紫色渐变
+  gradientSecondary: ['#0891B2', '#06B6D4'], // 青色渐变
+  gradientAccent: ['#7C3AED', '#06B6D4'], // 紫青渐变
 };
 
 export const FONTS = {

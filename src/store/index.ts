@@ -9,6 +9,7 @@ import {
   PERSIST,
   PURGE,
   REGISTER,
+  PersistConfig,
 } from 'redux-persist';
 import { MMKV } from 'react-native-mmkv';
 
@@ -19,6 +20,9 @@ import healthSlice from './slices/healthSlice';
 import deviceSlice from './slices/deviceSlice';
 import notificationSlice from './slices/notificationSlice';
 import uiSlice from './slices/uiSlice';
+
+// Import types
+import { AuthState, UserState, UIState } from '@/types/common';
 
 // Import API slices
 import { authApi } from './api/authApi';
@@ -49,43 +53,46 @@ const reduxStorage = {
 };
 
 // Persist configurations
-const authPersistConfig = {
+const authPersistConfig: PersistConfig<AuthState> = {
   key: 'auth',
   storage: reduxStorage,
   whitelist: ['token', 'refreshToken', 'isAuthenticated'],
 };
 
-const userPersistConfig = {
+const userPersistConfig: PersistConfig<UserState> = {
   key: 'user',
   storage: reduxStorage,
   whitelist: ['profile'],
 };
 
-const uiPersistConfig = {
+const uiPersistConfig: PersistConfig<UIState> = {
   key: 'ui',
   storage: reduxStorage,
   whitelist: ['theme', 'language'],
 };
 
+// Root reducer combining all reducers
+const rootReducer = {
+  // Persisted reducers
+  auth: persistReducer(authPersistConfig, authSlice),
+  user: persistReducer(userPersistConfig, userSlice),
+  ui: persistReducer(uiPersistConfig, uiSlice),
+
+  // Non-persisted reducers
+  health: healthSlice,
+  devices: deviceSlice,
+  notifications: notificationSlice,
+
+  // API reducers
+  [authApi.reducerPath]: authApi.reducer,
+  [healthApi.reducerPath]: healthApi.reducer,
+  [userApi.reducerPath]: userApi.reducer,
+  [deviceApi.reducerPath]: deviceApi.reducer,
+};
+
 // Create the store
 export const store = configureStore({
-  reducer: {
-    // Persisted reducers
-    auth: persistReducer(authPersistConfig, authSlice),
-    user: persistReducer(userPersistConfig, userSlice),
-    ui: persistReducer(uiPersistConfig, uiSlice),
-
-    // Non-persisted reducers
-    health: healthSlice,
-    devices: deviceSlice,
-    notifications: notificationSlice,
-
-    // API reducers
-    [authApi.reducerPath]: authApi.reducer,
-    [healthApi.reducerPath]: healthApi.reducer,
-    [userApi.reducerPath]: userApi.reducer,
-    [deviceApi.reducerPath]: deviceApi.reducer,
-  },
+  reducer: rootReducer,
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: {

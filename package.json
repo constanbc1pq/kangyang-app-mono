@@ -1,7 +1,7 @@
 {
   "name": "kangyang-app-mono",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -23,7 +23,9 @@
     "expo-constants": "~16.0.2",
     "expo-linking": "~6.3.1",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-native": "0.81.4",
+    "react-native-web": "^0.21.0",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/stack": "^6.4.1",
@@ -32,14 +34,16 @@
     "@reduxjs/toolkit": "^2.2.7",
     "react-redux": "^9.1.2",
     "redux-persist": "^6.0.0",
-    "react-native-paper": "^5.12.5",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "axios": "^1.7.7",
     "react-hook-form": "^7.53.0",
     "yup": "^1.4.0",
     "@hookform/resolvers": "^3.9.0",
     "date-fns": "^4.1.0",
-    "react-native-mmkv": "^3.0.2"
+    "react-native-mmkv": "^3.0.2",
+    "react-native-svg": "^15.2.0",
+    "@react-native-community/datetimepicker": "^8.2.0",
+    "lucide-react-native": "^0.263.1"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

@@ -1,9 +1,9 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SCREEN_NAMES } from '@/constants/app';
+import { LoginScreen } from '@/screens/auth/LoginScreen';
 
 // Placeholder screens - will be created later
-const LoginScreen: React.FC = () => null;
 const RegisterScreen: React.FC = () => null;
 const ForgotPasswordScreen: React.FC = () => null;
 

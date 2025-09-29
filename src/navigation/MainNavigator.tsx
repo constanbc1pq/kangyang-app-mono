@@ -1,13 +1,42 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SCREEN_NAMES, COLORS } from '@/constants/app';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  Box,
+  Text,
+  Icon
+} from '@gluestack-ui/themed';
+import {
+  Heart,
+  Activity,
+  Users,
+  User
+} from 'lucide-react-native';
 
 // Placeholder screens - will be created later
-const HealthDashboard: React.FC = () => null;
-const LifestyleDashboard: React.FC = () => null;
-const CommunityFeed: React.FC = () => null;
-const PersonalInfo: React.FC = () => null;
+const HealthDashboard: React.FC = () => (
+  <Box flex={1} justifyContent="center" alignItems="center" backgroundColor={COLORS.background}>
+    <Text fontSize="$xl" color={COLORS.primary}>康模块 - 健康监测</Text>
+  </Box>
+);
+
+const LifestyleDashboard: React.FC = () => (
+  <Box flex={1} justifyContent="center" alignItems="center" backgroundColor={COLORS.background}>
+    <Text fontSize="$xl" color={COLORS.secondary}>养模块 - 生活方式</Text>
+  </Box>
+);
+
+const CommunityFeed: React.FC = () => (
+  <Box flex={1} justifyContent="center" alignItems="center" backgroundColor={COLORS.background}>
+    <Text fontSize="$xl" color={COLORS.accent}>社区 - 健康分享</Text>
+  </Box>
+);
+
+const PersonalInfo: React.FC = () => (
+  <Box flex={1} justifyContent="center" alignItems="center" backgroundColor={COLORS.background}>
+    <Text fontSize="$xl" color={COLORS.primary}>我的 - 个人中心</Text>
+  </Box>
+);
 
 const Tab = createBottomTabNavigator();
 
@@ -16,20 +45,26 @@ export const MainNavigator: React.FC = () => {
     <Tab.Navigator
       initialRouteName={SCREEN_NAMES.HEALTH_TAB}
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName = 'home';
+        tabBarIcon: ({ focused, size }) => {
+          let IconComponent = Heart;
 
           if (route.name === SCREEN_NAMES.HEALTH_TAB) {
-            iconName = focused ? 'heart' : 'heart-outline';
+            IconComponent = Heart;
           } else if (route.name === SCREEN_NAMES.LIFESTYLE_TAB) {
-            iconName = focused ? 'run' : 'run-fast';
+            IconComponent = Activity;
           } else if (route.name === SCREEN_NAMES.COMMUNITY_TAB) {
-            iconName = focused ? 'account-group' : 'account-group-outline';
+            IconComponent = Users;
           } else if (route.name === SCREEN_NAMES.PROFILE_TAB) {
-            iconName = focused ? 'account' : 'account-outline';
+            IconComponent = User;
           }
 
-          return <Icon name={iconName} size={size} color={color} />;
+          return (
+            <Icon
+              as={IconComponent}
+              size={size}
+              color={focused ? COLORS.primary : COLORS.textSecondary}
+            />
+          );
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textSecondary,
@@ -39,6 +74,14 @@ export const MainNavigator: React.FC = () => {
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
+          shadowColor: COLORS.primary,
+          shadowOffset: {
+            width: 0,
+            height: -2,
+          },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 8,
         },
         headerShown: false,
       })}
