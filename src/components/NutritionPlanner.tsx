@@ -3,120 +3,116 @@ import {
   YStack,
   XStack,
   Text,
-  Button,
   Card,
   View,
   H3,
   Theme,
   Progress,
-  ScrollView,
 } from 'tamagui';
-import { Plus, Target, Utensils, TrendingUp, Calendar, Clock } from 'lucide-react-native';
+import { Pressable } from 'react-native';
+import {
+  Camera,
+  CheckCircle,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle
+} from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 
 export const NutritionPlanner: React.FC = () => {
-  const [selectedDay, setSelectedDay] = useState('今天');
+  const [selectedMeal, setSelectedMeal] = useState('早餐');
 
-  const nutritionGoals = {
-    calories: { current: 1680, target: 2000, unit: 'kcal' },
-    protein: { current: 85, target: 120, unit: 'g' },
-    carbs: { current: 180, target: 250, unit: 'g' },
-    fat: { current: 65, target: 80, unit: 'g' },
+  const mealTabs = ['早餐', '午餐', '晚餐'];
+
+  const mealData = {
+    '早餐': {
+      title: '营养早餐',
+      calories: 320,
+      status: 'completed',
+      foods: [
+        '• 燕麦粥',
+        '• 水煮蛋',
+        '• 牛奶',
+        '• 香蕉'
+      ],
+      nutrition: {
+        protein: { amount: 18, unit: 'g' },
+        carbs: { amount: 45, unit: 'g' },
+        fat: { amount: 8, unit: 'g' },
+        fiber: { amount: 6, unit: 'g' }
+      }
+    },
+    '午餐': {
+      title: '均衡午餐',
+      calories: 450,
+      status: 'pending',
+      foods: [
+        '• 鸡胸肉',
+        '• 糙米饭',
+        '• 西兰花',
+        '• 紫菜蛋花汤'
+      ],
+      nutrition: {
+        protein: { amount: 32, unit: 'g' },
+        carbs: { amount: 52, unit: 'g' },
+        fat: { amount: 12, unit: 'g' },
+        fiber: { amount: 8, unit: 'g' }
+      }
+    },
+    '晚餐': {
+      title: '轻食晚餐',
+      calories: 380,
+      status: 'pending',
+      foods: [
+        '• 三文鱼',
+        '• 蔬菜沙拉',
+        '• 红薯',
+        '• 酸奶'
+      ],
+      nutrition: {
+        protein: { amount: 28, unit: 'g' },
+        carbs: { amount: 35, unit: 'g' },
+        fat: { amount: 15, unit: 'g' },
+        fiber: { amount: 9, unit: 'g' }
+      }
+    }
   };
 
-  const mealPlan = [
-    {
-      time: '07:30',
-      meal: '早餐',
-      foods: ['燕麦粥', '香蕉', '核桃'],
-      calories: 420,
-      status: 'completed',
-    },
-    {
-      time: '12:00',
-      meal: '午餐',
-      foods: ['鸡胸肉沙拉', '糙米饭', '蒸蛋'],
-      calories: 650,
-      status: 'completed',
-    },
-    {
-      time: '15:30',
-      meal: '下午茶',
-      foods: ['苹果', '酸奶'],
-      calories: 180,
-      status: 'pending',
-    },
-    {
-      time: '18:30',
-      meal: '晚餐',
-      foods: ['三文鱼', '蔬菜沙拉', '红薯'],
-      calories: 580,
-      status: 'pending',
-    },
+  const dailyGoals = [
+    { name: '热量', current: 800, target: 1800, unit: 'kcal' },
+    { name: '蛋白质', current: 50, target: 80, unit: 'g' },
+    { name: '水分', current: 1200, target: 2000, unit: 'ml' },
+    { name: '纤维', current: 14, target: 25, unit: 'g' }
   ];
 
-  const weeklyRecommendations = [
+  const aiSuggestions = [
     {
-      day: '周一',
-      theme: '高蛋白日',
-      description: '增强肌肉合成',
-      color: COLORS.primary,
-    },
-    {
-      day: '周二',
-      theme: '抗氧化日',
-      description: '蓝莓坚果搭配',
-      color: COLORS.secondary,
-    },
-    {
-      day: '周三',
-      theme: '膳食纤维日',
-      description: '促进肠道健康',
-      color: COLORS.accent,
-    },
-    {
-      day: '周四',
-      theme: '低GI日',
-      description: '稳定血糖水平',
+      type: 'increase',
+      icon: TrendingUp,
       color: COLORS.success,
+      title: '增加',
+      content: '深色蔬菜',
+      description: '补充维生素A和叶酸'
     },
+    {
+      type: 'decrease',
+      icon: TrendingDown,
+      color: COLORS.error,
+      title: '减少',
+      content: '精制糖',
+      description: '控制血糖波动'
+    },
+    {
+      type: 'attention',
+      icon: AlertTriangle,
+      color: COLORS.warning,
+      title: '注意',
+      content: '饮水量',
+      description: '当前摄入不足'
+    }
   ];
 
-  const renderNutritionProgress = (label: string, data: { current: number; target: number; unit: string }) => {
-    const percentage = (data.current / data.target) * 100;
-    return (
-      <View
-        padding="$3"
-        borderRadius="$3"
-        backgroundColor="$surface"
-        borderWidth={1}
-        borderColor="$borderColor"
-        flex={1}
-      >
-        <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-          <Text fontSize="$3" color="$textSecondary" fontWeight="500">
-            {label}
-          </Text>
-          <Text fontSize="$2" color="$textSecondary">
-            {data.current}/{data.target} {data.unit}
-          </Text>
-        </XStack>
-        <Progress
-          value={percentage}
-          backgroundColor="$background"
-          marginBottom="$2"
-        >
-          <Progress.Indicator
-            backgroundColor={percentage >= 100 ? COLORS.success : COLORS.primary}
-            animation="bouncy"
-          />
-        </Progress>
-        <Text fontSize="$2" color={percentage >= 100 ? COLORS.success : COLORS.textSecondary}>
-          {percentage.toFixed(0)}% 完成
-        </Text>
-      </View>
-    );
-  };
+  const currentMeal = mealData[selectedMeal];
 
   return (
     <Theme name="light">
@@ -130,176 +126,212 @@ export const NutritionPlanner: React.FC = () => {
         shadowRadius={8}
         elevation={4}
       >
-        <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-          <H3 fontSize="$6" color="$text" fontWeight="600">
-            营养计划
-          </H3>
-          <XStack space="$2">
-            <Button size="$3" backgroundColor="$primary">
-              <XStack space="$1" alignItems="center">
-                <Target size={16} color="white" />
-                <Text fontSize="$3" color="white">目标</Text>
-              </XStack>
-            </Button>
-            <Button size="$3" variant="outlined" borderColor="$borderColor">
-              <Plus size={16} color={COLORS.textSecondary} />
-            </Button>
+        <YStack space="$4">
+          {/* Header */}
+          <XStack justifyContent="space-between" alignItems="center">
+            <H3 fontSize="$6" color="$text" fontWeight="600">
+              AI营养师
+            </H3>
+            <Pressable>
+              <View
+                backgroundColor={COLORS.primaryLight}
+                borderRadius="$3"
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+              >
+                <XStack space="$2" alignItems="center">
+                  <Camera size={16} color="white" />
+                  <Text fontSize="$3" color="white" fontWeight="500">
+                    拍照识别
+                  </Text>
+                </XStack>
+              </View>
+            </Pressable>
           </XStack>
-        </XStack>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <YStack space="$4">
-            {/* 每日营养目标 */}
-            <View>
-              <Text fontSize="$4" color="$text" fontWeight="600" marginBottom="$3">
-                今日营养摄入
-              </Text>
-              <XStack space="$2" marginBottom="$3">
-                {renderNutritionProgress('热量', nutritionGoals.calories)}
-                {renderNutritionProgress('蛋白质', nutritionGoals.protein)}
-              </XStack>
-              <XStack space="$2">
-                {renderNutritionProgress('碳水', nutritionGoals.carbs)}
-                {renderNutritionProgress('脂肪', nutritionGoals.fat)}
-              </XStack>
-            </View>
+          {/* Meal Tabs */}
+          <XStack backgroundColor="$surface" borderRadius="$3" padding="$1">
+            {mealTabs.map((meal) => (
+              <Pressable
+                key={meal}
+                onPress={() => setSelectedMeal(meal)}
+                style={{ flex: 1 }}
+              >
+                <View
+                  backgroundColor={selectedMeal === meal ? COLORS.primary : 'transparent'}
+                  borderRadius="$3"
+                  paddingVertical="$2"
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <Text
+                    fontSize="$3"
+                    color={selectedMeal === meal ? 'white' : '$textSecondary'}
+                    fontWeight={selectedMeal === meal ? '600' : '400'}
+                  >
+                    {meal}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </XStack>
 
-            {/* 今日用餐计划 */}
-            <View>
-              <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                <Text fontSize="$4" color="$text" fontWeight="600">
-                  用餐计划
-                </Text>
-                <XStack space="$1" backgroundColor="$surface" borderRadius="$3" padding="$1">
-                  {['昨天', '今天', '明天'].map((day) => (
-                    <Button
-                      key={day}
-                      size="$2"
-                      backgroundColor={selectedDay === day ? '$primary' : 'transparent'}
-                      onPress={() => setSelectedDay(day)}
-                      paddingHorizontal="$3"
-                    >
-                      <Text
-                        fontSize="$2"
-                        color={selectedDay === day ? 'white' : '$textSecondary'}
-                        fontWeight={selectedDay === day ? '600' : '400'}
-                      >
-                        {day}
+          {/* Meal Card */}
+          <Card
+            padding="$4"
+            borderRadius="$4"
+            backgroundColor="$surface"
+            borderWidth={1}
+            borderColor="$borderColor"
+          >
+            <YStack space="$3">
+              {/* Meal Header */}
+              <XStack justifyContent="space-between" alignItems="center">
+                <H3 fontSize="$5" color="$text" fontWeight="600">
+                  {currentMeal.title}
+                </H3>
+                <XStack space="$3" alignItems="center">
+                  <Text fontSize="$4" color="$text" fontWeight="600">
+                    {currentMeal.calories} kcal
+                  </Text>
+                  {currentMeal.status === 'completed' && (
+                    <XStack space="$1" alignItems="center">
+                      <CheckCircle size={16} color={COLORS.success} />
+                      <Text fontSize="$3" color={COLORS.success} fontWeight="500">
+                        已完成
                       </Text>
-                    </Button>
-                  ))}
+                    </XStack>
+                  )}
                 </XStack>
               </XStack>
 
-              <YStack space="$3">
-                {mealPlan.map((meal, index) => (
-                  <View
-                    key={index}
-                    padding="$4"
-                    borderRadius="$3"
-                    backgroundColor="$surface"
-                    borderWidth={1}
-                    borderColor="$borderColor"
-                  >
-                    <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                      <XStack space="$2" alignItems="center">
-                        <View
-                          width={8}
-                          height={8}
-                          borderRadius={4}
-                          backgroundColor={meal.status === 'completed' ? COLORS.success : COLORS.warning}
-                        />
-                        <Text fontSize="$4" fontWeight="600" color="$text">
-                          {meal.meal}
-                        </Text>
-                        <XStack space="$1" alignItems="center">
-                          <Clock size={12} color={COLORS.textSecondary} />
-                          <Text fontSize="$3" color="$textSecondary">
-                            {meal.time}
-                          </Text>
-                        </XStack>
-                      </XStack>
-                      <Text fontSize="$3" color="$textSecondary" fontWeight="600">
-                        {meal.calories} kcal
+              {/* Food List */}
+              <View>
+                <Text fontSize="$4" color="$text" fontWeight="600" marginBottom="$2">
+                  食物清单
+                </Text>
+                <YStack space="$1">
+                  {currentMeal.foods.map((food, index) => (
+                    <Text key={index} fontSize="$3" color="$textSecondary">
+                      {food}
+                    </Text>
+                  ))}
+                </YStack>
+              </View>
+
+              {/* Nutrition Facts */}
+              <View>
+                <Text fontSize="$4" color="$text" fontWeight="600" marginBottom="$3">
+                  营养成分
+                </Text>
+                <XStack space="$3">
+                  <YStack flex={1} space="$2">
+                    <XStack justifyContent="space-between" alignItems="center">
+                      <Text fontSize="$3" color="$textSecondary">蛋白质</Text>
+                      <Text fontSize="$3" color="$text" fontWeight="600">
+                        {currentMeal.nutrition.protein.amount}{currentMeal.nutrition.protein.unit}
                       </Text>
                     </XStack>
-                    <XStack space="$2" flexWrap="wrap">
-                      {meal.foods.map((food, foodIndex) => (
-                        <View
-                          key={foodIndex}
-                          backgroundColor="$background"
-                          borderRadius="$2"
-                          paddingVertical="$1"
-                          paddingHorizontal="$2"
-                          marginBottom="$1"
-                        >
-                          <Text fontSize="$2" color="$textSecondary">
-                            {food}
-                          </Text>
-                        </View>
-                      ))}
+                    <XStack justifyContent="space-between" alignItems="center">
+                      <Text fontSize="$3" color="$textSecondary">脂肪</Text>
+                      <Text fontSize="$3" color="$text" fontWeight="600">
+                        {currentMeal.nutrition.fat.amount}{currentMeal.nutrition.fat.unit}
+                      </Text>
                     </XStack>
-                  </View>
-                ))}
-              </YStack>
-            </View>
+                  </YStack>
+                  <YStack flex={1} space="$2">
+                    <XStack justifyContent="space-between" alignItems="center">
+                      <Text fontSize="$3" color="$textSecondary">碳水化合物</Text>
+                      <Text fontSize="$3" color="$text" fontWeight="600">
+                        {currentMeal.nutrition.carbs.amount}{currentMeal.nutrition.carbs.unit}
+                      </Text>
+                    </XStack>
+                    <XStack justifyContent="space-between" alignItems="center">
+                      <Text fontSize="$3" color="$textSecondary">膳食纤维</Text>
+                      <Text fontSize="$3" color="$text" fontWeight="600">
+                        {currentMeal.nutrition.fiber.amount}{currentMeal.nutrition.fiber.unit}
+                      </Text>
+                    </XStack>
+                  </YStack>
+                </XStack>
+              </View>
+            </YStack>
+          </Card>
 
-            {/* AI 营养建议 */}
-            <View
-              padding="$4"
-              borderRadius="$3"
-              backgroundColor="$surface"
-              borderWidth={1}
-              borderColor="$borderColor"
-            >
-              <XStack space="$2" alignItems="center" marginBottom="$3">
-                <TrendingUp size={16} color={COLORS.primary} />
-                <Text fontSize="$4" color="$text" fontWeight="600">
-                  AI 营养建议
-                </Text>
-              </XStack>
-              <Text fontSize="$3" color="$textSecondary" lineHeight="$1" marginBottom="$3">
-                根据您的健康数据分析，建议今天增加优质蛋白质摄入，可以选择鱼类、瘦肉或豆制品。同时注意补充维生素C，推荐猕猴桃或橙子。
-              </Text>
-              <Button size="$3" backgroundColor="$primary">
-                <Text fontSize="$3" color="white">查看详细建议</Text>
-              </Button>
-            </View>
-
-            {/* 本周营养主题 */}
-            <View>
-              <XStack space="$2" alignItems="center" marginBottom="$3">
-                <Calendar size={16} color={COLORS.accent} />
-                <Text fontSize="$4" color="$text" fontWeight="600">
-                  本周营养主题
-                </Text>
-              </XStack>
-              <XStack space="$3" flexWrap="wrap">
-                {weeklyRecommendations.map((rec, index) => (
-                  <View
-                    key={index}
-                    flex={1}
-                    minWidth="45%"
-                    padding="$3"
-                    borderRadius="$3"
-                    backgroundColor={rec.color}
-                    marginBottom="$2"
-                  >
-                    <Text fontSize="$3" color="white" fontWeight="600" marginBottom="$1">
-                      {rec.day}
-                    </Text>
-                    <Text fontSize="$2" color="white" fontWeight="500" marginBottom="$1">
-                      {rec.theme}
-                    </Text>
-                    <Text fontSize="$1" color="white" opacity={0.9}>
-                      {rec.description}
-                    </Text>
+          {/* Daily Goals */}
+          <View>
+            <Text fontSize="$4" color="$text" fontWeight="600" marginBottom="$3">
+              今日营养目标
+            </Text>
+            <YStack space="$3">
+              {dailyGoals.map((goal, index) => {
+                const percentage = Math.min((goal.current / goal.target) * 100, 100);
+                return (
+                  <View key={index}>
+                    <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                      <Text fontSize="$3" color="$textSecondary">
+                        {goal.name}
+                      </Text>
+                      <Text fontSize="$3" color="$text" fontWeight="500">
+                        {goal.current}/{goal.target} {goal.unit}
+                      </Text>
+                    </XStack>
+                    <Progress
+                      value={percentage}
+                      backgroundColor="$borderLight"
+                      height={8}
+                      borderRadius="$2"
+                    >
+                      <Progress.Indicator
+                        backgroundColor={percentage >= 80 ? COLORS.success : percentage >= 50 ? COLORS.warning : COLORS.primary}
+                        animation="bouncy"
+                      />
+                    </Progress>
                   </View>
-                ))}
-              </XStack>
-            </View>
-          </YStack>
-        </ScrollView>
+                );
+              })}
+            </YStack>
+          </View>
+
+          {/* AI Suggestions */}
+          <View>
+            <Text fontSize="$4" color="$text" fontWeight="600" marginBottom="$3">
+              AI营养建议
+            </Text>
+            <YStack space="$3">
+              {aiSuggestions.map((suggestion, index) => {
+                const IconComponent = suggestion.icon;
+                return (
+                  <XStack key={index} space="$3" alignItems="center">
+                    <View
+                      width={32}
+                      height={32}
+                      borderRadius={16}
+                      backgroundColor={`${suggestion.color}20`}
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <IconComponent size={16} color={suggestion.color} />
+                    </View>
+                    <YStack flex={1}>
+                      <XStack space="$2" alignItems="center" marginBottom="$1">
+                        <Text fontSize="$3" color={suggestion.color} fontWeight="600">
+                          {suggestion.title}
+                        </Text>
+                        <Text fontSize="$3" color="$text" fontWeight="600">
+                          {suggestion.content}
+                        </Text>
+                      </XStack>
+                      <Text fontSize="$3" color="$textSecondary">
+                        {suggestion.description}
+                      </Text>
+                    </YStack>
+                  </XStack>
+                );
+              })}
+            </YStack>
+          </View>
+        </YStack>
       </Card>
     </Theme>
   );

@@ -109,7 +109,7 @@ export const LoginScreen: React.FC = () => {
                     <Heart size={32} color="$primary" />
                   </View>
                   <H1 fontSize="$8" fontWeight="bold" color="$primary" textAlign="center">
-                    康养APP
+                    九紫康养
                   </H1>
                   <Text fontSize="$4" color="$textSecondary" textAlign="center">
                     智能健康管理平台

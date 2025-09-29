@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Heart } from 'lucide-react-native';
 import { Animated } from 'react-native';
+import { COLORS } from '@/constants/app';
 
 interface SplashScreenProps {
   onFinish?: () => void;
@@ -65,7 +66,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     <Theme name="light">
       <SafeAreaView style={{ flex: 1 }}>
         <LinearGradient
-          colors={['#6366F1', '#8B5CF6']}
+          colors={[COLORS.primary, COLORS.accent]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ flex: 1 }}
@@ -78,7 +79,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
               left="20%"
               width={180}
               height={180}
-              backgroundColor="rgba(139, 92, 246, 0.2)"
+              backgroundColor="rgba(200, 85, 240, 0.2)"
               borderRadius={90}
               opacity={0.8}
             />
@@ -88,7 +89,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
               right="15%"
               width={220}
               height={220}
-              backgroundColor="rgba(99, 102, 241, 0.15)"
+              backgroundColor="rgba(137, 255, 253, 0.15)"
               borderRadius={110}
               opacity={0.6}
             />
@@ -98,7 +99,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
               right="30%"
               width={100}
               height={100}
-              backgroundColor="rgba(168, 139, 250, 0.25)"
+              backgroundColor="rgba(244, 97, 224, 0.25)"
               borderRadius={50}
               opacity={0.7}
             />
@@ -136,7 +137,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
                 textAlign="center"
                 marginBottom="$2"
               >
-                康养
+                九紫康养
               </H1>
 
               <Text
@@ -145,7 +146,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
                 textAlign="center"
                 marginBottom="$8"
               >
-                智慧健康管理
+                智慧健康管理平台
               </Text>
             </Animated.View>
 
@@ -155,20 +156,20 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
                 <View
                   width={12}
                   height={12}
-                  backgroundColor="$primary"
+                  backgroundColor="white"
                   borderRadius={6}
                 />
                 <View
                   width={12}
                   height={12}
-                  backgroundColor="$primary"
+                  backgroundColor="white"
                   borderRadius={6}
                   opacity={0.7}
                 />
                 <View
                   width={12}
                   height={12}
-                  backgroundColor="$primary"
+                  backgroundColor="white"
                   borderRadius={6}
                   opacity={0.4}
                 />

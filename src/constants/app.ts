@@ -1,7 +1,7 @@
 // Application constants for Kangyang Health App
 
 export const APP_CONFIG = {
-  name: '康养APP',
+  name: '九紫康养',
   version: '1.0.0',
   api: {
     baseUrl: 'https://api.kangyang.com/v1',

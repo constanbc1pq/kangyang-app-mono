@@ -3,7 +3,6 @@ import {
   YStack,
   XStack,
   Text,
-  Button,
   Card,
   View,
   H2,
@@ -12,7 +11,9 @@ import {
 } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable } from 'react-native';
 import { Heart, Activity, Users, Sparkles, ChevronRight, ChevronLeft } from 'lucide-react-native';
+import { COLORS } from '@/constants/app';
 
 interface OnboardingScreenProps {
   onComplete: () => void;
@@ -24,26 +25,26 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
   const onboardingSteps = [
     {
       icon: Heart,
-      title: "欢迎使用康养",
-      description: "您的专属健康管理助手，让健康生活更简单",
+      title: "欢迎使用九紫康养",
+      description: "AI健康生活管家，您的专属智慧健康管理平台",
       color: "$primary",
     },
     {
       icon: Activity,
       title: "智能健康监测",
-      description: "连接智能设备，实时监测您的健康数据，AI分析提供个性化建议",
+      description: "连接智能设备，AI实时分析健康数据，提供个性化健康建议和预警",
       color: "$secondary",
     },
     {
       icon: Users,
-      title: "全家健康守护",
-      description: "管理家庭成员健康档案，为每个人提供专属的健康方案",
+      title: "品质生活服务",
+      description: "营养配餐、居家养老、健康社区，全方位提升生活品质",
       color: "$primary",
     },
     {
       icon: Sparkles,
-      title: "品质生活服务",
-      description: "营养配餐、养生服务、健康社区，全方位提升生活品质",
+      title: "全生命周期服务",
+      description: "从健康管理到财富规划，陪伴您的每一个人生阶段",
       color: "$secondary",
     },
   ];
@@ -126,19 +127,21 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                   <Heart size={20} color="white" />
                 </View>
                 <H3 fontSize="$6" fontWeight="bold" color="white">
-                  康养
+                  九紫康养
                 </H3>
               </XStack>
-              <Button
-                variant="outlined"
-                size="$3"
-                color="white"
-                borderColor="rgba(255,255,255,0.2)"
-                backgroundColor="transparent"
-                onPress={onComplete}
-              >
-                <Text color="rgba(255,255,255,0.8)">跳过</Text>
-              </Button>
+              <Pressable onPress={onComplete}>
+                <View
+                  borderColor="rgba(255,255,255,0.2)"
+                  borderWidth={1}
+                  backgroundColor="transparent"
+                  borderRadius="$3"
+                  paddingHorizontal="$3"
+                  paddingVertical="$2"
+                >
+                  <Text color="rgba(255,255,255,0.8)" fontSize="$3">跳过</Text>
+                </View>
+              </Pressable>
             </XStack>
 
             {/* Progress indicator */}
@@ -210,35 +213,46 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
               paddingHorizontal="$6"
               paddingBottom="$6"
             >
-              <Button
-                variant="outlined"
-                size="$4"
-                color="white"
-                borderColor="rgba(255,255,255,0.2)"
-                backgroundColor="transparent"
+              <Pressable
                 onPress={prevStep}
                 disabled={currentStep === 0}
-                opacity={currentStep === 0 ? 0.5 : 1}
+                style={{ opacity: currentStep === 0 ? 0.5 : 1 }}
               >
-                <XStack space="$2" alignItems="center">
-                  <ChevronLeft size={16} color="white" />
-                  <Text color="white">上一步</Text>
-                </XStack>
-              </Button>
+                <View
+                  borderColor="rgba(255,255,255,0.2)"
+                  borderWidth={1}
+                  backgroundColor="transparent"
+                  borderRadius="$4"
+                  paddingHorizontal="$4"
+                  paddingVertical="$3"
+                >
+                  <XStack space="$2" alignItems="center">
+                    <ChevronLeft size={16} color="white" />
+                    <Text color="white" fontSize="$4">上一步</Text>
+                  </XStack>
+                </View>
+              </Pressable>
 
-              <Button
-                backgroundColor="$primary"
-                size="$4"
-                pressStyle={{ scale: 0.98 }}
+              <Pressable
                 onPress={nextStep}
+                style={({ pressed }) => ({
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                })}
               >
-                <XStack space="$2" alignItems="center">
-                  <Text fontSize="$4" fontWeight="600" color="white">
-                    {currentStep === onboardingSteps.length - 1 ? "开始使用" : "下一步"}
-                  </Text>
-                  <ChevronRight size={16} color="white" />
-                </XStack>
-              </Button>
+                <View
+                  backgroundColor={COLORS.primary}
+                  borderRadius="$4"
+                  paddingHorizontal="$4"
+                  paddingVertical="$3"
+                >
+                  <XStack space="$2" alignItems="center">
+                    <Text fontSize="$4" fontWeight="600" color="white">
+                      {currentStep === onboardingSteps.length - 1 ? "开始使用" : "下一步"}
+                    </Text>
+                    <ChevronRight size={16} color="white" />
+                  </XStack>
+                </View>
+              </Pressable>
             </XStack>
           </YStack>
         </LinearGradient>
