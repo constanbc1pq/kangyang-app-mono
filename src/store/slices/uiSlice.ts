@@ -7,6 +7,8 @@ const initialState: UIState = {
   language: 'zh-CN',
   isOnline: true,
   activeScreen: 'HealthTab',
+  appInitialized: false,
+  hasSeenOnboarding: false,
 };
 
 const uiSlice = createSlice({
@@ -28,6 +30,15 @@ const uiSlice = createSlice({
     toggleTheme: (state) => {
       state.theme = state.theme === 'light' ? 'dark' : 'light';
     },
+    setAppInitialized: (state, action: PayloadAction<boolean>) => {
+      state.appInitialized = action.payload;
+    },
+    setHasSeenOnboarding: (state, action: PayloadAction<boolean>) => {
+      state.hasSeenOnboarding = action.payload;
+    },
+    completeOnboarding: (state) => {
+      state.hasSeenOnboarding = true;
+    },
   },
 });
 
@@ -37,6 +48,9 @@ export const {
   setOnlineStatus,
   setActiveScreen,
   toggleTheme,
+  setAppInitialized,
+  setHasSeenOnboarding,
+  completeOnboarding,
 } = uiSlice.actions;
 
 // Selectors
@@ -44,5 +58,7 @@ export const selectTheme = (state: RootState) => state.ui.theme;
 export const selectLanguage = (state: RootState) => state.ui.language;
 export const selectIsOnline = (state: RootState) => state.ui.isOnline;
 export const selectActiveScreen = (state: RootState) => state.ui.activeScreen;
+export const selectAppInitialized = (state: RootState) => state.ui.appInitialized;
+export const selectHasSeenOnboarding = (state: RootState) => state.ui.hasSeenOnboarding;
 
 export default uiSlice.reducer;

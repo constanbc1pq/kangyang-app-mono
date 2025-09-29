@@ -20,30 +20,55 @@ export const APP_CONFIG = {
 };
 
 export const COLORS = {
-  primary: '#7C3AED', // 主紫色
-  secondary: '#2C7A7B', // 主青色
-  accent: '#A855F7', // 亮紫色
-  background: '#FAFAFA', // 明亮背景
-  surface: '#FFFFFF', // 纯白表面
-  text: '#18181B', // 深色文字
-  textSecondary: '#71717A', // 次要文字
-  error: '#DC2626', // 错误红色
-  warning: '#F59E0B', // 警告橙色
-  success: '#16A34A', // 成功绿色
-  info: '#0EA5E9', // 信息蓝色
+  // AzurePop 主题色 - 基于偏蓝紫色到 #89fffd 渐变
+  primary: '#c855f0', // 主蓝紫色 (偏蓝的紫色)
+  primaryLight: '#f461e0', // 浅洋红色 - Tab选中状态
+  primaryDark: '#b146e8', // 深蓝紫色
+  secondary: '#89fffd', // 主薄荷青色 (AzurePop终点)
+  secondaryLight: '#a6ffff', // 浅薄荷色
+  secondaryDark: '#5ce6e3', // 深薄荷色
+  accent: '#7b6ef6', // 中间紫色 (渐变中点)
 
-  // 健康数据专用颜色 - 紫青色调
-  heartRate: '#EC4899', // 粉紫色心率
-  bloodPressure: '#8B5CF6', // 紫色血压
-  bloodSugar: '#06B6D4', // 青色血糖
-  weight: '#3B82F6', // 蓝色体重
-  sleep: '#6366F1', // 靛紫色睡眠
-  steps: '#10B981', // 绿青色步数
+  // 中性色调 - 基于AzurePop主题优化
+  background: '#fafcff', // 极浅蓝白背景
+  surface: '#ffffff', // 纯白表面
+  surfaceSecondary: '#f8fafc', // 次要表面
+  text: '#1a1d29', // 深蓝灰文字
+  textSecondary: '#64748b', // 次要文字
+  textTertiary: '#94a3b8', // 三级文字
 
-  // 渐变色
-  gradientPrimary: ['#7C3AED', '#A855F7'], // 紫色渐变
-  gradientSecondary: ['#0891B2', '#06B6D4'], // 青色渐变
-  gradientAccent: ['#7C3AED', '#06B6D4'], // 紫青渐变
+  // 功能色调 - 与主题协调
+  error: '#ef4444', // 错误红色
+  warning: '#f59e0b', // 警告橙色
+  success: '#10b981', // 成功绿色 (薄荷色系)
+  info: '#3b82f6', // 信息蓝色
+
+  // 边框和分割
+  border: '#e2e8f0', // 主要边框
+  borderLight: '#f1f5f9', // 浅色边框
+  borderDark: '#cbd5e1', // 深色边框
+
+  // 健康数据专用颜色 - AzurePop风格
+  heartRate: '#c855f0', // 心率 - 主蓝紫色
+  bloodPressure: '#b946db', // 血压 - 紫洋红
+  bloodSugar: '#7b6ef6', // 血糖 - 中间紫
+  weight: '#4dabf7', // 体重 - 蓝青
+  sleep: '#89fffd', // 睡眠 - 主薄荷青
+  steps: '#5ce6e3', // 步数 - 深薄荷
+  temperature: '#f093fb', // 体温 - 浅紫粉
+  oxygen: '#4ecdc4', // 血氧 - 青绿
+
+  // 渐变色组合 - AzurePop系列
+  gradientPrimary: ['#c855f0', '#f461e0'], // 蓝紫到洋红渐变
+  gradientSecondary: ['#5ce6e3', '#89fffd'], // 薄荷渐变
+  gradientAccent: ['#c855f0', '#89fffd'], // 主题渐变 (AzurePop新版)
+  gradientReverse: ['#89fffd', '#c855f0'], // 反向主题渐变
+  gradientSubtle: ['#f8fafc', '#ffffff'], // 微妙渐变
+
+  // 阴影色调
+  shadow: 'rgba(200, 85, 240, 0.1)', // 主题色阴影 (蓝紫色)
+  shadowSecondary: 'rgba(137, 255, 253, 0.1)', // 次要阴影
+  shadowNeutral: 'rgba(148, 163, 184, 0.1)', // 中性阴影
 };
 
 export const FONTS = {
@@ -151,6 +176,22 @@ export const HEALTH_DATA_TYPES = {
     icon: 'sleep',
     color: COLORS.sleep,
     normalRange: { min: 7, max: 9 },
+  },
+  TEMPERATURE: {
+    key: 'temperature',
+    name: '体温',
+    unit: '°C',
+    icon: 'thermometer',
+    color: COLORS.temperature,
+    normalRange: { min: 36.1, max: 37.2 },
+  },
+  OXYGEN_SATURATION: {
+    key: 'oxygen_saturation',
+    name: '血氧',
+    unit: '%',
+    icon: 'lungs',
+    color: COLORS.oxygen,
+    normalRange: { min: 95, max: 100 },
   },
 };
 

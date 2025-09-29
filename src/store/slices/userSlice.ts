@@ -20,6 +20,10 @@ const userSlice = createSlice({
       state.profile = action.payload;
       state.error = null;
     },
+    setCurrentUser: (state, action: PayloadAction<User>) => {
+      state.profile = action.payload;
+      state.error = null;
+    },
     updateProfile: (state, action: PayloadAction<Partial<User>>) => {
       if (state.profile) {
         state.profile = { ...state.profile, ...action.payload };
@@ -59,6 +63,7 @@ const userSlice = createSlice({
 export const {
   setLoading,
   setProfile,
+  setCurrentUser,
   updateProfile,
   setFamilyMembers,
   addFamilyMember,

@@ -16,10 +16,62 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Heart, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '@/store/slices/authSlice';
+import { setCurrentUser } from '@/store/slices/userSlice';
+import { Alert } from 'react-native';
+
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+
+  // 模拟登录处理
+  const handleLogin = async () => {
+    // 验证输入
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('提示', '请输入邮箱和密码');
+      return;
+    }
+
+    setIsLoading(true);
+
+    // 模拟API延迟
+    setTimeout(() => {
+      // 测试账号验证
+      if (email === 'test01@gmail.com' && password === '123456') {
+        // 登录成功
+        dispatch(loginSuccess({
+          token: 'test-jwt-token-' + Date.now(),
+          refreshToken: 'test-refresh-token-' + Date.now(),
+        }));
+
+        // 保存用户信息
+        dispatch(setCurrentUser({
+          id: 'test-user-01',
+          email: 'test01@gmail.com',
+          name: '测试用户',
+          avatar: undefined,
+          phone: '13800000001',
+          gender: 'male',
+          birthDate: '1995-01-01',
+          height: 175,
+          weight: 70,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }));
+
+        Alert.alert('登录成功', '欢迎回来！');
+        // Navigation will be handled by AppNavigator based on auth state
+      } else {
+        // 登录失败
+        Alert.alert('登录失败', '邮箱或密码错误\n\n测试账号：\n邮箱：test01@gmail.com\n密码：123456');
+      }
+      setIsLoading(false);
+    }, 1000);
+  };
 
   return (
     <Theme name="light">
@@ -149,9 +201,12 @@ export const LoginScreen: React.FC = () => {
                     borderRadius="$3"
                     size="$5"
                     pressStyle={{ scale: 0.98 }}
+                    onPress={handleLogin}
+                    disabled={isLoading}
+                    opacity={isLoading ? 0.7 : 1}
                   >
                     <Text fontSize="$4" fontWeight="600" color="white">
-                      登录
+                      {isLoading ? '登录中...' : '登录'}
                     </Text>
                   </Button>
 

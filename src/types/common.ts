@@ -262,6 +262,8 @@ export interface UIState {
   language: string;
   isOnline: boolean;
   activeScreen: string;
+  appInitialized: boolean;
+  hasSeenOnboarding: boolean;
 }
 
 export type SyncStatus = 'idle' | 'syncing' | 'completed' | 'error';
