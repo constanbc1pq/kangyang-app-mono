@@ -552,12 +552,21 @@ export const PersonalCenterScreen: React.FC = () => {
                           为家人创建健康档案，共同管理家庭健康
                         </Text>
                       </YStack>
-                      <Button backgroundColor="$primary">
-                        <XStack space="$1" alignItems="center">
-                          <Plus size={16} color="white" />
-                          <Text fontSize="$3" color="white">添加成员</Text>
-                        </XStack>
-                      </Button>
+                      <Pressable>
+                        <View
+                          backgroundColor={COLORS.primary}
+                          borderRadius="$3"
+                          paddingVertical="$3"
+                          paddingHorizontal="$4"
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <XStack space="$1" alignItems="center">
+                            <Plus size={16} color="white" />
+                            <Text fontSize="$3" color="white">添加成员</Text>
+                          </XStack>
+                        </View>
+                      </Pressable>
                     </XStack>
                   </Card>
 
@@ -652,24 +661,34 @@ export const PersonalCenterScreen: React.FC = () => {
                         )}
 
                         <XStack space="$2">
-                          <Button
-                            flex={1}
-                            size="$3"
-                            variant="outlined"
-                            borderColor="$borderColor"
-                            backgroundColor="transparent"
-                          >
-                            <Text fontSize="$3" color="$text">查看详情</Text>
-                          </Button>
-                          <Button
-                            flex={1}
-                            size="$3"
-                            variant="outlined"
-                            borderColor="$borderColor"
-                            backgroundColor="transparent"
-                          >
-                            <Text fontSize="$3" color="$text">健康提醒</Text>
-                          </Button>
+                          <Pressable style={{ flex: 1 }}>
+                            <View
+                              flex={1}
+                              borderWidth={1}
+                              borderColor="$borderColor"
+                              backgroundColor="transparent"
+                              borderRadius="$3"
+                              paddingVertical="$2"
+                              justifyContent="center"
+                              alignItems="center"
+                            >
+                              <Text fontSize="$3" color="$text">查看详情</Text>
+                            </View>
+                          </Pressable>
+                          <Pressable style={{ flex: 1 }}>
+                            <View
+                              flex={1}
+                              borderWidth={1}
+                              borderColor="$borderColor"
+                              backgroundColor="transparent"
+                              borderRadius="$3"
+                              paddingVertical="$2"
+                              justifyContent="center"
+                              alignItems="center"
+                            >
+                              <Text fontSize="$3" color="$text">健康提醒</Text>
+                            </View>
+                          </Pressable>
                         </XStack>
                       </Card>
                     ))}
@@ -746,9 +765,16 @@ export const PersonalCenterScreen: React.FC = () => {
                             )}
                           </YStack>
                         </YStack>
-                        <Button size="$3" chromeless>
-                          <ChevronRight size={16} color={COLORS.textSecondary} />
-                        </Button>
+                        <Pressable>
+                          <View
+                            paddingVertical="$2"
+                            paddingHorizontal="$2"
+                            justifyContent="center"
+                            alignItems="center"
+                          >
+                            <ChevronRight size={16} color={COLORS.textSecondary} />
+                          </View>
+                        </Pressable>
                       </XStack>
                     ))}
                   </YStack>
@@ -777,12 +803,21 @@ export const PersonalCenterScreen: React.FC = () => {
                             </Text>
                           </YStack>
                         </XStack>
-                        <Button backgroundColor="#D97706">
-                          <XStack space="$1" alignItems="center">
-                            <Gift size={16} color="white" />
-                            <Text fontSize="$3" color="white">续费升级</Text>
-                          </XStack>
-                        </Button>
+                        <Pressable>
+                          <View
+                            backgroundColor="#D97706"
+                            borderRadius="$3"
+                            paddingVertical="$3"
+                            paddingHorizontal="$4"
+                            justifyContent="center"
+                            alignItems="center"
+                          >
+                            <XStack space="$1" alignItems="center">
+                              <Gift size={16} color="white" />
+                              <Text fontSize="$3" color="white">续费升级</Text>
+                            </XStack>
+                          </View>
+                        </Pressable>
                       </XStack>
                       <Progress
                         value={75}
@@ -879,15 +914,19 @@ export const PersonalCenterScreen: React.FC = () => {
                           <Text fontSize="$3" color="$textSecondary" marginBottom="$3" textAlign="center">
                             基础健康服务
                           </Text>
-                          <Button
-                            size="$3"
-                            variant="outlined"
-                            borderColor="$borderColor"
-                            backgroundColor="transparent"
-                            width="100%"
-                          >
-                            <Text fontSize="$3" color="$textSecondary">当前等级</Text>
-                          </Button>
+                          <Pressable style={{ width: '100%' }}>
+                            <View
+                              borderWidth={1}
+                              borderColor="$borderColor"
+                              backgroundColor="transparent"
+                              borderRadius="$3"
+                              paddingVertical="$2"
+                              justifyContent="center"
+                              alignItems="center"
+                            >
+                              <Text fontSize="$3" color="$textSecondary">当前等级</Text>
+                            </View>
+                          </Pressable>
                         </View>
                         <View
                           flex={1}
@@ -908,9 +947,17 @@ export const PersonalCenterScreen: React.FC = () => {
                           <Text fontSize="$3" color="rgba(255,255,255,0.8)" marginBottom="$3" textAlign="center">
                             专业健康管理
                           </Text>
-                          <Button size="$3" backgroundColor="white" width="100%">
-                            <Text fontSize="$3" color="$primary">当前等级</Text>
-                          </Button>
+                          <Pressable style={{ width: '100%' }}>
+                            <View
+                              backgroundColor="white"
+                              borderRadius="$3"
+                              paddingVertical="$2"
+                              justifyContent="center"
+                              alignItems="center"
+                            >
+                              <Text fontSize="$3" color={COLORS.primary}>当前等级</Text>
+                            </View>
+                          </Pressable>
                         </View>
                       </XStack>
                       <View
@@ -933,15 +980,19 @@ export const PersonalCenterScreen: React.FC = () => {
                         <Text fontSize="$3" color="$textSecondary" marginBottom="$3" textAlign="center">
                           全方位健康服务
                         </Text>
-                        <Button
-                          size="$3"
-                          variant="outlined"
-                          borderColor="$primary"
-                          backgroundColor="transparent"
-                          width="100%"
-                        >
-                          <Text fontSize="$3" color="$primary">立即升级</Text>
-                        </Button>
+                        <Pressable style={{ width: '100%' }}>
+                          <View
+                            borderWidth={1}
+                            borderColor={COLORS.primary}
+                            backgroundColor="transparent"
+                            borderRadius="$3"
+                            paddingVertical="$2"
+                            justifyContent="center"
+                            alignItems="center"
+                          >
+                            <Text fontSize="$3" color={COLORS.primary}>立即升级</Text>
+                          </View>
+                        </Pressable>
                       </View>
                     </YStack>
                   </Card>

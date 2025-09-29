@@ -3,16 +3,24 @@ import {
   YStack,
   XStack,
   Text,
-  Button,
   Card,
   View,
   H3,
   Theme,
 } from 'tamagui';
+import { Pressable } from 'react-native';
 import { Bot, MessageCircle, FileText, Calendar, TrendingUp } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 
-export const AIHealthAssistant: React.FC = () => {
+interface AIHealthAssistantProps {
+  onReportPress?: () => void;
+  onConsultPress?: () => void;
+}
+
+export const AIHealthAssistant: React.FC<AIHealthAssistantProps> = ({
+  onReportPress,
+  onConsultPress
+}) => {
   const [activeTab, setActiveTab] = useState('insights');
 
   const healthInsights = [
@@ -124,28 +132,38 @@ export const AIHealthAssistant: React.FC = () => {
 
         {/* Quick Actions */}
         <XStack space="$2" marginTop="$4">
-          <Button
-            flex={1}
-            size="$3"
-            variant="outlined"
-            borderColor="$primary"
-            backgroundColor="transparent"
-          >
-            <XStack space="$2" alignItems="center">
-              <MessageCircle size={16} color={COLORS.primary} />
-              <Text fontSize="$3" color="$primary">咨询</Text>
-            </XStack>
-          </Button>
-          <Button
-            flex={1}
-            size="$3"
-            backgroundColor="$primary"
-          >
-            <XStack space="$2" alignItems="center">
-              <FileText size={16} color="white" />
-              <Text fontSize="$3" color="white">报告</Text>
-            </XStack>
-          </Button>
+          <Pressable style={{ flex: 1 }} onPress={onConsultPress}>
+            <View
+              flex={1}
+              borderWidth={1}
+              borderColor={COLORS.primary}
+              backgroundColor="transparent"
+              borderRadius="$3"
+              paddingVertical="$3"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <XStack space="$2" alignItems="center">
+                <MessageCircle size={16} color={COLORS.primary} />
+                <Text fontSize="$3" color={COLORS.primary}>咨询</Text>
+              </XStack>
+            </View>
+          </Pressable>
+          <Pressable style={{ flex: 1 }} onPress={onReportPress}>
+            <View
+              flex={1}
+              backgroundColor={COLORS.primary}
+              borderRadius="$3"
+              paddingVertical="$3"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <XStack space="$2" alignItems="center">
+                <FileText size={16} color="white" />
+                <Text fontSize="$3" color="white">报告</Text>
+              </XStack>
+            </View>
+          </Pressable>
         </XStack>
       </Card>
     </Theme>

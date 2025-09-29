@@ -3,7 +3,6 @@ import {
   YStack,
   XStack,
   Text,
-  Button,
   Card,
   View,
   H1,
@@ -12,6 +11,7 @@ import {
   Theme,
   ScrollView,
 } from 'tamagui';
+import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -167,17 +167,21 @@ export const WellnessScreen: React.FC = () => {
                   专业养生服务
                 </Text>
               </YStack>
-              <Button
-                size="$3"
-                variant="outlined"
-                borderColor="$primary"
-                backgroundColor="transparent"
-              >
-                <XStack space="$2" alignItems="center">
-                  <Calendar size={16} color={COLORS.primary} />
-                  <Text fontSize="$3" color="$primary">预约服务</Text>
-                </XStack>
-              </Button>
+              <Pressable>
+                <View
+                  borderWidth={1}
+                  borderColor={COLORS.primary}
+                  backgroundColor="transparent"
+                  borderRadius="$3"
+                  paddingHorizontal="$3"
+                  paddingVertical="$2"
+                >
+                  <XStack space="$2" alignItems="center">
+                    <Calendar size={16} color={COLORS.primary} />
+                    <Text fontSize="$3" color={COLORS.primary}>预约服务</Text>
+                  </XStack>
+                </View>
+              </Pressable>
             </XStack>
 
             {/* Today's Wellness Recommendation */}
@@ -455,9 +459,16 @@ export const WellnessScreen: React.FC = () => {
                           <Text fontSize="$5" fontWeight="bold" color="$primary" marginBottom="$2">
                             {service.price}
                           </Text>
-                          <Button size="$3" backgroundColor="$primary">
-                            <Text fontSize="$3" color="white">预订</Text>
-                          </Button>
+                          <Pressable>
+                            <View
+                              backgroundColor={COLORS.primary}
+                              borderRadius="$3"
+                              paddingHorizontal="$4"
+                              paddingVertical="$2"
+                            >
+                              <Text fontSize="$3" color="white">预订</Text>
+                            </View>
+                          </Pressable>
                         </YStack>
                       </XStack>
                     </YStack>
@@ -536,9 +547,16 @@ export const WellnessScreen: React.FC = () => {
                             <Text fontSize="$2" color="$primary">咨询</Text>
                           </XStack>
                         </Button>
-                        <Button size="$3" backgroundColor="$primary">
-                          <Text fontSize="$2" color="white">预约</Text>
-                        </Button>
+                        <Pressable>
+                          <View
+                            backgroundColor={COLORS.primary}
+                            borderRadius="$3"
+                            paddingHorizontal="$3"
+                            paddingVertical="$2"
+                          >
+                            <Text fontSize="$2" color="white">预约</Text>
+                          </View>
+                        </Pressable>
                       </YStack>
                     </XStack>
                   </Card>

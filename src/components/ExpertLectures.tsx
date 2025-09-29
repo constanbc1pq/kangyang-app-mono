@@ -335,14 +335,23 @@ export const ExpertLectures: React.FC = () => {
                 </XStack>
 
                 {/* Action Button */}
-                <Button backgroundColor="$primary" size="$4">
-                  <Text fontSize="$3" color="white" fontWeight="600">
-                    {lecture.type === 'live' && lecture.status === 'upcoming' && '预约直播'}
-                    {lecture.type === 'live' && lecture.status === 'live' && '进入直播间'}
-                    {lecture.type === 'video' && '立即观看'}
-                    {lecture.type === 'consultation' && '预约咨询'}
-                  </Text>
-                </Button>
+                <Pressable>
+                  <View
+                    backgroundColor={COLORS.primary}
+                    borderRadius="$3"
+                    paddingVertical="$3"
+                    paddingHorizontal="$4"
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    <Text fontSize="$3" color="white" fontWeight="600">
+                      {lecture.type === 'live' && lecture.status === 'upcoming' && '预约直播'}
+                      {lecture.type === 'live' && lecture.status === 'live' && '进入直播间'}
+                      {lecture.type === 'video' && '立即观看'}
+                      {lecture.type === 'consultation' && '预约咨询'}
+                    </Text>
+                  </View>
+                </Pressable>
               </YStack>
             </Card>
           ))}
@@ -350,14 +359,20 @@ export const ExpertLectures: React.FC = () => {
 
         {/* Load More */}
         <View alignItems="center">
-          <Button
-            size="$4"
-            variant="outlined"
-            borderColor="$borderColor"
-            backgroundColor="transparent"
-          >
-            <Text fontSize="$3" color="$text">查看更多课程</Text>
-          </Button>
+          <Pressable>
+            <View
+              borderWidth={1}
+              borderColor="$borderColor"
+              backgroundColor="transparent"
+              borderRadius="$3"
+              paddingVertical="$3"
+              paddingHorizontal="$4"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize="$3" color="$text">查看更多课程</Text>
+            </View>
+          </Pressable>
         </View>
       </YStack>
     </Theme>

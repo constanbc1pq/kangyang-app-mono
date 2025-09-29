@@ -3,7 +3,6 @@ import {
   YStack,
   XStack,
   Text,
-  Button,
   Card,
   View,
   H1,
@@ -12,8 +11,8 @@ import {
   Theme,
   ScrollView,
   Progress,
-  Tabs,
 } from 'tamagui';
+import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -34,9 +33,11 @@ import { AIHealthAssistant } from '@/components/AIHealthAssistant';
 import { HealthTrends } from '@/components/HealthTrends';
 import { DeviceManager } from '@/components/DeviceManager';
 import { COLORS } from '@/constants/app';
+import { useFullScreenNavigation } from '@/navigation/MainNavigator';
 
 export const HealthScreen: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
+  const { setShowHealthReport, setShowAIConsultation } = useFullScreenNavigation();
 
   const healthScore = 92;
 
@@ -130,6 +131,7 @@ export const HealthScreen: React.FC = () => {
       default: return '$blue10';
     }
   };
+
 
   return (
     <Theme name="light">
@@ -368,7 +370,10 @@ export const HealthScreen: React.FC = () => {
             </YStack>
 
             {/* AI Health Assistant */}
-            <AIHealthAssistant />
+            <AIHealthAssistant
+              onReportPress={() => setShowHealthReport(true)}
+              onConsultPress={() => setShowAIConsultation(true)}
+            />
 
             {/* Health Trends */}
             <HealthTrends
@@ -391,71 +396,84 @@ export const HealthScreen: React.FC = () => {
                 <H3 fontSize="$6" color="$text" fontWeight="600">
                   快捷功能
                 </H3>
-                <Button size="$3" chromeless>
-                  <XStack space="$1" alignItems="center">
-                    <Plus size={16} color={COLORS.primary} />
-                    <Text fontSize="$3" color="$primary">添加</Text>
-                  </XStack>
-                </Button>
+                <Pressable>
+                  <View paddingHorizontal="$3" paddingVertical="$2">
+                    <XStack space="$1" alignItems="center">
+                      <Plus size={16} color={COLORS.primary} />
+                      <Text fontSize="$3" color="$primary">添加</Text>
+                    </XStack>
+                  </View>
+                </Pressable>
               </XStack>
               <XStack space="$3">
                 <XStack flex={1} space="$3">
-                  <Button
-                    flex={1}
-                    height={70}
-                    variant="outlined"
-                    borderColor="$borderColor"
-                    backgroundColor="transparent"
-                    pressStyle={{ scale: 0.98 }}
-                    flexDirection="column"
-                    space="$1"
+                  <Pressable style={{ flex: 1 }}>
+                    <View
+                      flex={1}
+                      height={70}
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                      backgroundColor="transparent"
+                      borderRadius="$4"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Settings size={20} color={COLORS.primary} />
+                      <Text fontSize="$2" color="$text" marginTop="$1">设备管理</Text>
+                    </View>
+                  </Pressable>
+                  <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() => setShowHealthReport(true)}
                   >
-                    <Settings size={20} color={COLORS.primary} />
-                    <Text fontSize="$2" color="$text">设备管理</Text>
-                  </Button>
-                  <Button
-                    flex={1}
-                    height={70}
-                    variant="outlined"
-                    borderColor="$borderColor"
-                    backgroundColor="transparent"
-                    pressStyle={{ scale: 0.98 }}
-                    flexDirection="column"
-                    space="$1"
-                  >
-                    <TrendingUp size={20} color={COLORS.secondary} />
-                    <Text fontSize="$2" color="$text">健康报告</Text>
-                  </Button>
+                    <View
+                      flex={1}
+                      height={70}
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                      backgroundColor="transparent"
+                      borderRadius="$4"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <TrendingUp size={20} color={COLORS.secondary} />
+                      <Text fontSize="$2" color="$text" marginTop="$1">健康报告</Text>
+                    </View>
+                  </Pressable>
                 </XStack>
               </XStack>
               <XStack space="$3" marginTop="$3">
                 <XStack flex={1} space="$3">
-                  <Button
-                    flex={1}
-                    height={70}
-                    variant="outlined"
-                    borderColor="$borderColor"
-                    backgroundColor="transparent"
-                    pressStyle={{ scale: 0.98 }}
-                    flexDirection="column"
-                    space="$1"
-                  >
-                    <Heart size={20} color={COLORS.error} />
-                    <Text fontSize="$2" color="$text">AI问诊</Text>
-                  </Button>
-                  <Button
-                    flex={1}
-                    height={70}
-                    variant="outlined"
-                    borderColor="$borderColor"
-                    backgroundColor="transparent"
-                    pressStyle={{ scale: 0.98 }}
-                    flexDirection="column"
-                    space="$1"
-                  >
-                    <Bell size={20} color={COLORS.warning} />
-                    <Text fontSize="$2" color="$text">用药提醒</Text>
-                  </Button>
+                  <Pressable style={{ flex: 1 }}>
+                    <View
+                      flex={1}
+                      height={70}
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                      backgroundColor="transparent"
+                      borderRadius="$4"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Heart size={20} color={COLORS.error} />
+                      <Text fontSize="$2" color="$text" marginTop="$1">AI问诊</Text>
+                    </View>
+                  </Pressable>
+                  <Pressable style={{ flex: 1 }}>
+                    <View
+                      flex={1}
+                      height={70}
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                      backgroundColor="transparent"
+                      borderRadius="$4"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Bell size={20} color={COLORS.warning} />
+                      <Text fontSize="$2" color="$text" marginTop="$1">用药提醒</Text>
+                    </View>
+                  </Pressable>
                 </XStack>
               </XStack>
             </Card>
