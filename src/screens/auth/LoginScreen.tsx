@@ -1,182 +1,205 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Box,
-  VStack,
+  YStack,
+  XStack,
   Text,
   Button,
-  ButtonText,
   Input,
-  InputField,
-  HStack,
-  Pressable,
-  LinearGradient
-} from '@gluestack-ui/themed';
-import { COLORS } from '@/constants/app';
+  Card,
+  H1,
+  Separator,
+  Theme,
+  View,
+} from 'tamagui';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Heart, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 
 export const LoginScreen: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <LinearGradient
-      colors={COLORS.gradientAccent}
-      flex={1}
-    >
-      <Box
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
-        px="$6"
-      >
-        <VStack
-          space="xl"
-          width="$full"
-          maxWidth="$96"
-          backgroundColor={COLORS.surface}
-          borderRadius="$2xl"
-          p="$8"
-          shadowColor={COLORS.primary}
-          shadowOffset={{ width: 0, height: 4 }}
-          shadowOpacity={0.15}
-          shadowRadius={20}
-          elevation={8}
+    <Theme name="light">
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar style="light" />
+        <LinearGradient
+          colors={['#7C3AED', '#2C7A7B']}
+          style={{ flex: 1 }}
         >
-          {/* Logo区域 */}
-          <VStack space="md" alignItems="center">
-            <Text
-              fontSize="$3xl"
-              fontWeight="$bold"
-              color={COLORS.primary}
-              textAlign="center"
+          <View flex={1} justifyContent="center" alignItems="center" padding="$6">
+            <Card
+              width="100%"
+              maxWidth={400}
+              backgroundColor="$surface"
+              borderRadius="$6"
+              padding="$8"
+              shadowColor="$primary"
+              shadowOffset={{ width: 0, height: 4 }}
+              shadowOpacity={0.15}
+              shadowRadius={20}
+              elevation={8}
             >
-              康养APP
-            </Text>
-            <Text
-              fontSize="$md"
-              color={COLORS.textSecondary}
-              textAlign="center"
-            >
-              您的健康管理专家
-            </Text>
-          </VStack>
+              <YStack space="$6">
+                {/* Logo区域 */}
+                <YStack space="$3" alignItems="center">
+                  <View
+                    width={80}
+                    height={80}
+                    backgroundColor="rgba(124, 58, 237, 0.1)"
+                    borderRadius={40}
+                    justifyContent="center"
+                    alignItems="center"
+                    marginBottom="$4"
+                  >
+                    <Heart size={32} color="$primary" />
+                  </View>
+                  <H1 fontSize="$8" fontWeight="bold" color="$primary" textAlign="center">
+                    康养APP
+                  </H1>
+                  <Text fontSize="$4" color="$textSecondary" textAlign="center">
+                    智能健康管理平台
+                  </Text>
+                </YStack>
 
-          {/* 登录表单 */}
-          <VStack space="lg">
-            <VStack space="sm">
-              <Text fontSize="$sm" color={COLORS.text} fontWeight="$medium">
-                邮箱地址
-              </Text>
-              <Input
-                borderColor={COLORS.primary}
-                borderRadius="$lg"
-                backgroundColor={COLORS.background}
-              >
-                <InputField
-                  placeholder="请输入邮箱地址"
-                  placeholderTextColor={COLORS.textSecondary}
-                  fontSize="$md"
-                />
-              </Input>
-            </VStack>
+                {/* 登录表单 */}
+                <YStack space="$4">
+                  <YStack space="$2">
+                    <Text fontSize="$3" color="$text" fontWeight="600">
+                      邮箱地址
+                    </Text>
+                    <XStack
+                      borderWidth={1}
+                      borderColor="$primary"
+                      borderRadius="$3"
+                      backgroundColor="$background"
+                      alignItems="center"
+                      paddingHorizontal="$3"
+                    >
+                      <View marginRight="$2">
+                        <Mail size={20} color="#6B7280" />
+                      </View>
+                      <Input
+                        flex={1}
+                        borderWidth={0}
+                        backgroundColor="transparent"
+                        placeholder="请输入邮箱地址"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </XStack>
+                  </YStack>
 
-            <VStack space="sm">
-              <Text fontSize="$sm" color={COLORS.text} fontWeight="$medium">
-                密码
-              </Text>
-              <Input
-                borderColor={COLORS.primary}
-                borderRadius="$lg"
-                backgroundColor={COLORS.background}
-              >
-                <InputField
-                  placeholder="请输入密码"
-                  placeholderTextColor={COLORS.textSecondary}
-                  fontSize="$md"
-                  secureTextEntry
-                />
-              </Input>
-            </VStack>
+                  <YStack space="$2">
+                    <Text fontSize="$3" color="$text" fontWeight="600">
+                      密码
+                    </Text>
+                    <XStack
+                      borderWidth={1}
+                      borderColor="$primary"
+                      borderRadius="$3"
+                      backgroundColor="$background"
+                      alignItems="center"
+                      paddingHorizontal="$3"
+                    >
+                      <View marginRight="$2">
+                        <Lock size={20} color="#6B7280" />
+                      </View>
+                      <Input
+                        flex={1}
+                        borderWidth={0}
+                        backgroundColor="transparent"
+                        placeholder="请输入密码"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                      />
+                      <Button
+                        size="$2"
+                        chromeless
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff size={20} color="#6B7280" />
+                        ) : (
+                          <Eye size={20} color="#6B7280" />
+                        )}
+                      </Button>
+                    </XStack>
+                  </YStack>
 
-            <HStack justifyContent="space-between" alignItems="center">
-              <Pressable>
-                <Text fontSize="$sm" color={COLORS.primary}>
-                  记住密码
-                </Text>
-              </Pressable>
-              <Pressable>
-                <Text fontSize="$sm" color={COLORS.secondary}>
-                  忘记密码？
-                </Text>
-              </Pressable>
-            </HStack>
-          </VStack>
+                  <XStack justifyContent="space-between" alignItems="center">
+                    <Button variant="outlined" size="$2" chromeless>
+                      <Text fontSize="$2" color="$primary">记住密码</Text>
+                    </Button>
+                    <Button variant="outlined" size="$2" chromeless>
+                      <Text fontSize="$2" color="$secondary">忘记密码？</Text>
+                    </Button>
+                  </XStack>
+                </YStack>
 
-          {/* 登录按钮 */}
-          <VStack space="md">
-            <Button
-              backgroundColor={COLORS.primary}
-              borderRadius="$lg"
-              size="lg"
-              shadowColor={COLORS.primary}
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.25}
-              shadowRadius={8}
-              elevation={4}
-            >
-              <ButtonText
-                fontSize="$md"
-                fontWeight="$semibold"
-                color="$white"
-              >
-                登录
-              </ButtonText>
-            </Button>
+                {/* 登录按钮 */}
+                <YStack space="$3">
+                  <Button
+                    backgroundColor="$primary"
+                    borderRadius="$3"
+                    size="$5"
+                    pressStyle={{ scale: 0.98 }}
+                  >
+                    <Text fontSize="$4" fontWeight="600" color="white">
+                      登录
+                    </Text>
+                  </Button>
 
-            <Button
-              variant="outline"
-              borderColor={COLORS.secondary}
-              borderRadius="$lg"
-              size="lg"
-            >
-              <ButtonText
-                fontSize="$md"
-                fontWeight="$medium"
-                color={COLORS.secondary}
-              >
-                注册新账号
-              </ButtonText>
-            </Button>
-          </VStack>
+                  <Button
+                    variant="outlined"
+                    borderColor="$secondary"
+                    borderRadius="$3"
+                    size="$5"
+                  >
+                    <Text fontSize="$4" fontWeight="500" color="$secondary">
+                      注册新账号
+                    </Text>
+                  </Button>
+                </YStack>
 
-          {/* 第三方登录 */}
-          <VStack space="md" alignItems="center">
-            <Text fontSize="$sm" color={COLORS.textSecondary}>
-              或使用以下方式登录
-            </Text>
-            <HStack space="md">
-              <Button
-                size="md"
-                variant="outline"
-                borderColor={COLORS.accent}
-                borderRadius="$full"
-                px="$6"
-              >
-                <ButtonText color={COLORS.accent} fontSize="$sm">
-                  Gmail
-                </ButtonText>
-              </Button>
-              <Button
-                size="md"
-                variant="outline"
-                borderColor={COLORS.success}
-                borderRadius="$full"
-                px="$6"
-              >
-                <ButtonText color={COLORS.success} fontSize="$sm">
-                  微信
-                </ButtonText>
-              </Button>
-            </HStack>
-          </VStack>
-        </VStack>
-      </Box>
-    </LinearGradient>
+                <Separator />
+
+                {/* 第三方登录 */}
+                <YStack space="$3" alignItems="center">
+                  <Text fontSize="$2" color="$textSecondary">
+                    其他登录方式
+                  </Text>
+                  <XStack space="$3">
+                    <Button
+                      size="$4"
+                      variant="outlined"
+                      borderColor="$primary"
+                      borderRadius="$10"
+                      paddingHorizontal="$5"
+                    >
+                      <Text color="$primary" fontSize="$2">Gmail</Text>
+                    </Button>
+                    <Button
+                      size="$4"
+                      variant="outlined"
+                      borderColor="$success"
+                      borderRadius="$10"
+                      paddingHorizontal="$5"
+                    >
+                      <Text color="$success" fontSize="$2">微信</Text>
+                    </Button>
+                  </XStack>
+                </YStack>
+              </YStack>
+            </Card>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
+    </Theme>
   );
 };

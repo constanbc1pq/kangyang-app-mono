@@ -1,16 +1,109 @@
-import { MMKV } from 'react-native-mmkv';
+import { Platform } from 'react-native';
 import { APP_CONFIG } from '@/constants/app';
 
-// Create MMKV instances
-const storage = new MMKV({
-  id: 'kangyang-app-storage',
-  encryptionKey: 'kangyang-health-app-encryption-key',
-});
+// Platform-specific storage interface
+interface StorageInterface {
+  set(key: string, value: string): void;
+  getString(key: string): string | null | undefined;
+  delete(key: string): void;
+  clearAll(): void;
+}
 
-const secureStorage = new MMKV({
-  id: 'kangyang-secure-storage',
-  encryptionKey: 'kangyang-health-app-secure-key',
-});
+// Web Storage implementation using localStorage
+class WebStorage implements StorageInterface {
+  private prefix: string;
+
+  constructor(prefix: string) {
+    this.prefix = prefix;
+  }
+
+  set(key: string, value: string): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(`${this.prefix}:${key}`, value);
+      }
+    } catch (error) {
+      console.error('WebStorage set error:', error);
+    }
+  }
+
+  getString(key: string): string | null {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return localStorage.getItem(`${this.prefix}:${key}`);
+      }
+      return null;
+    } catch (error) {
+      console.error('WebStorage get error:', error);
+      return null;
+    }
+  }
+
+  delete(key: string): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem(`${this.prefix}:${key}`);
+      }
+    } catch (error) {
+      console.error('WebStorage delete error:', error);
+    }
+  }
+
+  clearAll(): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(this.prefix)) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+      }
+    } catch (error) {
+      console.error('WebStorage clearAll error:', error);
+    }
+  }
+}
+
+// Create storage instances
+// For Web, always use WebStorage
+// For Native, import MMKV without encryption first, then conditionally add it
+let storage: StorageInterface;
+let secureStorage: StorageInterface;
+
+// Initialize storage based on platform
+function initializeStorage() {
+  if (Platform.OS === 'web') {
+    // Use localStorage for web
+    storage = new WebStorage('kangyang-app-storage');
+    secureStorage = new WebStorage('kangyang-secure-storage');
+  } else {
+    // Dynamically import MMKV for native platforms only
+    try {
+      const { MMKV } = require('react-native-mmkv');
+
+      // For native platforms, we can use encryption
+      storage = new MMKV({
+        id: 'kangyang-app-storage',
+        encryptionKey: 'kangyang-health-app-encryption-key',
+      });
+      secureStorage = new MMKV({
+        id: 'kangyang-secure-storage',
+        encryptionKey: 'kangyang-health-app-secure-key',
+      });
+    } catch (error) {
+      console.error('Failed to initialize MMKV, falling back to WebStorage', error);
+      // Fallback to WebStorage if MMKV fails
+      storage = new WebStorage('kangyang-app-storage');
+      secureStorage = new WebStorage('kangyang-secure-storage');
+    }
+  }
+}
+
+// Initialize storage immediately
+initializeStorage();
 
 export class Storage {
   // Basic storage operations

@@ -11,7 +11,7 @@ import {
   REGISTER,
   PersistConfig,
 } from 'redux-persist';
-import { MMKV } from 'react-native-mmkv';
+import { Platform } from 'react-native';
 
 // Import reducers
 import authSlice from './slices/authSlice';
@@ -30,11 +30,56 @@ import { healthApi } from './api/healthApi';
 import { userApi } from './api/userApi';
 import { deviceApi } from './api/deviceApi';
 
-// MMKV storage instance
-const storage = new MMKV({
-  id: 'kangyang-app-storage',
-  encryptionKey: 'kangyang-health-app-encryption-key',
-});
+// Create platform-specific storage adapter
+interface StorageInterface {
+  set(key: string, value: string): void;
+  getString(key: string): string | null | undefined;
+  delete(key: string): void;
+  clearAll(): void;
+}
+
+let storage: StorageInterface;
+
+if (Platform.OS === 'web') {
+  // Web storage implementation using localStorage
+  storage = {
+    set: (key: string, value: string) => {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(`redux-persist:${key}`, value);
+      }
+    },
+    getString: (key: string) => {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return localStorage.getItem(`redux-persist:${key}`);
+      }
+      return null;
+    },
+    delete: (key: string) => {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem(`redux-persist:${key}`);
+      }
+    },
+    clearAll: () => {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('redux-persist:')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+      }
+    },
+  };
+} else {
+  // Native storage using MMKV with encryption
+  const { MMKV } = require('react-native-mmkv');
+  storage = new MMKV({
+    id: 'kangyang-app-storage',
+    encryptionKey: 'kangyang-health-app-encryption-key',
+  });
+}
 
 // Redux persist storage adapter
 const reduxStorage = {

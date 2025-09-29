@@ -1,41 +1,40 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SCREEN_NAMES, COLORS } from '@/constants/app';
-import {
-  Box,
-  Text,
-  Icon
-} from '@gluestack-ui/themed';
-import {
-  Heart,
-  Activity,
-  Users,
-  User
-} from 'lucide-react-native';
+import { YStack, Text, Theme, View } from 'tamagui';
+import { Heart, Activity, Users, User } from 'lucide-react-native';
 
 // Placeholder screens - will be created later
 const HealthDashboard: React.FC = () => (
-  <Box flex={1} justifyContent="center" alignItems="center" backgroundColor={COLORS.background}>
-    <Text fontSize="$xl" color={COLORS.primary}>康模块 - 健康监测</Text>
-  </Box>
+  <Theme name="light">
+    <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background" padding="$4">
+      <Text fontSize="$6" color="$primary" fontWeight="bold">康模块 - 健康监测</Text>
+    </YStack>
+  </Theme>
 );
 
 const LifestyleDashboard: React.FC = () => (
-  <Box flex={1} justifyContent="center" alignItems="center" backgroundColor={COLORS.background}>
-    <Text fontSize="$xl" color={COLORS.secondary}>养模块 - 生活方式</Text>
-  </Box>
+  <Theme name="light">
+    <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background" padding="$4">
+      <Text fontSize="$6" color="$secondary" fontWeight="bold">养模块 - 生活方式</Text>
+    </YStack>
+  </Theme>
 );
 
 const CommunityFeed: React.FC = () => (
-  <Box flex={1} justifyContent="center" alignItems="center" backgroundColor={COLORS.background}>
-    <Text fontSize="$xl" color={COLORS.accent}>社区 - 健康分享</Text>
-  </Box>
+  <Theme name="light">
+    <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background" padding="$4">
+      <Text fontSize="$6" color="$primary" fontWeight="bold">社区 - 健康分享</Text>
+    </YStack>
+  </Theme>
 );
 
 const PersonalInfo: React.FC = () => (
-  <Box flex={1} justifyContent="center" alignItems="center" backgroundColor={COLORS.background}>
-    <Text fontSize="$xl" color={COLORS.primary}>我的 - 个人中心</Text>
-  </Box>
+  <Theme name="light">
+    <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background" padding="$4">
+      <Text fontSize="$6" color="$primary" fontWeight="bold">我的 - 个人中心</Text>
+    </YStack>
+  </Theme>
 );
 
 const Tab = createBottomTabNavigator();
@@ -59,11 +58,12 @@ export const MainNavigator: React.FC = () => {
           }
 
           return (
-            <Icon
-              as={IconComponent}
-              size={size}
-              color={focused ? COLORS.primary : COLORS.textSecondary}
-            />
+            <View>
+              <IconComponent
+                size={size}
+                color={focused ? COLORS.primary : COLORS.textSecondary}
+              />
+            </View>
           );
         },
         tabBarActiveTintColor: COLORS.primary,
