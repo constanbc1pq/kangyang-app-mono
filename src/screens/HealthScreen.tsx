@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   YStack,
   XStack,
@@ -12,7 +12,7 @@ import {
   ScrollView,
   Progress,
 } from 'tamagui';
-import { Pressable } from 'react-native';
+import { Pressable, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -28,25 +28,47 @@ import {
   Bell,
   Droplets,
   Zap,
+  Clock,
+  ChevronRight,
 } from 'lucide-react-native';
 import { AIHealthAssistant } from '@/components/AIHealthAssistant';
 import { HealthTrends } from '@/components/HealthTrends';
 import { DeviceManager } from '@/components/DeviceManager';
 import { COLORS } from '@/constants/app';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { getTodayTasks } from '@/services/userDataService';
+import { HealthTask } from '@/types/userData';
+import * as Icons from 'lucide-react-native';
 
 export const HealthScreen: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
+  const [todayTasks, setTodayTasks] = useState<HealthTask[]>([]);
   const navigation = useNavigation<any>();
 
   const healthScore = 92;
 
-  const todayTasks = [
-    { id: 1, task: "早起喝水", completed: true },
-    { id: 2, task: "午后散步30分钟", completed: false },
-    { id: 3, task: "晚餐后测血压", completed: false },
-    { id: 4, task: "睡前冥想10分钟", completed: false },
-  ];
+  // 加载今日任务
+  useFocusEffect(
+    React.useCallback(() => {
+      loadTodayTasks();
+    }, [])
+  );
+
+  const loadTodayTasks = async () => {
+    try {
+      const tasks = await getTodayTasks();
+      // 只取前3个未完成的任务
+      const incompleteTasks = tasks.filter(t => t.status !== 'completed').slice(0, 3);
+      setTodayTasks(incompleteTasks);
+    } catch (error) {
+      console.error('加载今日任务失败:', error);
+    }
+  };
+
+  const getTaskIcon = (iconName: string) => {
+    const IconComponent = (Icons as any)[iconName];
+    return IconComponent || Icons.CheckCircle;
+  };
 
   const healthMetrics = [
     {
@@ -492,45 +514,87 @@ export const HealthScreen: React.FC = () => {
             </Card>
 
             {/* Today's Tasks */}
-            <Card
-              padding="$4"
-              borderRadius="$4"
-              backgroundColor="$surface"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
-              elevation={4}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('TaskList')}
+              activeOpacity={0.9}
             >
-              <H3 fontSize="$6" color="$text" fontWeight="600" marginBottom="$4">
-                今日任务
-              </H3>
-              <YStack space="$3">
-                {todayTasks.map((task) => (
-                  <XStack key={task.id} space="$3" alignItems="center">
-                    {task.completed ? (
-                      <CheckCircle size={20} color={COLORS.success} />
-                    ) : (
-                      <View
-                        width={20}
-                        height={20}
-                        borderRadius={10}
-                        borderWidth={2}
-                        borderColor="$textSecondary"
-                      />
-                    )}
-                    <Text
-                      fontSize="$3"
-                      color={task.completed ? "$textSecondary" : "$text"}
-                      textDecorationLine={task.completed ? "line-through" : "none"}
-                      flex={1}
-                    >
-                      {task.task}
-                    </Text>
+              <Card
+                padding="$4"
+                borderRadius="$4"
+                backgroundColor="$surface"
+                shadowColor="$shadow"
+                shadowOffset={{ width: 0, height: 2 }}
+                shadowOpacity={0.1}
+                shadowRadius={8}
+                elevation={4}
+              >
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
+                  <H3 fontSize="$6" color="$text" fontWeight="600">
+                    今日任务
+                  </H3>
+                  <XStack space="$2" alignItems="center">
+                    <Text fontSize="$3" color="$primary">查看全部</Text>
+                    <ChevronRight size={16} color={COLORS.primary} />
                   </XStack>
-                ))}
-              </YStack>
-            </Card>
+                </XStack>
+
+                {todayTasks.length > 0 ? (
+                  <YStack space="$3">
+                    {todayTasks.map((task) => {
+                      const TaskIcon = getTaskIcon(task.icon);
+                      return (
+                        <TouchableOpacity
+                          key={task.id}
+                          onPress={() => navigation.navigate('TaskDetail', { taskId: task.id })}
+                        >
+                          <View
+                            padding="$3"
+                            borderRadius="$3"
+                            backgroundColor="$background"
+                            borderLeftWidth={3}
+                            borderLeftColor={task.color}
+                          >
+                            <XStack space="$3" alignItems="center">
+                              <View
+                                width={36}
+                                height={36}
+                                borderRadius={18}
+                                backgroundColor={`${task.color}20`}
+                                justifyContent="center"
+                                alignItems="center"
+                              >
+                                <TaskIcon size={18} color={task.color} />
+                              </View>
+                              <YStack flex={1}>
+                                <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
+                                  {task.title}
+                                </Text>
+                                {task.startTime && (
+                                  <XStack space="$1" alignItems="center">
+                                    <Clock size={12} color={COLORS.textSecondary} />
+                                    <Text fontSize="$2" color="$textSecondary">
+                                      {task.startTime}
+                                    </Text>
+                                  </XStack>
+                                )}
+                              </YStack>
+                              <ChevronRight size={18} color={COLORS.textSecondary} />
+                            </XStack>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </YStack>
+                ) : (
+                  <View paddingVertical="$4" alignItems="center">
+                    <CheckCircle size={48} color={COLORS.success} />
+                    <Text fontSize="$4" color="$textSecondary" marginTop="$2">
+                      今日任务已全部完成！
+                    </Text>
+                  </View>
+                )}
+              </Card>
+            </TouchableOpacity>
 
             {/* Recent Alerts */}
             {recentAlerts.length > 0 && (

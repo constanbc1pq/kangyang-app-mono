@@ -57,6 +57,7 @@ export interface HealthDevice {
   connection: 'wifi' | 'bluetooth' | 'manual'; // 连接方式
   model?: string; // 设备型号
   syncType: 'auto' | 'manual'; // 同步类型
+  isPinned?: boolean; // 是否置顶（用于"康"页展示）
   events: DeviceEvent[]; // 该设备的所有数据记录
   createdAt: string; // 添加时间
   updatedAt: string; // 更新时间
@@ -186,6 +187,77 @@ export interface HealthGoal {
 }
 
 /**
+ * 健康任务完成记录
+ */
+export interface TaskCompletionRecord {
+  id: string;
+  date: string; // 完成日期
+  time: string; // 完成时间
+  duration?: number; // 耗时(分钟)
+  notes?: string; // 备注
+  mood?: 'excellent' | 'good' | 'normal' | 'bad'; // 完成时心情
+}
+
+/**
+ * 任务成就
+ */
+export interface TaskAchievement {
+  id: string;
+  title: string; // 成就标题
+  description: string; // 成就描述
+  icon: string; // 图标名称（Lucide icon name）
+  target: number; // 目标值
+  current: number; // 当前进度
+  unit: string; // 单位
+  achieved: boolean; // 是否达成
+  achievedDate?: string; // 达成日期
+  color: string; // 成就颜色
+}
+
+/**
+ * 健康任务
+ */
+export interface HealthTask {
+  id: string;
+  title: string; // 任务标题
+  description?: string; // 任务描述
+  category: 'fitness' | 'nutrition' | 'medication' | 'monitoring' | 'lifestyle'; // 任务分类
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue'; // 任务状态
+  priority: 'low' | 'medium' | 'high'; // 优先级
+  icon: string; // 图标名称（Lucide icon name）
+  color: string; // 任务颜色
+
+  // 时间相关
+  startTime?: string; // 开始时间（HH:mm格式）
+  endTime?: string; // 结束时间（HH:mm格式）
+  dueDate?: string; // 截止日期（ISO 8601格式）
+  repeatFrequency: 'none' | 'daily' | 'weekly' | 'monthly'; // 重复频率
+
+  // 进度与统计
+  progress: number; // 进度百分比(0-100)
+  totalCompletions: number; // 总完成次数
+  currentStreak: number; // 当前连续天数
+  bestStreak: number; // 最佳连续天数
+  completionRate: number; // 完成率(0-100)
+
+  // 提醒设置
+  reminder: boolean; // 是否开启提醒
+  reminderTime?: number; // 提前提醒时间（分钟）：5、15、30、60
+
+  // 历史记录与成就
+  completionHistory: TaskCompletionRecord[]; // 完成记录
+  achievements: TaskAchievement[]; // 相关成就
+
+  // AI健康建议
+  healthSuggestions?: string[]; // AI生成的健康建议
+
+  // 元数据
+  createdAt: string;
+  updatedAt: string;
+  lastCompletedAt?: string; // 最后完成时间
+}
+
+/**
  * 社区互动记录
  */
 export interface CommunityActivity {
@@ -254,6 +326,7 @@ export interface UserData {
   consultations: AIConsultation[]; // AI咨询历史
   lifestyleRecords: LifestyleRecord[]; // 养生生活记录
   healthGoals: HealthGoal[]; // 健康目标
+  tasks: HealthTask[]; // 健康任务
   communityActivities: CommunityActivity[]; // 社区活动
   familyMembers: FamilyMember[]; // 家庭成员
   settings: AppSettings; // APP设置

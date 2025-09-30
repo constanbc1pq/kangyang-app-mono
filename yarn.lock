@@ -2178,7 +2178,7 @@
     "@tamagui/stacks" "1.134.4"
     "@tamagui/text" "1.134.4"
 
-"@tamagui/babel-plugin@^1.112.23":
+"@tamagui/babel-plugin@1.134.4":
   version "1.134.4"
   resolved "https://registry.yarnpkg.com/@tamagui/babel-plugin/-/babel-plugin-1.134.4.tgz#8f13161ddb141e7d349592e4f5ea79a06bd02776"
   integrity sha512-5LwfpwPmHxuvVxdcGDFxs7U2t285cIe1lWqRsuXGLGDHQX5dpeyUYDWTR/1wfNpcQUBWgMkOsTDLJMrV4XNVfA==

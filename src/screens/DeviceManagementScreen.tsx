@@ -30,7 +30,15 @@ import { useNavigation } from '@react-navigation/native';
 import { getDevices, addDevice, deleteDevice as deleteDeviceService } from '@/services/userDataService';
 import { HealthDevice, DeviceEvent } from '@/types/userData';
 
-export const DeviceManagementScreen: React.FC = () => {
+interface DeviceManagementScreenProps {
+  route?: {
+    params?: {
+      deviceId?: number;
+    };
+  };
+}
+
+export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ route }) => {
   const navigation = useNavigation();
   const toast = useToastController();
   const [selectedDevice, setSelectedDevice] = useState<HealthDevice | null>(null);
@@ -63,6 +71,16 @@ export const DeviceManagementScreen: React.FC = () => {
   useEffect(() => {
     loadDevices();
   }, []);
+
+  // 如果有deviceId参数，加载完设备后自动打开该设备详情
+  useEffect(() => {
+    if (route?.params?.deviceId && devices.length > 0) {
+      const device = devices.find(d => d.id === route.params.deviceId);
+      if (device) {
+        setSelectedDevice(device);
+      }
+    }
+  }, [route?.params?.deviceId, devices]);
 
   const loadDevices = async () => {
     setLoading(true);

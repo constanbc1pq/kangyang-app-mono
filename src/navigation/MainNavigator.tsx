@@ -12,6 +12,9 @@ import { AIConsultationScreen } from '@/screens/AIConsultationScreen';
 import { HealthReportScreen } from '@/screens/HealthReportScreen';
 import { DeviceManagementScreen } from '@/screens/DeviceManagementScreen';
 import { MedicationReminderScreen } from '@/screens/MedicationReminderScreen';
+import { TaskListScreen } from '@/screens/TaskListScreen';
+import { TaskDetailScreen } from '@/screens/TaskDetailScreen';
+import { TaskFormScreen } from '@/screens/TaskFormScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -118,6 +121,18 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="MedicationReminder"
         component={MedicationReminderScreen}
+      />
+      <Stack.Screen
+        name="TaskList"
+        component={TaskListScreen}
+      />
+      <Stack.Screen
+        name="TaskDetail"
+        component={TaskDetailScreen}
+      />
+      <Stack.Screen
+        name="TaskForm"
+        component={TaskFormScreen}
       />
     </Stack.Navigator>
   );

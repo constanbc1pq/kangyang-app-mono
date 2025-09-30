@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   YStack,
   XStack,
@@ -10,20 +10,46 @@ import {
   Theme,
   Sheet,
 } from 'tamagui';
-import { Plus, Bluetooth, Wifi, Battery, Settings, Trash2, Watch, Heart, Activity, Scale, Thermometer, ChevronRight } from 'lucide-react-native';
+import { TouchableOpacity } from 'react-native';
+import { Plus, Bluetooth, Wifi, Battery, Settings, Trash2, Watch, Heart, Activity, Scale, Thermometer, ChevronRight, Edit } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
-import { useDevices } from '@/contexts/DeviceContext';
-import type { Device } from '@/contexts/DeviceContext';
+import { getDevices } from '@/services/userDataService';
+import { HealthDevice } from '@/types/userData';
+import { useNavigation } from '@react-navigation/native';
 
 interface DeviceManagerProps {
   onManageDevices?: () => void;
 }
 
 export const DeviceManager: React.FC<DeviceManagerProps> = ({ onManageDevices }) => {
-  const { devices, deleteDevice, addDevice } = useDevices();
+  const navigation = useNavigation<any>();
+  const [devices, setDevices] = useState<HealthDevice[]>([]);
   const [showAddDevice, setShowAddDevice] = useState(false);
 
-  const getDeviceIcon = (type: Device['type']) => {
+  // 加载设备数据
+  useEffect(() => {
+    loadDevices();
+  }, []);
+
+  const loadDevices = async () => {
+    const allDevices = await getDevices();
+
+    // 排序：置顶设备优先，然后按最后同步时间排序
+    const sortedDevices = [...allDevices].sort((a, b) => {
+      // 置顶设备排在前面
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+
+      // 都置顶或都不置顶，按lastSync排序
+      // 注意：lastSync可能是"刚刚"、"5分钟前"等文本，这里简化处理按更新时间排序
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+
+    // 只取前5台设备
+    setDevices(sortedDevices.slice(0, 5));
+  };
+
+  const getDeviceIcon = (type: HealthDevice['type']) => {
     switch (type) {
       case 'smartwatch':
         return <Watch size={20} color="white" />;
@@ -42,7 +68,7 @@ export const DeviceManager: React.FC<DeviceManagerProps> = ({ onManageDevices })
     }
   };
 
-  const getStatusColor = (status: Device['status']) => {
+  const getStatusColor = (status: HealthDevice['status']) => {
     switch (status) {
       case 'connected':
         return COLORS.success;
@@ -53,7 +79,7 @@ export const DeviceManager: React.FC<DeviceManagerProps> = ({ onManageDevices })
     }
   };
 
-  const getStatusText = (status: Device['status']) => {
+  const getStatusText = (status: HealthDevice['status']) => {
     switch (status) {
       case 'connected':
         return '已连接';
@@ -62,6 +88,11 @@ export const DeviceManager: React.FC<DeviceManagerProps> = ({ onManageDevices })
       case 'syncing':
         return '同步中';
     }
+  };
+
+  // 点击设备卡片，导航到设备管理页并传递deviceId
+  const handleDevicePress = (deviceId: number) => {
+    navigation.navigate('DeviceManagement', { deviceId });
   };
 
   return (
@@ -95,78 +126,82 @@ export const DeviceManager: React.FC<DeviceManagerProps> = ({ onManageDevices })
         </XStack>
 
         <YStack space="$3">
-          {devices.slice(0, 3).map((device) => (
-            <View
+          {devices.map((device) => (
+            <TouchableOpacity
               key={device.id}
-              padding="$4"
-              borderRadius="$3"
-              backgroundColor="$surface"
-              borderWidth={1}
-              borderColor="$borderColor"
+              onPress={() => handleDevicePress(device.id)}
+              activeOpacity={0.7}
             >
-              <XStack justifyContent="space-between" alignItems="center">
-                <XStack space="$4" alignItems="center" flex={1}>
-                  <View
-                    width={40}
-                    height={40}
-                    borderRadius={20}
-                    backgroundColor={COLORS.primaryLight}
-                    justifyContent="center"
-                    alignItems="center"
-                  >
-                    {getDeviceIcon(device.type)}
-                  </View>
-                  <YStack flex={1}>
-                    <XStack space="$2" alignItems="center" marginBottom="$1">
-                      <H3 fontSize="$4" fontWeight="600" color="$text">
-                        {device.name}
-                      </H3>
-                      <View
-                        width={8}
-                        height={8}
-                        borderRadius={4}
-                        backgroundColor={getStatusColor(device.status)}
-                      />
-                    </XStack>
-                    <XStack space="$4" alignItems="center">
-                      <Text fontSize="$3" color="$textSecondary">
-                        最后同步: {device.lastSync}
-                      </Text>
-                      {device.status !== 'disconnected' && (
-                        <XStack space="$1" alignItems="center">
-                          {device.connection === "wifi" ?
-                            <Wifi size={12} color={COLORS.textSecondary} /> :
-                            <Bluetooth size={12} color={COLORS.textSecondary} />
-                          }
-                          <Text fontSize="$3" color="$textSecondary">
-                            {device.connection === "wifi" ? "WiFi" : "蓝牙"}
-                          </Text>
-                        </XStack>
+              <View
+                padding="$4"
+                borderRadius="$3"
+                backgroundColor="$surface"
+                borderWidth={1}
+                borderColor="$borderColor"
+              >
+                <XStack justifyContent="space-between" alignItems="center">
+                  <XStack space="$4" alignItems="center" flex={1}>
+                    <View
+                      width={40}
+                      height={40}
+                      borderRadius={20}
+                      backgroundColor={COLORS.primaryLight}
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      {getDeviceIcon(device.type)}
+                    </View>
+                    <YStack flex={1}>
+                      <XStack space="$2" alignItems="center" marginBottom="$1">
+                        <H3 fontSize="$4" fontWeight="600" color="$text">
+                          {device.name}
+                        </H3>
+                        <View
+                          width={8}
+                          height={8}
+                          borderRadius={4}
+                          backgroundColor={getStatusColor(device.status)}
+                        />
+                      </XStack>
+                      <XStack space="$4" alignItems="center">
+                        <Text fontSize="$3" color="$textSecondary">
+                          最后同步: {device.lastSync}
+                        </Text>
+                        {device.connection !== 'manual' && device.status !== 'disconnected' && (
+                          <XStack space="$1" alignItems="center">
+                            {device.connection === "wifi" ?
+                              <Wifi size={12} color={COLORS.textSecondary} /> :
+                              device.connection === "bluetooth" ?
+                              <Bluetooth size={12} color={COLORS.textSecondary} /> :
+                              <Edit size={12} color={COLORS.textSecondary} />
+                            }
+                            <Text fontSize="$3" color="$textSecondary">
+                              {device.connection === "wifi" ? "WiFi" : device.connection === "bluetooth" ? "蓝牙" : "手动"}
+                            </Text>
+                          </XStack>
+                        )}
+                      </XStack>
+                      {device.connection !== 'manual' && (
+                        <Text fontSize="$2" color={getStatusColor(device.status)} marginTop="$1">
+                          {getStatusText(device.status)}
+                        </Text>
                       )}
-                    </XStack>
-                    <Text fontSize="$2" color={getStatusColor(device.status)} marginTop="$1">
-                      {getStatusText(device.status)}
-                    </Text>
-                  </YStack>
+                    </YStack>
+                  </XStack>
+                  <XStack space="$2" alignItems="center">
+                    {device.connection !== 'manual' && device.status !== 'disconnected' && (
+                      <XStack space="$1" alignItems="center">
+                        <Battery size={16} color={COLORS.textSecondary} />
+                        <Text fontSize="$3" color="$textSecondary">
+                          {device.battery}%
+                        </Text>
+                      </XStack>
+                    )}
+                    <ChevronRight size={20} color={COLORS.textSecondary} />
+                  </XStack>
                 </XStack>
-                <XStack space="$2" alignItems="center">
-                  {device.status !== 'disconnected' && (
-                    <XStack space="$1" alignItems="center">
-                      <Battery size={16} color={COLORS.textSecondary} />
-                      <Text fontSize="$3" color="$textSecondary">
-                        {device.battery}%
-                      </Text>
-                    </XStack>
-                  )}
-                  <Button size="$3" chromeless>
-                    <Settings size={16} color={COLORS.textSecondary} />
-                  </Button>
-                  <Button size="$3" chromeless>
-                    <Trash2 size={16} color={COLORS.error} />
-                  </Button>
-                </XStack>
-              </XStack>
-            </View>
+              </View>
+            </TouchableOpacity>
           ))}
         </YStack>
 
