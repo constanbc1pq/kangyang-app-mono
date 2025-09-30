@@ -12,9 +12,10 @@ import {
   ScrollView,
   Progress,
 } from 'tamagui';
-import { Pressable } from 'react-native';
+import { Pressable, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import {
   ArrowLeft,
   Share2,
@@ -41,11 +42,8 @@ import {
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 
-interface HealthReportScreenProps {
-  onBack?: () => void;
-}
-
-export const HealthReportScreen: React.FC<HealthReportScreenProps> = ({ onBack }) => {
+export const HealthReportScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [selectedPeriod, setSelectedPeriod] = useState('month');
 
   const periods = [
@@ -274,7 +272,7 @@ export const HealthReportScreen: React.FC<HealthReportScreenProps> = ({ onBack }
         >
           <XStack justifyContent="space-between" alignItems="center">
             {/* 左侧返回按钮 */}
-            <Pressable onPress={onBack}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
               <View
                 width={40}
                 height={40}
@@ -283,7 +281,7 @@ export const HealthReportScreen: React.FC<HealthReportScreenProps> = ({ onBack }
               >
                 <ArrowLeft size={20} color={COLORS.text} />
               </View>
-            </Pressable>
+            </TouchableOpacity>
 
             {/* 中间标题 */}
             <Text fontSize="$5" fontWeight="600" color="$text">
@@ -317,7 +315,11 @@ export const HealthReportScreen: React.FC<HealthReportScreenProps> = ({ onBack }
         </View>
 
         {/* 可滚动内容区域 */}
-        <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          flex={1}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
           <YStack space="$4" padding="$4">
 
             {/* 综合健康评分卡片 */}

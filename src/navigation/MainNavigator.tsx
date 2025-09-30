@@ -1,7 +1,8 @@
-import React, { useState, createContext, useContext } from 'react';
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SCREEN_NAMES, COLORS } from '@/constants/app';
-import { YStack, Text, Theme, View } from 'tamagui';
+import { View } from 'tamagui';
 import { Heart, Activity, Users, User } from 'lucide-react-native';
 import { HealthScreen } from '@/screens/HealthScreen';
 import { WellnessScreen } from '@/screens/WellnessScreen';
@@ -9,28 +10,13 @@ import { CommunityScreen } from '@/screens/CommunityScreen';
 import { PersonalCenterScreen } from '@/screens/PersonalCenterScreen';
 import { AIConsultationScreen } from '@/screens/AIConsultationScreen';
 import { HealthReportScreen } from '@/screens/HealthReportScreen';
+import { DeviceManagementScreen } from '@/screens/DeviceManagementScreen';
+import { MedicationReminderScreen } from '@/screens/MedicationReminderScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-// 全屏页面导航上下文
-interface FullScreenNavigationContextType {
-  showAIConsultation: boolean;
-  setShowAIConsultation: (show: boolean) => void;
-  showHealthReport: boolean;
-  setShowHealthReport: (show: boolean) => void;
-}
-
-const FullScreenNavigationContext = createContext<FullScreenNavigationContextType | null>(null);
-
-export const useFullScreenNavigation = () => {
-  const context = useContext(FullScreenNavigationContext);
-  if (!context) {
-    throw new Error('useFullScreenNavigation must be used within FullScreenNavigationProvider');
-  }
-  return context;
-};
-
-// Tab导航器组件
+// Tab导航器组件 - 包含4个主页面
 const TabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
@@ -102,40 +88,37 @@ const TabNavigator: React.FC = () => {
   );
 };
 
-// 主导航器 - 管理全屏页面
+// 主导航器 - Stack Navigator作为根，Tab作为第一个screen，全屏页面作为其他screens
 export const MainNavigator: React.FC = () => {
-  const [showAIConsultation, setShowAIConsultation] = useState(false);
-  const [showHealthReport, setShowHealthReport] = useState(false);
-
-  const contextValue: FullScreenNavigationContextType = {
-    showAIConsultation,
-    setShowAIConsultation,
-    showHealthReport,
-    setShowHealthReport,
-  };
-
-  // 如果显示AI咨询页面，隐藏底部导航栏
-  if (showAIConsultation) {
-    return (
-      <FullScreenNavigationContext.Provider value={contextValue}>
-        <AIConsultationScreen onBack={() => setShowAIConsultation(false)} />
-      </FullScreenNavigationContext.Provider>
-    );
-  }
-
-  // 如果显示健康报告页面，隐藏底部导航栏
-  if (showHealthReport) {
-    return (
-      <FullScreenNavigationContext.Provider value={contextValue}>
-        <HealthReportScreen onBack={() => setShowHealthReport(false)} />
-      </FullScreenNavigationContext.Provider>
-    );
-  }
-
-  // 默认显示Tab导航器
   return (
-    <FullScreenNavigationContext.Provider value={contextValue}>
-      <TabNavigator />
-    </FullScreenNavigationContext.Provider>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false, // 全部隐藏默认header
+      }}
+    >
+      {/* Tab导航器作为首页 - 显示底部导航栏 */}
+      <Stack.Screen
+        name="HomeTabs"
+        component={TabNavigator}
+      />
+
+      {/* 全屏页面 - 不显示底部导航栏 */}
+      <Stack.Screen
+        name="AIConsultation"
+        component={AIConsultationScreen}
+      />
+      <Stack.Screen
+        name="HealthReport"
+        component={HealthReportScreen}
+      />
+      <Stack.Screen
+        name="DeviceManagement"
+        component={DeviceManagementScreen}
+      />
+      <Stack.Screen
+        name="MedicationReminder"
+        component={MedicationReminderScreen}
+      />
+    </Stack.Navigator>
   );
 };

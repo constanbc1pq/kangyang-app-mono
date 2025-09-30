@@ -10,6 +10,7 @@ import {
   H3,
   Theme,
   ScrollView,
+  Button,
 } from 'tamagui';
 import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

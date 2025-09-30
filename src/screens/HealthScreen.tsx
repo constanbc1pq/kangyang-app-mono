@@ -33,11 +33,11 @@ import { AIHealthAssistant } from '@/components/AIHealthAssistant';
 import { HealthTrends } from '@/components/HealthTrends';
 import { DeviceManager } from '@/components/DeviceManager';
 import { COLORS } from '@/constants/app';
-import { useFullScreenNavigation } from '@/navigation/MainNavigator';
+import { useNavigation } from '@react-navigation/native';
 
 export const HealthScreen: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
-  const { setShowHealthReport, setShowAIConsultation } = useFullScreenNavigation();
+  const navigation = useNavigation<any>();
 
   const healthScore = 92;
 
@@ -136,7 +136,11 @@ export const HealthScreen: React.FC = () => {
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          flex={1}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
           <YStack padding="$4" space="$4">
             {/* Greeting Section */}
             <YStack space="$2" marginBottom="$4">
@@ -371,8 +375,8 @@ export const HealthScreen: React.FC = () => {
 
             {/* AI Health Assistant */}
             <AIHealthAssistant
-              onReportPress={() => setShowHealthReport(true)}
-              onConsultPress={() => setShowAIConsultation(true)}
+              onReportPress={() => navigation.navigate('HealthReport')}
+              onConsultPress={() => navigation.navigate('AIConsultation')}
             />
 
             {/* Health Trends */}
@@ -407,7 +411,10 @@ export const HealthScreen: React.FC = () => {
               </XStack>
               <XStack space="$3">
                 <XStack flex={1} space="$3">
-                  <Pressable style={{ flex: 1 }}>
+                  <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() => navigation.navigate('DeviceManagement')}
+                  >
                     <View
                       flex={1}
                       height={70}
@@ -424,7 +431,7 @@ export const HealthScreen: React.FC = () => {
                   </Pressable>
                   <Pressable
                     style={{ flex: 1 }}
-                    onPress={() => setShowHealthReport(true)}
+                    onPress={() => navigation.navigate('HealthReport')}
                   >
                     <View
                       flex={1}
@@ -444,7 +451,10 @@ export const HealthScreen: React.FC = () => {
               </XStack>
               <XStack space="$3" marginTop="$3">
                 <XStack flex={1} space="$3">
-                  <Pressable style={{ flex: 1 }}>
+                  <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() => navigation.navigate('AIConsultation')}
+                  >
                     <View
                       flex={1}
                       height={70}
@@ -459,7 +469,10 @@ export const HealthScreen: React.FC = () => {
                       <Text fontSize="$2" color="$text" marginTop="$1">AI问诊</Text>
                     </View>
                   </Pressable>
-                  <Pressable style={{ flex: 1 }}>
+                  <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() => navigation.navigate('MedicationReminder')}
+                  >
                     <View
                       flex={1}
                       height={70}
@@ -562,7 +575,7 @@ export const HealthScreen: React.FC = () => {
             )}
 
             {/* Device Manager */}
-            <DeviceManager />
+            <DeviceManager onManageDevices={() => navigation.navigate('DeviceManagement')} />
 
             {/* Bottom padding for safe area */}
             <View height={20} />

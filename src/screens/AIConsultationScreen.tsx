@@ -17,7 +17,8 @@ import {
   StyleSheet,
   Dimensions,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,10 +44,7 @@ import {
   Cpu,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
-
-interface AIConsultationScreenProps {
-  onBack?: () => void;
-}
+import { useNavigation } from '@react-navigation/native';
 
 interface Message {
   id: string;
@@ -75,7 +73,8 @@ interface AIModel {
   responseTime: string;
 }
 
-export const AIConsultationScreen: React.FC<AIConsultationScreenProps> = ({ onBack }) => {
+export const AIConsultationScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -257,22 +256,18 @@ export const AIConsultationScreen: React.FC<AIConsultationScreenProps> = ({ onBa
 
   return (
     <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+        {/* 顶部导航栏 */}
+        <View
+          backgroundColor="$cardBg"
+          paddingHorizontal="$4"
+          paddingVertical="$3"
+          borderBottomWidth={1}
+          borderBottomColor="$borderColor"
         >
-          {/* 顶部导航栏 */}
-          <View
-            backgroundColor="$cardBg"
-            paddingHorizontal="$4"
-            paddingVertical="$3"
-            borderBottomWidth={1}
-            borderBottomColor="$borderColor"
-          >
             <XStack justifyContent="space-between" alignItems="center">
               {/* 返回按钮 */}
-              <Pressable onPress={onBack}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
                 <View
                   width={40}
                   height={40}
@@ -283,7 +278,7 @@ export const AIConsultationScreen: React.FC<AIConsultationScreenProps> = ({ onBa
                 >
                   <ArrowLeft size={20} color={COLORS.text} />
                 </View>
-              </Pressable>
+              </TouchableOpacity>
 
               {/* 标题和状态 */}
               <XStack alignItems="center" flex={1} marginHorizontal="$3" space="$2">
@@ -346,8 +341,14 @@ export const AIConsultationScreen: React.FC<AIConsultationScreenProps> = ({ onBa
                 </View>
               </Pressable>
             </XStack>
-          </View>
+        </View>
 
+        <View style={{ flex: 1 }}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
+          >
           {/* 模型选择器 */}
           {showModelSelector && (
             <View
@@ -517,14 +518,16 @@ export const AIConsultationScreen: React.FC<AIConsultationScreenProps> = ({ onBa
             flex={1}
             padding="$4"
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
           >
-            <YStack space="$4">
+            <YStack space="$5">
               {messages.map((message) => (
                 <XStack
                   key={message.id}
                   justifyContent={message.type === 'user' ? 'flex-end' : 'flex-start'}
                   alignItems="flex-end"
                   space="$2"
+                  marginBottom="$2"
                 >
                   {message.type === 'ai' && (
                     <View
@@ -744,6 +747,9 @@ export const AIConsultationScreen: React.FC<AIConsultationScreenProps> = ({ onBa
                   </Card>
                 </YStack>
               )}
+
+              {/* 底部空白区域 */}
+              <View height={20} />
             </YStack>
           </ScrollView>
 
@@ -825,7 +831,8 @@ export const AIConsultationScreen: React.FC<AIConsultationScreenProps> = ({ onBa
               )}
             </XStack>
           </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </SafeAreaView>
     </Theme>
   );

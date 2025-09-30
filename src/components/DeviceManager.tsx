@@ -10,88 +10,57 @@ import {
   Theme,
   Sheet,
 } from 'tamagui';
-import { Plus, Bluetooth, Wifi, Battery, Settings, Trash2 } from 'lucide-react-native';
+import { Plus, Bluetooth, Wifi, Battery, Settings, Trash2, Watch, Heart, Activity, Scale, Thermometer, ChevronRight } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { useDevices } from '@/contexts/DeviceContext';
+import type { Device } from '@/contexts/DeviceContext';
 
-export const DeviceManager: React.FC = () => {
+interface DeviceManagerProps {
+  onManageDevices?: () => void;
+}
+
+export const DeviceManager: React.FC<DeviceManagerProps> = ({ onManageDevices }) => {
+  const { devices, deleteDevice, addDevice } = useDevices();
   const [showAddDevice, setShowAddDevice] = useState(false);
-  const [devices, setDevices] = useState([
-    {
-      id: 1,
-      name: "智能马桶",
-      type: "toilet",
-      status: "connected",
-      battery: 85,
-      lastSync: "2分钟前",
-      connection: "wifi",
-    },
-    {
-      id: 2,
-      name: "智能手环",
-      type: "wearable",
-      status: "connected",
-      battery: 65,
-      lastSync: "刚刚",
-      connection: "bluetooth",
-    },
-    {
-      id: 3,
-      name: "血压计",
-      type: "monitor",
-      status: "disconnected",
-      battery: 45,
-      lastSync: "2小时前",
-      connection: "bluetooth",
-    },
-    {
-      id: 4,
-      name: "体脂秤",
-      type: "scale",
-      status: "connected",
-      battery: 90,
-      lastSync: "10分钟前",
-      connection: "wifi",
-    },
-  ]);
 
-  const getDeviceIcon = (type: string) => {
+  const getDeviceIcon = (type: Device['type']) => {
     switch (type) {
-      case "toilet":
-        return "🚽";
-      case "wearable":
-        return "⌚";
-      case "monitor":
-        return "🩺";
-      case "scale":
-        return "⚖️";
+      case 'smartwatch':
+        return <Watch size={20} color="white" />;
+      case 'blood-pressure':
+        return <Heart size={20} color="white" />;
+      case 'glucose-meter':
+        return <Activity size={20} color="white" />;
+      case 'scale':
+        return <Scale size={20} color="white" />;
+      case 'thermometer':
+        return <Thermometer size={20} color="white" />;
+      case 'smart-toilet':
+        return <Activity size={20} color="white" />;
       default:
-        return "📱";
+        return <Activity size={20} color="white" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: Device['status']) => {
     switch (status) {
-      case "connected":
+      case 'connected':
         return COLORS.success;
-      case "disconnected":
+      case 'disconnected':
         return COLORS.error;
-      case "syncing":
+      case 'syncing':
         return COLORS.warning;
-      default:
-        return COLORS.textSecondary;
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: Device['status']) => {
     switch (status) {
-      case "connected":
-        return "已连接";
-      case "disconnected":
-        return "已断开";
-      case "syncing":
-        return "同步中";
-      default:
-        return "未知";
+      case 'connected':
+        return '已连接';
+      case 'disconnected':
+        return '未连接';
+      case 'syncing':
+        return '同步中';
     }
   };
 
@@ -113,18 +82,20 @@ export const DeviceManager: React.FC = () => {
           </H3>
           <Button
             size="$3"
-            backgroundColor="$primary"
-            onPress={() => setShowAddDevice(true)}
+            backgroundColor="transparent"
+            borderWidth={1}
+            borderColor="$borderColor"
+            onPress={onManageDevices}
           >
             <XStack space="$1" alignItems="center">
-              <Plus size={16} color="white" />
-              <Text fontSize="$3" color="white">添加设备</Text>
+              <Text fontSize="$3" color="$text">查看更多</Text>
+              <ChevronRight size={16} color={COLORS.textSecondary} />
             </XStack>
           </Button>
         </XStack>
 
         <YStack space="$3">
-          {devices.map((device) => (
+          {devices.slice(0, 3).map((device) => (
             <View
               key={device.id}
               padding="$4"
@@ -135,7 +106,16 @@ export const DeviceManager: React.FC = () => {
             >
               <XStack justifyContent="space-between" alignItems="center">
                 <XStack space="$4" alignItems="center" flex={1}>
-                  <Text fontSize="$8">{getDeviceIcon(device.type)}</Text>
+                  <View
+                    width={40}
+                    height={40}
+                    borderRadius={20}
+                    backgroundColor={COLORS.primaryLight}
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    {getDeviceIcon(device.type)}
+                  </View>
                   <YStack flex={1}>
                     <XStack space="$2" alignItems="center" marginBottom="$1">
                       <H3 fontSize="$4" fontWeight="600" color="$text">
@@ -152,15 +132,17 @@ export const DeviceManager: React.FC = () => {
                       <Text fontSize="$3" color="$textSecondary">
                         最后同步: {device.lastSync}
                       </Text>
-                      <XStack space="$1" alignItems="center">
-                        {device.connection === "wifi" ?
-                          <Wifi size={12} color={COLORS.textSecondary} /> :
-                          <Bluetooth size={12} color={COLORS.textSecondary} />
-                        }
-                        <Text fontSize="$3" color="$textSecondary">
-                          {device.connection === "wifi" ? "WiFi" : "蓝牙"}
-                        </Text>
-                      </XStack>
+                      {device.status !== 'disconnected' && (
+                        <XStack space="$1" alignItems="center">
+                          {device.connection === "wifi" ?
+                            <Wifi size={12} color={COLORS.textSecondary} /> :
+                            <Bluetooth size={12} color={COLORS.textSecondary} />
+                          }
+                          <Text fontSize="$3" color="$textSecondary">
+                            {device.connection === "wifi" ? "WiFi" : "蓝牙"}
+                          </Text>
+                        </XStack>
+                      )}
                     </XStack>
                     <Text fontSize="$2" color={getStatusColor(device.status)} marginTop="$1">
                       {getStatusText(device.status)}
@@ -168,12 +150,14 @@ export const DeviceManager: React.FC = () => {
                   </YStack>
                 </XStack>
                 <XStack space="$2" alignItems="center">
-                  <XStack space="$1" alignItems="center">
-                    <Battery size={16} color={COLORS.textSecondary} />
-                    <Text fontSize="$3" color="$textSecondary">
-                      {device.battery}%
-                    </Text>
-                  </XStack>
+                  {device.status !== 'disconnected' && (
+                    <XStack space="$1" alignItems="center">
+                      <Battery size={16} color={COLORS.textSecondary} />
+                      <Text fontSize="$3" color="$textSecondary">
+                        {device.battery}%
+                      </Text>
+                    </XStack>
+                  )}
                   <Button size="$3" chromeless>
                     <Settings size={16} color={COLORS.textSecondary} />
                   </Button>
