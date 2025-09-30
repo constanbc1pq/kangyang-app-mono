@@ -12,9 +12,9 @@ import {
 } from 'tamagui';
 import {
   Pressable,
+  TouchableOpacity,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -176,18 +176,9 @@ export const MedicationReminderScreen: React.FC = () => {
         >
           <XStack justifyContent="space-between" alignItems="center">
             <XStack space="$3" alignItems="center">
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <View
-                  width={40}
-                  height={40}
-                  borderRadius={20}
-                  justifyContent="center"
-                  alignItems="center"
-                  backgroundColor="$surface"
-                >
-                  <ArrowLeft size={20} color={COLORS.text} />
-                </View>
-              </TouchableOpacity>
+              <Pressable onPress={() => navigation.goBack()}>
+                <ArrowLeft size={24} color={COLORS.text} />
+              </Pressable>
               <YStack>
                 <H2 fontSize="$6" fontWeight="600" color="$text">
                   用药提醒
@@ -197,7 +188,7 @@ export const MedicationReminderScreen: React.FC = () => {
                 </Text>
               </YStack>
             </XStack>
-            <Pressable onPress={() => setIsAddDialogOpen(true)}>
+            <TouchableOpacity onPress={() => setIsAddDialogOpen(true)}>
               <View
                 backgroundColor={COLORS.primary}
                 paddingHorizontal="$3"
@@ -211,7 +202,7 @@ export const MedicationReminderScreen: React.FC = () => {
                   </Text>
                 </XStack>
               </View>
-            </Pressable>
+            </TouchableOpacity>
           </XStack>
         </View>
 
@@ -357,7 +348,7 @@ export const MedicationReminderScreen: React.FC = () => {
                     添加您的用药计划，我们会按时提醒您
                   </Text>
                 </YStack>
-                <Pressable onPress={() => setIsAddDialogOpen(true)}>
+                <TouchableOpacity onPress={() => setIsAddDialogOpen(true)}>
                   <View
                     backgroundColor={COLORS.primary}
                     paddingHorizontal="$4"
@@ -371,7 +362,7 @@ export const MedicationReminderScreen: React.FC = () => {
                       </Text>
                     </XStack>
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               </YStack>
             )}
           </YStack>
@@ -403,9 +394,9 @@ export const MedicationReminderScreen: React.FC = () => {
                   <H3 fontSize="$5" fontWeight="600" color="$text">
                     添加用药提醒
                   </H3>
-                  <Pressable onPress={() => setIsAddDialogOpen(false)}>
+                  <TouchableOpacity onPress={() => setIsAddDialogOpen(false)}>
                     <Text fontSize="$6" color="$textSecondary">×</Text>
-                  </Pressable>
+                  </TouchableOpacity>
                 </XStack>
 
                 <YStack space="$3">
@@ -476,7 +467,7 @@ export const MedicationReminderScreen: React.FC = () => {
                   </YStack>
                 </YStack>
 
-                <Pressable onPress={handleAddMedication}>
+                <TouchableOpacity onPress={handleAddMedication}>
                   <View
                     backgroundColor={COLORS.primary}
                     paddingVertical="$3"
@@ -491,7 +482,7 @@ export const MedicationReminderScreen: React.FC = () => {
                       </Text>
                     </XStack>
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               </YStack>
             </Card>
           </View>
@@ -598,7 +589,7 @@ function MedicationCard({
           </XStack>
           <XStack space="$1">
             {medication.status !== 'taken' && (
-              <Pressable onPress={() => onMarkAsTaken(medication.id)}>
+              <TouchableOpacity onPress={() => onMarkAsTaken(medication.id)}>
                 <View
                   width={32}
                   height={32}
@@ -609,9 +600,9 @@ function MedicationCard({
                 >
                   <Check size={16} color={COLORS.success} />
                 </View>
-              </Pressable>
+              </TouchableOpacity>
             )}
-            <Pressable>
+            <TouchableOpacity>
               <View
                 width={32}
                 height={32}
@@ -622,8 +613,8 @@ function MedicationCard({
               >
                 <Edit size={16} color={COLORS.text} />
               </View>
-            </Pressable>
-            <Pressable onPress={() => onDelete(medication.id)}>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onDelete(medication.id)}>
               <View
                 width={32}
                 height={32}
@@ -634,7 +625,7 @@ function MedicationCard({
               >
                 <Trash2 size={16} color={COLORS.error} />
               </View>
-            </Pressable>
+            </TouchableOpacity>
           </XStack>
         </XStack>
       </YStack>

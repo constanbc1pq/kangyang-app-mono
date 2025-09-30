@@ -272,16 +272,9 @@ export const HealthReportScreen: React.FC = () => {
         >
           <XStack justifyContent="space-between" alignItems="center">
             {/* 左侧返回按钮 */}
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <View
-                width={40}
-                height={40}
-                justifyContent="center"
-                alignItems="center"
-              >
-                <ArrowLeft size={20} color={COLORS.text} />
-              </View>
-            </TouchableOpacity>
+            <Pressable onPress={() => navigation.goBack()}>
+              <ArrowLeft size={24} color={COLORS.text} />
+            </Pressable>
 
             {/* 中间标题 */}
             <Text fontSize="$5" fontWeight="600" color="$text">
@@ -290,7 +283,7 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* 右侧操作按钮 */}
             <XStack space="$2">
-              <Pressable onPress={handleShareReport}>
+              <TouchableOpacity onPress={handleShareReport}>
                 <View
                   width={40}
                   height={40}
@@ -299,8 +292,8 @@ export const HealthReportScreen: React.FC = () => {
                 >
                   <Share2 size={20} color={COLORS.text} />
                 </View>
-              </Pressable>
-              <Pressable onPress={handleExportReport}>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleExportReport}>
                 <View
                   width={40}
                   height={40}
@@ -309,7 +302,7 @@ export const HealthReportScreen: React.FC = () => {
                 >
                   <Download size={20} color={COLORS.text} />
                 </View>
-              </Pressable>
+              </TouchableOpacity>
             </XStack>
           </XStack>
         </View>
@@ -373,7 +366,7 @@ export const HealthReportScreen: React.FC = () => {
             {/* 时间段选择器 */}
             <XStack backgroundColor="$surface" borderRadius="$3" padding="$1">
               {periods.map((period) => (
-                <Pressable
+                <TouchableOpacity
                   key={period.id}
                   onPress={() => setSelectedPeriod(period.id)}
                   style={{ flex: 1 }}
@@ -393,7 +386,7 @@ export const HealthReportScreen: React.FC = () => {
                       {period.name}
                     </Text>
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               ))}
             </XStack>
 

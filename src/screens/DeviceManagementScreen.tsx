@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, Modal, TextInput, StyleSheet } from 'react-native';
+import { TouchableOpacity, Modal, TextInput, StyleSheet, Pressable } from 'react-native';
 import { View, Text, ScrollView, YStack, XStack, Theme, Card, Progress, Input } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -200,18 +200,9 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
           >
             <XStack justifyContent="space-between" alignItems="center" height="100%">
               <XStack space="$3" alignItems="center">
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                  <View
-                    width={40}
-                    height={40}
-                    borderRadius={20}
-                    backgroundColor="#f0f0f0"
-                    justifyContent="center"
-                    alignItems="center"
-                  >
-                    <ArrowLeft size={20} color="#333" />
-                  </View>
-                </TouchableOpacity>
+                <Pressable onPress={() => navigation.goBack()}>
+                  <ArrowLeft size={24} color={COLORS.text} />
+                </Pressable>
                 <YStack>
                   <Text fontSize="$6" fontWeight="600" color="$text">
                     设备管理
@@ -653,18 +644,9 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
         <View height={60} backgroundColor="white" borderBottomWidth={1} borderBottomColor="#e0e0e0" paddingHorizontal="$4">
           <XStack justifyContent="space-between" alignItems="center" height="100%">
             <XStack space="$3" alignItems="center" flex={1}>
-              <TouchableOpacity onPress={() => setSelectedDevice(null)}>
-                <View
-                  width={40}
-                  height={40}
-                  borderRadius={20}
-                  backgroundColor="#f0f0f0"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <ArrowLeft size={20} color="#333" />
-                </View>
-              </TouchableOpacity>
+              <Pressable onPress={() => setSelectedDevice(null)}>
+                <ArrowLeft size={24} color={COLORS.text} />
+              </Pressable>
               <XStack space="$2" alignItems="center" flex={1}>
                 <View padding="$2" borderRadius="$2" backgroundColor="#f0fdf4">
                   {getDeviceIcon(selectedDevice.type)}

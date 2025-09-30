@@ -15,6 +15,7 @@ import {
 import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import {
   Leaf,
   Calendar,
@@ -39,7 +40,16 @@ import { WellnessCalendar } from '@/components/WellnessCalendar';
 import { ServiceBooking } from '@/components/ServiceBooking';
 
 export const WellnessScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [activeService, setActiveService] = useState('overview');
+
+  const handleServiceClick = (serviceId: string) => {
+    if (serviceId === 'nutrition') {
+      navigation.navigate('NutritionService' as never);
+    } else {
+      setActiveService(serviceId);
+    }
+  };
 
   const todayRecommendation = {
     season: "立冬",
@@ -287,7 +297,7 @@ export const WellnessScreen: React.FC = () => {
                         shadowOpacity={0.1}
                         shadowRadius={8}
                         elevation={4}
-                        onPress={() => setActiveService(service.id)}
+                        onPress={() => handleServiceClick(service.id)}
                       >
                         <View
                           width={48}
@@ -328,7 +338,7 @@ export const WellnessScreen: React.FC = () => {
                         shadowOpacity={0.1}
                         shadowRadius={8}
                         elevation={4}
-                        onPress={() => setActiveService(service.id)}
+                        onPress={() => handleServiceClick(service.id)}
                       >
                         <View
                           width={48}
@@ -369,7 +379,7 @@ export const WellnessScreen: React.FC = () => {
                         shadowOpacity={0.1}
                         shadowRadius={8}
                         elevation={4}
-                        onPress={() => setActiveService(service.id)}
+                        onPress={() => handleServiceClick(service.id)}
                       >
                         <View
                           width={48}

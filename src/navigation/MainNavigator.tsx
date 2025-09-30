@@ -15,6 +15,12 @@ import { MedicationReminderScreen } from '@/screens/MedicationReminderScreen';
 import { TaskListScreen } from '@/screens/TaskListScreen';
 import { TaskDetailScreen } from '@/screens/TaskDetailScreen';
 import { TaskFormScreen } from '@/screens/TaskFormScreen';
+import NutritionServiceScreen from '@/screens/NutritionServiceScreen';
+import NutritionistDetailScreen from '@/screens/NutritionistDetailScreen';
+import CheckoutScreen from '@/screens/CheckoutScreen';
+import PaymentScreen from '@/screens/PaymentScreen';
+import OrderListScreen from '@/screens/OrderListScreen';
+import OrderDetailScreen from '@/screens/OrderDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -133,6 +139,30 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="TaskForm"
         component={TaskFormScreen}
+      />
+      <Stack.Screen
+        name="NutritionService"
+        component={NutritionServiceScreen}
+      />
+      <Stack.Screen
+        name="NutritionistDetail"
+        component={NutritionistDetailScreen}
+      />
+      <Stack.Screen
+        name="Checkout"
+        component={CheckoutScreen}
+      />
+      <Stack.Screen
+        name="Payment"
+        component={PaymentScreen}
+      />
+      <Stack.Screen
+        name="OrderList"
+        component={OrderListScreen}
+      />
+      <Stack.Screen
+        name="OrderDetail"
+        component={OrderDetailScreen}
       />
     </Stack.Navigator>
   );

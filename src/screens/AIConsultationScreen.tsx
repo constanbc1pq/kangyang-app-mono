@@ -13,12 +13,12 @@ import {
 } from 'tamagui';
 import {
   Pressable,
+  TouchableOpacity,
   TextInput,
   StyleSheet,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -267,18 +267,9 @@ export const AIConsultationScreen: React.FC = () => {
         >
             <XStack justifyContent="space-between" alignItems="center">
               {/* 返回按钮 */}
-              <TouchableOpacity onPress={() => navigation.goBack()}>
-                <View
-                  width={40}
-                  height={40}
-                  borderRadius={20}
-                  justifyContent="center"
-                  alignItems="center"
-                  backgroundColor="$surface"
-                >
-                  <ArrowLeft size={20} color={COLORS.text} />
-                </View>
-              </TouchableOpacity>
+              <Pressable onPress={() => navigation.goBack()}>
+                <ArrowLeft size={24} color={COLORS.text} />
+              </Pressable>
 
               {/* 标题和状态 */}
               <XStack alignItems="center" flex={1} marginHorizontal="$3" space="$2">
@@ -328,7 +319,7 @@ export const AIConsultationScreen: React.FC = () => {
               </XStack>
 
               {/* 模型选择 */}
-              <Pressable onPress={() => setShowModelSelector(!showModelSelector)}>
+              <TouchableOpacity onPress={() => setShowModelSelector(!showModelSelector)}>
                 <View
                   width={40}
                   height={40}
@@ -339,7 +330,7 @@ export const AIConsultationScreen: React.FC = () => {
                 >
                   <Cpu size={20} color={COLORS.text} />
                 </View>
-              </Pressable>
+              </TouchableOpacity>
             </XStack>
         </View>
 
@@ -374,7 +365,7 @@ export const AIConsultationScreen: React.FC = () => {
                   <H3 fontSize="$5" fontWeight="600" color="$text">
                     选择AI模型
                   </H3>
-                  <Pressable onPress={() => setShowModelSelector(false)}>
+                  <TouchableOpacity onPress={() => setShowModelSelector(false)}>
                     <View
                       width={32}
                       height={32}
@@ -385,7 +376,7 @@ export const AIConsultationScreen: React.FC = () => {
                     >
                       <Text fontSize="$4" color="$textSecondary">×</Text>
                     </View>
-                  </Pressable>
+                  </TouchableOpacity>
                 </XStack>
 
                 <YStack space="$3">
@@ -394,7 +385,7 @@ export const AIConsultationScreen: React.FC = () => {
                     const isSelected = selectedModel === model.id;
 
                     return (
-                      <Pressable
+                      <TouchableOpacity
                         key={model.id}
                         onPress={() => {
                           setSelectedModel(model.id);
@@ -504,7 +495,7 @@ export const AIConsultationScreen: React.FC = () => {
                             </YStack>
                           </XStack>
                         </View>
-                      </Pressable>
+                      </TouchableOpacity>
                     );
                   })}
                 </YStack>
@@ -646,7 +637,7 @@ export const AIConsultationScreen: React.FC = () => {
                     {quickQuestions.map((question) => {
                       const IconComponent = question.icon;
                       return (
-                        <Pressable
+                        <TouchableOpacity
                           key={question.id}
                           onPress={() => handleQuickQuestion(question)}
                         >
@@ -689,7 +680,7 @@ export const AIConsultationScreen: React.FC = () => {
                               </View>
                             </XStack>
                           </Card>
-                        </Pressable>
+                        </TouchableOpacity>
                       );
                     })}
                   </YStack>
@@ -763,7 +754,7 @@ export const AIConsultationScreen: React.FC = () => {
           >
             <XStack space="$3" alignItems="center">
               {/* 附件按钮 */}
-              <Pressable>
+              <TouchableOpacity>
                 <View
                   width={40}
                   height={40}
@@ -774,7 +765,7 @@ export const AIConsultationScreen: React.FC = () => {
                 >
                   <Paperclip size={20} color={COLORS.textSecondary} />
                 </View>
-              </Pressable>
+              </TouchableOpacity>
 
               {/* 输入框 */}
               <View
@@ -803,7 +794,7 @@ export const AIConsultationScreen: React.FC = () => {
 
               {/* 语音/发送按钮 */}
               {inputText.trim() ? (
-                <Pressable onPress={() => sendMessage(inputText)}>
+                <TouchableOpacity onPress={() => sendMessage(inputText)}>
                   <View
                     width={40}
                     height={40}
@@ -814,9 +805,9 @@ export const AIConsultationScreen: React.FC = () => {
                   >
                     <Send size={18} color="white" />
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               ) : (
-                <Pressable>
+                <TouchableOpacity>
                   <View
                     width={40}
                     height={40}
@@ -827,7 +818,7 @@ export const AIConsultationScreen: React.FC = () => {
                   >
                     <Mic size={20} color={COLORS.textSecondary} />
                   </View>
-                </Pressable>
+                </TouchableOpacity>
               )}
             </XStack>
           </View>

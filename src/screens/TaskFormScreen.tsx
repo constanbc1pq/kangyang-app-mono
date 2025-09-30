@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, ScrollView as RNScrollView, Alert, Platform } from 'react-native';
+import { Pressable, TouchableOpacity, ScrollView as RNScrollView, Alert, Platform } from 'react-native';
 import { View, Text, YStack, XStack, Card, Theme, H2, Input, TextArea, Switch } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useToastController } from '@tamagui/toast';
@@ -231,9 +231,9 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
           borderBottomColor="$borderColor"
           backgroundColor="white"
         >
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Pressable onPress={() => navigation.goBack()}>
             <ArrowLeft size={24} color={COLORS.text} />
-          </TouchableOpacity>
+          </Pressable>
           <H2 fontSize="$7" fontWeight="bold" color="$text" marginLeft="$3" flex={1}>
             {isEdit ? '编辑任务' : '创建任务'}
           </H2>

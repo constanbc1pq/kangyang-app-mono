@@ -42,11 +42,7 @@ import {
   MapPin,
 } from 'lucide-react-native';
 import { Pressable } from 'react-native';
-import {
-  COLORS,
-  ORDER_STATUS_COLORS,
-  ORDER_STATUS_LABELS,
-} from '@/constants/app';
+import { COLORS } from '@/constants/app';
 import { getOrders, Order } from '@/services/orderService';
 import { ItemType } from '@/types/commerce';
 
@@ -184,61 +180,6 @@ export const PersonalCenterScreen: React.FC = () => {
     },
   ];
 
-  // 加载订单数据
-  const loadOrders = async () => {
-    try {
-      const allOrders = await getOrders();
-      console.log('✅ 订单数据已从localStorage(@kangyang_orders)加载:', allOrders.length, '条订单');
-      setOrders(allOrders);
-    } catch (error) {
-      console.error('❌ 加载订单失败:', error);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      loadOrders();
-    }, [])
-  );
-
-  // 按类型分类订单（修复：使用order.itemType字段）
-  const getOrdersByType = (type: ItemType) => {
-    const filtered = orders.filter(order => order.itemType === type);
-    console.log(`✅ PersonalCenter: ${type}类型订单共${filtered.length}条，展示最新3条`);
-    return filtered.slice(0, 3);
-  };
-
-  // 服务类订单（meal_plan和service）
-  const serviceOrders = orders.filter(order => order.itemType === 'meal_plan' || order.itemType === 'service').slice(0, 3);
-  // 咨询类订单
-  const consultationOrders = getOrdersByType('consultation');
-  // 商品类订单
-  const productOrders = getOrdersByType('product');
-
-  // 获取订单图标
-  const getOrderIcon = (type: ItemType) => {
-    switch (type) {
-      case 'meal_plan':
-        return <ShoppingBag size={20} color={COLORS.primary} />;
-      case 'consultation':
-        return <MessageSquare size={20} color={COLORS.primary} />;
-      case 'product':
-        return <Package size={20} color={COLORS.primary} />;
-      default:
-        return <Package size={20} color={COLORS.primary} />;
-    }
-  };
-
-  // 状态颜色（使用全局常量）
-  const getStatusColor = (status: string): string => {
-    return ORDER_STATUS_COLORS[status as keyof typeof ORDER_STATUS_COLORS] || '#6B7280';
-  };
-
-  // 状态标签（使用全局常量）
-  const getStatusLabel = (status: string): string => {
-    return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
-  };
-
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
@@ -340,28 +281,6 @@ export const PersonalCenterScreen: React.FC = () => {
               >
                 <Pressable
                   style={{ flex: 1 }}
-                  onPress={() => setActiveTab('orders')}
-                >
-                  <View
-                    flex={1}
-                    height={32}
-                    backgroundColor={activeTab === 'orders' ? COLORS.primary : 'transparent'}
-                    borderRadius="$2"
-                    justifyContent="center"
-                    alignItems="center"
-                    paddingHorizontal="$3"
-                  >
-                    <Text
-                      fontSize="$3"
-                      color={activeTab === 'orders' ? 'white' : '$textSecondary'}
-                      fontWeight={activeTab === 'orders' ? '600' : '400'}
-                    >
-                      订单
-                    </Text>
-                  </View>
-                </Pressable>
-                <Pressable
-                  style={{ flex: 1 }}
                   onPress={() => setActiveTab('profile')}
                 >
                   <View
@@ -406,6 +325,28 @@ export const PersonalCenterScreen: React.FC = () => {
                 </Pressable>
                 <Pressable
                   style={{ flex: 1 }}
+                  onPress={() => setActiveTab('records')}
+                >
+                  <View
+                    flex={1}
+                    height={32}
+                    backgroundColor={activeTab === 'records' ? COLORS.primary : 'transparent'}
+                    borderRadius="$2"
+                    justifyContent="center"
+                    alignItems="center"
+                    paddingHorizontal="$3"
+                  >
+                    <Text
+                      fontSize="$3"
+                      color={activeTab === 'records' ? 'white' : '$textSecondary'}
+                      fontWeight={activeTab === 'records' ? '600' : '400'}
+                    >
+                      健康档案
+                    </Text>
+                  </View>
+                </Pressable>
+                <Pressable
+                  style={{ flex: 1 }}
                   onPress={() => setActiveTab('membership')}
                 >
                   <View
@@ -431,197 +372,6 @@ export const PersonalCenterScreen: React.FC = () => {
               <Separator marginBottom="$4" />
 
               {/* Tab Content */}
-              {activeTab === 'orders' && (
-                <YStack gap="$4">
-                  {/* 订单页面标题和统一的"查看全部"按钮 */}
-                  <XStack justifyContent="space-between" alignItems="center">
-                    <H4 fontSize="$5" fontWeight="600" color="$text">
-                      我的订单
-                    </H4>
-                    <Pressable onPress={() => navigation.navigate('OrderList' as never)}>
-                      <XStack gap="$1" alignItems="center">
-                        <Text fontSize="$3" color={COLORS.primary} fontWeight="600">
-                          查看全部
-                        </Text>
-                        <ChevronRight size={18} color={COLORS.primary} />
-                      </XStack>
-                    </Pressable>
-                  </XStack>
-
-                  {/* 服务类订单 */}
-                  <YStack gap="$3">
-                    <H4 fontSize="$4" fontWeight="600" color="$text">
-                      服务类订单
-                    </H4>
-                    {serviceOrders.length > 0 ? (
-                      serviceOrders.map(order => (
-                        <Card
-                          key={order.id}
-                          bordered
-                          padding="$3"
-                          pressStyle={{ scale: 0.98 }}
-                          onPress={() => {
-                            navigation.navigate('OrderDetail' as never, { orderId: order.id } as never);
-                          }}
-                        >
-                          <XStack gap="$3" alignItems="center">
-                            {getOrderIcon(order.itemType)}
-                            <YStack flex={1} gap="$1">
-                              <Text fontSize="$3" fontWeight="600" color="$text">
-                                {order.itemName}
-                              </Text>
-                              <Text fontSize="$2" color="$textSecondary">
-                                {order.createdAt}
-                              </Text>
-                            </YStack>
-                            <YStack alignItems="flex-end" gap="$1">
-                              <Text fontSize="$4" fontWeight="700" color={COLORS.primary}>
-                                ¥{order.totalAmount.toFixed(2)}
-                              </Text>
-                              <View
-                                backgroundColor={`${getStatusColor(order.status)}20`}
-                                paddingHorizontal="$2"
-                                paddingVertical="$0.5"
-                                borderRadius="$2"
-                              >
-                                <Text fontSize="$1" color={getStatusColor(order.status)} fontWeight="600">
-                                  {getStatusLabel(order.status)}
-                                </Text>
-                              </View>
-                            </YStack>
-                          </XStack>
-                        </Card>
-                      ))
-                    ) : (
-                      <View paddingVertical="$6" alignItems="center">
-                        <ShoppingBag size={48} color={COLORS.textSecondary} />
-                        <Text fontSize="$3" color="$textSecondary" marginTop="$2">
-                          暂无服务类订单
-                        </Text>
-                      </View>
-                    )}
-                  </YStack>
-
-                  {/* 咨询类订单 */}
-                  <YStack gap="$3">
-                    <H4 fontSize="$4" fontWeight="600" color="$text">
-                      咨询类订单
-                    </H4>
-                    {consultationOrders.length > 0 ? (
-                      consultationOrders.map(order => (
-                        <Card
-                          key={order.id}
-                          bordered
-                          padding="$3"
-                          pressStyle={{ scale: 0.98 }}
-                          onPress={() => {
-                            navigation.navigate('OrderDetail' as never, { orderId: order.id } as never);
-                          }}
-                        >
-                          <XStack gap="$3" alignItems="center">
-                            {getOrderIcon(order.itemType)}
-                            <YStack flex={1} gap="$1">
-                              <Text fontSize="$3" fontWeight="600" color="$text">
-                                {order.itemName}
-                              </Text>
-                              {order.metadata?.appointmentDate && (
-                                <XStack gap="$1" alignItems="center">
-                                  <Clock size={12} color={COLORS.textSecondary} />
-                                  <Text fontSize="$2" color="$textSecondary">
-                                    {order.metadata.appointmentDate} {order.metadata.appointmentTime}
-                                  </Text>
-                                </XStack>
-                              )}
-                            </YStack>
-                            <YStack alignItems="flex-end" gap="$1">
-                              <Text fontSize="$4" fontWeight="700" color={COLORS.primary}>
-                                ¥{order.totalAmount.toFixed(2)}
-                              </Text>
-                              <View
-                                backgroundColor={`${getStatusColor(order.status)}20`}
-                                paddingHorizontal="$2"
-                                paddingVertical="$0.5"
-                                borderRadius="$2"
-                              >
-                                <Text fontSize="$1" color={getStatusColor(order.status)} fontWeight="600">
-                                  {getStatusLabel(order.status)}
-                                </Text>
-                              </View>
-                            </YStack>
-                          </XStack>
-                        </Card>
-                      ))
-                    ) : (
-                      <View paddingVertical="$6" alignItems="center">
-                        <MessageSquare size={48} color={COLORS.textSecondary} />
-                        <Text fontSize="$3" color="$textSecondary" marginTop="$2">
-                          暂无咨询类订单
-                        </Text>
-                      </View>
-                    )}
-                  </YStack>
-
-                  {/* 商品类订单 */}
-                  <YStack gap="$3">
-                    <H4 fontSize="$4" fontWeight="600" color="$text">
-                      商品类订单
-                    </H4>
-                    {productOrders.length > 0 ? (
-                      productOrders.map(order => (
-                        <Card
-                          key={order.id}
-                          bordered
-                          padding="$3"
-                          pressStyle={{ scale: 0.98 }}
-                          onPress={() => {
-                            navigation.navigate('OrderDetail' as never, { orderId: order.id } as never);
-                          }}
-                        >
-                          <XStack gap="$3" alignItems="center">
-                            {getOrderIcon(order.itemType)}
-                            <YStack flex={1} gap="$1">
-                              <Text fontSize="$3" fontWeight="600" color="$text">
-                                {order.itemName}
-                              </Text>
-                              {order.deliveryAddress && (
-                                <XStack gap="$1" alignItems="center">
-                                  <MapPin size={12} color={COLORS.textSecondary} />
-                                  <Text fontSize="$2" color="$textSecondary" numberOfLines={1}>
-                                    {order.deliveryAddress.name}
-                                  </Text>
-                                </XStack>
-                              )}
-                            </YStack>
-                            <YStack alignItems="flex-end" gap="$1">
-                              <Text fontSize="$4" fontWeight="700" color={COLORS.primary}>
-                                ¥{order.totalAmount.toFixed(2)}
-                              </Text>
-                              <View
-                                backgroundColor={`${getStatusColor(order.status)}20`}
-                                paddingHorizontal="$2"
-                                paddingVertical="$0.5"
-                                borderRadius="$2"
-                              >
-                                <Text fontSize="$1" color={getStatusColor(order.status)} fontWeight="600">
-                                  {getStatusLabel(order.status)}
-                                </Text>
-                              </View>
-                            </YStack>
-                          </XStack>
-                        </Card>
-                      ))
-                    ) : (
-                      <View paddingVertical="$6" alignItems="center">
-                        <Package size={48} color={COLORS.textSecondary} />
-                        <Text fontSize="$3" color="$textSecondary" marginTop="$2">
-                          暂无商品类订单
-                        </Text>
-                      </View>
-                    )}
-                  </YStack>
-                </YStack>
-              )}
-
               {activeTab === 'profile' && (
                 <YStack space="$4">
                   {/* Quick Actions */}

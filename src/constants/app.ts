@@ -299,3 +299,102 @@ export const ANIMATIONS = {
   BOUNCE: 'spring',
   EASE: 'ease-in-out',
 };
+
+// ==================== 订单系统常量 ====================
+
+/**
+ * 订单商品类型枚举
+ */
+export const ORDER_ITEM_TYPES = {
+  MEAL_PLAN: 'meal_plan',
+  SERVICE: 'service',
+  PRODUCT: 'product',
+  CONSULTATION: 'consultation',
+  COURSE: 'course',
+} as const;
+
+/**
+ * 订单状态枚举
+ */
+export const ORDER_STATUSES = {
+  PENDING: 'pending',
+  PAID: 'paid',
+  PROCESSING: 'processing',
+  SHIPPING: 'shipping',
+  DELIVERED: 'delivered',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+  REFUNDED: 'refunded',
+} as const;
+
+/**
+ * 订单类型配置（用于筛选）
+ */
+export const ORDER_TYPE_CONFIGS = [
+  { id: 'all', label: '全部' },
+  { id: ORDER_ITEM_TYPES.MEAL_PLAN, label: '服务类' },
+  { id: ORDER_ITEM_TYPES.CONSULTATION, label: '咨询类' },
+  { id: ORDER_ITEM_TYPES.PRODUCT, label: '商品类' },
+];
+
+/**
+ * 订单状态配置（用于筛选）
+ */
+export const ORDER_STATUS_CONFIGS = [
+  { id: 'all', label: '全部' },
+  { id: ORDER_STATUSES.PENDING, label: '待支付' },
+  { id: ORDER_STATUSES.PAID, label: '已支付' },
+  { id: ORDER_STATUSES.PROCESSING, label: '进行中' },
+  { id: ORDER_STATUSES.SHIPPING, label: '配送中' },
+  { id: ORDER_STATUSES.COMPLETED, label: '已完成' },
+  { id: ORDER_STATUSES.CANCELLED, label: '已取消' },
+];
+
+/**
+ * 订单状态颜色映射
+ */
+export const ORDER_STATUS_COLORS = {
+  [ORDER_STATUSES.PENDING]: '#F59E0B',
+  [ORDER_STATUSES.PAID]: '#10B981',
+  [ORDER_STATUSES.PROCESSING]: '#3B82F6',
+  [ORDER_STATUSES.SHIPPING]: '#8B5CF6',
+  [ORDER_STATUSES.DELIVERED]: '#10B981',
+  [ORDER_STATUSES.COMPLETED]: '#6B7280',
+  [ORDER_STATUSES.CANCELLED]: '#EF4444',
+  [ORDER_STATUSES.REFUNDED]: '#EC4899',
+};
+
+/**
+ * 订单状态中文标签映射
+ */
+export const ORDER_STATUS_LABELS = {
+  [ORDER_STATUSES.PENDING]: '待支付',
+  [ORDER_STATUSES.PAID]: '已支付',
+  [ORDER_STATUSES.PROCESSING]: '进行中',
+  [ORDER_STATUSES.SHIPPING]: '配送中',
+  [ORDER_STATUSES.DELIVERED]: '已送达',
+  [ORDER_STATUSES.COMPLETED]: '已完成',
+  [ORDER_STATUSES.CANCELLED]: '已取消',
+  [ORDER_STATUSES.REFUNDED]: '已退款',
+};
+
+/**
+ * 订单商品类型中文标签映射
+ */
+export const ORDER_ITEM_TYPE_LABELS = {
+  [ORDER_ITEM_TYPES.MEAL_PLAN]: '营养配餐',
+  [ORDER_ITEM_TYPES.CONSULTATION]: '专家咨询',
+  [ORDER_ITEM_TYPES.PRODUCT]: '商品',
+  [ORDER_ITEM_TYPES.SERVICE]: '服务',
+  [ORDER_ITEM_TYPES.COURSE]: '课程',
+};
+
+/**
+ * 订单状态流程步骤（用于详情页进度展示）
+ */
+export const ORDER_STATUS_STEPS = [
+  { status: ORDER_STATUSES.PENDING, label: '待支付' },
+  { status: ORDER_STATUSES.PAID, label: '已支付' },
+  { status: ORDER_STATUSES.PROCESSING, label: '进行中' },
+  { status: ORDER_STATUSES.COMPLETED, label: '已完成' },
+];
