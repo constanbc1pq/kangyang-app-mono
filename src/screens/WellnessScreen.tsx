@@ -11,8 +11,9 @@ import {
   Theme,
   ScrollView,
   Button,
+  Sheet,
 } from 'tamagui';
-import { Pressable } from 'react-native';
+import { Pressable, Modal, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -33,6 +34,8 @@ import {
   Target,
   Utensils,
   BookOpen,
+  Navigation,
+  X,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 import { NutritionPlanner } from '@/components/NutritionPlanner';
@@ -42,13 +45,51 @@ import { ServiceBooking } from '@/components/ServiceBooking';
 export const WellnessScreen: React.FC = () => {
   const navigation = useNavigation();
   const [activeService, setActiveService] = useState('overview');
+  const [selectedCity, setSelectedCity] = useState('深圳');
+  const [showCityModal, setShowCityModal] = useState(false);
 
   const handleServiceClick = (serviceId: string) => {
     if (serviceId === 'nutrition') {
       navigation.navigate('NutritionService' as never);
+    } else if (serviceId === 'delivery') {
+      navigation.navigate('DeliveryService' as never);
     } else {
       setActiveService(serviceId);
     }
+  };
+
+  // 热门城市列表
+  const hotCities = [
+    { id: '1', name: '北京', available: true },
+    { id: '2', name: '上海', available: true },
+    { id: '3', name: '广州', available: true },
+    { id: '4', name: '深圳', available: true },
+    { id: '5', name: '杭州', available: true },
+    { id: '6', name: '成都', available: true },
+    { id: '7', name: '南京', available: true },
+    { id: '8', name: '武汉', available: true },
+    { id: '9', name: '西安', available: true },
+    { id: '10', name: '重庆', available: true },
+    { id: '11', name: '天津', available: true },
+    { id: '12', name: '苏州', available: true },
+  ];
+
+  const handleAutoLocate = () => {
+    // 模拟自动定位
+    Alert.alert('定位提示', '已定位到您当前城市：北京', [
+      {
+        text: '确定',
+        onPress: () => {
+          setSelectedCity('北京');
+          setShowCityModal(false);
+        },
+      },
+    ]);
+  };
+
+  const handleCitySelect = (cityName: string) => {
+    setSelectedCity(cityName);
+    setShowCityModal(false);
   };
 
   const todayRecommendation = {
@@ -178,18 +219,18 @@ export const WellnessScreen: React.FC = () => {
                   专业养生服务
                 </Text>
               </YStack>
-              <Pressable>
+              <Pressable onPress={() => setShowCityModal(true)}>
                 <View
                   borderWidth={1}
                   borderColor={COLORS.primary}
-                  backgroundColor="transparent"
+                  backgroundColor="white"
                   borderRadius="$3"
                   paddingHorizontal="$3"
                   paddingVertical="$2"
                 >
                   <XStack space="$2" alignItems="center">
-                    <Calendar size={16} color={COLORS.primary} />
-                    <Text fontSize="$3" color={COLORS.primary}>预约服务</Text>
+                    <MapPin size={16} color={COLORS.primary} />
+                    <Text fontSize="$3" color={COLORS.primary} fontWeight="600">{selectedCity}</Text>
                   </XStack>
                 </View>
               </Pressable>
@@ -579,6 +620,95 @@ export const WellnessScreen: React.FC = () => {
             <View height={20} />
           </YStack>
         </ScrollView>
+
+        {/* City Selection Modal */}
+        <Modal
+          visible={showCityModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowCityModal(false)}
+        >
+          <Pressable
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+            onPress={() => setShowCityModal(false)}
+          >
+            <Pressable onPress={(e) => e.stopPropagation()}>
+              <View
+                backgroundColor="white"
+                borderTopLeftRadius="$6"
+                borderTopRightRadius="$6"
+                paddingBottom={40}
+              >
+              {/* Modal Header */}
+              <XStack
+                justifyContent="space-between"
+                alignItems="center"
+                padding="$4"
+                borderBottomWidth={1}
+                borderBottomColor="$borderColor"
+              >
+                <H3 fontSize="$6" fontWeight="600" color="$text">
+                  选择城市
+                </H3>
+                <TouchableOpacity onPress={() => setShowCityModal(false)}>
+                  <X size={24} color={COLORS.textSecondary} />
+                </TouchableOpacity>
+              </XStack>
+
+              {/* Auto Locate Button */}
+              <View padding="$4">
+                <TouchableOpacity onPress={handleAutoLocate}>
+                  <View
+                    backgroundColor={COLORS.primaryLight}
+                    borderRadius="$3"
+                    padding="$3"
+                  >
+                    <XStack space="$2" alignItems="center" justifyContent="center">
+                      <Navigation size={20} color="white" />
+                      <Text fontSize="$4" color="white" fontWeight="600">
+                        自动定位当前城市
+                      </Text>
+                    </XStack>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Hot Cities */}
+              <YStack padding="$4" paddingTop="$2">
+                <Text fontSize="$4" color="$textSecondary" marginBottom="$3" fontWeight="600">
+                  热门城市
+                </Text>
+                <XStack flexWrap="wrap" gap="$3">
+                  {hotCities.map((city) => (
+                    <TouchableOpacity
+                      key={city.id}
+                      onPress={() => handleCitySelect(city.name)}
+                      style={{ width: '30%' }}
+                    >
+                      <View
+                        backgroundColor={selectedCity === city.name ? COLORS.primary : '$surface'}
+                        borderRadius="$3"
+                        padding="$3"
+                        alignItems="center"
+                        borderWidth={1}
+                        borderColor={selectedCity === city.name ? COLORS.primary : '$borderColor'}
+                      >
+                        <Text
+                          fontSize="$4"
+                          color={selectedCity === city.name ? 'white' : '$text'}
+                          fontWeight={selectedCity === city.name ? '600' : '400'}
+                        >
+                          {city.name}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </XStack>
+              </YStack>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </SafeAreaView>
     </Theme>
   );

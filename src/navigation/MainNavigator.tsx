@@ -21,6 +21,9 @@ import CheckoutScreen from '@/screens/CheckoutScreen';
 import PaymentScreen from '@/screens/PaymentScreen';
 import OrderListScreen from '@/screens/OrderListScreen';
 import OrderDetailScreen from '@/screens/OrderDetailScreen';
+import { DeliveryServiceScreen } from '@/screens/DeliveryServiceScreen';
+import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
+import GroceryCheckoutScreen from '@/screens/GroceryCheckoutScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -163,6 +166,18 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="OrderDetail"
         component={OrderDetailScreen}
+      />
+      <Stack.Screen
+        name="DeliveryService"
+        component={DeliveryServiceScreen}
+      />
+      <Stack.Screen
+        name="ProductDetail"
+        component={ProductDetailScreen}
+      />
+      <Stack.Screen
+        name="GroceryCheckout"
+        component={GroceryCheckoutScreen}
       />
     </Stack.Navigator>
   );

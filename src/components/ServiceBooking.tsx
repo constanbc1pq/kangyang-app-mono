@@ -416,7 +416,7 @@ export const ServiceBooking: React.FC = () => {
                 新建预约
               </H3>
 
-              {selectedService && (
+              {selectedService ? (
                 <View
                   padding="$3"
                   backgroundColor="$primary"
@@ -427,7 +427,7 @@ export const ServiceBooking: React.FC = () => {
                     已选择服务: {selectedService}
                   </Text>
                 </View>
-              )}
+              ) : null}
 
               <YStack space="$3">
                 <Text fontSize="$4" color="$text" fontWeight="600">
