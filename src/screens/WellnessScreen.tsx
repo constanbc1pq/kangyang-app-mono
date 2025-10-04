@@ -12,8 +12,11 @@ import {
   ScrollView,
   Button,
   Sheet,
+  Toast,
+  useToastState,
 } from 'tamagui';
-import { Pressable, Modal, TouchableOpacity, Alert } from 'react-native';
+import { Pressable, Modal, TouchableOpacity } from 'react-native';
+import { ToastViewport, useToastController } from '@tamagui/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -40,19 +43,35 @@ import {
 import { COLORS } from '@/constants/app';
 import { NutritionPlanner } from '@/components/NutritionPlanner';
 import { WellnessCalendar } from '@/components/WellnessCalendar';
-import { ServiceBooking } from '@/components/ServiceBooking';
 
 export const WellnessScreen: React.FC = () => {
   const navigation = useNavigation();
   const [activeService, setActiveService] = useState('overview');
   const [selectedCity, setSelectedCity] = useState('深圳');
   const [showCityModal, setShowCityModal] = useState(false);
+  const toast = useToastController();
+
+  // 显示toast提示
+  const showToast = (message: string) => {
+    toast.show(message, {
+      duration: 2000,
+      burntOptions: {
+        preset: 'none',
+        haptic: 'success',
+      },
+    });
+  };
 
   const handleServiceClick = (serviceId: string) => {
     if (serviceId === 'nutrition') {
       navigation.navigate('NutritionService' as never);
     } else if (serviceId === 'delivery') {
       navigation.navigate('DeliveryService' as never);
+    } else if (serviceId === 'elderly') {
+      navigation.navigate('ElderlyService' as never);
+    } else if (serviceId === 'doctor' || serviceId === 'therapy' || serviceId === 'insurance') {
+      // 私人医生、康复理疗、保险规划 显示"敬请期待"
+      showToast('敬请期待');
     } else {
       setActiveService(serviceId);
     }
@@ -150,57 +169,27 @@ export const WellnessScreen: React.FC = () => {
     },
   ];
 
-  const featuredServices = [
-    {
-      id: 1,
-      title: "冬季养生汤品定制",
-      provider: "康养厨房",
-      price: "￥68/份",
-      rating: 4.8,
-      tags: ["温补", "养胃", "当季"],
-      description: "根据个人体质定制的冬季养生汤品，温补脾胃，增强免疫力",
-    },
-    {
-      id: 2,
-      title: "老年营养餐配送",
-      provider: "银龄膳食",
-      price: "￥45/餐",
-      rating: 4.9,
-      tags: ["软糯", "易消化", "营养均衡"],
-      description: "专为老年人设计的营养餐，质地软糯，营养丰富，易于消化",
-    },
-    {
-      id: 3,
-      title: "上门康复理疗",
-      provider: "康复之家",
-      price: "￥180/次",
-      rating: 4.7,
-      tags: ["专业", "上门", "个性化"],
-      description: "专业理疗师上门服务，针对性康复训练，恢复身体机能",
-    },
-  ];
-
   const nearbyServices = [
     {
-      name: "康养中心(朝阳店)",
+      name: "康养中心(福田店)",
       distance: "1.2km",
       services: ["体检", "理疗", "营养咨询"],
       rating: 4.6,
-      phone: "400-123-4567",
+      phone: "0755-8888-1234",
     },
     {
-      name: "银龄照护中心",
+      name: "银龄照护中心(南山店)",
       distance: "2.1km",
       services: ["日间照料", "康复训练", "心理疏导"],
       rating: 4.8,
-      phone: "400-234-5678",
+      phone: "0755-8888-5678",
     },
     {
-      name: "健康管理诊所",
+      name: "健康管理诊所(罗湖店)",
       distance: "0.8km",
       services: ["健康评估", "慢病管理", "营养指导"],
       rating: 4.5,
-      phone: "400-345-6789",
+      phone: "0755-8888-9012",
     },
   ];
 
@@ -446,94 +435,8 @@ export const WellnessScreen: React.FC = () => {
               </YStack>
             </YStack>
 
-            {/* Featured Services */}
-            <YStack space="$3">
-              <XStack justifyContent="space-between" alignItems="center">
-                <H3 fontSize="$6" color="$text" fontWeight="600">
-                  精选服务
-                </H3>
-                <Button size="$2" chromeless>
-                  <Text fontSize="$3" color="$primary">查看更多</Text>
-                </Button>
-              </XStack>
-
-              <YStack space="$3">
-                {featuredServices.map((service) => (
-                  <Card
-                    key={service.id}
-                    padding="$4"
-                    borderRadius="$4"
-                    backgroundColor="$cardBg"
-                    pressStyle={{ scale: 0.98 }}
-                    shadowColor="$shadow"
-                    shadowOffset={{ width: 0, height: 2 }}
-                    shadowOpacity={0.1}
-                    shadowRadius={8}
-                    elevation={4}
-                  >
-                    <YStack space="$3">
-                      <XStack justifyContent="space-between" alignItems="flex-start">
-                        <YStack flex={1} marginRight="$3">
-                          <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
-                            {service.title}
-                          </H3>
-                          <XStack space="$2" alignItems="center" marginBottom="$2">
-                            <Text fontSize="$3" color="$textSecondary">
-                              {service.provider}
-                            </Text>
-                            <XStack space="$1" alignItems="center">
-                              <Star size={12} color={COLORS.warning} />
-                              <Text fontSize="$2" color="$textSecondary">
-                                {service.rating}
-                              </Text>
-                            </XStack>
-                          </XStack>
-                          <Text fontSize="$3" color="$textSecondary" lineHeight="$1" marginBottom="$2">
-                            {service.description}
-                          </Text>
-                          <XStack flexWrap="wrap" gap="$2">
-                            {service.tags.map((tag, index) => (
-                              <View
-                                key={index}
-                                backgroundColor="$surface"
-                                paddingHorizontal="$2"
-                                paddingVertical="$1"
-                                borderRadius="$2"
-                              >
-                                <Text fontSize="$2" color="$primary">
-                                  {tag}
-                                </Text>
-                              </View>
-                            ))}
-                          </XStack>
-                        </YStack>
-                        <YStack alignItems="flex-end">
-                          <Text fontSize="$5" fontWeight="bold" color="$primary" marginBottom="$2">
-                            {service.price}
-                          </Text>
-                          <Pressable>
-                            <View
-                              backgroundColor={COLORS.primary}
-                              borderRadius="$3"
-                              paddingHorizontal="$4"
-                              paddingVertical="$2"
-                            >
-                              <Text fontSize="$3" color="white">预订</Text>
-                            </View>
-                          </Pressable>
-                        </YStack>
-                      </XStack>
-                    </YStack>
-                  </Card>
-                ))}
-              </YStack>
-            </YStack>
-
             {/* Nutrition Planner */}
             <NutritionPlanner />
-
-            {/* Service Booking */}
-            <ServiceBooking />
 
             {/* Wellness Calendar */}
             <WellnessCalendar />
@@ -599,7 +502,7 @@ export const WellnessScreen: React.FC = () => {
                             <Text fontSize="$2" color="$primary">咨询</Text>
                           </XStack>
                         </Button>
-                        <Pressable>
+                        <Pressable onPress={() => showToast('敬请期待')}>
                           <View
                             backgroundColor={COLORS.primary}
                             borderRadius="$3"
@@ -709,6 +612,8 @@ export const WellnessScreen: React.FC = () => {
             </Pressable>
           </Pressable>
         </Modal>
+
+        <ToastViewport />
       </SafeAreaView>
     </Theme>
   );

@@ -10,12 +10,25 @@ import {
   Theme,
   ScrollView,
 } from 'tamagui';
+import { useToastController } from '@tamagui/toast';
 import { ChevronLeft, ChevronRight, Calendar, Sun, Leaf, Snowflake, Flower2, Star } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 
 export const WellnessCalendar: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const toast = useToastController();
+
+  // 显示toast提示
+  const showToast = (message: string) => {
+    toast.show(message, {
+      duration: 2000,
+      burntOptions: {
+        preset: 'none',
+        haptic: 'success',
+      },
+    });
+  };
 
   const seasons = {
     spring: { name: '春季', icon: Flower2, color: COLORS.success },
@@ -297,7 +310,11 @@ export const WellnessCalendar: React.FC = () => {
                         </Text>
                       </XStack>
                     </XStack>
-                    <Button size="$3" backgroundColor="$primary">
+                    <Button
+                      size="$3"
+                      backgroundColor="$primary"
+                      onPress={() => showToast('敬请期待')}
+                    >
                       <Text fontSize="$3" color="white">立即参与</Text>
                     </Button>
                   </View>

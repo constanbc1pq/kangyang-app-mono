@@ -13,6 +13,7 @@ import {
   Clock,
   ChevronRight,
   Search,
+  Heart,
 } from 'lucide-react-native';
 import {
   COLORS,
@@ -81,6 +82,8 @@ const OrderListScreen: React.FC = () => {
         return <ShoppingBag size={20} color={COLORS.primary} />;
       case 'consultation':
         return <MessageSquare size={20} color={COLORS.primary} />;
+      case 'elderly_service':
+        return <Heart size={20} color={COLORS.primary} />;
       case 'product':
         return <Package size={20} color={COLORS.primary} />;
       case 'service':

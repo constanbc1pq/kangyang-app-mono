@@ -5,46 +5,73 @@ import {
   Text,
   Card,
   View,
-  H2,
   H3,
   Theme,
   ScrollView,
-  Separator,
+  Button,
 } from 'tamagui';
 import {
   Pressable,
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   ArrowLeft,
   Send,
   Bot,
   User,
-  MessageCircle,
   Mic,
   Paperclip,
-  MoreHorizontal,
   Sparkles,
   Heart,
   Activity,
   AlertCircle,
   CheckCircle,
-  Clock,
   Zap,
-  ChevronDown,
   Star,
   Shield,
   Cpu,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { CaregiverSelectCard } from '@/components/CaregiverSelectCard';
+import { PackageSelectCard } from '@/components/PackageSelectCard';
+import { getCaregiversByServiceType, servicePackages, getCaregiverById, getPackageById } from '@/services/elderlyService';
+import type { Caregiver, ServicePackage, ServiceType } from '@/types/elderly';
+
+// 服务类型中文标签映射
+const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
+  'elderly-care': '长者照顾',
+  'escort': '陪诊服务',
+  'medical-staff': '医护替补',
+};
+
+// 资质匹配辅助函数（EN登记护士使用RN的价格）
+const getMatchingQualification = (qualification: string): string => {
+  if (qualification === 'EN') return 'RN';  // EN使用RN的价格
+  return qualification;
+};
+
+type AIConsultationScreenRouteProp = RouteProp<{
+  AIConsultation: {
+    initialMessage?: string;
+    source?: 'elderly_service' | 'general'; // 来源标识
+    caregiverId?: string;  // 护理人员ID（从详情页进入时传入）
+    serviceType?: ServiceType;  // 服务类型（从详情页进入时传入）
+    qualification?: 'PCW' | 'HW' | 'RN';  // 资质（从详情页进入时传入）
+  }
+}, 'AIConsultation'>;
+
+interface QuickReply {
+  id: string;
+  label: string;
+  value: string;
+  icon?: any;
+}
 
 interface Message {
   id: string;
@@ -52,6 +79,15 @@ interface Message {
   content: string;
   timestamp: Date;
   typing?: boolean;
+  // Interactive data support
+  interactiveType?: 'caregiver_selection' | 'package_selection';
+  interactiveData?: {
+    caregivers?: Caregiver[];
+    packages?: ServicePackage[];
+    serviceType?: ServiceType;
+  };
+  // Quick reply buttons
+  quickReplies?: QuickReply[];
 }
 
 interface QuickQuestion {
@@ -73,14 +109,41 @@ interface AIModel {
   responseTime: string;
 }
 
+type ConversationStep =
+  | 'initial'
+  | 'select_service_type'
+  | 'select_qualification'
+  | 'select_caregiver'
+  | 'select_package'
+  | 'select_date'
+  | 'select_time'
+  | 'confirm_order'
+  | 'completed';
+
+interface ConversationState {
+  step: ConversationStep;
+  serviceType?: ServiceType;
+  qualification?: 'PCW' | 'HW' | 'RN';
+  caregiverId?: string;
+  packageId?: string;
+  serviceDate?: string;
+  serviceTime?: string;
+}
+
 export const AIConsultationScreen: React.FC = () => {
   const navigation = useNavigation();
+  const route = useRoute<AIConsultationScreenRouteProp>();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'ai',
-      content: '您好！我是华佗AI健康助手，很高兴为您服务。请描述您的健康问题或症状，我会为您提供专业的建议和指导。',
+      content: '您好！我是康养AI助手。我可以帮您预约专业的护理服务。请问您需要哪种服务？',
       timestamp: new Date(),
+      quickReplies: [
+        { id: 'service_elderly', label: '养老照护', value: 'elderly-care', icon: Heart },
+        { id: 'service_escort', label: '陪诊服务', value: 'escort', icon: Activity },
+        { id: 'service_medical', label: '医护替补', value: 'medical-staff', icon: Shield },
+      ],
     }
   ]);
   const [inputText, setInputText] = useState('');
@@ -89,6 +152,47 @@ export const AIConsultationScreen: React.FC = () => {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const inputRef = useRef<TextInput>(null);
+  const [initialMessageSent, setInitialMessageSent] = useState(false);
+  const [selectedCaregiverId, setSelectedCaregiverId] = useState<string | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+
+  // Conversation state management
+  const [conversationState, setConversationState] = useState<ConversationState>({
+    step: 'select_service_type'
+  });
+
+  // 如果从护理人员详情页进入，直接跳到套餐选择
+  useEffect(() => {
+    if (route.params?.caregiverId && route.params?.serviceType && route.params?.qualification) {
+      const { caregiverId, serviceType, qualification } = route.params;
+
+      // 设置对话状态
+      setConversationState({
+        step: 'select_package',
+        serviceType,
+        qualification,
+        caregiverId,
+      });
+      setSelectedCaregiverId(caregiverId);
+
+      // 获取护理人员信息
+      const caregiver = getCaregiverById(caregiverId);
+
+      // 添加欢迎消息和套餐选择消息
+      const welcomeMessage: Message = {
+        id: 'welcome_from_detail',
+        type: 'ai',
+        content: `您好！您已选择了 ${caregiver?.name}（${qualification}）为您提供服务。现在请选择服务套餐：`,
+        timestamp: new Date(),
+        interactiveType: 'package_selection',
+        interactiveData: {
+          packages: servicePackages,
+        },
+      };
+
+      setMessages([welcomeMessage]);
+    }
+  }, [route.params?.caregiverId, route.params?.serviceType, route.params?.qualification]);
 
   // AI模型配置
   const aiModels: AIModel[] = [
@@ -132,7 +236,7 @@ export const AIConsultationScreen: React.FC = () => {
     return aiModels.find(model => model.id === selectedModel) || aiModels[0];
   };
 
-  // 快捷问题模板
+  // 快捷问题模板（用于健康咨询）
   const quickQuestions: QuickQuestion[] = [
     {
       id: '1',
@@ -160,7 +264,362 @@ export const AIConsultationScreen: React.FC = () => {
     }
   ];
 
-  // 发送消息
+  // Check if this message's quick replies should still be active
+  const isLatestQuickReply = (messageId: string): boolean => {
+    const index = messages.findIndex(m => m.id === messageId);
+    // Check if there are any user messages after this message
+    for (let i = index + 1; i < messages.length; i++) {
+      if (messages[i].type === 'user') {
+        return false; // Already has user reply
+      }
+    }
+    return true;
+  };
+
+  // Handle quick reply button click
+  const handleQuickReply = (reply: QuickReply) => {
+    // 1. Add user's selection message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: reply.label,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    // 2. Determine next step based on conversation state
+    setIsTyping(true);
+
+    setTimeout(() => {
+      let nextMessage: Message;
+      let nextState: Partial<ConversationState> = {};
+
+      switch (conversationState.step) {
+        case 'initial':
+        case 'select_service_type':
+          // User selected service type
+          nextState = {
+            step: 'select_qualification',
+            serviceType: reply.value as ServiceType,
+          };
+          nextMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: '很好！请问您需要什么资质的护理人员？',
+            timestamp: new Date(),
+            quickReplies: [
+              { id: 'qual_pcw', label: '护理员 (PCW)', value: 'PCW' },
+              { id: 'qual_hw', label: '保健员 (HW)', value: 'HW' },
+              { id: 'qual_rn', label: '注册护士 (RN)', value: 'RN' },
+            ],
+          };
+          break;
+
+        case 'select_qualification':
+          // User selected qualification, show caregivers
+          nextState = {
+            step: 'select_caregiver',
+            qualification: reply.value as 'PCW' | 'HW' | 'RN',
+          };
+
+          // Filter caregivers by service type and qualification
+          const caregivers = getCaregiversByServiceType(conversationState.serviceType!)
+            .filter(c => c.qualificationBadge === reply.value);
+
+          nextMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `为您推荐以下${reply.label}，请选择一位：`,
+            timestamp: new Date(),
+            interactiveType: 'caregiver_selection',
+            interactiveData: {
+              caregivers: caregivers,
+              serviceType: conversationState.serviceType,
+            },
+          };
+          break;
+
+        case 'select_date':
+          // User selected date
+          nextState = {
+            step: 'select_time',
+            serviceDate: reply.value,
+          };
+
+          // 根据套餐类型生成不同的时段选项
+          const selectedPkg = getPackageById(conversationState.packageId!);
+          let timeSlotOptions: QuickReply[] = [];
+
+          if (!selectedPkg) {
+            // 如果找不到套餐，使用默认选项
+            console.warn('⚠️ Package not found, using default time slots');
+            timeSlotOptions = [
+              { id: 'time_morning', label: '上午 (8:00-12:00)', value: '08:00-12:00' },
+              { id: 'time_afternoon', label: '下午 (14:00-18:00)', value: '14:00-18:00' },
+              { id: 'time_fullday', label: '全天 (8:00-18:00)', value: '08:00-18:00' },
+            ];
+          } else if (selectedPkg.id === 'hourly') {
+            // 按小时服务：提供时段选择
+            timeSlotOptions = [
+              { id: 'time_morning', label: '上午 (8:00-12:00)', value: '08:00-12:00' },
+              { id: 'time_afternoon', label: '下午 (14:00-18:00)', value: '14:00-18:00' },
+              { id: 'time_evening', label: '晚间 (18:00-22:00)', value: '18:00-22:00' },
+            ];
+          } else if (selectedPkg.id === 'daily') {
+            // 按天服务：8-12小时
+            timeSlotOptions = [
+              { id: 'time_day8', label: '白天8小时 (8:00-16:00)', value: '08:00-16:00' },
+              { id: 'time_day10', label: '白天10小时 (8:00-18:00)', value: '08:00-18:00' },
+              { id: 'time_day12', label: '白天12小时 (8:00-20:00)', value: '08:00-20:00' },
+            ];
+          } else if (selectedPkg.id === '24hour') {
+            // 24小时服务：全天候
+            timeSlotOptions = [
+              { id: 'time_24h', label: '全天24小时 (00:00-24:00)', value: '00:00-24:00' },
+            ];
+          } else if (selectedPkg.id === 'monthly') {
+            // 按月服务：计算服务周期
+            const startDate = new Date(reply.value);
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + 1);
+
+            const formatDate = (date: Date) => {
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            };
+
+            const servicePeriod = `${formatDate(startDate)} 至 ${formatDate(endDate)}`;
+
+            timeSlotOptions = [
+              {
+                id: 'time_monthly_day',
+                label: `白天服务 (${servicePeriod})`,
+                value: `08:00-20:00|${servicePeriod}`
+              },
+              {
+                id: 'time_monthly_24h',
+                label: `全天服务 (${servicePeriod})`,
+                value: `00:00-24:00|${servicePeriod}`
+              },
+            ];
+          } else {
+            // 未知套餐类型
+            console.warn('⚠️ Unknown package type:', selectedPkg.id);
+            timeSlotOptions = [
+              { id: 'time_morning', label: '上午 (8:00-12:00)', value: '08:00-12:00' },
+              { id: 'time_afternoon', label: '下午 (14:00-18:00)', value: '14:00-18:00' },
+              { id: 'time_fullday', label: '全天 (8:00-18:00)', value: '08:00-18:00' },
+            ];
+          }
+
+          nextMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: selectedPkg?.id === 'monthly'
+              ? '请选择每日服务时段（服务周期一个月）：'
+              : '请选择服务时段：',
+            timestamp: new Date(),
+            quickReplies: timeSlotOptions,
+          };
+          break;
+
+        case 'select_time':
+          // User selected time, show confirmation
+          nextState = {
+            step: 'confirm_order',
+            serviceTime: reply.value,
+          };
+
+          const caregiver = getCaregiverById(conversationState.caregiverId!);
+          const pkg = getPackageById(conversationState.packageId!);
+
+          // 处理包月服务的显示
+          let serviceDateDisplay = conversationState.serviceDate;
+          let serviceTimeDisplay = reply.value;
+
+          if (pkg?.id === 'monthly' && reply.value.includes('|')) {
+            // 包月服务格式: "08:00-20:00|2025-10-05 至 2025-11-05"
+            const [timeRange, period] = reply.value.split('|');
+            serviceTimeDisplay = timeRange === '00:00-24:00' ? '24小时全天' : '白天时段 (8:00-20:00)';
+            serviceDateDisplay = period; // "2025-10-05 至 2025-11-05"
+          }
+
+          // 获取匹配的价格（处理EN->RN的映射）
+          const matchingQualification = getMatchingQualification(caregiver?.qualificationBadge || '');
+          const priceInfo = pkg?.prices.find(p => p.type === matchingQualification);
+          const orderPrice = priceInfo?.price || 0;
+
+          nextMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `📋 **订单确认**\n\n👤 护理人员：${caregiver?.name} (${caregiver?.qualificationBadge})\n📦 服务套餐：${pkg?.name}\n📅 服务${pkg?.id === 'monthly' ? '周期' : '日期'}：${serviceDateDisplay}\n⏰ 每日时段：${serviceTimeDisplay}\n💰 费用：¥${orderPrice}\n\n请确认订单信息`,
+            timestamp: new Date(),
+            quickReplies: [
+              { id: 'confirm_yes', label: '✅ 确认下单', value: 'confirm' },
+              { id: 'confirm_no', label: '↩️ 重新选择', value: 'restart' },
+            ],
+          };
+          break;
+
+        case 'confirm_order':
+          if (reply.value === 'confirm') {
+            // Navigate to Checkout
+            const caregiver = getCaregiverById(conversationState.caregiverId!);
+            const pkg = getPackageById(conversationState.packageId!);
+
+            // 构建详细的订单名称：养老服务-长者照顾-包月服务-张桂芳（PCW）
+            const serviceTypeLabel = conversationState.serviceType ? SERVICE_TYPE_LABELS[conversationState.serviceType] : '';
+            const itemName = `养老服务-${serviceTypeLabel}-${pkg?.name}-${caregiver?.name}（${caregiver?.qualificationBadge}）`;
+
+            // 获取匹配的价格（处理EN->RN的映射）
+            const matchingQual = getMatchingQualification(caregiver?.qualificationBadge || '');
+            const price = pkg?.prices.find(p => p.type === matchingQual)?.price || 0;
+
+            (navigation as any).navigate('Checkout', {
+              itemType: 'elderly_service',
+              caregiverId: conversationState.caregiverId,
+              packageId: conversationState.packageId,
+              elderlyServiceType: conversationState.serviceType,
+              itemId: conversationState.packageId,
+              itemName,
+              price,
+              // 传递服务日期和时间
+              serviceDate: conversationState.serviceDate,
+              serviceTime: conversationState.serviceTime,
+            });
+            return;
+          } else {
+            // Restart conversation
+            nextState = {
+              step: 'select_service_type',
+              serviceType: undefined,
+              qualification: undefined,
+              caregiverId: undefined,
+              packageId: undefined,
+              serviceDate: undefined,
+              serviceTime: undefined,
+            };
+            setSelectedCaregiverId(null);
+            setSelectedPackageId(null);
+
+            nextMessage = {
+              id: (Date.now() + 1).toString(),
+              type: 'ai',
+              content: '好的，让我们重新开始。请问您需要哪种服务？',
+              timestamp: new Date(),
+              quickReplies: [
+                { id: 'service_elderly', label: '养老照护', value: 'elderly-care', icon: Heart },
+                { id: 'service_escort', label: '陪诊服务', value: 'escort', icon: Activity },
+                { id: 'service_medical', label: '医护替补', value: 'medical-staff', icon: Shield },
+              ],
+            };
+          }
+          break;
+
+        default:
+          nextMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: '抱歉，出现了一些问题。让我们重新开始吧。',
+            timestamp: new Date(),
+            quickReplies: [
+              { id: 'service_elderly', label: '养老照护', value: 'elderly-care', icon: Heart },
+              { id: 'service_escort', label: '陪诊服务', value: 'escort', icon: Activity },
+              { id: 'service_medical', label: '医护替补', value: 'medical-staff', icon: Shield },
+            ],
+          };
+          nextState = { step: 'select_service_type' };
+      }
+
+      setConversationState(prev => ({ ...prev, ...nextState }));
+      setMessages(prev => [...prev, nextMessage]);
+      setIsTyping(false);
+
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }, 1500);
+  };
+
+  // Handle caregiver selection
+  const handleCaregiverSelect = (caregiverId: string) => {
+    setSelectedCaregiverId(caregiverId);
+
+    // Update conversation state
+    setConversationState(prev => ({
+      ...prev,
+      step: 'select_package',
+      caregiverId,
+    }));
+
+    setTimeout(() => {
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `很好！现在请选择服务套餐：`,
+        timestamp: new Date(),
+        interactiveType: 'package_selection',
+        interactiveData: {
+          packages: servicePackages,
+        },
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }, 500);
+  };
+
+  // Handle package selection
+  const handlePackageSelect = (packageId: string) => {
+    setSelectedPackageId(packageId);
+
+    // Update conversation state
+    setConversationState(prev => ({
+      ...prev,
+      step: 'select_date',
+      packageId,
+    }));
+
+    setTimeout(() => {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayAfter = new Date(today);
+      dayAfter.setDate(dayAfter.getDate() + 2);
+
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: '请选择服务开始日期：',
+        timestamp: new Date(),
+        quickReplies: [
+          { id: 'date_today', label: `今天 (${formatDate(today)})`, value: formatDate(today) },
+          { id: 'date_tomorrow', label: `明天 (${formatDate(tomorrow)})`, value: formatDate(tomorrow) },
+          { id: 'date_after', label: `后天 (${formatDate(dayAfter)})`, value: formatDate(dayAfter) },
+        ],
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }, 500);
+  };
+
+  // 发送消息（保留用于健康咨询等传统对话）
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
 
@@ -253,6 +712,17 @@ export const AIConsultationScreen: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // 处理初始消息自动发送 - 已禁用，改用按钮引导流程
+  // useEffect(() => {
+  //   const initialMessage = route.params?.initialMessage;
+  //   if (initialMessage && !initialMessageSent) {
+  //     setInitialMessageSent(true);
+  //     setTimeout(() => {
+  //       sendMessage(initialMessage);
+  //     }, 1000);
+  //   }
+  // }, [route.params?.initialMessage, initialMessageSent]);
 
   return (
     <Theme name="light">
@@ -533,38 +1003,161 @@ export const AIConsultationScreen: React.FC = () => {
                     </View>
                   )}
 
-                  <View
-                    maxWidth="80%"
-                    backgroundColor={
-                      message.type === 'user' ? COLORS.primary : '$surface'
-                    }
-                    padding="$3"
-                    borderRadius="$4"
-                    borderTopLeftRadius={message.type === 'ai' ? '$1' : '$4'}
-                    borderTopRightRadius={message.type === 'user' ? '$1' : '$4'}
-                  >
-                    <Text
-                      fontSize="$3"
-                      color={message.type === 'user' ? 'white' : '$text'}
-                      lineHeight="$2"
-                    >
-                      {message.content}
-                    </Text>
-                    <Text
-                      fontSize="$1"
-                      color={
-                        message.type === 'user'
-                          ? 'rgba(255,255,255,0.7)'
-                          : '$textSecondary'
+                  <YStack maxWidth="80%" space="$2">
+                    <View
+                      backgroundColor={
+                        message.type === 'user' ? COLORS.primary : '$surface'
                       }
-                      marginTop="$1"
+                      padding="$3"
+                      borderRadius="$4"
+                      borderTopLeftRadius={message.type === 'ai' ? '$1' : '$4'}
+                      borderTopRightRadius={message.type === 'user' ? '$1' : '$4'}
                     >
-                      {message.timestamp.toLocaleTimeString('zh-CN', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </Text>
-                  </View>
+                      <Text
+                        fontSize="$3"
+                        color={message.type === 'user' ? 'white' : '$text'}
+                        lineHeight="$2"
+                      >
+                        {message.content}
+                      </Text>
+                      <Text
+                        fontSize="$1"
+                        color={
+                          message.type === 'user'
+                            ? 'rgba(255,255,255,0.7)'
+                            : '$textSecondary'
+                        }
+                        marginTop="$1"
+                      >
+                        {message.timestamp.toLocaleTimeString('zh-CN', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </Text>
+                    </View>
+
+                    {/* Quick reply buttons */}
+                    {message.type === 'ai' && message.quickReplies && isLatestQuickReply(message.id) && (
+                      <>
+                        {/* 如果是第一条欢迎消息（服务类型选择），使用卡片样式 */}
+                        {message.id === '1' ? (
+                          <YStack gap="$2" paddingTop="$3" width="100%">
+                            {message.quickReplies.map((reply) => {
+                              const IconComponent = reply.icon;
+                              return (
+                                <Pressable key={reply.id} onPress={() => handleQuickReply(reply)}>
+                                  <View
+                                    backgroundColor="$surface"
+                                    padding="$3"
+                                    borderRadius="$4"
+                                    borderWidth={1}
+                                    borderColor="$borderColor"
+                                  >
+                                    <XStack alignItems="center" gap="$3">
+                                      {/* 图标 */}
+                                      <View
+                                        width={36}
+                                        height={36}
+                                        backgroundColor={COLORS.primaryLight}
+                                        borderRadius={18}
+                                        justifyContent="center"
+                                        alignItems="center"
+                                      >
+                                        {IconComponent && <IconComponent size={18} color="white" />}
+                                      </View>
+
+                                      {/* 文本内容 */}
+                                      <YStack flex={1}>
+                                        <Text fontSize="$3" fontWeight="500" color="$text">
+                                          {reply.label}
+                                        </Text>
+                                      </YStack>
+
+                                      {/* 右侧提示 */}
+                                      <View
+                                        backgroundColor="rgba(200, 85, 240, 0.1)"
+                                        paddingHorizontal="$2"
+                                        paddingVertical="$1"
+                                        borderRadius="$2"
+                                      >
+                                        <Text fontSize="$1" color={COLORS.primary}>
+                                          点击选择
+                                        </Text>
+                                      </View>
+                                    </XStack>
+                                  </View>
+                                </Pressable>
+                              );
+                            })}
+                          </YStack>
+                        ) : (
+                          // 其他消息使用小按钮样式
+                          <XStack flexWrap="wrap" gap="$2" paddingTop="$2" maxWidth="100%">
+                            {message.quickReplies.map((reply) => (
+                              <Pressable key={reply.id} onPress={() => handleQuickReply(reply)}>
+                                <View
+                                  backgroundColor={COLORS.primary}
+                                  paddingHorizontal="$3"
+                                  paddingVertical="$2"
+                                  borderRadius="$4"
+                                  borderWidth={1}
+                                  borderColor={COLORS.primary}
+                                >
+                                  <Text fontSize="$3" color="white" fontWeight="600">
+                                    {reply.label}
+                                  </Text>
+                                </View>
+                              </Pressable>
+                            ))}
+                          </XStack>
+                        )}
+                      </>
+                    )}
+
+                    {/* 交互式护理人员选择卡片 */}
+                    {message.type === 'ai' && message.interactiveType === 'caregiver_selection' && message.interactiveData?.caregivers && (
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ paddingRight: 16 }}
+                      >
+                        <XStack space="$3" paddingVertical="$2">
+                          {message.interactiveData.caregivers.slice(0, 6).map((caregiver) => (
+                            <View key={caregiver.id} width={280}>
+                              <CaregiverSelectCard
+                                caregiver={caregiver}
+                                isSelected={selectedCaregiverId === caregiver.id}
+                                onSelect={handleCaregiverSelect}
+                              />
+                            </View>
+                          ))}
+                        </XStack>
+                      </ScrollView>
+                    )}
+
+                    {/* 交互式套餐选择卡片 */}
+                    {message.type === 'ai' && message.interactiveType === 'package_selection' && message.interactiveData?.packages && (
+                      <YStack space="$3" paddingVertical="$2" width="100%">
+                        {message.interactiveData.packages.map((pkg) => {
+                          // 根据已选择的护理员获取资质类型
+                          const caregiver = conversationState.caregiverId
+                            ? getCaregiverById(conversationState.caregiverId)
+                            : null;
+                          const qualificationType = caregiver?.qualificationBadge as 'PCW' | 'HW' | 'RN' || 'PCW';
+
+                          return (
+                            <PackageSelectCard
+                              key={pkg.id}
+                              package={pkg}
+                              isSelected={selectedPackageId === pkg.id}
+                              onSelect={handlePackageSelect}
+                              qualificationType={qualificationType}
+                            />
+                          );
+                        })}
+                      </YStack>
+                    )}
+                  </YStack>
 
                   {message.type === 'user' && (
                     <View
@@ -624,8 +1217,8 @@ export const AIConsultationScreen: React.FC = () => {
                 </XStack>
               )}
 
-              {/* 快捷问题 */}
-              {messages.length === 1 && (
+              {/* 快捷问题 - 仅在非养老服务来源时显示 */}
+              {messages.length === 1 && route.params?.source !== 'elderly_service' && (
                 <YStack space="$3" marginTop="$4">
                   <XStack space="$2" alignItems="center">
                     <Sparkles size={16} color={COLORS.primary} />

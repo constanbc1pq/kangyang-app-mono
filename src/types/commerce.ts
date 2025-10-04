@@ -5,7 +5,7 @@
 
 // ==================== 通用类型 ====================
 
-export type ItemType = 'meal_plan' | 'service' | 'product' | 'consultation' | 'course';
+export type ItemType = 'meal_plan' | 'service' | 'product' | 'consultation' | 'course' | 'elderly_service';
 
 export type OrderStatus = 'pending' | 'paid' | 'processing' | 'shipping' | 'delivered' | 'completed' | 'cancelled' | 'refunded';
 

@@ -40,6 +40,7 @@ import {
   ShoppingBag,
   Clock,
   MapPin,
+  Heart,
 } from 'lucide-react-native';
 import { Pressable } from 'react-native';
 import {
@@ -210,6 +211,8 @@ export const PersonalCenterScreen: React.FC = () => {
 
   // 服务类订单（meal_plan和service）
   const serviceOrders = orders.filter(order => order.itemType === 'meal_plan' || order.itemType === 'service').slice(0, 3);
+  // 养老服务订单
+  const elderlyServiceOrders = getOrdersByType('elderly_service');
   // 咨询类订单
   const consultationOrders = getOrdersByType('consultation');
   // 商品类订单
@@ -222,6 +225,8 @@ export const PersonalCenterScreen: React.FC = () => {
         return <ShoppingBag size={20} color={COLORS.primary} />;
       case 'consultation':
         return <MessageSquare size={20} color={COLORS.primary} />;
+      case 'elderly_service':
+        return <Heart size={20} color={COLORS.primary} />;
       case 'product':
         return <Package size={20} color={COLORS.primary} />;
       default:
@@ -556,6 +561,65 @@ export const PersonalCenterScreen: React.FC = () => {
                         <MessageSquare size={48} color={COLORS.textSecondary} />
                         <Text fontSize="$3" color="$textSecondary" marginTop="$2">
                           暂无咨询类订单
+                        </Text>
+                      </View>
+                    )}
+                  </YStack>
+
+                  {/* 养老服务订单 */}
+                  <YStack gap="$3">
+                    <H4 fontSize="$4" fontWeight="600" color="$text">
+                      养老服务订单
+                    </H4>
+                    {elderlyServiceOrders.length > 0 ? (
+                      elderlyServiceOrders.map(order => (
+                        <Card
+                          key={order.id}
+                          bordered
+                          padding="$3"
+                          pressStyle={{ scale: 0.98 }}
+                          onPress={() => {
+                            navigation.navigate('OrderDetail' as never, { orderId: order.id } as never);
+                          }}
+                        >
+                          <XStack gap="$3" alignItems="center">
+                            {getOrderIcon(order.itemType)}
+                            <YStack flex={1} gap="$1">
+                              <Text fontSize="$3" fontWeight="600" color="$text">
+                                {order.itemName}
+                              </Text>
+                              {order.metadata?.appointmentDate && (
+                                <XStack gap="$1" alignItems="center">
+                                  <Clock size={12} color={COLORS.textSecondary} />
+                                  <Text fontSize="$2" color="$textSecondary">
+                                    {order.metadata.appointmentDate} {order.metadata.appointmentTime}
+                                  </Text>
+                                </XStack>
+                              )}
+                            </YStack>
+                            <YStack alignItems="flex-end" gap="$1">
+                              <Text fontSize="$4" fontWeight="700" color={COLORS.primary}>
+                                ¥{order.totalAmount.toFixed(2)}
+                              </Text>
+                              <View
+                                backgroundColor={`${getStatusColor(order.status)}20`}
+                                paddingHorizontal="$2"
+                                paddingVertical="$0.5"
+                                borderRadius="$2"
+                              >
+                                <Text fontSize="$1" color={getStatusColor(order.status)} fontWeight="600">
+                                  {getStatusLabel(order.status)}
+                                </Text>
+                              </View>
+                            </YStack>
+                          </XStack>
+                        </Card>
+                      ))
+                    ) : (
+                      <View paddingVertical="$6" alignItems="center">
+                        <Heart size={48} color={COLORS.textSecondary} />
+                        <Text fontSize="$3" color="$textSecondary" marginTop="$2">
+                          暂无养老服务订单
                         </Text>
                       </View>
                     )}

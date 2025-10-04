@@ -311,6 +311,7 @@ export const ORDER_ITEM_TYPES = {
   PRODUCT: 'product',
   CONSULTATION: 'consultation',
   COURSE: 'course',
+  ELDERLY_SERVICE: 'elderly_service',
 } as const;
 
 /**
@@ -334,6 +335,7 @@ export const ORDER_TYPE_CONFIGS = [
   { id: 'all', label: '全部' },
   { id: ORDER_ITEM_TYPES.MEAL_PLAN, label: '服务类' },
   { id: ORDER_ITEM_TYPES.CONSULTATION, label: '咨询类' },
+  { id: ORDER_ITEM_TYPES.ELDERLY_SERVICE, label: '养老服务' },
   { id: ORDER_ITEM_TYPES.PRODUCT, label: '商品类' },
 ];
 
@@ -384,6 +386,7 @@ export const ORDER_STATUS_LABELS = {
 export const ORDER_ITEM_TYPE_LABELS = {
   [ORDER_ITEM_TYPES.MEAL_PLAN]: '营养配餐',
   [ORDER_ITEM_TYPES.CONSULTATION]: '专家咨询',
+  [ORDER_ITEM_TYPES.ELDERLY_SERVICE]: '养老服务',
   [ORDER_ITEM_TYPES.PRODUCT]: '商品',
   [ORDER_ITEM_TYPES.SERVICE]: '服务',
   [ORDER_ITEM_TYPES.COURSE]: '课程',

@@ -24,6 +24,8 @@ import OrderDetailScreen from '@/screens/OrderDetailScreen';
 import { DeliveryServiceScreen } from '@/screens/DeliveryServiceScreen';
 import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import GroceryCheckoutScreen from '@/screens/GroceryCheckoutScreen';
+import ElderlyServiceScreen from '@/screens/ElderlyServiceScreen';
+import CaregiverDetailScreen from '@/screens/CaregiverDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -178,6 +180,14 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="GroceryCheckout"
         component={GroceryCheckoutScreen}
+      />
+      <Stack.Screen
+        name="ElderlyService"
+        component={ElderlyServiceScreen}
+      />
+      <Stack.Screen
+        name="CaregiverDetail"
+        component={CaregiverDetailScreen}
       />
     </Stack.Navigator>
   );
