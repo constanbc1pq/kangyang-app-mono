@@ -26,6 +26,13 @@ import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import GroceryCheckoutScreen from '@/screens/GroceryCheckoutScreen';
 import ElderlyServiceScreen from '@/screens/ElderlyServiceScreen';
 import CaregiverDetailScreen from '@/screens/CaregiverDetailScreen';
+import { ArticleDetailScreen } from '@/screens/ArticleDetailScreen';
+import { ArticleListScreen } from '@/screens/ArticleListScreen';
+import { CircleDetailScreen } from '@/screens/CircleDetailScreen';
+import { CircleListScreen } from '@/screens/CircleListScreen';
+import { VideoListScreen } from '@/screens/VideoListScreen';
+import { VideoDetailScreen } from '@/screens/VideoDetailScreen';
+import { TopicDetailScreen } from '@/screens/TopicDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -188,6 +195,34 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="CaregiverDetail"
         component={CaregiverDetailScreen}
+      />
+      <Stack.Screen
+        name="ArticleDetail"
+        component={ArticleDetailScreen}
+      />
+      <Stack.Screen
+        name="ArticleList"
+        component={ArticleListScreen}
+      />
+      <Stack.Screen
+        name="CircleDetail"
+        component={CircleDetailScreen}
+      />
+      <Stack.Screen
+        name="CircleList"
+        component={CircleListScreen}
+      />
+      <Stack.Screen
+        name="VideoList"
+        component={VideoListScreen}
+      />
+      <Stack.Screen
+        name="VideoDetail"
+        component={VideoDetailScreen}
+      />
+      <Stack.Screen
+        name="TopicDetail"
+        component={TopicDetailScreen}
       />
     </Stack.Navigator>
   );

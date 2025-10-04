@@ -22,7 +22,11 @@ import {
 import { Pressable } from 'react-native';
 import { COLORS } from '@/constants/app';
 
-export const HealthNews: React.FC = () => {
+interface HealthNewsProps {
+  navigation?: any;
+}
+
+export const HealthNews: React.FC<HealthNewsProps> = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const categories = [
@@ -108,17 +112,14 @@ export const HealthNews: React.FC = () => {
     : newsArticles.filter((article) => article.category === selectedCategory);
 
   return (
-    <Theme name="light">
-      <YStack space="$4">
-        {/* Category Filter */}
-        <Card
-          padding="$4"
-          borderRadius="$4"
-          backgroundColor="$cardBg"
-          borderWidth={1}
-          borderColor="$borderColor"
-        >
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    <YStack space="$4">
+      {/* Category Filter */}
+      <View
+        padding="$3"
+        borderRadius="$3"
+        backgroundColor="$surface"
+      >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <XStack space="$2">
               {categories.map((category) => (
                 <Pressable
@@ -159,23 +160,26 @@ export const HealthNews: React.FC = () => {
               ))}
             </XStack>
           </ScrollView>
-        </Card>
+        </View>
 
         {/* News Articles */}
         <YStack space="$3">
           {filteredArticles.map((article) => (
-            <Card
+            <Pressable
               key={article.id}
-              padding="$4"
-              borderRadius="$4"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
-              elevation={4}
-              pressStyle={{ scale: 0.98 }}
+              onPress={() => navigation?.navigate('ArticleList')}
             >
+              <Card
+                padding="$4"
+                borderRadius="$4"
+                backgroundColor="$cardBg"
+                shadowColor="$shadow"
+                shadowOffset={{ width: 0, height: 2 }}
+                shadowOpacity={0.1}
+                shadowRadius={8}
+                elevation={4}
+                pressStyle={{ scale: 0.98 }}
+              >
               <YStack space="$3">
                 {/* Title with verification */}
                 <XStack space="$2" alignItems="flex-start">
@@ -264,6 +268,7 @@ export const HealthNews: React.FC = () => {
                 </XStack>
               </YStack>
             </Card>
+            </Pressable>
           ))}
         </YStack>
 
@@ -279,6 +284,5 @@ export const HealthNews: React.FC = () => {
           </Button>
         </View>
       </YStack>
-    </Theme>
   );
 };

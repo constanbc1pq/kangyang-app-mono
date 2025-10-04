@@ -32,16 +32,23 @@ import {
   Radio,
   AlertTriangle,
   CheckCircle,
+  ChevronRight,
 } from 'lucide-react-native';
 import { Pressable } from 'react-native';
 import { COLORS } from '@/constants/app';
 import { HealthNews } from '@/components/HealthNews';
 import { ExpertLectures } from '@/components/ExpertLectures';
 import { UserCommunity } from '@/components/UserCommunity';
+import { useToastController } from '@tamagui/toast';
 
-export const CommunityScreen: React.FC = () => {
+interface CommunityScreenProps {
+  navigation: any;
+}
+
+export const CommunityScreen: React.FC<CommunityScreenProps> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('news');
   const [searchQuery, setSearchQuery] = useState('');
+  const toast = useToastController();
 
   const featuredContent = [
     {
@@ -83,11 +90,11 @@ export const CommunityScreen: React.FC = () => {
   ];
 
   const trendingTopics = [
-    { name: "冬季养生", posts: 234, trend: "up" },
-    { name: "血压管理", posts: 189, trend: "up" },
-    { name: "老年护理", posts: 156, trend: "stable" },
-    { name: "营养搭配", posts: 134, trend: "up" },
-    { name: "运动康复", posts: 98, trend: "down" },
+    { id: "1", name: "冬季养生", posts: 234, trend: "up" },
+    { id: "2", name: "血压管理", posts: 189, trend: "up" },
+    { id: "3", name: "老年护理", posts: 156, trend: "stable" },
+    { id: "4", name: "营养搭配", posts: 134, trend: "up" },
+    { id: "5", name: "运动康复", posts: 98, trend: "down" },
   ];
 
   const healthCircles = [
@@ -225,13 +232,28 @@ export const CommunityScreen: React.FC = () => {
 
               <YStack space="$4">
                 {featuredContent.map((content) => (
-                  <Card
+                  <Pressable
                     key={content.id}
-                    padding="$4"
-                    borderRadius="$3"
-                    backgroundColor="$surface"
-                    pressStyle={{ scale: 0.98 }}
+                    onPress={() => {
+                      console.log('Featured content clicked:', content.type, content.title);
+                      if (content.type === 'article') {
+                        navigation.navigate('ArticleList');
+                      } else if (content.type === 'video') {
+                        navigation.navigate('VideoList');
+                      } else if (content.type === 'live') {
+                        toast.show('直播功能敬请期待', { duration: 2000 });
+                      }
+                    }}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.7 : 1,
+                      transform: [{ scale: pressed ? 0.98 : 1 }],
+                    })}
                   >
+                    <Card
+                      padding="$4"
+                      borderRadius="$3"
+                      backgroundColor="$surface"
+                    >
                     <YStack space="$3">
                       {/* Content type badge */}
                       <XStack justifyContent="space-between" alignItems="center">
@@ -326,6 +348,7 @@ export const CommunityScreen: React.FC = () => {
                       </YStack>
                     </YStack>
                   </Card>
+                  </Pressable>
                 ))}
               </YStack>
             </Card>
@@ -349,37 +372,49 @@ export const CommunityScreen: React.FC = () => {
               </XStack>
 
               <YStack space="$3">
-                {trendingTopics.map((topic, index) => (
-                  <XStack
-                    key={index}
-                    justifyContent="space-between"
-                    alignItems="center"
-                    padding="$3"
-                    borderRadius="$3"
-                    backgroundColor="$surface"
-                    pressStyle={{ scale: 0.98 }}
+                {trendingTopics.map((topic) => (
+                  <Pressable
+                    key={topic.id}
+                    onPress={() => {
+                      console.log('Topic clicked:', topic.name, topic.id);
+                      navigation.navigate('TopicDetail', { topicId: topic.id });
+                    }}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.7 : 1,
+                    })}
                   >
-                    <YStack flex={1}>
-                      <XStack space="$2" alignItems="center" marginBottom="$1">
-                        <Text fontSize="$4" fontWeight="600" color="$text">
-                          {topic.name}
+                    <XStack
+                      justifyContent="space-between"
+                      alignItems="center"
+                      padding="$3"
+                      borderRadius="$3"
+                      backgroundColor="$surface"
+                    >
+                      <YStack flex={1}>
+                        <XStack space="$2" alignItems="center" marginBottom="$1">
+                          <Text fontSize="$4" fontWeight="600" color="$text">
+                            {topic.name}
+                          </Text>
+                          <TrendingUp
+                            size={12}
+                            color={getTrendColor(topic.trend)}
+                            style={{
+                              transform: topic.trend === 'down' ? [{ rotate: '180deg' }] : undefined
+                            }}
+                          />
+                        </XStack>
+                        <Text fontSize="$3" color="$textSecondary">
+                          {topic.posts} 条讨论
                         </Text>
-                        <TrendingUp
-                          size={12}
-                          color={getTrendColor(topic.trend)}
-                          style={{
-                            transform: topic.trend === 'down' ? [{ rotate: '180deg' }] : undefined
-                          }}
-                        />
+                      </YStack>
+                      <XStack space="$2" alignItems="center">
+                        <Button size="$3" variant="outlined" borderColor="$primary">
+                          <Text fontSize="$3" color="$primary">关注</Text>
+                        </Button>
+                        <ChevronRight size={18} color={COLORS.textSecondary} />
                       </XStack>
-                      <Text fontSize="$3" color="$textSecondary">
-                        {topic.posts} 条讨论
-                      </Text>
-                    </YStack>
-                    <Button size="$3" variant="outlined" borderColor="$primary">
-                      <Text fontSize="$3" color="$primary">关注</Text>
-                    </Button>
-                  </XStack>
+                    </XStack>
+                  </Pressable>
                 ))}
               </YStack>
             </Card>
@@ -402,22 +437,25 @@ export const CommunityScreen: React.FC = () => {
                     健康圈子
                   </H3>
                 </XStack>
-                <Button size="$2" chromeless>
+                <Button size="$2" chromeless onPress={() => navigation.navigate('CircleList')}>
                   <Text fontSize="$3" color="$primary">查看全部</Text>
                 </Button>
               </XStack>
 
               <YStack space="$3">
                 {healthCircles.map((circle) => (
-                  <XStack
+                  <Pressable
                     key={circle.id}
-                    space="$4"
-                    padding="$4"
-                    borderRadius="$3"
-                    backgroundColor="$surface"
-                    borderWidth={1}
-                    borderColor="$borderColor"
+                    onPress={() => navigation.navigate('CircleDetail', { circleId: circle.id.toString() })}
                   >
+                    <XStack
+                      space="$4"
+                      padding="$4"
+                      borderRadius="$3"
+                      backgroundColor="$surface"
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                    >
                     <View
                       width={60}
                       height={60}
@@ -471,6 +509,7 @@ export const CommunityScreen: React.FC = () => {
                       </XStack>
                     </YStack>
                   </XStack>
+                  </Pressable>
                 ))}
               </YStack>
             </Card>
@@ -564,7 +603,7 @@ export const CommunityScreen: React.FC = () => {
               <Separator marginBottom="$4" />
 
               {/* Tab Content */}
-              {activeTab === 'news' && <HealthNews />}
+              {activeTab === 'news' && <HealthNews navigation={navigation} />}
               {activeTab === 'lectures' && <ExpertLectures />}
               {activeTab === 'community' && <UserCommunity />}
             </Card>
