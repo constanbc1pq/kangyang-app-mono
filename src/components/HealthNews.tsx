@@ -167,7 +167,7 @@ export const HealthNews: React.FC<HealthNewsProps> = ({ navigation }) => {
           {filteredArticles.map((article) => (
             <Pressable
               key={article.id}
-              onPress={() => navigation?.navigate('ArticleList')}
+              onPress={() => navigation?.navigate('ArticleDetail', { articleId: article.id.toString() })}
             >
               <Card
                 padding="$4"

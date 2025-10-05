@@ -24,7 +24,7 @@ const mockVideos: Video[] = [
     shares: 156,
     category: '运动健身',
     tags: ['办公室健身', '拉伸运动', '腰背护理'],
-    thumbnail: 'https://placeholder.com/video1.jpg',
+    thumbnail: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=600&fit=crop',
     videoUrl: 'https://placeholder.com/video1.mp4',
   },
   {
@@ -46,7 +46,7 @@ const mockVideos: Video[] = [
     shares: 345,
     category: '老年健康',
     tags: ['防跌倒', '平衡训练', '老年运动'],
-    thumbnail: 'https://placeholder.com/video2.jpg',
+    thumbnail: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?w=800&h=600&fit=crop',
     videoUrl: 'https://placeholder.com/video2.mp4',
   },
   {
@@ -68,7 +68,7 @@ const mockVideos: Video[] = [
     shares: 567,
     category: '营养饮食',
     tags: ['冬季养生', '养生汤', '食疗'],
-    thumbnail: 'https://placeholder.com/video3.jpg',
+    thumbnail: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&h=600&fit=crop',
     videoUrl: 'https://placeholder.com/video3.mp4',
   },
   {
@@ -90,7 +90,7 @@ const mockVideos: Video[] = [
     shares: 445,
     category: '慢病管理',
     tags: ['糖尿病', '饮食指南', '低GI食物'],
-    thumbnail: 'https://placeholder.com/video4.jpg',
+    thumbnail: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&h=600&fit=crop',
     videoUrl: 'https://placeholder.com/video4.mp4',
   },
   {
@@ -112,7 +112,7 @@ const mockVideos: Video[] = [
     shares: 234,
     category: '运动健身',
     tags: ['瑜伽', '改善睡眠', '睡前拉伸'],
-    thumbnail: 'https://placeholder.com/video5.jpg',
+    thumbnail: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=600&fit=crop',
     videoUrl: 'https://placeholder.com/video5.mp4',
   },
   {
@@ -134,7 +134,7 @@ const mockVideos: Video[] = [
     shares: 489,
     category: '慢病管理',
     tags: ['高血压', '日常护理', '健康管理'],
-    thumbnail: 'https://placeholder.com/video6.jpg',
+    thumbnail: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&h=600&fit=crop',
     videoUrl: 'https://placeholder.com/video6.mp4',
   },
 ];

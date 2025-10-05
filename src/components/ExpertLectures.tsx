@@ -22,7 +22,11 @@ import {
 import { Pressable } from 'react-native';
 import { COLORS } from '@/constants/app';
 
-export const ExpertLectures: React.FC = () => {
+interface ExpertLecturesProps {
+  navigation?: any;
+}
+
+export const ExpertLectures: React.FC<ExpertLecturesProps> = ({ navigation }) => {
   const [selectedType, setSelectedType] = useState('all');
 
   const lectureTypes = [
@@ -222,8 +226,21 @@ export const ExpertLectures: React.FC = () => {
         {/* Lectures */}
         <YStack space="$4">
           {filteredLectures.map((lecture) => (
-            <Card
+            <Pressable
               key={lecture.id}
+              onPress={() => {
+                if (lecture.type === 'video') {
+                  navigation?.navigate('VideoDetail', { videoId: lecture.id.toString() });
+                } else if (lecture.type === 'live') {
+                  // 直播功能暂未实现
+                  console.log('Live lecture clicked:', lecture.title);
+                } else {
+                  // 咨询功能暂未实现
+                  console.log('Consultation clicked:', lecture.title);
+                }
+              }}
+            >
+            <Card
               padding="$4"
               borderRadius="$4"
               backgroundColor="$cardBg"
@@ -354,6 +371,7 @@ export const ExpertLectures: React.FC = () => {
                 </Pressable>
               </YStack>
             </Card>
+            </Pressable>
           ))}
         </YStack>
 

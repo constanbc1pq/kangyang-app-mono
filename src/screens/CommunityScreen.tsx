@@ -604,8 +604,8 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({ navigation }) 
 
               {/* Tab Content */}
               {activeTab === 'news' && <HealthNews navigation={navigation} />}
-              {activeTab === 'lectures' && <ExpertLectures />}
-              {activeTab === 'community' && <UserCommunity />}
+              {activeTab === 'lectures' && <ExpertLectures navigation={navigation} />}
+              {activeTab === 'community' && <UserCommunity navigation={navigation} />}
             </Card>
 
             {/* Bottom padding for safe area */}

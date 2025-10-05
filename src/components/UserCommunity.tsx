@@ -24,9 +24,14 @@ import {
   Clock,
   User,
 } from 'lucide-react-native';
+import { Pressable } from 'react-native';
 import { COLORS } from '@/constants/app';
 
-export const UserCommunity: React.FC = () => {
+interface UserCommunityProps {
+  navigation?: any;
+}
+
+export const UserCommunity: React.FC<UserCommunityProps> = ({ navigation }) => {
   const [newPost, setNewPost] = useState('');
 
   const communityPosts = [
@@ -263,8 +268,14 @@ export const UserCommunity: React.FC = () => {
         {/* Community Posts */}
         <YStack space="$3">
           {communityPosts.map((post) => (
-            <Card
+            <Pressable
               key={post.id}
+              onPress={() => {
+                // 用户社区帖子暂时用文章详情页展示
+                navigation?.navigate('ArticleDetail', { articleId: post.id.toString() });
+              }}
+            >
+            <Card
               padding="$4"
               borderRadius="$4"
               backgroundColor="$cardBg"
@@ -273,6 +284,7 @@ export const UserCommunity: React.FC = () => {
               shadowOpacity={0.1}
               shadowRadius={8}
               elevation={4}
+              pressStyle={{ scale: 0.98 }}
             >
               <YStack space="$3">
                 {/* User Info */}
@@ -401,6 +413,7 @@ export const UserCommunity: React.FC = () => {
                 </XStack>
               </YStack>
             </Card>
+            </Pressable>
           ))}
         </YStack>
 

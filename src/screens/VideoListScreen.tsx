@@ -11,7 +11,7 @@ import {
   Input,
 } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Pressable, ActivityIndicator, Dimensions } from 'react-native';
+import { Pressable, ActivityIndicator, Dimensions, Image } from 'react-native';
 import {
   ArrowLeft,
   Search,
@@ -195,7 +195,30 @@ export const VideoListScreen: React.FC<VideoListScreenProps> = ({ navigation }) 
                             height={CARD_WIDTH * 1.3}
                             backgroundColor="#F0F0F0"
                             position="relative"
+                            overflow="hidden"
                           >
+                            {/* 缩略图 */}
+                            {video.thumbnail ? (
+                              <Image
+                                source={{ uri: video.thumbnail }}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                }}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <View
+                                width="100%"
+                                height="100%"
+                                backgroundColor="#E0E0E0"
+                                justifyContent="center"
+                                alignItems="center"
+                              >
+                                <Play size={32} color="#999999" />
+                              </View>
+                            )}
+
                             {/* 播放按钮 */}
                             <View
                               position="absolute"

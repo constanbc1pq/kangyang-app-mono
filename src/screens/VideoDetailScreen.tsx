@@ -9,7 +9,7 @@ import {
   Button,
 } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Pressable, ActivityIndicator, Dimensions } from 'react-native';
+import { Pressable, ActivityIndicator, Dimensions, Image } from 'react-native';
 import {
   ArrowLeft,
   Heart,
@@ -123,6 +123,30 @@ export const VideoDetailScreen: React.FC<VideoDetailScreenProps> = ({ route, nav
           alignItems="center"
           position="relative"
         >
+          {/* 视频缩略图 */}
+          {video.thumbnail ? (
+            <Image
+              source={{ uri: video.thumbnail }}
+              style={{
+                width: width,
+                height: height,
+              }}
+              resizeMode="cover"
+            />
+          ) : (
+            <View
+              width={width}
+              height={height}
+              backgroundColor="#1A1A1A"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize="$6" color="white" opacity={0.5}>
+                视频播放器占位
+              </Text>
+            </View>
+          )}
+
           {/* 播放按钮 */}
           <Pressable style={{ position: 'absolute', zIndex: 10 }}>
             <View
@@ -136,11 +160,6 @@ export const VideoDetailScreen: React.FC<VideoDetailScreenProps> = ({ route, nav
               <Play size={40} color="white" fill="white" />
             </View>
           </Pressable>
-
-          {/* 视频封面占位 */}
-          <Text fontSize="$6" color="white" opacity={0.5}>
-            视频播放器占位
-          </Text>
         </View>
 
         {/* 顶部返回按钮 */}

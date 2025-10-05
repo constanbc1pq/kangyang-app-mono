@@ -108,37 +108,38 @@ export const ArticleListScreen: React.FC<ArticleListScreenProps> = ({ navigation
           </View>
 
           {/* 分类筛选 */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            paddingHorizontal="$4"
-            paddingBottom="$3"
-          >
-            <XStack space="$2">
-              {categories.map((category) => (
-                <Pressable key={category} onPress={() => setSelectedCategory(category)}>
-                  <View
-                    backgroundColor={
-                      selectedCategory === category ? COLORS.primary : '$surface'
-                    }
-                    paddingHorizontal="$4"
-                    paddingVertical="$2"
-                    borderRadius="$3"
-                    borderWidth={1}
-                    borderColor={selectedCategory === category ? COLORS.primary : '$borderColor'}
-                  >
-                    <Text
-                      fontSize="$3"
-                      color={selectedCategory === category ? 'white' : '$text'}
-                      fontWeight={selectedCategory === category ? '600' : '400'}
+          <View paddingBottom="$3">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+            >
+              <XStack space="$2">
+                {categories.map((category) => (
+                  <Pressable key={category} onPress={() => setSelectedCategory(category)}>
+                    <View
+                      backgroundColor={
+                        selectedCategory === category ? COLORS.primary : '$surface'
+                      }
+                      paddingHorizontal="$4"
+                      paddingVertical="$2"
+                      borderRadius="$3"
+                      borderWidth={1}
+                      borderColor={selectedCategory === category ? COLORS.primary : '$borderColor'}
                     >
-                      {category}
-                    </Text>
-                  </View>
-                </Pressable>
-              ))}
-            </XStack>
-          </ScrollView>
+                      <Text
+                        fontSize="$3"
+                        color={selectedCategory === category ? 'white' : '$text'}
+                        fontWeight={selectedCategory === category ? '600' : '400'}
+                      >
+                        {category}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </XStack>
+            </ScrollView>
+          </View>
 
           {/* 文章列表 */}
           {loading ? (
@@ -153,11 +154,12 @@ export const ArticleListScreen: React.FC<ArticleListScreenProps> = ({ navigation
             </View>
           ) : (
             <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-              <YStack padding="$4" paddingTop="$2" space="$3">
+              <YStack padding="$4" paddingTop="$0">
                 {articles.map((article) => (
                   <Pressable key={article.id} onPress={() => handleArticlePress(article.id)}>
                     <Card
                       padding="$4"
+                      marginBottom="$3"
                       borderRadius="$4"
                       backgroundColor="$cardBg"
                       shadowColor="$shadow"
