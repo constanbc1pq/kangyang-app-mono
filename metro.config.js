@@ -7,7 +7,7 @@ const config = getDefaultConfig(__dirname);
 config.resolver.platforms = ['ios', 'android', 'native', 'web'];
 
 // 支持更多文件扩展
-config.resolver.sourceExts = ['js', 'jsx', 'ts', 'tsx', 'json'];
+config.resolver.sourceExts = ['js', 'jsx', 'ts', 'tsx', 'json', 'cjs', 'mjs'];
 
 // 添加node_modules解析路径
 config.resolver.nodeModulesPaths = [
@@ -31,6 +31,7 @@ config.resolver.alias = {
 
   // 明确指定问题包的解析
   'clsx': path.resolve(__dirname, 'node_modules/clsx/dist/clsx.js'),
+  'redux': path.resolve(__dirname, 'node_modules/redux'),
 
   // Web特定别名
   'react-native$': 'react-native-web',
