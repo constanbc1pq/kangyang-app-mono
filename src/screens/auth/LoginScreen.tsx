@@ -189,7 +189,7 @@ export const LoginScreen: React.FC = () => {
                       <Text fontSize="$2" color="$primary">记住密码</Text>
                     </Button>
                     <Button variant="outlined" size="$2" chromeless>
-                      <Text fontSize="$2" color="$secondary">忘记密码？</Text>
+                      <Text fontSize="$2" color="$primaryLight">忘记密码？</Text>
                     </Button>
                   </XStack>
                 </YStack>
@@ -212,11 +212,11 @@ export const LoginScreen: React.FC = () => {
 
                   <Button
                     variant="outlined"
-                    borderColor="$secondary"
+                    borderColor="$primaryLight"
                     borderRadius="$3"
                     size="$5"
                   >
-                    <Text fontSize="$4" fontWeight="500" color="$secondary">
+                    <Text fontSize="$4" fontWeight="500" color="$primaryLight">
                       注册新账号
                     </Text>
                   </Button>
