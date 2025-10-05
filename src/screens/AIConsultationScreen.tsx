@@ -133,19 +133,33 @@ interface ConversationState {
 export const AIConsultationScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<AIConsultationScreenRouteProp>();
-  const [messages, setMessages] = useState<Message[]>([
-    {
+
+  // 根据来源决定初始消息
+  const getInitialMessage = (): Message => {
+    if (route.params?.source === 'elderly_service') {
+      return {
+        id: '1',
+        type: 'ai',
+        content: '您好！我是康养AI助手。我可以帮您预约专业的护理服务。请问您需要哪种服务？',
+        timestamp: new Date(),
+        quickReplies: [
+          { id: 'service_elderly', label: '养老照护', value: 'elderly-care', icon: Heart },
+          { id: 'service_escort', label: '陪诊服务', value: 'escort', icon: Activity },
+          { id: 'service_medical', label: '医护替补', value: 'medical-staff', icon: Shield },
+        ],
+      };
+    }
+
+    // 通用健康咨询初始消息
+    return {
       id: '1',
       type: 'ai',
-      content: '您好！我是康养AI助手。我可以帮您预约专业的护理服务。请问您需要哪种服务？',
+      content: '您好！我是康养AI助手。我可以为您提供健康咨询、疾病预防、养生建议等服务。请问有什么可以帮助您的吗？',
       timestamp: new Date(),
-      quickReplies: [
-        { id: 'service_elderly', label: '养老照护', value: 'elderly-care', icon: Heart },
-        { id: 'service_escort', label: '陪诊服务', value: 'escort', icon: Activity },
-        { id: 'service_medical', label: '医护替补', value: 'medical-staff', icon: Shield },
-      ],
-    }
-  ]);
+    };
+  };
+
+  const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedModel, setSelectedModel] = useState('huatuo');
@@ -704,15 +718,6 @@ export const AIConsultationScreen: React.FC = () => {
     sendMessage(question.text);
   };
 
-  useEffect(() => {
-    // 组件挂载时聚焦输入框
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   // 处理初始消息自动发送 - 已禁用，改用按钮引导流程
   // useEffect(() => {
   //   const initialMessage = route.params?.initialMessage;
@@ -1230,17 +1235,15 @@ export const AIConsultationScreen: React.FC = () => {
                     {quickQuestions.map((question) => {
                       const IconComponent = question.icon;
                       return (
-                        <TouchableOpacity
-                          key={question.id}
-                          onPress={() => handleQuickQuestion(question)}
-                        >
                           <Card
+                            key={question.id}
                             padding="$3"
                             borderRadius="$4"
                             backgroundColor="$surface"
                             borderWidth={1}
                             borderColor="$borderColor"
                             pressStyle={{ scale: 0.98 }}
+                            onPress={() => handleQuickQuestion(question)}
                           >
                             <XStack space="$3" alignItems="center">
                               <View
@@ -1273,7 +1276,6 @@ export const AIConsultationScreen: React.FC = () => {
                               </View>
                             </XStack>
                           </Card>
-                        </TouchableOpacity>
                       );
                     })}
                   </YStack>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Alert, Pressable, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/app';
 import { getNutritionists, Nutritionist } from '@/services/nutritionistService';
 import {
@@ -74,6 +75,7 @@ interface Nutritionist {
 
 const NutritionServiceScreen: React.FC = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [selectedPlanId, setSelectedPlanId] = useState<string>('balanced');
   const [isFavorited, setIsFavorited] = useState(false);
   const [activeTab, setActiveTab] = useState<'intro' | 'reviews' | 'faq'>('intro');
@@ -516,11 +518,13 @@ const NutritionServiceScreen: React.FC = () => {
             <H3 fontSize="$5" fontWeight="bold">
               选择您的套餐
             </H3>
-            <XStack gap="$3" flexWrap="wrap" justifyContent="space-between">
+            <XStack gap="$3" flexWrap="wrap">
               {mealPlans.map((plan) => (
                 <Card
                   key={plan.id}
-                  width="48%"
+                  flex={1}
+                  minWidth="45%"
+                  maxWidth="48%"
                   bordered
                   borderWidth={2}
                   borderColor={selectedPlanId === plan.id ? COLORS.primary : '$borderColor'}
@@ -1026,6 +1030,7 @@ const NutritionServiceScreen: React.FC = () => {
         borderTopWidth={1}
         borderTopColor="$borderColor"
         padding="$4"
+        paddingBottom={insets.bottom + 16}
         gap="$2"
       >
         <YStack f={1}>

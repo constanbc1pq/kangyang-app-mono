@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, Alert, TextInput } from 'react-native';
 import { View, Text, XStack, YStack, Card } from 'tamagui';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, MapPin, Edit, Package } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 import { Image } from 'react-native';
@@ -29,6 +30,7 @@ const GroceryCheckoutScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const params = (route.params || {}) as RouteParams;
+  const insets = useSafeAreaInsets();
 
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [address, setAddress] = useState<Address | null>(null);
@@ -303,6 +305,7 @@ const GroceryCheckoutScreen: React.FC = () => {
         borderTopWidth={1}
         borderTopColor="$borderColor"
         padding="$4"
+        paddingBottom={insets.bottom + 16}
       >
         <XStack gap="$3" alignItems="center">
           <YStack flex={1}>

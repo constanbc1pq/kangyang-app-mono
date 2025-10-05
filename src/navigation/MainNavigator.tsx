@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCREEN_NAMES, COLORS } from '@/constants/app';
 import { View } from 'tamagui';
 import { Heart, Activity, Users, User } from 'lucide-react-native';
@@ -39,6 +40,8 @@ const Stack = createNativeStackNavigator();
 
 // Tab导航器组件 - 包含4个主页面
 const TabNavigator: React.FC = () => {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       initialRouteName={SCREEN_NAMES.HEALTH_TAB}
@@ -70,8 +73,8 @@ const TabNavigator: React.FC = () => {
         tabBarStyle: {
           backgroundColor: COLORS.surface,
           borderTopColor: COLORS.background,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 8,
           paddingTop: 8,
           shadowColor: COLORS.primary,
           shadowOffset: {

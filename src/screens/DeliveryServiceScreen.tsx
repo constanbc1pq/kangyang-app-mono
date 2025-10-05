@@ -684,6 +684,7 @@ export const DeliveryServiceScreen: React.FC = () => {
             borderTopWidth={1}
             borderTopColor="$borderColor"
             padding="$4"
+            paddingBottom={16}
           >
             <XStack justifyContent="space-between" alignItems="center">
               <XStack space="$3" alignItems="center">

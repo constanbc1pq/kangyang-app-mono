@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable } from 'react-native';
 import { View, Text, XStack, YStack, Card } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Phone, Heart, ChevronDown, ChevronUp, CheckCircle, Info, Shield, Award, Home, Ambulance, Stethoscope, Users } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,6 +23,7 @@ import { CaregiverCard } from '@/components/CaregiverCard';
 
 const ElderlyServiceScreen: React.FC = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [selectedService, setSelectedService] = useState<ServiceType>('elderly-care');
   const [currentBanner, setCurrentBanner] = useState(0);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
@@ -613,7 +615,7 @@ const ElderlyServiceScreen: React.FC = () => {
               </XStack>
               <XStack flexDirection="row" flexWrap="wrap" gap="$3">
                 {(showAllCaregivers ? caregivers : caregivers.slice(0, 6)).map((caregiver) => (
-                  <View key={caregiver.id} width="48%">
+                  <View key={caregiver.id} flex={1} minWidth="45%" maxWidth="48%">
                     <CaregiverCard
                       caregiver={caregiver}
                       size="compact"
@@ -780,6 +782,7 @@ const ElderlyServiceScreen: React.FC = () => {
         borderTopWidth={1}
         borderTopColor="$borderColor"
         padding="$4"
+        paddingBottom={insets.bottom + 16}
       >
         <Pressable onPress={handleOnlineConsult}>
           <View

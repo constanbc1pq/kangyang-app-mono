@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, ActivityIndicator, Animated, Alert } from 'react-native';
 import { View, Text, XStack, YStack } from 'tamagui';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   CreditCard,
@@ -54,6 +55,7 @@ const PaymentScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const params = (route.params || {}) as RouteParams;
+  const insets = useSafeAreaInsets();
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('wechat');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -300,6 +302,7 @@ const PaymentScreen: React.FC = () => {
         borderTopWidth={1}
         borderTopColor="$borderColor"
         padding="$4"
+        paddingBottom={insets.bottom + 16}
       >
         <Pressable onPress={handlePayment} disabled={isProcessing}>
           <View
