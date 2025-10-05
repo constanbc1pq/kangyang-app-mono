@@ -10,7 +10,10 @@ import {
   Separator,
   Theme,
   View,
+  Toast,
+  useToastState,
 } from 'tamagui';
+import { ToastViewport, useToastController } from '@tamagui/toast';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -27,6 +30,7 @@ export const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
+  const toast = useToastController();
 
   // 模拟登录处理
   const handleLogin = async () => {
@@ -63,7 +67,13 @@ export const LoginScreen: React.FC = () => {
           updatedAt: new Date().toISOString(),
         }));
 
-        Alert.alert('登录成功', '欢迎回来！');
+        toast.show('登录成功，欢迎回来！', {
+          duration: 2000,
+          burntOptions: {
+            preset: 'done',
+            haptic: 'success',
+          },
+        });
         // Navigation will be handled by AppNavigator based on auth state
       } else {
         // 登录失败
@@ -254,6 +264,7 @@ export const LoginScreen: React.FC = () => {
             </Card>
           </View>
         </LinearGradient>
+        <ToastViewport />
       </SafeAreaView>
     </Theme>
   );

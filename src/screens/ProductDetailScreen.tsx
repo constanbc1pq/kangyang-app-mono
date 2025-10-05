@@ -23,6 +23,7 @@ import {
 import { COLORS } from '@/constants/app';
 import { useNavigation } from '@react-navigation/native';
 import { groceryCartService } from '@/services/groceryCartService';
+import { getProductById } from '@/data/groceryProducts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -46,41 +47,28 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
   const [isFavorite, setIsFavorite] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
-  // Mock product data - 实际应该从props或API获取
-  const product = {
-    id: productId,
-    name: '有机西兰花',
-    images: [
-      'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=800',
-      'https://images.unsplash.com/photo-1628773822990-202e8e7d2d85?w=800',
-      'https://images.unsplash.com/photo-1553778256-f78276190634?w=800',
-    ],
-    price: 12.9,
-    originalPrice: 15.9,
-    unit: '500g',
-    stock: 156,
-    sales: 1234,
-    rating: 4.8,
-    tag: '新鲜',
-    tags: ['有机认证', '当日采摘', '冷链配送'],
-    description:
-      '精选优质有机西兰花，产自山东寿光有机农场。每日清晨采摘，全程冷链配送，保证新鲜度。富含维生素C、膳食纤维和多种矿物质，营养丰富，口感鲜嫩。',
-    nutrition: [
-      { name: '能量', value: '34', unit: 'kcal/100g' },
-      { name: '蛋白质', value: '2.8', unit: 'g/100g' },
-      { name: '膳食纤维', value: '1.6', unit: 'g/100g' },
-      { name: '维生素C', value: '51', unit: 'mg/100g' },
-    ],
+  // 从数据文件获取商品信息
+  const productData = getProductById(productId);
+
+  // 如果商品不存在，使用默认商品
+  const product = productData ? {
+    ...productData,
+    images: productData.images || [productData.image],
+    stock: productData.stock || 100,
+    rating: productData.rating || 4.5,
+    tags: productData.tags || ['新鲜', '优质'],
+    description: productData.description || `精选${productData.name}，新鲜优质，值得信赖。`,
+    nutrition: productData.nutrition || [],
     features: [
       {
         icon: Package,
         title: '产地直采',
-        desc: '山东寿光有机农场',
+        desc: '精选产地 品质保证',
       },
       {
         icon: Shield,
         title: '品质保证',
-        desc: '有机认证 无农药残留',
+        desc: '严格把关 安全放心',
       },
       {
         icon: Truck,
@@ -93,7 +81,23 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
         desc: '不满意可退换',
       },
     ],
-    reviews: [
+  } : {
+    id: productId,
+    name: '商品不存在',
+    images: ['https://via.placeholder.com/800'],
+    price: 0,
+    unit: '',
+    stock: 0,
+    sales: 0,
+    rating: 0,
+    tag: '',
+    tags: [],
+    description: '该商品不存在',
+    nutrition: [],
+    features: [],
+  };
+
+  const reviews = [
       {
         id: 1,
         user: '张**',
@@ -127,8 +131,9 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
         images: [],
         likes: 8,
       },
-    ],
-    faqs: [
+    ];
+
+  const faqs = [
       {
         question: '如何判断西兰花是否新鲜？',
         answer: '新鲜的西兰花颜色翠绿，花球紧实，茎部不发黄，没有黑点。我们的西兰花都是当日采摘，冷链配送，保证新鲜度。',
@@ -144,10 +149,9 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
       },
       {
         question: '配送时间和范围？',
-        answer: '朝阳区、海淀区、东城区、西城区支持次日达。每天下午5点前下单，次日上午送达。其他区域配送时间可能延长1-2天。',
+        answer: '深圳市内各区域支持次日达。每天下午5点前下单，次日上午送达。偏远区域配送时间可能延长1-2天。',
       },
-    ],
-  };
+    ];
 
   const handleAddToCart = async () => {
     try {
@@ -450,7 +454,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
                 <YStack space="$4">
                   <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
                     <H3 fontSize="$5" fontWeight="600">
-                      用户评价 ({product.reviews.length})
+                      用户评价 ({reviews.length})
                     </H3>
                     <XStack space="$1" alignItems="center">
                       <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
@@ -460,7 +464,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
                     </XStack>
                   </XStack>
 
-                  {product.reviews.map((review) => (
+                  {reviews.map((review) => (
                     <Card key={review.id} padding="$4" backgroundColor="$background" borderRadius="$4">
                       <XStack space="$3" marginBottom="$3">
                         <Image
@@ -523,7 +527,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
 
               {activeTab === 'qa' && (
                 <YStack space="$3">
-                  {product.faqs.map((faq, index) => (
+                  {faqs.map((faq, index) => (
                     <Card key={index} padding="$4" backgroundColor="$background" borderRadius="$4">
                       <XStack space="$2" alignItems="flex-start" marginBottom="$2">
                         <View

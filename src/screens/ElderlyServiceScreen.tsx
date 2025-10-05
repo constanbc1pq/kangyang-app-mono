@@ -111,23 +111,6 @@ const ElderlyServiceScreen: React.FC = () => {
             专业照护 · 温暖陪伴
           </Text>
         </YStack>
-        <Pressable
-          onPress={() => {/* 紧急联系 */}}
-          style={{
-            backgroundColor: COLORS.error,
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            borderRadius: 8,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 4,
-          }}
-        >
-          <Phone size={14} color="white" />
-          <Text fontSize="$2" color="white" fontWeight="600">
-            紧急联系
-          </Text>
-        </Pressable>
       </XStack>
 
       <ScrollView showsVerticalScrollIndicator={false}>
