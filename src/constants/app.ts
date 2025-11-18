@@ -312,6 +312,8 @@ export const ORDER_ITEM_TYPES = {
   CONSULTATION: 'consultation',
   COURSE: 'course',
   ELDERLY_SERVICE: 'elderly_service',
+  PRIVATE_DOCTOR: 'private_doctor',
+  LEGAL_MEMBERSHIP: 'legal_membership',
 } as const;
 
 /**
@@ -337,6 +339,7 @@ export const ORDER_TYPE_CONFIGS = [
   { id: ORDER_ITEM_TYPES.CONSULTATION, label: '咨询类' },
   { id: ORDER_ITEM_TYPES.ELDERLY_SERVICE, label: '养老服务' },
   { id: ORDER_ITEM_TYPES.PRODUCT, label: '商品类' },
+  { id: ORDER_ITEM_TYPES.PRIVATE_DOCTOR, label: '私人医生' },
 ];
 
 /**
@@ -390,6 +393,8 @@ export const ORDER_ITEM_TYPE_LABELS = {
   [ORDER_ITEM_TYPES.PRODUCT]: '商品',
   [ORDER_ITEM_TYPES.SERVICE]: '服务',
   [ORDER_ITEM_TYPES.COURSE]: '课程',
+  [ORDER_ITEM_TYPES.PRIVATE_DOCTOR]: '私人医生',
+  [ORDER_ITEM_TYPES.LEGAL_MEMBERSHIP]: '法律尊享计划',
 };
 
 /**

@@ -1,617 +1,1022 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   YStack,
   XStack,
   Text,
-  Button,
-  Card,
   View,
   H1,
-  H2,
-  H3,
   Theme,
   ScrollView,
   Input,
-  Separator,
 } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  MessageCircle,
-  Search,
-  TrendingUp,
-  Users,
-  BookOpen,
-  Play,
-  ThumbsUp,
-  Eye,
-  Star,
-  Filter,
-  Clock,
-  UserCheck,
-  Plus,
-  Radio,
-  AlertTriangle,
-  CheckCircle,
-  ChevronRight,
-} from 'lucide-react-native';
-import { Pressable } from 'react-native';
+import { Search, PenLine, Plus, X, FileText, Package, Briefcase } from 'lucide-react-native';
+import { Pressable, FlatList, RefreshControl, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent, Modal } from 'react-native';
 import { COLORS } from '@/constants/app';
-import { HealthNews } from '@/components/HealthNews';
-import { ExpertLectures } from '@/components/ExpertLectures';
-import { UserCommunity } from '@/components/UserCommunity';
-import { useToastController } from '@tamagui/toast';
+import { BannerSlider, BannerItem } from '@/components/BannerSlider';
+import {
+  CircleNavigation,
+  CircleNavItem,
+  defaultCircleNavItems,
+} from '@/components/CircleNavigation';
+import { CommunityFeedCard, FeedItem } from '@/components/CommunityFeedCard';
+import {
+  getBanners,
+  getJobs,
+  getSecondHandItems,
+  getPosts,
+  getExperts,
+  initializeCommunityData,
+} from '@/services/communityDataService';
 
 interface CommunityScreenProps {
   navigation: any;
 }
 
-export const CommunityScreen: React.FC<CommunityScreenProps> = ({ navigation }) => {
-  const [activeTab, setActiveTab] = useState('news');
+export const CommunityScreen: React.FC<CommunityScreenProps> = ({
+  navigation,
+}) => {
+  const [activeTab, setActiveTab] = useState('recommend');
   const [searchQuery, setSearchQuery] = useState('');
-  const toast = useToastController();
+  const [banners, setBanners] = useState<BannerItem[]>([]);
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [jobFeedItems, setJobFeedItems] = useState<FeedItem[]>([]);
+  const [itemFeedItems, setItemFeedItems] = useState<FeedItem[]>([]);
+  const [nearbyFeedItems, setNearbyFeedItems] = useState<FeedItem[]>([]);
+  const [contentFeedItems, setContentFeedItems] = useState<FeedItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const [showPublishMenu, setShowPublishMenu] = useState(false);
+  const PAGE_SIZE = 10;
 
-  const featuredContent = [
-    {
-      id: 1,
-      type: "article",
-      title: "冬季养生：如何科学进补",
-      author: "张医师",
-      authorTitle: "中医养生专家",
-      readTime: "5分钟",
-      views: 1234,
-      likes: 89,
-      tags: ["冬季养生", "中医", "进补"],
-      summary: "冬季是进补的最佳时节，但如何科学进补却大有学问...",
-    },
-    {
-      id: 2,
-      type: "video",
-      title: "老年人居家运动指南",
-      author: "李教练",
-      authorTitle: "康复理疗师",
-      duration: "12分钟",
-      views: 2156,
-      likes: 156,
-      tags: ["老年健康", "居家运动", "康复"],
-      summary: "适合老年人的居家运动方案，安全有效提升身体机能...",
-    },
-    {
-      id: 3,
-      type: "live",
-      title: "营养专家在线答疑",
-      author: "王营养师",
-      authorTitle: "注册营养师",
-      startTime: "今晚8点",
-      viewers: 456,
-      status: "upcoming",
-      tags: ["营养咨询", "在线答疑", "直播"],
-      summary: "营养专家在线解答您的饮食健康问题...",
-    },
-  ];
+  // 加载Banner数据
+  useEffect(() => {
+    const initializeAndLoadData = async () => {
+      try {
+        // 首先初始化社区数据（如果还没有的话）
+        await initializeCommunityData();
 
-  const trendingTopics = [
-    { id: "1", name: "冬季养生", posts: 234, trend: "up" },
-    { id: "2", name: "血压管理", posts: 189, trend: "up" },
-    { id: "3", name: "老年护理", posts: 156, trend: "stable" },
-    { id: "4", name: "营养搭配", posts: 134, trend: "up" },
-    { id: "5", name: "运动康复", posts: 98, trend: "down" },
-  ];
+        // 然后加载各类数据
+        await loadBanners();
+        await loadFeedData();
+        await loadJobFeedData();
+        await loadItemFeedData();
+        await loadNearbyFeedData();
+        await loadContentFeedData();
+      } catch (error) {
+        console.error('初始化社区数据失败:', error);
+      }
+    };
 
-  const healthCircles = [
-    {
-      id: 1,
-      name: "糖尿病友互助圈",
-      members: 1234,
-      posts: 567,
-      description: "糖尿病患者经验分享与互助支持",
-      isJoined: true,
-    },
-    {
-      id: 2,
-      name: "高血压管理群",
-      members: 987,
-      posts: 432,
-      description: "高血压患者日常管理经验交流",
-      isJoined: false,
-    },
-    {
-      id: 3,
-      name: "养生食疗分享",
-      members: 2156,
-      posts: 1234,
-      description: "传统养生食疗方法分享与讨论",
-      isJoined: true,
-    },
-    {
-      id: 4,
-      name: "老年健康关爱",
-      members: 876,
-      posts: 345,
-      description: "关注老年人健康，分享护理经验",
-      isJoined: false,
-    },
-  ];
+    initializeAndLoadData();
+  }, []);
 
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case "up": return COLORS.success;
-      case "down": return COLORS.error;
-      default: return COLORS.textSecondary;
+  const loadBanners = async () => {
+    try {
+      const bannerData = await getBanners();
+      setBanners(bannerData);
+    } catch (error) {
+      console.error('加载Banner失败:', error);
     }
   };
 
-  const getContentTypeIcon = (type: string) => {
-    switch (type) {
-      case "article":
-        return <BookOpen size={16} color={COLORS.primary} />;
-      case "video":
-        return <Play size={16} color={COLORS.secondary} />;
-      case "live":
-        return <Radio size={16} color={COLORS.error} />;
+  // 加载Feed数据（混合内容）
+  const loadFeedData = async (pageNum: number = 1) => {
+    try {
+      if (pageNum === 1) {
+        setLoading(true);
+        setPage(1);
+      } else {
+        setLoadingMore(true);
+      }
+
+      // 并行加载各类数据
+      const [jobs, items, posts, experts] = await Promise.all([
+        getJobs({}),
+        getSecondHandItems({}),
+        getPosts(),
+        getExperts({}),
+      ]);
+
+      // 混合所有数据
+      const allMixed: FeedItem[] = [
+        ...jobs.map((data) => ({ type: 'job' as const, data })),
+        ...items.map((data) => ({ type: 'item' as const, data })),
+        ...posts.map((data) => ({ type: 'post' as const, data })),
+        ...experts.map((data) => ({ type: 'expert' as const, data })),
+      ];
+
+      // 打乱顺序
+      const shuffled = allMixed.sort(() => Math.random() - 0.5);
+
+      // 分页处理
+      const startIndex = (pageNum - 1) * PAGE_SIZE;
+      const endIndex = startIndex + PAGE_SIZE;
+      const paginatedData = shuffled.slice(startIndex, endIndex);
+
+      // 判断是否还有更多数据
+      const hasMoreData = endIndex < shuffled.length;
+      setHasMore(hasMoreData);
+
+      // 更新数据
+      if (pageNum === 1) {
+        setFeedItems(paginatedData);
+      } else {
+        setFeedItems(prev => [...prev, ...paginatedData]);
+      }
+
+      setPage(pageNum);
+    } catch (error) {
+      console.error('加载Feed数据失败:', error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // 加载更多Feed数据
+  const loadMoreFeedData = async () => {
+    if (loadingMore || !hasMore) return;
+    await loadFeedData(page + 1);
+  };
+
+  // 加载邻里帮Feed数据
+  const loadJobFeedData = async () => {
+    try {
+      const jobs = await getJobs({});
+      const jobFeeds: FeedItem[] = jobs.map((data) => ({ type: 'job' as const, data }));
+      setJobFeedItems(jobFeeds);
+    } catch (error) {
+      console.error('加载邻里帮数据失败:', error);
+    }
+  };
+
+  // 加载邻里闲物Feed数据
+  const loadItemFeedData = async () => {
+    try {
+      const items = await getSecondHandItems({});
+      const itemFeeds: FeedItem[] = items.map((data) => ({ type: 'item' as const, data }));
+      setItemFeedItems(itemFeeds);
+    } catch (error) {
+      console.error('加载邻里闲物数据失败:', error);
+    }
+  };
+
+  // 加载内容Feed数据（帖子+视频等）
+  const loadContentFeedData = async () => {
+    try {
+      const posts = await getPosts();
+      const contentFeeds: FeedItem[] = posts.map((data) => ({ type: 'post' as const, data }));
+      setContentFeedItems(contentFeeds);
+    } catch (error) {
+      console.error('加载内容数据失败:', error);
+    }
+  };
+
+  // 加载附近Feed数据（模拟距离，混合所有类型）
+  const loadNearbyFeedData = async () => {
+    try {
+      const [jobs, items, posts, experts] = await Promise.all([
+        getJobs({}),
+        getSecondHandItems({}),
+        getPosts(),
+        getExperts({}),
+      ]);
+
+      // 模拟添加距离信息（随机0.5-3km）
+      const addDistance = <T extends any>(item: T) => ({
+        ...item,
+        distance: (Math.random() * 2.5 + 0.5).toFixed(1), // 0.5-3.0km
+      });
+
+      // 混合所有类型，模拟附近内容
+      const mixed: FeedItem[] = [
+        ...jobs.slice(0, 4).map((data) => ({ type: 'job' as const, data: addDistance(data) })),
+        ...items.slice(0, 4).map((data) => ({ type: 'item' as const, data: addDistance(data) })),
+        ...posts.slice(0, 2).map((data) => ({ type: 'post' as const, data: addDistance(data) })),
+        ...experts.slice(0, 2).map((data) => ({ type: 'expert' as const, data: addDistance(data) })),
+      ];
+
+      // 按距离排序
+      const sorted = mixed.sort((a, b) => {
+        const distA = parseFloat(a.data.distance || '999');
+        const distB = parseFloat(b.data.distance || '999');
+        return distA - distB;
+      });
+
+      setNearbyFeedItems(sorted);
+    } catch (error) {
+      console.error('加载附近数据失败:', error);
+    }
+  };
+
+  // 处理下拉刷新
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setPage(1);
+    setHasMore(true);
+
+    // 根据当前Tab刷新对应数据
+    switch (activeTab) {
+      case 'recommend':
+        await loadFeedData(1);
+        break;
+      case 'jobs':
+        await loadJobFeedData();
+        break;
+      case 'secondhand':
+        await loadItemFeedData();
+        break;
+      case 'nearby':
+        await loadNearbyFeedData();
+        break;
+      case 'content':
+        await loadContentFeedData();
+        break;
       default:
-        return <BookOpen size={16} color={COLORS.primary} />;
+        await loadFeedData();
+    }
+
+    setRefreshing(false);
+  };
+
+  // 处理Banner点击
+  const handleBannerPress = (banner: BannerItem) => {
+    if (banner.link) {
+      navigation.navigate(banner.link as never, banner.linkId ? { id: banner.linkId } : undefined);
     }
   };
 
-  const getContentTypeBg = (type: string) => {
-    switch (type) {
-      case "article": return "rgba(99, 102, 241, 0.1)";
-      case "video": return "rgba(139, 92, 246, 0.1)";
-      case "live": return "rgba(239, 68, 68, 0.1)";
-      default: return "rgba(99, 102, 241, 0.1)";
+  // 处理圆形导航点击
+  const handleNavItemPress = (item: CircleNavItem) => {
+    // 特殊处理：附近服务切换到附近Tab
+    if (item.route === 'nearby-tab') {
+      setActiveTab('nearby');
+      return;
+    }
+    navigation.navigate(item.route as never, item.params);
+  };
+
+  // 处理搜索
+  const handleSearch = () => {
+    navigation.navigate('Search');
+  };
+
+  // 打开发布菜单
+  const handleOpenPublishMenu = () => {
+    setShowPublishMenu(true);
+  };
+
+  // 关闭发布菜单
+  const handleClosePublishMenu = () => {
+    setShowPublishMenu(false);
+  };
+
+  // 发布服务需求
+  const handlePublishJob = () => {
+    setShowPublishMenu(false);
+    navigation.navigate('JobPublish' as never);
+  };
+
+  // 发布闲置物品
+  const handlePublishItem = () => {
+    setShowPublishMenu(false);
+    navigation.navigate('SecondHandPublish' as never);
+  };
+
+  // 发布文章
+  const handlePublishPost = () => {
+    setShowPublishMenu(false);
+    navigation.navigate('PostPublish' as never);
+  };
+
+  // 处理Feed卡片点击
+  const handleFeedItemPress = (feedItem: FeedItem) => {
+    switch (feedItem.type) {
+      case 'job':
+        navigation.navigate('JobDetail', { jobId: feedItem.data.id });
+        break;
+      case 'item':
+        navigation.navigate('SecondHandDetail', { itemId: feedItem.data.id });
+        break;
+      case 'post':
+        navigation.navigate('PostDetail', { postId: feedItem.data.id });
+        break;
+      case 'expert':
+        navigation.navigate('ExpertDetail', { expertId: feedItem.data.id });
+        break;
+    }
+  };
+
+  // 处理滚动事件（实现上拉加载更多）
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const paddingToBottom = 20;
+
+    // 检测是否接近底部
+    const isCloseToBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - paddingToBottom;
+
+    if (isCloseToBottom && activeTab === 'recommend') {
+      loadMoreFeedData();
     }
   };
 
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-          <YStack space="$4" padding="$4">
+        <ScrollView
+          flex={1}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
+          <YStack space="$4">
             {/* Header */}
-            <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+            <XStack
+              justifyContent="space-between"
+              alignItems="center"
+              paddingHorizontal="$4"
+              paddingTop="$3"
+            >
               <YStack>
                 <H1 fontSize="$9" fontWeight="bold" color="$text">
-                  健康社区
+                  社区
                 </H1>
                 <Text fontSize="$4" color="$textSecondary">
-                  分享健康知识，交流养生经验
+                  邻里互助，温暖生活
                 </Text>
               </YStack>
-              <Button
-                size="$3"
-                variant="outlined"
-                borderColor="$primary"
-                backgroundColor="transparent"
-              >
-                <XStack space="$2" alignItems="center">
-                  <Filter size={16} color={COLORS.primary} />
-                  <Text fontSize="$3" color="$primary">筛选</Text>
-                </XStack>
-              </Button>
+
+              {/* 发布按钮 */}
+              <TouchableOpacity onPress={handleOpenPublishMenu}>
+                <View
+                  width={40}
+                  height={40}
+                  borderRadius={20}
+                  backgroundColor={COLORS.primary}
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <Plus size={24} color="white" />
+                </View>
+              </TouchableOpacity>
             </XStack>
 
             {/* Search Bar */}
-            <XStack
-              borderWidth={1}
-              borderColor="$borderColor"
-              borderRadius="$3"
-              backgroundColor="$surface"
-              alignItems="center"
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-            >
-              <Search size={16} color={COLORS.textSecondary} />
-              <Input
-                flex={1}
-                borderWidth={0}
-                backgroundColor="transparent"
-                placeholder="搜索健康话题、专家、文章..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                marginLeft="$2"
-              />
-            </XStack>
-
-            {/* Featured Content */}
-            <Card
-              padding="$4"
-              borderRadius="$4"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
-              elevation={4}
-            >
-              <XStack space="$2" alignItems="center" marginBottom="$4">
-                <Star size={20} color={COLORS.primary} />
-                <H3 fontSize="$6" color="$text" fontWeight="600">
-                  精选内容
-                </H3>
-              </XStack>
-
-              <YStack space="$4">
-                {featuredContent.map((content) => (
-                  <Pressable
-                    key={content.id}
-                    onPress={() => {
-                      console.log('Featured content clicked:', content.type, content.title);
-                      if (content.type === 'article') {
-                        navigation.navigate('ArticleList');
-                      } else if (content.type === 'video') {
-                        navigation.navigate('VideoList');
-                      } else if (content.type === 'live') {
-                        toast.show('直播功能敬请期待', { duration: 2000 });
-                      }
-                    }}
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.7 : 1,
-                      transform: [{ scale: pressed ? 0.98 : 1 }],
-                    })}
-                  >
-                    <Card
-                      padding="$4"
-                      borderRadius="$3"
-                      backgroundColor="$surface"
-                    >
-                    <YStack space="$3">
-                      {/* Content type badge */}
-                      <XStack justifyContent="space-between" alignItems="center">
-                        <View
-                          backgroundColor={getContentTypeBg(content.type)}
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$2"
-                        >
-                          <XStack space="$1" alignItems="center">
-                            {getContentTypeIcon(content.type)}
-                            <Text fontSize="$2" color="$text" textTransform="capitalize">
-                              {content.type === 'article' ? '文章' :
-                               content.type === 'video' ? '视频' : '直播'}
-                            </Text>
-                          </XStack>
-                        </View>
-                        {content.type === "live" && content.status === "upcoming" && (
-                          <View
-                            backgroundColor="$error"
-                            paddingHorizontal="$2"
-                            paddingVertical="$1"
-                            borderRadius="$2"
-                          >
-                            <Text fontSize="$2" color="white">即将开始</Text>
-                          </View>
-                        )}
-                      </XStack>
-
-                      {/* Content info */}
-                      <YStack space="$2">
-                        <H3 fontSize="$5" fontWeight="600" color="$text">
-                          {content.title}
-                        </H3>
-                        <XStack space="$2" alignItems="center">
-                          <Text fontSize="$3" color="$textSecondary">
-                            {content.author}
-                          </Text>
-                          <View width={4} height={4} borderRadius={2} backgroundColor="$textSecondary" />
-                          <Text fontSize="$3" color="$textSecondary">
-                            {content.authorTitle}
-                          </Text>
-                        </XStack>
-                        <Text fontSize="$3" color="$textSecondary" lineHeight="$1" numberOfLines={2}>
-                          {content.summary}
-                        </Text>
-
-                        {/* Tags */}
-                        <XStack flexWrap="wrap" gap="$2">
-                          {content.tags.map((tag, index) => (
-                            <View
-                              key={index}
-                              backgroundColor="rgba(99, 102, 241, 0.1)"
-                              paddingHorizontal="$2"
-                              paddingVertical="$1"
-                              borderRadius="$2"
-                            >
-                              <Text fontSize="$2" color="$primary">
-                                {tag}
-                              </Text>
-                            </View>
-                          ))}
-                        </XStack>
-
-                        {/* Stats */}
-                        <XStack justifyContent="space-between" alignItems="center">
-                          <XStack space="$4" alignItems="center">
-                            <XStack space="$1" alignItems="center">
-                              <Eye size={14} color={COLORS.textSecondary} />
-                              <Text fontSize="$3" color="$textSecondary">
-                                {content.views || content.viewers}
-                              </Text>
-                            </XStack>
-                            {content.likes && (
-                              <XStack space="$1" alignItems="center">
-                                <ThumbsUp size={14} color={COLORS.textSecondary} />
-                                <Text fontSize="$3" color="$textSecondary">
-                                  {content.likes}
-                                </Text>
-                              </XStack>
-                            )}
-                            {content.readTime && (
-                              <XStack space="$1" alignItems="center">
-                                <Clock size={14} color={COLORS.textSecondary} />
-                                <Text fontSize="$3" color="$textSecondary">
-                                  {content.readTime}
-                                </Text>
-                              </XStack>
-                            )}
-                          </XStack>
-                        </XStack>
-                      </YStack>
-                    </YStack>
-                  </Card>
-                  </Pressable>
-                ))}
-              </YStack>
-            </Card>
-
-            {/* Trending Topics */}
-            <Card
-              padding="$4"
-              borderRadius="$4"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
-              elevation={4}
-            >
-              <XStack space="$2" alignItems="center" marginBottom="$4">
-                <TrendingUp size={20} color={COLORS.primary} />
-                <H3 fontSize="$6" color="$text" fontWeight="600">
-                  热门话题
-                </H3>
-              </XStack>
-
-              <YStack space="$3">
-                {trendingTopics.map((topic) => (
-                  <Pressable
-                    key={topic.id}
-                    onPress={() => {
-                      console.log('Topic clicked:', topic.name, topic.id);
-                      navigation.navigate('TopicDetail', { topicId: topic.id });
-                    }}
-                    style={({ pressed }) => ({
-                      opacity: pressed ? 0.7 : 1,
-                    })}
-                  >
-                    <XStack
-                      justifyContent="space-between"
-                      alignItems="center"
-                      padding="$3"
-                      borderRadius="$3"
-                      backgroundColor="$surface"
-                    >
-                      <YStack flex={1}>
-                        <XStack space="$2" alignItems="center" marginBottom="$1">
-                          <Text fontSize="$4" fontWeight="600" color="$text">
-                            {topic.name}
-                          </Text>
-                          <TrendingUp
-                            size={12}
-                            color={getTrendColor(topic.trend)}
-                            style={{
-                              transform: topic.trend === 'down' ? [{ rotate: '180deg' }] : undefined
-                            }}
-                          />
-                        </XStack>
-                        <Text fontSize="$3" color="$textSecondary">
-                          {topic.posts} 条讨论
-                        </Text>
-                      </YStack>
-                      <XStack space="$2" alignItems="center">
-                        <Button size="$3" variant="outlined" borderColor="$primary">
-                          <Text fontSize="$3" color="$primary">关注</Text>
-                        </Button>
-                        <ChevronRight size={18} color={COLORS.textSecondary} />
-                      </XStack>
-                    </XStack>
-                  </Pressable>
-                ))}
-              </YStack>
-            </Card>
-
-            {/* Health Circles */}
-            <Card
-              padding="$4"
-              borderRadius="$4"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
-              elevation={4}
-            >
-              <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-                <XStack space="$2" alignItems="center">
-                  <Users size={20} color={COLORS.primary} />
-                  <H3 fontSize="$6" color="$text" fontWeight="600">
-                    健康圈子
-                  </H3>
+            <Pressable onPress={handleSearch}>
+              <View paddingHorizontal="$4">
+                <XStack
+                  borderWidth={1}
+                  borderColor="$borderColor"
+                  borderRadius="$3"
+                  backgroundColor="$surface"
+                  alignItems="center"
+                  paddingHorizontal="$3"
+                  paddingVertical="$2"
+                >
+                  <Search size={16} color={COLORS.textSecondary} />
+                  <Input
+                    flex={1}
+                    borderWidth={0}
+                    backgroundColor="transparent"
+                    placeholder="搜索服务需求、闲置物品..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    marginLeft="$2"
+                  />
                 </XStack>
-                <Button size="$2" chromeless onPress={() => navigation.navigate('CircleList')}>
-                  <Text fontSize="$3" color="$primary">查看全部</Text>
-                </Button>
-              </XStack>
+              </View>
+            </Pressable>
 
-              <YStack space="$3">
-                {healthCircles.map((circle) => (
-                  <Pressable
-                    key={circle.id}
-                    onPress={() => navigation.navigate('CircleDetail', { circleId: circle.id.toString() })}
-                  >
-                    <XStack
-                      space="$4"
-                      padding="$4"
-                      borderRadius="$3"
-                      backgroundColor="$surface"
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                    >
-                    <View
-                      width={60}
-                      height={60}
-                      backgroundColor="$background"
-                      borderRadius="$3"
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Users size={24} color={COLORS.primary} />
-                    </View>
-                    <YStack flex={1}>
-                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                        <XStack space="$2" alignItems="center">
-                          <H3 fontSize="$4" fontWeight="600" color="$text">
-                            {circle.name}
-                          </H3>
-                          {circle.isJoined && (
-                            <UserCheck size={16} color={COLORS.success} />
-                          )}
-                        </XStack>
-                        <Button
-                          size="$3"
-                          backgroundColor={circle.isJoined ? '$surface' : '$primary'}
-                          variant={circle.isJoined ? 'outlined' : undefined}
-                          borderColor={circle.isJoined ? '$borderColor' : undefined}
-                        >
-                          <Text
-                            fontSize="$3"
-                            color={circle.isJoined ? '$text' : 'white'}
-                          >
-                            {circle.isJoined ? '已加入' : '加入'}
-                          </Text>
-                        </Button>
-                      </XStack>
-                      <Text fontSize="$3" color="$textSecondary" marginBottom="$2" numberOfLines={2}>
-                        {circle.description}
-                      </Text>
-                      <XStack space="$4">
-                        <XStack space="$1" alignItems="center">
-                          <Users size={14} color={COLORS.textSecondary} />
-                          <Text fontSize="$3" color="$textSecondary">
-                            {circle.members} 成员
-                          </Text>
-                        </XStack>
-                        <XStack space="$1" alignItems="center">
-                          <MessageCircle size={14} color={COLORS.textSecondary} />
-                          <Text fontSize="$3" color="$textSecondary">
-                            {circle.posts} 帖子
-                          </Text>
-                        </XStack>
-                      </XStack>
-                    </YStack>
-                  </XStack>
-                  </Pressable>
-                ))}
-              </YStack>
-            </Card>
+            {/* Banner轮播图 */}
+            <BannerSlider banners={banners} onBannerPress={handleBannerPress} />
 
-            {/* Main Content Tabs */}
-            <Card
-              padding="$4"
-              borderRadius="$4"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
-              elevation={4}
-            >
-              {/* Tab Buttons */}
+            {/* 圆形功能导航区 */}
+            <CircleNavigation
+              items={defaultCircleNavItems}
+              onItemPress={handleNavItemPress}
+            />
+
+            {/* Tab切换栏 */}
+            <View paddingHorizontal="$4">
               <XStack
                 backgroundColor="$surface"
                 borderRadius="$3"
                 padding="$1"
                 marginBottom="$4"
+                borderWidth={1}
+                borderColor="$borderColor"
               >
                 <Pressable
                   style={{ flex: 1 }}
-                  onPress={() => setActiveTab('news')}
+                  onPress={() => setActiveTab('recommend')}
                 >
                   <View
                     flex={1}
-                    height={32}
-                    backgroundColor={activeTab === 'news' ? COLORS.primary : 'transparent'}
+                    height={36}
+                    backgroundColor={
+                      activeTab === 'recommend' ? COLORS.primary : 'transparent'
+                    }
                     borderRadius="$2"
                     justifyContent="center"
                     alignItems="center"
-                    paddingHorizontal="$3"
+                    paddingHorizontal="$2"
                   >
                     <Text
                       fontSize="$3"
-                      color={activeTab === 'news' ? 'white' : '$textSecondary'}
-                      fontWeight={activeTab === 'news' ? '600' : '400'}
+                      color={activeTab === 'recommend' ? 'white' : '$textSecondary'}
+                      fontWeight={activeTab === 'recommend' ? '600' : '400'}
                     >
-                      健康资讯
+                      发现
                     </Text>
                   </View>
                 </Pressable>
                 <Pressable
                   style={{ flex: 1 }}
-                  onPress={() => setActiveTab('lectures')}
+                  onPress={() => setActiveTab('jobs')}
                 >
                   <View
                     flex={1}
-                    height={32}
-                    backgroundColor={activeTab === 'lectures' ? COLORS.primary : 'transparent'}
+                    height={36}
+                    backgroundColor={
+                      activeTab === 'jobs' ? COLORS.primary : 'transparent'
+                    }
                     borderRadius="$2"
                     justifyContent="center"
                     alignItems="center"
-                    paddingHorizontal="$3"
+                    paddingHorizontal="$2"
                   >
                     <Text
                       fontSize="$3"
-                      color={activeTab === 'lectures' ? 'white' : '$textSecondary'}
-                      fontWeight={activeTab === 'lectures' ? '600' : '400'}
+                      color={activeTab === 'jobs' ? 'white' : '$textSecondary'}
+                      fontWeight={activeTab === 'jobs' ? '600' : '400'}
                     >
-                      专家讲堂
+                      邻里帮
                     </Text>
                   </View>
                 </Pressable>
                 <Pressable
                   style={{ flex: 1 }}
-                  onPress={() => setActiveTab('community')}
+                  onPress={() => setActiveTab('secondhand')}
                 >
                   <View
                     flex={1}
-                    height={32}
-                    backgroundColor={activeTab === 'community' ? COLORS.primary : 'transparent'}
+                    height={36}
+                    backgroundColor={
+                      activeTab === 'secondhand' ? COLORS.primary : 'transparent'
+                    }
                     borderRadius="$2"
                     justifyContent="center"
                     alignItems="center"
-                    paddingHorizontal="$3"
+                    paddingHorizontal="$2"
                   >
                     <Text
                       fontSize="$3"
-                      color={activeTab === 'community' ? 'white' : '$textSecondary'}
-                      fontWeight={activeTab === 'community' ? '600' : '400'}
+                      color={activeTab === 'secondhand' ? 'white' : '$textSecondary'}
+                      fontWeight={activeTab === 'secondhand' ? '600' : '400'}
                     >
-                      用户社区
+                      邻里闲物
+                    </Text>
+                  </View>
+                </Pressable>
+                <Pressable
+                  style={{ flex: 1 }}
+                  onPress={() => setActiveTab('nearby')}
+                >
+                  <View
+                    flex={1}
+                    height={36}
+                    backgroundColor={
+                      activeTab === 'nearby' ? COLORS.primary : 'transparent'
+                    }
+                    borderRadius="$2"
+                    justifyContent="center"
+                    alignItems="center"
+                    paddingHorizontal="$2"
+                  >
+                    <Text
+                      fontSize="$3"
+                      color={activeTab === 'nearby' ? 'white' : '$textSecondary'}
+                      fontWeight={activeTab === 'nearby' ? '600' : '400'}
+                    >
+                      附近
+                    </Text>
+                  </View>
+                </Pressable>
+                <Pressable
+                  style={{ flex: 1 }}
+                  onPress={() => setActiveTab('content')}
+                >
+                  <View
+                    flex={1}
+                    height={36}
+                    backgroundColor={
+                      activeTab === 'content' ? COLORS.primary : 'transparent'
+                    }
+                    borderRadius="$2"
+                    justifyContent="center"
+                    alignItems="center"
+                    paddingHorizontal="$2"
+                  >
+                    <Text
+                      fontSize="$3"
+                      color={activeTab === 'content' ? 'white' : '$textSecondary'}
+                      fontWeight={activeTab === 'content' ? '600' : '400'}
+                    >
+                      分享
                     </Text>
                   </View>
                 </Pressable>
               </XStack>
+            </View>
 
-              <Separator marginBottom="$4" />
-
-              {/* Tab Content */}
-              {activeTab === 'news' && <HealthNews navigation={navigation} />}
-              {activeTab === 'lectures' && <ExpertLectures navigation={navigation} />}
-              {activeTab === 'community' && <UserCommunity navigation={navigation} />}
-            </Card>
+            {/* Tab Content */}
+            <View paddingHorizontal="$4">
+              {activeTab === 'recommend' && (
+                <View marginBottom="$8">
+                  {loading && feedItems.length === 0 ? (
+                    <YStack
+                      alignItems="center"
+                      paddingVertical="$8"
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                    >
+                      <Text fontSize="$4" color="$textSecondary">
+                        加载中...
+                      </Text>
+                    </YStack>
+                  ) : feedItems.length === 0 ? (
+                    <YStack
+                      alignItems="center"
+                      paddingVertical="$8"
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                    >
+                      <Text fontSize={48} marginBottom="$3">
+                        📭
+                      </Text>
+                      <Text
+                        fontSize="$5"
+                        fontWeight="600"
+                        color="$text"
+                        marginBottom="$2"
+                      >
+                        暂无内容
+                      </Text>
+                      <Text fontSize="$3" color="$textSecondary" textAlign="center">
+                        下拉刷新试试看
+                      </Text>
+                    </YStack>
+                  ) : (
+                    <FlatList
+                      data={feedItems}
+                      renderItem={({ item }) => (
+                        <CommunityFeedCard
+                          feedItem={item}
+                          onPress={() => handleFeedItemPress(item)}
+                        />
+                      )}
+                      keyExtractor={(item, index) => `${item.type}-${item.data.id}-${index}`}
+                      refreshControl={
+                        <RefreshControl
+                          refreshing={refreshing}
+                          onRefresh={handleRefresh}
+                        />
+                      }
+                      onEndReached={loadMoreFeedData}
+                      onEndReachedThreshold={0.5}
+                      ListFooterComponent={
+                        loadingMore ? (
+                          <View paddingVertical="$4" alignItems="center">
+                            <Text fontSize="$3" color="$textSecondary">
+                              加载更多...
+                            </Text>
+                          </View>
+                        ) : !hasMore ? (
+                          <View paddingVertical="$4" alignItems="center">
+                            <Text fontSize="$3" color="$textSecondary">
+                              没有更多内容了
+                            </Text>
+                          </View>
+                        ) : null
+                      }
+                      scrollEnabled={false}
+                      // 性能优化配置
+                      initialNumToRender={5}
+                      maxToRenderPerBatch={5}
+                      windowSize={5}
+                      removeClippedSubviews={true}
+                      updateCellsBatchingPeriod={50}
+                    />
+                  )}
+                </View>
+              )}
+              {activeTab === 'jobs' && (
+                <View marginBottom="$8">
+                  {jobFeedItems.length === 0 ? (
+                    <YStack
+                      alignItems="center"
+                      paddingVertical="$8"
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                    >
+                      <Text fontSize={48} marginBottom="$3">
+                        🤝
+                      </Text>
+                      <Text
+                        fontSize="$5"
+                        fontWeight="600"
+                        color="$text"
+                        marginBottom="$2"
+                      >
+                        暂无服务需求
+                      </Text>
+                      <Text fontSize="$3" color="$textSecondary" textAlign="center">
+                        下拉刷新或发布第一个需求
+                      </Text>
+                    </YStack>
+                  ) : (
+                    <>
+                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
+                        <Text fontSize="$4" fontWeight="600" color="$text">
+                          邻里帮服务大厅
+                        </Text>
+                        <Pressable onPress={() => navigation.navigate('JobList' as never)}>
+                          <Text fontSize="$3" color={COLORS.primary}>
+                            查看全部 →
+                          </Text>
+                        </Pressable>
+                      </XStack>
+                      <FlatList
+                        data={jobFeedItems}
+                        renderItem={({ item }) => (
+                          <CommunityFeedCard
+                            feedItem={item}
+                            onPress={() => handleFeedItemPress(item)}
+                          />
+                        )}
+                        keyExtractor={(item, index) => `job-${item.data.id}-${index}`}
+                        refreshControl={
+                          <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
+                          />
+                        }
+                        scrollEnabled={false}
+                        initialNumToRender={5}
+                        maxToRenderPerBatch={5}
+                        windowSize={5}
+                        removeClippedSubviews={true}
+                      />
+                    </>
+                  )}
+                </View>
+              )}
+              {activeTab === 'secondhand' && (
+                <View marginBottom="$8">
+                  {itemFeedItems.length === 0 ? (
+                    <YStack
+                      alignItems="center"
+                      paddingVertical="$8"
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                    >
+                      <Text fontSize={48} marginBottom="$3">
+                        🛒
+                      </Text>
+                      <Text
+                        fontSize="$5"
+                        fontWeight="600"
+                        color="$text"
+                        marginBottom="$2"
+                      >
+                        暂无闲置商品
+                      </Text>
+                      <Text fontSize="$3" color="$textSecondary" textAlign="center">
+                        下拉刷新或发布第一个闲置
+                      </Text>
+                    </YStack>
+                  ) : (
+                    <>
+                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
+                        <Text fontSize="$4" fontWeight="600" color="$text">
+                          邻里闲物市场
+                        </Text>
+                        <Pressable onPress={() => navigation.navigate('SecondHandList' as never)}>
+                          <Text fontSize="$3" color={COLORS.primary}>
+                            查看全部 →
+                          </Text>
+                        </Pressable>
+                      </XStack>
+                      <FlatList
+                        data={itemFeedItems}
+                        renderItem={({ item }) => (
+                          <CommunityFeedCard
+                            feedItem={item}
+                            onPress={() => handleFeedItemPress(item)}
+                          />
+                        )}
+                        keyExtractor={(item, index) => `item-${item.data.id}-${index}`}
+                        refreshControl={
+                          <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
+                          />
+                        }
+                        scrollEnabled={false}
+                        initialNumToRender={5}
+                        maxToRenderPerBatch={5}
+                        windowSize={5}
+                        removeClippedSubviews={true}
+                      />
+                    </>
+                  )}
+                </View>
+              )}
+              {activeTab === 'nearby' && (
+                <View marginBottom="$8">
+                  {nearbyFeedItems.length === 0 ? (
+                    <YStack
+                      alignItems="center"
+                      paddingVertical="$8"
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                    >
+                      <Text fontSize={48} marginBottom="$3">
+                        📍
+                      </Text>
+                      <Text
+                        fontSize="$5"
+                        fontWeight="600"
+                        color="$text"
+                        marginBottom="$2"
+                      >
+                        暂无附近内容
+                      </Text>
+                      <Text fontSize="$3" color="$textSecondary" textAlign="center">
+                        下拉刷新试试看
+                      </Text>
+                    </YStack>
+                  ) : (
+                    <>
+                      <XStack
+                        justifyContent="space-between"
+                        alignItems="center"
+                        marginBottom="$3"
+                      >
+                        <Text fontSize="$4" fontWeight="600" color="$text">
+                          附近3公里内容 ({nearbyFeedItems.length})
+                        </Text>
+                        <Text fontSize="$3" color="$textSecondary">
+                          按距离排序
+                        </Text>
+                      </XStack>
+                      <FlatList
+                        data={nearbyFeedItems}
+                        renderItem={({ item }) => (
+                          <CommunityFeedCard
+                            feedItem={item}
+                            onPress={() => handleFeedItemPress(item)}
+                          />
+                        )}
+                        keyExtractor={(item, index) => `nearby-${item.data.id}-${index}`}
+                        refreshControl={
+                          <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
+                          />
+                        }
+                        scrollEnabled={false}
+                        initialNumToRender={5}
+                        maxToRenderPerBatch={5}
+                        windowSize={5}
+                        removeClippedSubviews={true}
+                      />
+                    </>
+                  )}
+                </View>
+              )}
+              {activeTab === 'content' && (
+                <View marginBottom="$8">
+                  {contentFeedItems.length === 0 ? (
+                    <YStack
+                      alignItems="center"
+                      paddingVertical="$8"
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                    >
+                      <Text fontSize={48} marginBottom="$3">
+                        📖
+                      </Text>
+                      <Text
+                        fontSize="$5"
+                        fontWeight="600"
+                        color="$text"
+                        marginBottom="$2"
+                      >
+                        暂无内容
+                      </Text>
+                      <Text fontSize="$3" color="$textSecondary" textAlign="center">
+                        下拉刷新试试看
+                      </Text>
+                    </YStack>
+                  ) : (
+                    <>
+                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
+                        <Text fontSize="$4" fontWeight="600" color="$text">
+                          邻里分享
+                        </Text>
+                        <Pressable onPress={() => navigation.navigate('ArticleList' as never)}>
+                          <Text fontSize="$3" color={COLORS.primary}>
+                            查看全部 →
+                          </Text>
+                        </Pressable>
+                      </XStack>
+                      <FlatList
+                        data={contentFeedItems}
+                        renderItem={({ item }) => (
+                          <CommunityFeedCard
+                            feedItem={item}
+                            onPress={() => handleFeedItemPress(item)}
+                          />
+                        )}
+                        keyExtractor={(item, index) => `content-${item.data.id}-${index}`}
+                        refreshControl={
+                          <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
+                          />
+                        }
+                        scrollEnabled={false}
+                        initialNumToRender={5}
+                        maxToRenderPerBatch={5}
+                        windowSize={5}
+                        removeClippedSubviews={true}
+                      />
+                    </>
+                  )}
+                </View>
+              )}
+            </View>
 
             {/* Bottom padding for safe area */}
             <View height={20} />
           </YStack>
         </ScrollView>
+
+        {/* 发布菜单弹窗 */}
+        <Modal
+          visible={showPublishMenu}
+          transparent
+          animationType="fade"
+          onRequestClose={handleClosePublishMenu}
+        >
+          <Pressable
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={handleClosePublishMenu}
+          >
+            <Pressable
+              onPress={(e) => e.stopPropagation()}
+              style={{ width: '85%' }}
+            >
+              <View
+                backgroundColor="white"
+                borderRadius="$5"
+                padding="$5"
+                shadowColor="black"
+                shadowOffset={{ width: 0, height: 2 }}
+                shadowOpacity={0.25}
+                shadowRadius={3.84}
+              >
+                {/* 关闭按钮 */}
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
+                  <Text fontSize="$6" fontWeight="700" color="$text">
+                    发布内容
+                  </Text>
+                  <TouchableOpacity onPress={handleClosePublishMenu}>
+                    <View
+                      width={32}
+                      height={32}
+                      borderRadius={16}
+                      backgroundColor="$background"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <X size={18} color={COLORS.textSecondary} />
+                    </View>
+                  </TouchableOpacity>
+                </XStack>
+
+                {/* 发布选项 */}
+                <YStack space="$3">
+                  {/* 发布服务需求 */}
+                  <TouchableOpacity onPress={handlePublishJob}>
+                    <View
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                      padding="$4"
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                    >
+                      <XStack space="$3" alignItems="center">
+                        <View
+                          width={48}
+                          height={48}
+                          borderRadius={24}
+                          backgroundColor={`${COLORS.primary}15`}
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <Briefcase size={24} color={COLORS.primary} />
+                        </View>
+                        <YStack flex={1}>
+                          <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
+                            发布服务需求
+                          </Text>
+                          <Text fontSize="$3" color="$textSecondary">
+                            寻找邻里帮助，发布服务需求
+                          </Text>
+                        </YStack>
+                      </XStack>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* 发布闲置物品 */}
+                  <TouchableOpacity onPress={handlePublishItem}>
+                    <View
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                      padding="$4"
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                    >
+                      <XStack space="$3" alignItems="center">
+                        <View
+                          width={48}
+                          height={48}
+                          borderRadius={24}
+                          backgroundColor={`${COLORS.success}15`}
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <Package size={24} color={COLORS.success} />
+                        </View>
+                        <YStack flex={1}>
+                          <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
+                            发布闲置物品
+                          </Text>
+                          <Text fontSize="$3" color="$textSecondary">
+                            分享闲置好物，循环利用资源
+                          </Text>
+                        </YStack>
+                      </XStack>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* 发布文章 */}
+                  <TouchableOpacity onPress={handlePublishPost}>
+                    <View
+                      backgroundColor="$surface"
+                      borderRadius="$4"
+                      padding="$4"
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                    >
+                      <XStack space="$3" alignItems="center">
+                        <View
+                          width={48}
+                          height={48}
+                          borderRadius={24}
+                          backgroundColor={`${COLORS.warning}15`}
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          <FileText size={24} color={COLORS.warning} />
+                        </View>
+                        <YStack flex={1}>
+                          <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
+                            发布文章
+                          </Text>
+                          <Text fontSize="$3" color="$textSecondary">
+                            分享生活经验，记录健康心得
+                          </Text>
+                        </YStack>
+                      </XStack>
+                    </View>
+                  </TouchableOpacity>
+                </YStack>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </SafeAreaView>
     </Theme>
   );

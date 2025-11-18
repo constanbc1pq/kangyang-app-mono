@@ -12,6 +12,7 @@ import { PersonalCenterScreen } from '@/screens/PersonalCenterScreen';
 import { AIConsultationScreen } from '@/screens/AIConsultationScreen';
 import { HealthReportScreen } from '@/screens/HealthReportScreen';
 import { DeviceManagementScreen } from '@/screens/DeviceManagementScreen';
+import { DataConfirmationScreen } from '@/screens/device/DataConfirmationScreen';
 import { MedicationReminderScreen } from '@/screens/MedicationReminderScreen';
 import { TaskListScreen } from '@/screens/TaskListScreen';
 import { TaskDetailScreen } from '@/screens/TaskDetailScreen';
@@ -34,6 +35,89 @@ import { CircleListScreen } from '@/screens/CircleListScreen';
 import { VideoListScreen } from '@/screens/VideoListScreen';
 import { VideoDetailScreen } from '@/screens/VideoDetailScreen';
 import { TopicDetailScreen } from '@/screens/TopicDetailScreen';
+import { JobListScreen } from '@/screens/JobListScreen';
+import { JobDetailScreen } from '@/screens/JobDetailScreen';
+import { JobPublishScreen } from '@/screens/JobPublishScreen';
+import { SecondHandDetailScreen } from '@/screens/SecondHandDetailScreen';
+import { SecondHandListScreen } from '@/screens/SecondHandListScreen';
+import { SecondHandPublishScreen } from '@/screens/SecondHandPublishScreen';
+import { ExpertDetailScreen } from '@/screens/ExpertDetailScreen';
+import { ExpertListScreen } from '@/screens/ExpertListScreen';
+import { ExpertDashboardScreen } from '@/screens/ExpertDashboardScreen';
+import { PostDetailScreen } from '@/screens/PostDetailScreen';
+import { PostPublishScreen } from '@/screens/PostPublishScreen';
+import { SearchScreen } from '@/screens/SearchScreen';
+import { ChatScreen } from '@/screens/ChatScreen';
+import { ChatListScreen } from '@/screens/ChatListScreen';
+import { ServiceOrderDetailScreen } from '@/screens/ServiceOrderDetailScreen';
+import { ServiceReviewScreen } from '@/screens/ServiceReviewScreen';
+import { MyOrdersScreen } from '@/screens/MyOrdersScreen';
+import { ExpertCertificationScreen } from '@/screens/ExpertCertificationScreen';
+import { PrivateDoctorListScreen } from '@/screens/PrivateDoctorListScreen';
+import { PrivateDoctorDetailScreen } from '@/screens/PrivateDoctorDetailScreen';
+import { PrivateDoctorSubscribeScreen } from '@/screens/PrivateDoctorSubscribeScreen';
+import { SubscriptionSuccessScreen } from '@/screens/SubscriptionSuccessScreen';
+import { PrivateDoctorServiceDeskScreen } from '@/screens/PrivateDoctorServiceDeskScreen';
+import { ConsultationListScreen } from '@/screens/ConsultationListScreen';
+import DoctorChatScreen from '@/screens/DoctorChatScreen';
+import BookConsultationScreen from '@/screens/BookConsultationScreen';
+import ConsultationDetailScreen from '@/screens/ConsultationDetailScreen';
+import HealthRecordsScreen from '@/screens/HealthRecordsScreen';
+import HealthAssessmentScreen from '@/screens/HealthAssessmentScreen';
+import HealthPlanScreen from '@/screens/HealthPlanScreen';
+import HealthManagerScreen from '@/screens/HealthManagerScreen';
+import ExpertConsultationScreen from '@/screens/ExpertConsultationScreen';
+import InternationalReferralScreen from '@/screens/InternationalReferralScreen';
+import ContractManagementScreen from '@/screens/ContractManagementScreen';
+import LegalServiceHomeScreen from '@/screens/LegalServiceHomeScreen';
+import WillCreatorScreen from '@/screens/WillCreatorScreen';
+import WillReviewScreen from '@/screens/WillReviewScreen';
+import WillExecutionGuideScreen from '@/screens/WillExecutionGuideScreen';
+import MyWillsScreen from '@/screens/MyWillsScreen';
+import GuardianshipCreatorScreen from '@/screens/GuardianshipCreatorScreen';
+import MyGuardianshipScreen from '@/screens/MyGuardianshipScreen';
+import PropertyInventoryScreen from '@/screens/PropertyInventoryScreen';
+import LawyerListScreen from '@/screens/LawyerListScreen';
+import LawyerDetailScreen from '@/screens/LawyerDetailScreen';
+import TextConsultationScreen from '@/screens/TextConsultationScreen';
+import PhoneConsultationScreen from '@/screens/PhoneConsultationScreen';
+import VideoConsultationScreen from '@/screens/VideoConsultationScreen';
+import ConsultationHistoryScreen from '@/screens/ConsultationHistoryScreen';
+import MyCasesScreen from '@/screens/MyCasesScreen';
+import CaseDelegationScreen from '@/screens/CaseDelegationScreen';
+import CaseLibraryScreen from '@/screens/CaseLibraryScreen';
+import ContractReviewScreen from '@/screens/ContractReviewScreen';
+import LegalCheckupScreen from '@/screens/LegalCheckupScreen';
+import LegalVideoScreen from '@/screens/LegalVideoScreen';
+import LegalArticleScreen from '@/screens/LegalArticleScreen';
+import DocumentTemplateScreen from '@/screens/DocumentTemplateScreen';
+import LegalMembershipScreen from '@/screens/LegalMembershipScreen';
+import InsuranceHomeScreen from '@/screens/InsuranceHomeScreen';
+import InsuranceProductListScreen from '@/screens/InsuranceProductListScreen';
+import InsuranceProductDetailScreen from '@/screens/InsuranceProductDetailScreen';
+import ProductComparisonScreen from '@/screens/ProductComparisonScreen';
+import InsuranceAdvisorListScreen from '@/screens/InsuranceAdvisorListScreen';
+import InsuranceAdvisorDetailScreen from '@/screens/InsuranceAdvisorDetailScreen';
+import InsuranceTextConsultationScreen from '@/screens/InsuranceTextConsultationScreen';
+import InsurancePhoneConsultationScreen from '@/screens/InsurancePhoneConsultationScreen';
+import InsuranceVideoConsultationScreen from '@/screens/InsuranceVideoConsultationScreen';
+import InsuranceHomeVisitScreen from '@/screens/InsuranceHomeVisitScreen';
+import InsuranceConsultationHistoryScreen from '@/screens/InsuranceConsultationHistoryScreen';
+import AIPlannerWizardScreen from '@/screens/AIPlannerWizardScreen';
+import InsurancePlanResultScreen from '@/screens/InsurancePlanResultScreen';
+import SmartUnderwritingScreen from '@/screens/SmartUnderwritingScreen';
+import CoverageGapAnalysisScreen from '@/screens/CoverageGapAnalysisScreen';
+import MyInsurancePoliciesScreen from '@/screens/MyInsurancePoliciesScreen';
+import InsurancePolicyDetailScreen from '@/screens/InsurancePolicyDetailScreen';
+import ClaimAssistanceScreen from '@/screens/ClaimAssistanceScreen';
+import ClaimHistoryScreen from '@/screens/ClaimHistoryScreen';
+import InsuranceCompanyListScreen from '@/screens/InsuranceCompanyListScreen';
+import InsuranceArticleScreen from '@/screens/InsuranceArticleScreen';
+import InsuranceVideoScreen from '@/screens/InsuranceVideoScreen';
+import ClaimCaseLibraryScreen from '@/screens/ClaimCaseLibraryScreen';
+import InsuranceCalculatorScreen from '@/screens/InsuranceCalculatorScreen';
+import InsuranceQAScreen from '@/screens/InsuranceQAScreen';
+import InsuranceSpecialTopicScreen from '@/screens/InsuranceSpecialTopicScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -140,6 +224,10 @@ export const MainNavigator: React.FC = () => {
         component={DeviceManagementScreen}
       />
       <Stack.Screen
+        name="DataConfirmation"
+        component={DataConfirmationScreen}
+      />
+      <Stack.Screen
         name="MedicationReminder"
         component={MedicationReminderScreen}
       />
@@ -178,6 +266,18 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="OrderDetail"
         component={OrderDetailScreen}
+      />
+      <Stack.Screen
+        name="ServiceOrderDetail"
+        component={ServiceOrderDetailScreen}
+      />
+      <Stack.Screen
+        name="ServiceReview"
+        component={ServiceReviewScreen}
+      />
+      <Stack.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
       />
       <Stack.Screen
         name="DeliveryService"
@@ -226,6 +326,332 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="TopicDetail"
         component={TopicDetailScreen}
+      />
+      <Stack.Screen
+        name="JobList"
+        component={JobListScreen}
+      />
+      <Stack.Screen
+        name="JobDetail"
+        component={JobDetailScreen}
+      />
+      <Stack.Screen
+        name="JobPublish"
+        component={JobPublishScreen}
+      />
+      <Stack.Screen
+        name="SecondHandDetail"
+        component={SecondHandDetailScreen}
+      />
+      <Stack.Screen
+        name="SecondHandList"
+        component={SecondHandListScreen}
+      />
+      <Stack.Screen
+        name="SecondHandPublish"
+        component={SecondHandPublishScreen}
+      />
+      <Stack.Screen
+        name="ExpertDetail"
+        component={ExpertDetailScreen}
+      />
+      <Stack.Screen
+        name="ExpertList"
+        component={ExpertListScreen}
+      />
+      <Stack.Screen
+        name="ExpertDashboard"
+        component={ExpertDashboardScreen}
+      />
+      <Stack.Screen
+        name="ExpertCertification"
+        component={ExpertCertificationScreen}
+      />
+      <Stack.Screen
+        name="PostDetail"
+        component={PostDetailScreen}
+      />
+      <Stack.Screen
+        name="PostPublish"
+        component={PostPublishScreen}
+      />
+      <Stack.Screen
+        name="Search"
+        component={SearchScreen}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+      />
+      <Stack.Screen
+        name="ChatList"
+        component={ChatListScreen}
+      />
+
+      {/* 私人医生服务 */}
+      <Stack.Screen
+        name="PrivateDoctorList"
+        component={PrivateDoctorListScreen}
+      />
+      <Stack.Screen
+        name="PrivateDoctorDetail"
+        component={PrivateDoctorDetailScreen}
+      />
+      <Stack.Screen
+        name="PrivateDoctorSubscribe"
+        component={PrivateDoctorSubscribeScreen}
+      />
+      <Stack.Screen
+        name="SubscriptionSuccess"
+        component={SubscriptionSuccessScreen}
+      />
+      <Stack.Screen
+        name="PrivateDoctorServiceDesk"
+        component={PrivateDoctorServiceDeskScreen}
+      />
+      <Stack.Screen
+        name="ConsultationList"
+        component={ConsultationListScreen}
+      />
+      <Stack.Screen
+        name="DoctorChat"
+        component={DoctorChatScreen}
+      />
+      <Stack.Screen
+        name="BookConsultation"
+        component={BookConsultationScreen}
+      />
+      <Stack.Screen
+        name="ConsultationDetail"
+        component={ConsultationDetailScreen}
+      />
+      <Stack.Screen
+        name="HealthRecords"
+        component={HealthRecordsScreen}
+      />
+      <Stack.Screen
+        name="HealthAssessment"
+        component={HealthAssessmentScreen}
+      />
+      <Stack.Screen
+        name="HealthPlan"
+        component={HealthPlanScreen}
+      />
+      <Stack.Screen
+        name="HealthManager"
+        component={HealthManagerScreen}
+      />
+      <Stack.Screen
+        name="ExpertConsultation"
+        component={ExpertConsultationScreen}
+      />
+      <Stack.Screen
+        name="InternationalReferral"
+        component={InternationalReferralScreen}
+      />
+      <Stack.Screen
+        name="ContractManagement"
+        component={ContractManagementScreen}
+      />
+
+      {/* 法律服务 - Legal Services */}
+      <Stack.Screen
+        name="LegalServiceHome"
+        component={LegalServiceHomeScreen}
+      />
+      <Stack.Screen
+        name="WillCreator"
+        component={WillCreatorScreen}
+      />
+      <Stack.Screen
+        name="WillReview"
+        component={WillReviewScreen}
+      />
+      <Stack.Screen
+        name="WillExecutionGuide"
+        component={WillExecutionGuideScreen}
+      />
+      <Stack.Screen
+        name="MyWills"
+        component={MyWillsScreen}
+      />
+      <Stack.Screen
+        name="GuardianshipCreator"
+        component={GuardianshipCreatorScreen}
+      />
+      <Stack.Screen
+        name="MyGuardianship"
+        component={MyGuardianshipScreen}
+      />
+      <Stack.Screen
+        name="PropertyInventory"
+        component={PropertyInventoryScreen}
+      />
+      <Stack.Screen
+        name="LawyerList"
+        component={LawyerListScreen}
+      />
+      <Stack.Screen
+        name="LawyerDetail"
+        component={LawyerDetailScreen}
+      />
+      <Stack.Screen
+        name="TextConsultation"
+        component={TextConsultationScreen}
+      />
+      <Stack.Screen
+        name="PhoneConsultation"
+        component={PhoneConsultationScreen}
+      />
+      <Stack.Screen
+        name="VideoConsultation"
+        component={VideoConsultationScreen}
+      />
+      <Stack.Screen
+        name="ConsultationHistory"
+        component={ConsultationHistoryScreen}
+      />
+      <Stack.Screen
+        name="MyCases"
+        component={MyCasesScreen}
+      />
+      <Stack.Screen
+        name="CaseDelegation"
+        component={CaseDelegationScreen}
+      />
+      <Stack.Screen
+        name="CaseLibrary"
+        component={CaseLibraryScreen}
+      />
+      <Stack.Screen
+        name="ContractReview"
+        component={ContractReviewScreen}
+      />
+      <Stack.Screen
+        name="LegalCheckup"
+        component={LegalCheckupScreen}
+      />
+      <Stack.Screen
+        name="LegalVideo"
+        component={LegalVideoScreen}
+      />
+      <Stack.Screen
+        name="LegalArticle"
+        component={LegalArticleScreen}
+      />
+      <Stack.Screen
+        name="DocumentTemplate"
+        component={DocumentTemplateScreen}
+      />
+      <Stack.Screen
+        name="LegalMembership"
+        component={LegalMembershipScreen}
+      />
+
+      {/* 保险规划 - Insurance Planning */}
+      <Stack.Screen
+        name="InsuranceHome"
+        component={InsuranceHomeScreen}
+      />
+      <Stack.Screen
+        name="InsuranceProductList"
+        component={InsuranceProductListScreen}
+      />
+      <Stack.Screen
+        name="InsuranceProductDetail"
+        component={InsuranceProductDetailScreen}
+      />
+      <Stack.Screen
+        name="ProductComparison"
+        component={ProductComparisonScreen}
+      />
+      <Stack.Screen
+        name="InsuranceAdvisorList"
+        component={InsuranceAdvisorListScreen}
+      />
+      <Stack.Screen
+        name="InsuranceAdvisorDetail"
+        component={InsuranceAdvisorDetailScreen}
+      />
+      <Stack.Screen
+        name="InsuranceTextConsultation"
+        component={InsuranceTextConsultationScreen}
+      />
+      <Stack.Screen
+        name="InsurancePhoneConsultation"
+        component={InsurancePhoneConsultationScreen}
+      />
+      <Stack.Screen
+        name="InsuranceVideoConsultation"
+        component={InsuranceVideoConsultationScreen}
+      />
+      <Stack.Screen
+        name="InsuranceHomeVisit"
+        component={InsuranceHomeVisitScreen}
+      />
+      <Stack.Screen
+        name="InsuranceConsultationHistory"
+        component={InsuranceConsultationHistoryScreen}
+      />
+      <Stack.Screen
+        name="AIPlannerWizard"
+        component={AIPlannerWizardScreen}
+      />
+      <Stack.Screen
+        name="InsurancePlanResult"
+        component={InsurancePlanResultScreen}
+      />
+      <Stack.Screen
+        name="SmartUnderwriting"
+        component={SmartUnderwritingScreen}
+      />
+      <Stack.Screen
+        name="CoverageGapAnalysis"
+        component={CoverageGapAnalysisScreen}
+      />
+      <Stack.Screen
+        name="MyInsurancePolicies"
+        component={MyInsurancePoliciesScreen}
+      />
+      <Stack.Screen
+        name="InsurancePolicyDetail"
+        component={InsurancePolicyDetailScreen}
+      />
+      <Stack.Screen
+        name="ClaimAssistance"
+        component={ClaimAssistanceScreen}
+      />
+      <Stack.Screen
+        name="ClaimHistory"
+        component={ClaimHistoryScreen}
+      />
+      <Stack.Screen
+        name="InsuranceCompanyList"
+        component={InsuranceCompanyListScreen}
+      />
+      <Stack.Screen
+        name="InsuranceArticle"
+        component={InsuranceArticleScreen}
+      />
+      <Stack.Screen
+        name="InsuranceVideo"
+        component={InsuranceVideoScreen}
+      />
+      <Stack.Screen
+        name="ClaimCaseLibrary"
+        component={ClaimCaseLibraryScreen}
+      />
+      <Stack.Screen
+        name="InsuranceCalculator"
+        component={InsuranceCalculatorScreen}
+      />
+      <Stack.Screen
+        name="InsuranceQA"
+        component={InsuranceQAScreen}
+      />
+      <Stack.Screen
+        name="InsuranceSpecialTopic"
+        component={InsuranceSpecialTopicScreen}
       />
     </Stack.Navigator>
   );

@@ -42,7 +42,7 @@ export const VideoListScreen: React.FC<VideoListScreenProps> = ({ navigation }) 
   const [selectedCategory, setSelectedCategory] = useState('全部');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const categories = ['全部', '运动健身', '营养饮食', '慢病管理', '老年健康'];
+  const categories = ['全部', '生活技巧', '美食烹饪', '手工制作', '运动健身', '才艺展示'];
 
   const loadVideos = async () => {
     setLoading(true);
@@ -89,7 +89,7 @@ export const VideoListScreen: React.FC<VideoListScreenProps> = ({ navigation }) 
             <XStack space="$2" alignItems="center">
               <ArrowLeft size={24} color={COLORS.text} />
               <Text fontSize="$5" color="$text" fontWeight="600">
-                健康视频
+                视频分享
               </Text>
             </XStack>
           </Pressable>

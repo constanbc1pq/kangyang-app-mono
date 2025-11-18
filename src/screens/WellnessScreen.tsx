@@ -3,53 +3,105 @@ import {
   YStack,
   XStack,
   Text,
-  Card,
   View,
   H1,
-  H2,
   H3,
   Theme,
   ScrollView,
-  Button,
-  Sheet,
-  Toast,
-  useToastState,
+  Card,
 } from 'tamagui';
-import { Pressable, Modal, TouchableOpacity } from 'react-native';
+import { Pressable, Modal, TouchableOpacity, Alert } from 'react-native';
 import { ToastViewport, useToastController } from '@tamagui/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
-  Leaf,
-  Calendar,
+  MapPin,
+  Navigation,
+  X,
+  Stethoscope,
   ChefHat,
   Truck,
   Heart,
   Users,
+  Scale,
   Shield,
-  Star,
-  MapPin,
-  Phone,
-  ShoppingCart,
-  Clock,
-  Award,
-  Target,
-  Utensils,
-  BookOpen,
-  Navigation,
-  X,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
-import { NutritionPlanner } from '@/components/NutritionPlanner';
-import { WellnessCalendar } from '@/components/WellnessCalendar';
+import { privateDoctorService } from '@/services/privateDoctorService';
+import { DoctorSubscription } from '@/types/privateDoctor';
+
+// Feed组件导入
+import {
+  PersonalizedRecommendationBanner,
+  generateRecommendation,
+} from '@/components/wellness/PersonalizedRecommendationBanner';
+import {
+  TodayRecommendationCard,
+  generateTodayRecommendation,
+} from '@/components/wellness/TodayRecommendationCard';
+import {
+  UserStoryList,
+  mockUserStories,
+} from '@/components/wellness/UserStoryCard';
+import { FreeTrialZone } from '@/components/wellness/FreeTrialZone';
+import {
+  ScenarioServiceSection,
+  mockScenarioServices,
+} from '@/components/wellness/ScenarioServiceCard';
+import {
+  ComboPackageList,
+  mockComboPackages,
+} from '@/components/wellness/ComboPackageCard';
+import {
+  ExpertTeamList,
+  mockExperts,
+} from '@/components/wellness/ExpertTeamCard';
+import {
+  CommunityDynamics,
+  mockCommunityPosts,
+} from '@/components/wellness/CommunityDynamics';
 
 export const WellnessScreen: React.FC = () => {
   const navigation = useNavigation();
-  const [activeService, setActiveService] = useState('overview');
   const [selectedCity, setSelectedCity] = useState('深圳');
   const [showCityModal, setShowCityModal] = useState(false);
+  const [subscription, setSubscription] = useState<DoctorSubscription | null>(null);
+  const [doctorName, setDoctorName] = useState<string>('');
+  const [subscriptionId, setSubscriptionId] = useState<string>('');
   const toast = useToastController();
+
+  // 检查用户是否有私人医生订阅
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkSubscription = async () => {
+        const userId = 'user_001'; // TODO: 实际应从认证状态获取
+
+        console.log('🔍 WellnessScreen: 检查私人医生订阅, userId:', userId);
+
+        // getMySubscription 已经统一从 @kangyang_orders 读取订阅数据
+        const subscription = await privateDoctorService.getMySubscription(userId);
+
+        if (subscription) {
+          console.log('✅ WellnessScreen: 找到订阅数据, status:', subscription.status);
+          setSubscription(subscription);
+          setSubscriptionId(subscription.id);
+
+          // 获取医生信息
+          const doctor = await privateDoctorService.getDoctorById(subscription.doctorId);
+          if (doctor) {
+            setDoctorName(doctor.name);
+            console.log('✅ WellnessScreen: 医生信息:', doctor.name);
+          }
+        } else {
+          console.log('❌ WellnessScreen: 未找到私人医生订阅数据');
+          setSubscription(null);
+        }
+      };
+
+      checkSubscription();
+    }, [])
+  );
 
   // 显示toast提示
   const showToast = (message: string) => {
@@ -62,6 +114,7 @@ export const WellnessScreen: React.FC = () => {
     });
   };
 
+  // 6大服务导航处理
   const handleServiceClick = (serviceId: string) => {
     if (serviceId === 'nutrition') {
       navigation.navigate('NutritionService' as never);
@@ -69,20 +122,129 @@ export const WellnessScreen: React.FC = () => {
       navigation.navigate('DeliveryService' as never);
     } else if (serviceId === 'elderly') {
       navigation.navigate('ElderlyService' as never);
-    } else if (serviceId === 'doctor' || serviceId === 'therapy' || serviceId === 'insurance') {
-      // 私人医生、康复理疗、保险规划 显示"敬请期待"
-      showToast('敬请期待');
-    } else {
-      setActiveService(serviceId);
+    } else if (serviceId === 'doctor') {
+      navigation.navigate('PrivateDoctorList' as never);
+    } else if (serviceId === 'legal') {
+      navigation.navigate('LegalServiceHome' as never);
+    } else if (serviceId === 'insurance') {
+      navigation.navigate('InsuranceHome' as never);
     }
   };
 
+  // 已存在的Screen列表
+  const existingScreens = [
+    'NutritionService',
+    'DeliveryService',
+    'ElderlyService',
+    'PrivateDoctorList',
+    'LegalServiceHome',
+    'InsuranceHome',
+  ];
+
+  // Feed组件导航处理 - 带fallback
+  const handleNavigate = (screen: string, params?: any) => {
+    if (existingScreens.includes(screen)) {
+      navigation.navigate(screen as never, params as never);
+    } else {
+      toast.show(`${screen} 功能开发中，敬请期待`, { duration: 2000 });
+    }
+  };
+
+  const handleConsult = (screen: string, params?: any) => {
+    if (existingScreens.includes(screen)) {
+      navigation.navigate(screen as never, params as never);
+    } else {
+      toast.show('咨询功能开发中，敬请期待', { duration: 2000 });
+    }
+  };
+
+  // 社区动态交互处理
+  const handleLike = (postId: string) => {
+    toast.show('点赞成功', { duration: 1000 });
+  };
+
+  const handleComment = (postId: string) => {
+    // 跳转到社区帖子详情页
+    navigation.navigate('CommunityPostDetail' as never, { postId } as never);
+  };
+
+  const handleShare = (postId: string) => {
+    toast.show('分享功能开发中', { duration: 2000 });
+  };
+
+  // 用户画像数据（实际应从用户状态获取）
+  const userProfile = {
+    age: 65,
+    healthScore: 80,
+    hasChronicDisease: false,
+    isNewUser: false,
+    livingAlone: true,
+  };
+
+  // 生成个性化推荐
+  const recommendation = generateRecommendation(userProfile);
+
+  // 生成今日推荐
+  const todayRecommendation = generateTodayRecommendation(new Date());
+
+  // 6大服务入口
+  const services = [
+    {
+      id: 'nutrition',
+      title: '营养配餐',
+      description: 'AI定制营养方案',
+      icon: ChefHat,
+      color: COLORS.success,
+      bgColor: 'rgba(16, 185, 129, 0.1)',
+    },
+    {
+      id: 'delivery',
+      title: '送餐上门',
+      description: '健康餐品配送',
+      icon: Truck,
+      color: COLORS.primary,
+      bgColor: 'rgba(99, 102, 241, 0.1)',
+    },
+    {
+      id: 'elderly',
+      title: '养老服务',
+      description: '专业照护服务',
+      icon: Heart,
+      color: COLORS.error,
+      bgColor: 'rgba(239, 68, 68, 0.1)',
+    },
+    {
+      id: 'doctor',
+      title: '私人医生',
+      description: '1对1健康管理',
+      icon: Users,
+      color: COLORS.secondary,
+      bgColor: 'rgba(139, 92, 246, 0.1)',
+    },
+    {
+      id: 'legal',
+      title: '遗嘱及法律',
+      description: '法律咨询服务',
+      icon: Scale,
+      color: '#8b5cf6',
+      bgColor: 'rgba(139, 92, 246, 0.1)',
+    },
+    {
+      id: 'insurance',
+      title: '保险规划',
+      description: '健康保障方案',
+      icon: Shield,
+      color: COLORS.accent,
+      bgColor: 'rgba(6, 182, 212, 0.1)',
+    },
+  ];
+
   // 热门城市列表
   const hotCities = [
-    { id: '1', name: '北京', available: true },
+    { id: '1', name: '深圳', available: true },
     { id: '2', name: '上海', available: true },
     { id: '3', name: '广州', available: true },
-    { id: '4', name: '深圳', available: true },
+    { id: '4', name: '北京', available: true },
     { id: '5', name: '杭州', available: true },
     { id: '6', name: '成都', available: true },
     { id: '7', name: '南京', available: true },
@@ -95,11 +257,11 @@ export const WellnessScreen: React.FC = () => {
 
   const handleAutoLocate = () => {
     // 模拟自动定位
-    Alert.alert('定位提示', '已定位到您当前城市：北京', [
+    Alert.alert('定位提示', '已定位到您当前城市：深圳', [
       {
         text: '确定',
         onPress: () => {
-          setSelectedCity('北京');
+          setSelectedCity('深圳');
           setShowCityModal(false);
         },
       },
@@ -111,416 +273,298 @@ export const WellnessScreen: React.FC = () => {
     setShowCityModal(false);
   };
 
-  const todayRecommendation = {
-    season: "立冬",
-    advice: "今日宜：清淡饮食，温补养生",
-    foods: ["山药", "红枣", "枸杞", "银耳"],
-    avoid: ["生冷食物", "辛辣刺激"],
-  };
-
-  const services = [
-    {
-      id: "nutrition",
-      title: "营养配餐",
-      description: "AI定制营养方案",
-      icon: ChefHat,
-      color: COLORS.success,
-      bgColor: "rgba(16, 185, 129, 0.1)",
-    },
-    {
-      id: "delivery",
-      title: "送餐上门",
-      description: "健康餐品配送",
-      icon: Truck,
-      color: COLORS.primary,
-      bgColor: "rgba(99, 102, 241, 0.1)",
-    },
-    {
-      id: "elderly",
-      title: "养老服务",
-      description: "专业照护服务",
-      icon: Heart,
-      color: COLORS.error,
-      bgColor: "rgba(239, 68, 68, 0.1)",
-    },
-    {
-      id: "doctor",
-      title: "私人医生",
-      description: "1对1健康管理",
-      icon: Users,
-      color: COLORS.secondary,
-      bgColor: "rgba(139, 92, 246, 0.1)",
-    },
-    {
-      id: "therapy",
-      title: "康复理疗",
-      description: "专业理疗服务",
-      icon: Shield,
-      color: COLORS.warning,
-      bgColor: "rgba(245, 158, 11, 0.1)",
-    },
-    {
-      id: "insurance",
-      title: "保险规划",
-      description: "健康保障方案",
-      icon: Shield,
-      color: COLORS.accent,
-      bgColor: "rgba(6, 182, 212, 0.1)",
-    },
-  ];
-
-  const nearbyServices = [
-    {
-      name: "康养中心(福田店)",
-      distance: "1.2km",
-      services: ["体检", "理疗", "营养咨询"],
-      rating: 4.6,
-      phone: "0755-8888-1234",
-    },
-    {
-      name: "银龄照护中心(南山店)",
-      distance: "2.1km",
-      services: ["日间照料", "康复训练", "心理疏导"],
-      rating: 4.8,
-      phone: "0755-8888-5678",
-    },
-    {
-      name: "健康管理诊所(罗湖店)",
-      distance: "0.8km",
-      services: ["健康评估", "慢病管理", "营养指导"],
-      rating: 4.5,
-      phone: "0755-8888-9012",
-    },
-  ];
 
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-          <YStack space="$4" padding="$4">
+          <YStack>
             {/* Header */}
-            <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-              <YStack>
-                <H1 fontSize="$9" fontWeight="bold" color="$text">
-                  品质生活
-                </H1>
-                <Text fontSize="$4" color="$textSecondary">
-                  专业养生服务
-                </Text>
-              </YStack>
-              <Pressable onPress={() => setShowCityModal(true)}>
-                <View
-                  borderWidth={1}
-                  borderColor={COLORS.primary}
-                  backgroundColor="white"
-                  borderRadius="$3"
-                  paddingHorizontal="$3"
-                  paddingVertical="$2"
-                >
-                  <XStack space="$2" alignItems="center">
-                    <MapPin size={16} color={COLORS.primary} />
-                    <Text fontSize="$3" color={COLORS.primary} fontWeight="600">{selectedCity}</Text>
-                  </XStack>
-                </View>
-              </Pressable>
-            </XStack>
-
-            {/* Today's Wellness Recommendation */}
-            <View borderRadius="$6" overflow="hidden">
-              <LinearGradient
-                colors={[COLORS.primary, COLORS.secondary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{ padding: 24 }}
-              >
-                <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-                  <XStack space="$2" alignItems="center">
-                    <Leaf size={24} color="white" />
-                    <H2 fontSize="$7" fontWeight="bold" color="white">
-                      养生日历
-                    </H2>
-                  </XStack>
+            <View paddingHorizontal="$4" paddingTop="$4" paddingBottom="$3">
+              <XStack justifyContent="space-between" alignItems="center">
+                <YStack>
+                  <H1 fontSize="$9" fontWeight="bold" color="$text">
+                    品质生活
+                  </H1>
+                  <Text fontSize="$4" color="$textSecondary">
+                    场景化服务，品质养老
+                  </Text>
+                </YStack>
+                <Pressable onPress={() => setShowCityModal(true)}>
                   <View
-                    backgroundColor="rgba(255,255,255,0.2)"
+                    borderWidth={1}
+                    borderColor={COLORS.primary}
+                    backgroundColor="white"
+                    borderRadius="$3"
                     paddingHorizontal="$3"
                     paddingVertical="$2"
-                    borderRadius="$3"
-                    borderWidth={1}
-                    borderColor="rgba(255,255,255,0.3)"
                   >
-                    <Text fontSize="$3" color="white" fontWeight="500">
-                      {todayRecommendation.season}
-                    </Text>
+                    <XStack space="$2" alignItems="center">
+                      <MapPin size={16} color={COLORS.primary} />
+                      <Text fontSize="$3" color={COLORS.primary} fontWeight="600">
+                        {selectedCity}
+                      </Text>
+                    </XStack>
                   </View>
-                </XStack>
-
-                <Text fontSize="$5" color="white" marginBottom="$4" lineHeight="$2">
-                  {todayRecommendation.advice}
-                </Text>
-
-                <XStack space="$4">
-                  <YStack flex={1}>
-                    <Text fontSize="$3" color="rgba(255,255,255,0.8)" marginBottom="$2">
-                      推荐食材
-                    </Text>
-                    <XStack flexWrap="wrap" gap="$2">
-                      {todayRecommendation.foods.map((food, index) => (
-                        <View
-                          key={index}
-                          backgroundColor="rgba(255,255,255,0.2)"
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$2"
-                        >
-                          <Text fontSize="$2" color="white">
-                            {food}
-                          </Text>
-                        </View>
-                      ))}
-                    </XStack>
-                  </YStack>
-                  <YStack flex={1}>
-                    <Text fontSize="$3" color="rgba(255,255,255,0.8)" marginBottom="$2">
-                      避免食用
-                    </Text>
-                    <XStack flexWrap="wrap" gap="$2">
-                      {todayRecommendation.avoid.map((item, index) => (
-                        <View
-                          key={index}
-                          borderWidth={1}
-                          borderColor="rgba(255,255,255,0.3)"
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$2"
-                        >
-                          <Text fontSize="$2" color="rgba(255,255,255,0.8)">
-                            {item}
-                          </Text>
-                        </View>
-                      ))}
-                    </XStack>
-                  </YStack>
-                </XStack>
-              </LinearGradient>
+                </Pressable>
+              </XStack>
             </View>
 
-            {/* Service Navigation */}
-            <YStack space="$3">
-              <H3 fontSize="$6" color="$text" fontWeight="600">
-                服务分类
-              </H3>
-              <YStack space="$3">
-                {/* First row - 2 services */}
-                <XStack space="$3">
-                  {services.slice(0, 2).map((service) => {
-                    const IconComponent = service.icon;
-                    return (
-                      <Card
-                        key={service.id}
-                        flex={1}
-                        padding="$4"
-                        borderRadius="$4"
-                        backgroundColor="$cardBg"
-                        pressStyle={{ scale: 0.98 }}
-                        shadowColor="$shadow"
-                        shadowOffset={{ width: 0, height: 2 }}
-                        shadowOpacity={0.1}
-                        shadowRadius={8}
-                        elevation={4}
-                        onPress={() => handleServiceClick(service.id)}
-                      >
+            {/* 私人医生服务台Banner - VIP用户专属 */}
+            {subscription && subscription.status === 'active' && (
+              <View paddingHorizontal="$4">
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate('PrivateDoctorServiceDesk' as never, {
+                      subscriptionId: subscriptionId || subscription.id,
+                    } as never)
+                  }
+                >
+                  <View borderRadius="$4" overflow="hidden" marginBottom={16}>
+                    <LinearGradient
+                      colors={['#0f172a', '#1e293b']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{ padding: 16 }}
+                    >
+                      <XStack space="$3" alignItems="center">
                         <View
-                          width={48}
-                          height={48}
-                          borderRadius={12}
-                          backgroundColor={service.bgColor}
+                          width={52}
+                          height={52}
+                          borderRadius={26}
+                          backgroundColor="rgba(212, 175, 55, 0.15)"
+                          borderWidth={2}
+                          borderColor="rgba(212, 175, 55, 0.3)"
                           justifyContent="center"
                           alignItems="center"
-                          marginBottom="$3"
                         >
-                          <IconComponent size={24} color={service.color} />
+                          <Stethoscope size={26} color="#d4af37" />
                         </View>
-                        <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
-                          {service.title}
-                        </H3>
-                        <Text fontSize="$3" color="$textSecondary">
-                          {service.description}
-                        </Text>
-                      </Card>
-                    );
-                  })}
-                </XStack>
-
-                {/* Second row - 2 services */}
-                <XStack space="$3">
-                  {services.slice(2, 4).map((service) => {
-                    const IconComponent = service.icon;
-                    return (
-                      <Card
-                        key={service.id}
-                        flex={1}
-                        padding="$4"
-                        borderRadius="$4"
-                        backgroundColor="$cardBg"
-                        pressStyle={{ scale: 0.98 }}
-                        shadowColor="$shadow"
-                        shadowOffset={{ width: 0, height: 2 }}
-                        shadowOpacity={0.1}
-                        shadowRadius={8}
-                        elevation={4}
-                        onPress={() => handleServiceClick(service.id)}
-                      >
-                        <View
-                          width={48}
-                          height={48}
-                          borderRadius={12}
-                          backgroundColor={service.bgColor}
-                          justifyContent="center"
-                          alignItems="center"
-                          marginBottom="$3"
-                        >
-                          <IconComponent size={24} color={service.color} />
-                        </View>
-                        <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
-                          {service.title}
-                        </H3>
-                        <Text fontSize="$3" color="$textSecondary">
-                          {service.description}
-                        </Text>
-                      </Card>
-                    );
-                  })}
-                </XStack>
-
-                {/* Third row - 2 services */}
-                <XStack space="$3">
-                  {services.slice(4, 6).map((service) => {
-                    const IconComponent = service.icon;
-                    return (
-                      <Card
-                        key={service.id}
-                        flex={1}
-                        padding="$4"
-                        borderRadius="$4"
-                        backgroundColor="$cardBg"
-                        pressStyle={{ scale: 0.98 }}
-                        shadowColor="$shadow"
-                        shadowOffset={{ width: 0, height: 2 }}
-                        shadowOpacity={0.1}
-                        shadowRadius={8}
-                        elevation={4}
-                        onPress={() => handleServiceClick(service.id)}
-                      >
-                        <View
-                          width={48}
-                          height={48}
-                          borderRadius={12}
-                          backgroundColor={service.bgColor}
-                          justifyContent="center"
-                          alignItems="center"
-                          marginBottom="$3"
-                        >
-                          <IconComponent size={24} color={service.color} />
-                        </View>
-                        <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
-                          {service.title}
-                        </H3>
-                        <Text fontSize="$3" color="$textSecondary">
-                          {service.description}
-                        </Text>
-                      </Card>
-                    );
-                  })}
-                </XStack>
-              </YStack>
-            </YStack>
-
-            {/* Nutrition Planner */}
-            <NutritionPlanner />
-
-            {/* Wellness Calendar */}
-            <WellnessCalendar />
-
-            {/* Nearby Services */}
-            <YStack space="$3">
-              <H3 fontSize="$6" color="$text" fontWeight="600">
-                附近服务
-              </H3>
-              <YStack space="$3">
-                {nearbyServices.map((service, index) => (
-                  <Card
-                    key={index}
-                    padding="$4"
-                    borderRadius="$4"
-                    backgroundColor="$cardBg"
-                    pressStyle={{ scale: 0.98 }}
-                    shadowColor="$shadow"
-                    shadowOffset={{ width: 0, height: 2 }}
-                    shadowOpacity={0.1}
-                    shadowRadius={8}
-                    elevation={4}
-                  >
-                    <XStack justifyContent="space-between" alignItems="center">
-                      <YStack flex={1} marginRight="$3">
-                        <XStack space="$2" alignItems="center" marginBottom="$1">
-                          <H3 fontSize="$5" fontWeight="600" color="$text">
-                            {service.name}
-                          </H3>
-                          <XStack space="$1" alignItems="center">
-                            <MapPin size={12} color={COLORS.textSecondary} />
-                            <Text fontSize="$2" color="$textSecondary">
-                              {service.distance}
+                        <YStack flex={1} space="$1">
+                          <XStack space="$2" alignItems="center">
+                            <Text fontSize="$4" fontWeight="700" color="white">
+                              专属医生服务台
                             </Text>
-                          </XStack>
-                        </XStack>
-                        <XStack space="$1" alignItems="center" marginBottom="$2">
-                          <Star size={12} color={COLORS.warning} />
-                          <Text fontSize="$3" color="$textSecondary">
-                            {service.rating}分
-                          </Text>
-                        </XStack>
-                        <XStack flexWrap="wrap" gap="$2">
-                          {service.services.map((item, itemIndex) => (
                             <View
-                              key={itemIndex}
-                              backgroundColor="$surface"
+                              backgroundColor="#d4af37"
                               paddingHorizontal="$2"
-                              paddingVertical="$1"
+                              paddingVertical="$0.5"
                               borderRadius="$2"
                             >
-                              <Text fontSize="$2" color="$primary">
-                                {item}
+                              <Text fontSize={10} color="#0f172a" fontWeight="700">
+                                VIP
                               </Text>
                             </View>
-                          ))}
-                        </XStack>
-                      </YStack>
-                      <YStack alignItems="flex-end" space="$2">
-                        <Button size="$3" variant="outlined" borderColor="$primary">
-                          <XStack space="$1" alignItems="center">
-                            <Phone size={14} color={COLORS.primary} />
-                            <Text fontSize="$2" color="$primary">咨询</Text>
                           </XStack>
-                        </Button>
-                        <Pressable onPress={() => showToast('敬请期待')}>
+                          <Text fontSize="$2" color="rgba(255,255,255,0.7)">
+                            {doctorName} 医生为您服务
+                          </Text>
+                        </YStack>
+                        <View
+                          backgroundColor="rgba(212, 175, 55, 0.2)"
+                          borderRadius="$2"
+                          paddingHorizontal="$3"
+                          paddingVertical="$2"
+                          borderWidth={1}
+                          borderColor="rgba(212, 175, 55, 0.4)"
+                        >
+                          <Text fontSize="$2" color="#d4af37" fontWeight="600">
+                            进入
+                          </Text>
+                        </View>
+                      </XStack>
+                    </LinearGradient>
+                  </View>
+                </Pressable>
+              </View>
+            )}
+
+            {/* 6大服务入口 */}
+            <View paddingHorizontal="$4" marginBottom={16}>
+              <YStack space="$3">
+                <H3 fontSize="$6" color="$text" fontWeight="600">
+                  服务分类
+                </H3>
+                <YStack space="$3">
+                  {/* 第一行 - 2个服务 */}
+                  <XStack space="$3">
+                    {services.slice(0, 2).map((service) => {
+                      const IconComponent = service.icon;
+                      return (
+                        <Card
+                          key={service.id}
+                          flex={1}
+                          padding="$4"
+                          borderRadius="$4"
+                          backgroundColor="$cardBg"
+                          pressStyle={{ scale: 0.98 }}
+                          shadowColor="$shadow"
+                          shadowOffset={{ width: 0, height: 2 }}
+                          shadowOpacity={0.1}
+                          shadowRadius={8}
+                          elevation={4}
+                          onPress={() => handleServiceClick(service.id)}
+                        >
                           <View
-                            backgroundColor={COLORS.primary}
-                            borderRadius="$3"
-                            paddingHorizontal="$3"
-                            paddingVertical="$2"
+                            width={48}
+                            height={48}
+                            borderRadius={12}
+                            backgroundColor={service.bgColor}
+                            justifyContent="center"
+                            alignItems="center"
+                            marginBottom="$3"
                           >
-                            <Text fontSize="$2" color="white">预约</Text>
+                            <IconComponent size={24} color={service.color} />
                           </View>
-                        </Pressable>
-                      </YStack>
-                    </XStack>
-                  </Card>
-                ))}
+                          <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
+                            {service.title}
+                          </H3>
+                          <Text fontSize="$3" color="$textSecondary">
+                            {service.description}
+                          </Text>
+                        </Card>
+                      );
+                    })}
+                  </XStack>
+
+                  {/* 第二行 - 2个服务 */}
+                  <XStack space="$3">
+                    {services.slice(2, 4).map((service) => {
+                      const IconComponent = service.icon;
+                      return (
+                        <Card
+                          key={service.id}
+                          flex={1}
+                          padding="$4"
+                          borderRadius="$4"
+                          backgroundColor="$cardBg"
+                          pressStyle={{ scale: 0.98 }}
+                          shadowColor="$shadow"
+                          shadowOffset={{ width: 0, height: 2 }}
+                          shadowOpacity={0.1}
+                          shadowRadius={8}
+                          elevation={4}
+                          onPress={() => handleServiceClick(service.id)}
+                        >
+                          <View
+                            width={48}
+                            height={48}
+                            borderRadius={12}
+                            backgroundColor={service.bgColor}
+                            justifyContent="center"
+                            alignItems="center"
+                            marginBottom="$3"
+                          >
+                            <IconComponent size={24} color={service.color} />
+                          </View>
+                          <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
+                            {service.title}
+                          </H3>
+                          <Text fontSize="$3" color="$textSecondary">
+                            {service.description}
+                          </Text>
+                        </Card>
+                      );
+                    })}
+                  </XStack>
+
+                  {/* 第三行 - 2个服务 */}
+                  <XStack space="$3">
+                    {services.slice(4, 6).map((service) => {
+                      const IconComponent = service.icon;
+                      return (
+                        <Card
+                          key={service.id}
+                          flex={1}
+                          padding="$4"
+                          borderRadius="$4"
+                          backgroundColor="$cardBg"
+                          pressStyle={{ scale: 0.98 }}
+                          shadowColor="$shadow"
+                          shadowOffset={{ width: 0, height: 2 }}
+                          shadowOpacity={0.1}
+                          shadowRadius={8}
+                          elevation={4}
+                          onPress={() => handleServiceClick(service.id)}
+                        >
+                          <View
+                            width={48}
+                            height={48}
+                            borderRadius={12}
+                            backgroundColor={service.bgColor}
+                            justifyContent="center"
+                            alignItems="center"
+                            marginBottom="$3"
+                          >
+                            <IconComponent size={24} color={service.color} />
+                          </View>
+                          <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
+                            {service.title}
+                          </H3>
+                          <Text fontSize="$3" color="$textSecondary">
+                            {service.description}
+                          </Text>
+                        </Card>
+                      );
+                    })}
+                  </XStack>
+                </YStack>
               </YStack>
-            </YStack>
+            </View>
+
+            {/* Feed流组件 */}
+            {/* 1. 个性化智能推荐Banner */}
+            <View paddingHorizontal="$4">
+              <PersonalizedRecommendationBanner
+                recommendation={recommendation}
+                onPress={handleNavigate}
+              />
+            </View>
+
+            {/* 2. 今日推荐大卡片 */}
+            <View paddingHorizontal="$4">
+              <TodayRecommendationCard
+                recommendation={todayRecommendation}
+                onPurchase={handleNavigate}
+                onConsult={handleConsult}
+              />
+            </View>
+
+            {/* 3. 用户故事 */}
+            <UserStoryList stories={mockUserStories} onStoryPress={handleNavigate} />
+
+            {/* 4. 免费体验区 */}
+            <FreeTrialZone onServicePress={handleNavigate} />
+
+            {/* 5. 场景化服务卡片 */}
+            <ScenarioServiceSection
+              services={mockScenarioServices}
+              onServicePress={handleNavigate}
+              onConsultPress={handleConsult}
+            />
+
+            {/* 6. 组合套餐 */}
+            <ComboPackageList
+              packages={mockComboPackages}
+              onPurchase={handleNavigate}
+              onCustomize={handleConsult}
+            />
+
+            {/* 7. 专家团队 */}
+            <ExpertTeamList experts={mockExperts} onExpertPress={handleNavigate} />
+
+            {/* 8. 社区动态 */}
+            <CommunityDynamics
+              posts={mockCommunityPosts}
+              onLike={handleLike}
+              onComment={handleComment}
+              onShare={handleShare}
+              onPostPress={handleNavigate}
+              onViewAllPress={() => navigation.navigate('HomeTabs' as never, { screen: 'CommunityTab' } as never)}
+            />
 
             {/* Bottom padding for safe area */}
-            <View height={20} />
+            <View height={40} />
           </YStack>
         </ScrollView>
 

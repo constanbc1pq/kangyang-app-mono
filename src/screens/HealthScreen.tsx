@@ -22,7 +22,6 @@ import {
   Scale,
   Plus,
   TrendingUp,
-  AlertTriangle,
   CheckCircle,
   Settings,
   Bell,
@@ -31,28 +30,85 @@ import {
   Clock,
   ChevronRight,
 } from 'lucide-react-native';
-import { AIHealthAssistant } from '@/components/AIHealthAssistant';
+import { HealthGuardianHero, FamilyMember } from '@/components/HealthGuardianHero';
+import { HealthMetricCard } from '@/components/HealthMetricCard';
+import { AIInsights, AIInsight } from '@/components/AIInsights';
 import { HealthTrends } from '@/components/HealthTrends';
-import { DeviceManager } from '@/components/DeviceManager';
+import { DeviceStatusOverview } from '@/components/DeviceStatusOverview';
 import { COLORS } from '@/constants/app';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { getTodayTasks } from '@/services/userDataService';
-import { HealthTask } from '@/types/userData';
+import {
+  getTodayTasks,
+  getFamilyMembers,
+  getMemberHealthProfile,
+  getMemberAIInsights,
+  getMemberDevices,
+  clearUserData,
+} from '@/services/userDataService';
+import { HealthTask, MemberHealthProfile, FamilyMember as FamilyMemberType } from '@/types/userData';
 import * as Icons from 'lucide-react-native';
 
 export const HealthScreen: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [todayTasks, setTodayTasks] = useState<HealthTask[]>([]);
+  const [currentMemberId, setCurrentMemberId] = useState<string>('self'); // 当前查看的家庭成员
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [currentMemberProfile, setCurrentMemberProfile] = useState<MemberHealthProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation<any>();
 
-  const healthScore = 92;
+  // 获取当前成员信息
+  const currentMember = familyMembers.find(m => m.id === currentMemberId) || familyMembers[0];
 
-  // 加载今日任务
+  // 加载家庭成员和当前成员数据
   useFocusEffect(
     React.useCallback(() => {
+      loadFamilyData();
       loadTodayTasks();
     }, [])
   );
+
+  // 当切换家庭成员时，重新加载该成员的健康数据
+  React.useEffect(() => {
+    if (familyMembers.length > 0) {
+      loadMemberHealthData(currentMemberId);
+    }
+  }, [currentMemberId]);
+
+  // 加载家庭成员列表
+  const loadFamilyData = async () => {
+    try {
+      const members = await getFamilyMembers();
+      // 转换为 HealthGuardianHero 组件需要的格式
+      const formattedMembers: FamilyMember[] = members.map(member => ({
+        id: member.id,
+        name: member.name,
+        relationship: member.relationship,
+        healthStatus: member.healthProfile.healthStatus,
+        avatar: member.avatar,
+      }));
+      setFamilyMembers(formattedMembers);
+
+      // 加载第一个成员的数据
+      if (members.length > 0) {
+        await loadMemberHealthData(currentMemberId);
+      }
+    } catch (error) {
+      console.error('加载家庭成员数据失败:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 加载指定成员的健康数据
+  const loadMemberHealthData = async (memberId: string) => {
+    try {
+      const profile = await getMemberHealthProfile(memberId);
+      setCurrentMemberProfile(profile);
+    } catch (error) {
+      console.error('加载成员健康数据失败:', error);
+    }
+  };
 
   const loadTodayTasks = async () => {
     try {
@@ -70,81 +126,148 @@ export const HealthScreen: React.FC = () => {
     return IconComponent || Icons.CheckCircle;
   };
 
-  const healthMetrics = [
-    {
-      title: "体重",
-      value: "68.5",
-      unit: "kg",
-      change: "-0.5",
-      trend: "down",
-      icon: Scale,
-      color: "#10B981", // Emerald
-      bgColor: "rgba(16, 185, 129, 0.1)",
-    },
-    {
-      title: "血压",
-      value: "120/80",
-      unit: "mmHg",
-      change: "正常",
-      trend: "stable",
-      icon: Heart,
-      color: "#6366F1", // Indigo
-      bgColor: "rgba(99, 102, 241, 0.1)",
-    },
-    {
-      title: "心率",
-      value: "72",
-      unit: "bpm",
-      change: "+2",
-      trend: "up",
-      icon: Activity,
-      color: "#F59E0B", // Amber
-      bgColor: "rgba(245, 158, 11, 0.1)",
-    },
-    {
-      title: "睡眠",
-      value: "7.5",
-      unit: "小时",
-      change: "优质",
-      trend: "stable",
-      icon: Moon,
-      color: "#8B5CF6", // Violet
-      bgColor: "rgba(139, 92, 246, 0.1)",
-    },
-    {
-      title: "血糖",
-      value: "5.6",
-      unit: "mmol/L",
-      change: "正常",
-      trend: "stable",
-      icon: Droplets,
-      color: "#06B6D4", // Cyan
-      bgColor: "rgba(6, 182, 212, 0.1)",
-    },
-    {
-      title: "步数",
-      value: "8,543",
-      unit: "步",
-      change: "已达标",
-      trend: "up",
-      icon: Zap,
-      color: "#EF4444", // Red
-      bgColor: "rgba(239, 68, 68, 0.1)",
-    },
-  ];
+  // 从设备获取健康指标数据
+  const getHealthMetricsFromDevices = () => {
+    if (!currentMemberProfile || !currentMemberProfile.devices) {
+      return [];
+    }
 
-  const recentAlerts = [
-    {
-      type: "warning",
-      message: "血压略高于正常范围，建议减少盐分摄入",
-      time: "2小时前",
-    },
-    {
-      type: "info",
-      message: "今日步数已达标，继续保持！",
-      time: "4小时前",
-    },
-  ];
+    // 将设备数据转换为健康指标卡片格式
+    const metrics: any[] = [];
+
+    currentMemberProfile.devices.forEach(device => {
+      // 根据设备类型提取不同的健康指标
+      if (device.type === 'smart-toilet' && device.events.length > 0) {
+        const latestEvent = device.events[0];
+        metrics.push({
+          title: "体重",
+          value: latestEvent.value,
+          unit: latestEvent.unit || "kg",
+          change: latestEvent.status === 'normal' ? '正常' : '需关注',
+          trend: latestEvent.status === 'normal' ? 'stable' : 'warning',
+          icon: "Scale",
+          color: "#10B981",
+          bgColor: "rgba(16, 185, 129, 0.1)",
+          device: {
+            id: device.id.toString(),
+            name: device.name,
+            icon: "🚽",
+            lastSync: device.lastSync,
+            status: device.status,
+          },
+        });
+      }
+
+      if (device.type === 'blood-pressure' && device.events.length > 0) {
+        const latestEvent = device.events[0];
+        metrics.push({
+          title: "血压",
+          value: latestEvent.value,
+          unit: latestEvent.unit || "mmHg",
+          change: latestEvent.status === 'normal' ? '正常' : '需关注',
+          trend: latestEvent.status === 'normal' ? 'stable' : 'warning',
+          icon: "Heart",
+          color: "#6366F1",
+          bgColor: "rgba(99, 102, 241, 0.1)",
+          device: {
+            id: device.id.toString(),
+            name: device.name,
+            icon: "💉",
+            lastSync: device.lastSync,
+            status: device.status,
+          },
+        });
+      }
+
+      if (device.type === 'smartwatch' && device.events.length > 0) {
+        // 手表可能有多个数据
+        device.events.forEach(event => {
+          if (event.type === '心率') {
+            metrics.push({
+              title: "心率",
+              value: event.value,
+              unit: event.unit || "bpm",
+              change: event.status === 'normal' ? '正常' : '需关注',
+              trend: event.status === 'normal' ? 'stable' : 'warning',
+              icon: "Activity",
+              color: "#F59E0B",
+              bgColor: "rgba(245, 158, 11, 0.1)",
+              device: {
+                id: device.id.toString(),
+                name: device.name,
+                icon: "⌚",
+                lastSync: device.lastSync,
+                status: device.status,
+              },
+            });
+          } else if (event.type === '睡眠') {
+            metrics.push({
+              title: "睡眠",
+              value: event.value,
+              unit: event.unit || "小时",
+              change: event.status === 'normal' ? '优质' : '需改善',
+              trend: event.status === 'normal' ? 'stable' : 'warning',
+              icon: "Moon",
+              color: "#8B5CF6",
+              bgColor: "rgba(139, 92, 246, 0.1)",
+              device: {
+                id: device.id.toString(),
+                name: device.name,
+                icon: "⌚",
+                lastSync: device.lastSync,
+                status: device.status,
+              },
+            });
+          }
+        });
+      }
+
+      if (device.type === 'glucose-meter' && device.events.length > 0) {
+        const latestEvent = device.events[0];
+        metrics.push({
+          title: "血糖",
+          value: latestEvent.value,
+          unit: latestEvent.unit || "mmol/L",
+          change: latestEvent.status === 'normal' ? '正常' : '需关注',
+          trend: latestEvent.status === 'normal' ? 'stable' : 'warning',
+          icon: "Droplets",
+          color: "#EC4899",
+          bgColor: "rgba(236, 72, 153, 0.1)",
+          device: {
+            id: device.id.toString(),
+            name: device.name,
+            icon: "💉",
+            lastSync: device.lastSync,
+            status: device.status,
+          },
+        });
+      }
+    });
+
+    return metrics.slice(0, 4); // 只显示前4个指标
+  };
+
+  const healthMetrics = getHealthMetricsFromDevices();
+
+  // 从成员健康档案获取AI洞察
+  const getAIInsightsFromProfile = (): AIInsight[] => {
+    if (!currentMemberProfile || !currentMemberProfile.aiInsights) {
+      return [];
+    }
+
+    return currentMemberProfile.aiInsights.map(insight => ({
+      id: insight.id,
+      type: insight.type,
+      title: insight.title,
+      description: insight.description,
+      action: {
+        label: insight.type === 'warning' ? '去检查' : '查看详情',
+        onPress: () => navigation.navigate('HealthReport'),
+      },
+    }));
+  };
+
+  const aiInsights: AIInsight[] = getAIInsightsFromProfile();
 
   const getTrendColor = (trend: string) => {
     switch (trend) {
@@ -155,6 +278,19 @@ export const HealthScreen: React.FC = () => {
   };
 
 
+  // 显示加载状态
+  if (isLoading) {
+    return (
+      <Theme name="light">
+        <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
+          <View flex={1} justifyContent="center" alignItems="center">
+            <Text fontSize="$5" color="$textSecondary">加载中...</Text>
+          </View>
+        </SafeAreaView>
+      </Theme>
+    );
+  }
+
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
@@ -164,242 +300,151 @@ export const HealthScreen: React.FC = () => {
           contentContainerStyle={{ paddingBottom: 20 }}
         >
           <YStack padding="$4" space="$4">
-            {/* Greeting Section */}
-            <YStack space="$2" marginBottom="$4">
-              <H1 fontSize="$9" fontWeight="bold" color="$text">
-                早安，王先生
-              </H1>
-              <Text fontSize="$4" color="$textSecondary">
-                让我们开始今天的健康之旅
-              </Text>
-            </YStack>
-
-            {/* Health Score Card */}
-            <View borderRadius="$6" overflow="hidden">
-              <LinearGradient
-                colors={[COLORS.primary, COLORS.accent]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  padding: 24,
-                  shadowColor: '#6366F1',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 15,
-                  elevation: 8,
-                }}
-              >
-              <XStack justifyContent="space-between" alignItems="center">
-                <YStack>
-                  <H2 fontSize="$11" fontWeight="bold" color="white" marginBottom="$1">
-                    {healthScore}分
-                  </H2>
-                  <Text fontSize="$4" color="rgba(255,255,255,0.8)">
-                    健康状态良好
+            {/* 开发调试：重置数据按钮（仅在数据异常时显示） */}
+            {(!currentMember || !currentMemberProfile || familyMembers.length === 0) && (
+              <Card padding="$3" borderRadius="$4" backgroundColor="$orange2" borderWidth={1} borderColor="$orange8">
+                <YStack space="$2">
+                  <Text fontSize="$3" fontWeight="600" color="$orange11">
+                    ⚠️ 检测到数据异常
                   </Text>
+                  <Text fontSize="$2" color="$orange11">
+                    可能是旧版本数据，点击下方按钮重置数据
+                  </Text>
+                  <Pressable
+                    onPress={async () => {
+                      await clearUserData();
+                      // 重新加载数据
+                      await loadFamilyData();
+                      await loadTodayTasks();
+                    }}
+                  >
+                    <View
+                      backgroundColor="$orange9"
+                      padding="$2"
+                      borderRadius="$3"
+                      alignItems="center"
+                    >
+                      <Text fontSize="$3" fontWeight="600" color="white">
+                        重置并重新加载数据
+                      </Text>
+                    </View>
+                  </Pressable>
                 </YStack>
-                <View
-                  width={64}
-                  height={64}
-                  borderRadius={32}
-                  borderWidth={4}
-                  borderColor="rgba(255,255,255,0.3)"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Heart size={32} color="white" />
+              </Card>
+            )}
+
+            {/* 智能健康守护中心 - Hero区 */}
+            {currentMember && currentMemberProfile && (
+              <HealthGuardianHero
+                userName={currentMember.name}
+                healthScore={currentMemberProfile.healthScore}
+                aiInterpretation={currentMemberProfile.aiInterpretation || '暂无AI健康解读'}
+                aiSuggestion={currentMemberProfile.aiSuggestion || '保持良好的生活习惯'}
+                currentMemberId={currentMemberId}
+                familyMembers={familyMembers}
+                onReportPress={() => navigation.navigate('HealthReport')}
+                onAIConsultPress={() => navigation.navigate('AIConsultation')}
+                onMemberChange={(memberId) => {
+                  setCurrentMemberId(memberId);
+                  console.log('切换到家庭成员:', memberId);
+                  // 数据会通过 useEffect 自动加载
+                }}
+              />
+            )}
+
+            {/* 健康指标卡片（带设备标签） */}
+            <Card
+              padding="$4"
+              borderRadius="$4"
+              backgroundColor="$surface"
+              shadowColor="$shadow"
+              shadowOffset={{ width: 0, height: 2 }}
+              shadowOpacity={0.1}
+              shadowRadius={8}
+              elevation={4}
+            >
+              {/* 标题和设备管理入口 */}
+              <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
+                <H3 fontSize="$6" color="$text" fontWeight="600">
+                  健康数据
+                </H3>
+                <Pressable onPress={() => navigation.navigate('DeviceManagement')}>
+                  <XStack space="$2" alignItems="center">
+                    <Settings size={16} color={COLORS.primary} />
+                    <Text fontSize="$3" color="$primary" fontWeight="600">
+                      管理设备
+                    </Text>
+                  </XStack>
+                </Pressable>
+              </XStack>
+
+              {healthMetrics.length > 0 ? (
+                <YStack space="$3">
+                  {/* First row - 2 metrics */}
+                  <XStack space="$3">
+                    {healthMetrics.slice(0, 2).map((metric, index) => (
+                      <HealthMetricCard
+                        key={index}
+                        title={metric.title}
+                        value={metric.value}
+                        unit={metric.unit}
+                        change={metric.change}
+                        trend={metric.trend}
+                        icon={metric.icon as any}
+                        color={metric.color}
+                        bgColor={metric.bgColor}
+                        device={metric.device}
+                        onDevicePress={() => navigation.navigate('DeviceManagement', { deviceId: metric.device.id })}
+                      />
+                    ))}
+                  </XStack>
+
+                  {/* Second row - 2 metrics */}
+                  {healthMetrics.length > 2 && (
+                    <XStack space="$3">
+                      {healthMetrics.slice(2, 4).map((metric, index) => (
+                        <HealthMetricCard
+                          key={index + 2}
+                          title={metric.title}
+                          value={metric.value}
+                          unit={metric.unit}
+                          change={metric.change}
+                          trend={metric.trend}
+                          icon={metric.icon as any}
+                          color={metric.color}
+                          bgColor={metric.bgColor}
+                          device={metric.device}
+                          onDevicePress={() => navigation.navigate('DeviceManagement', { deviceId: metric.device.id })}
+                        />
+                      ))}
+                    </XStack>
+                  )}
+                </YStack>
+              ) : (
+                <View paddingVertical="$4" alignItems="center">
+                  <Settings size={48} color={COLORS.textSecondary} />
+                  <Text fontSize="$4" color="$textSecondary" marginTop="$2">
+                    暂无健康数据，请添加设备
+                  </Text>
                 </View>
-              </XStack>
-              <YStack marginTop="$4">
-                <Progress value={healthScore} backgroundColor="rgba(255,255,255,0.2)">
-                  <Progress.Indicator backgroundColor="white" />
-                </Progress>
-              </YStack>
-              </LinearGradient>
-            </View>
+              )}
+            </Card>
 
-            {/* Health Metrics Grid */}
-            <YStack space="$3">
-              {/* First row - 2 metrics */}
-              <XStack space="$3">
-                {healthMetrics.slice(0, 2).map((metric, index) => {
-                  const IconComponent = metric.icon;
-                  return (
-                    <Card
-                      key={index}
-                      flex={1}
-                      padding="$4"
-                      borderRadius="$4"
-                      backgroundColor="$cardBg"
-                      pressStyle={{ scale: 0.98 }}
-                      shadowColor="$shadow"
-                      shadowOffset={{ width: 0, height: 2 }}
-                      shadowOpacity={0.1}
-                      shadowRadius={8}
-                      elevation={4}
-                    >
-                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                        <View
-                          width={40}
-                          height={40}
-                          borderRadius={20}
-                          backgroundColor={metric.bgColor}
-                          justifyContent="center"
-                          alignItems="center"
-                        >
-                          <IconComponent size={20} color={metric.color} />
-                        </View>
-                        <View
-                          backgroundColor={metric.color}
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$2"
-                        >
-                          <Text fontSize="$1" color="white" fontWeight="500">
-                            {metric.change}
-                          </Text>
-                        </View>
-                      </XStack>
-                      <YStack>
-                        <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
-                          {metric.title}
-                        </Text>
-                        <XStack alignItems="baseline">
-                          <Text fontSize="$6" fontWeight="bold" color="$text">
-                            {metric.value}
-                          </Text>
-                          <Text fontSize="$2" color="$textSecondary" marginLeft="$1">
-                            {metric.unit}
-                          </Text>
-                        </XStack>
-                      </YStack>
-                    </Card>
-                  );
-                })}
-              </XStack>
+            {/* AI健康洞察 */}
+            {aiInsights.length > 0 && <AIInsights insights={aiInsights} />}
 
-              {/* Second row - 2 metrics */}
-              <XStack space="$3">
-                {healthMetrics.slice(2, 4).map((metric, index) => {
-                  const IconComponent = metric.icon;
-                  return (
-                    <Card
-                      key={index + 2}
-                      flex={1}
-                      padding="$4"
-                      borderRadius="$4"
-                      backgroundColor="$cardBg"
-                      pressStyle={{ scale: 0.98 }}
-                      shadowColor="$shadow"
-                      shadowOffset={{ width: 0, height: 2 }}
-                      shadowOpacity={0.1}
-                      shadowRadius={8}
-                      elevation={4}
-                    >
-                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                        <View
-                          width={40}
-                          height={40}
-                          borderRadius={20}
-                          backgroundColor={metric.bgColor}
-                          justifyContent="center"
-                          alignItems="center"
-                        >
-                          <IconComponent size={20} color={metric.color} />
-                        </View>
-                        <View
-                          backgroundColor={metric.color}
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$2"
-                        >
-                          <Text fontSize="$1" color="white" fontWeight="500">
-                            {metric.change}
-                          </Text>
-                        </View>
-                      </XStack>
-                      <YStack>
-                        <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
-                          {metric.title}
-                        </Text>
-                        <XStack alignItems="baseline">
-                          <Text fontSize="$6" fontWeight="bold" color="$text">
-                            {metric.value}
-                          </Text>
-                          <Text fontSize="$2" color="$textSecondary" marginLeft="$1">
-                            {metric.unit}
-                          </Text>
-                        </XStack>
-                      </YStack>
-                    </Card>
-                  );
-                })}
-              </XStack>
-
-              {/* Third row - 2 metrics */}
-              <XStack space="$3">
-                {healthMetrics.slice(4, 6).map((metric, index) => {
-                  const IconComponent = metric.icon;
-                  return (
-                    <Card
-                      key={index + 4}
-                      flex={1}
-                      padding="$4"
-                      borderRadius="$4"
-                      backgroundColor="$cardBg"
-                      pressStyle={{ scale: 0.98 }}
-                      shadowColor="$shadow"
-                      shadowOffset={{ width: 0, height: 2 }}
-                      shadowOpacity={0.1}
-                      shadowRadius={8}
-                      elevation={4}
-                    >
-                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                        <View
-                          width={40}
-                          height={40}
-                          borderRadius={20}
-                          backgroundColor={metric.bgColor}
-                          justifyContent="center"
-                          alignItems="center"
-                        >
-                          <IconComponent size={20} color={metric.color} />
-                        </View>
-                        <View
-                          backgroundColor={metric.color}
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$2"
-                        >
-                          <Text fontSize="$1" color="white" fontWeight="500">
-                            {metric.change}
-                          </Text>
-                        </View>
-                      </XStack>
-                      <YStack>
-                        <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
-                          {metric.title}
-                        </Text>
-                        <XStack alignItems="baseline">
-                          <Text fontSize="$6" fontWeight="bold" color="$text">
-                            {metric.value}
-                          </Text>
-                          <Text fontSize="$2" color="$textSecondary" marginLeft="$1">
-                            {metric.unit}
-                          </Text>
-                        </XStack>
-                      </YStack>
-                    </Card>
-                  );
-                })}
-              </XStack>
-            </YStack>
-
-            {/* AI Health Assistant */}
-            <AIHealthAssistant
-              onReportPress={() => navigation.navigate('HealthReport')}
-              onConsultPress={() => navigation.navigate('AIConsultation')}
-            />
+            {/* 设备状态快览 */}
+            {currentMemberProfile && (
+              <DeviceStatusOverview
+                devices={currentMemberProfile.devices || []}
+                onAddDevice={() => navigation.navigate('DeviceManagement')}
+                onDevicePress={(deviceId) => {
+                  console.log('点击设备:', deviceId);
+                  navigation.navigate('DeviceManagement', { deviceId });
+                }}
+                onManageDevices={() => navigation.navigate('DeviceManagement')}
+              />
+            )}
 
             {/* Health Trends */}
             <HealthTrends
@@ -513,133 +558,90 @@ export const HealthScreen: React.FC = () => {
               </XStack>
             </Card>
 
-            {/* Today's Tasks */}
-            <TouchableOpacity
-              onPress={() => navigation.navigate('TaskList')}
-              activeOpacity={0.9}
-            >
-              <Card
-                padding="$4"
-                borderRadius="$4"
-                backgroundColor="$surface"
-                shadowColor="$shadow"
-                shadowOffset={{ width: 0, height: 2 }}
-                shadowOpacity={0.1}
-                shadowRadius={8}
-                elevation={4}
+            {/* Today's Tasks - 仅在查看本人时显示 */}
+            {currentMemberId === 'self' && (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('TaskList')}
+                activeOpacity={0.9}
               >
-                <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-                  <H3 fontSize="$6" color="$text" fontWeight="600">
-                    今日任务
-                  </H3>
-                  <XStack space="$2" alignItems="center">
-                    <Text fontSize="$3" color="$primary">查看全部</Text>
-                    <ChevronRight size={16} color={COLORS.primary} />
-                  </XStack>
-                </XStack>
-
-                {todayTasks.length > 0 ? (
-                  <YStack space="$3">
-                    {todayTasks.map((task) => {
-                      const TaskIcon = getTaskIcon(task.icon);
-                      return (
-                        <TouchableOpacity
-                          key={task.id}
-                          onPress={() => navigation.navigate('TaskDetail', { taskId: task.id })}
-                        >
-                          <View
-                            padding="$3"
-                            borderRadius="$3"
-                            backgroundColor="$background"
-                            borderLeftWidth={3}
-                            borderLeftColor={task.color}
-                          >
-                            <XStack space="$3" alignItems="center">
-                              <View
-                                width={36}
-                                height={36}
-                                borderRadius={18}
-                                backgroundColor={`${task.color}20`}
-                                justifyContent="center"
-                                alignItems="center"
-                              >
-                                <TaskIcon size={18} color={task.color} />
-                              </View>
-                              <YStack flex={1}>
-                                <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
-                                  {task.title}
-                                </Text>
-                                {task.startTime && (
-                                  <XStack space="$1" alignItems="center">
-                                    <Clock size={12} color={COLORS.textSecondary} />
-                                    <Text fontSize="$2" color="$textSecondary">
-                                      {task.startTime}
-                                    </Text>
-                                  </XStack>
-                                )}
-                              </YStack>
-                              <ChevronRight size={18} color={COLORS.textSecondary} />
-                            </XStack>
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </YStack>
-                ) : (
-                  <View paddingVertical="$4" alignItems="center">
-                    <CheckCircle size={48} color={COLORS.success} />
-                    <Text fontSize="$4" color="$textSecondary" marginTop="$2">
-                      今日任务已全部完成！
-                    </Text>
-                  </View>
-                )}
-              </Card>
-            </TouchableOpacity>
-
-            {/* Recent Alerts */}
-            {recentAlerts.length > 0 && (
-              <Card
-                padding="$4"
-                borderRadius="$4"
-                backgroundColor="$surface"
-                shadowColor="$shadow"
-                shadowOffset={{ width: 0, height: 2 }}
-                shadowOpacity={0.1}
-                shadowRadius={8}
-                elevation={4}
-              >
-                <XStack space="$2" alignItems="center" marginBottom="$4">
-                  <AlertTriangle size={20} color={COLORS.warning} />
-                  <H3 fontSize="$6" color="$text" fontWeight="600">
-                    健康提醒
-                  </H3>
-                </XStack>
-                <YStack space="$3">
-                  {recentAlerts.map((alert, index) => (
-                    <XStack key={index} space="$3" alignItems="flex-start">
-                      <View
-                        width={8}
-                        height={8}
-                        borderRadius={4}
-                        backgroundColor={alert.type === "warning" ? "$orange10" : "$blue10"}
-                        marginTop="$1"
-                      />
-                      <YStack flex={1}>
-                        <Text fontSize="$3" color="$text" lineHeight="$1">
-                          {alert.message}
-                        </Text>
-                        <Text fontSize="$2" color="$textSecondary" marginTop="$1">
-                          {alert.time}
-                        </Text>
-                      </YStack>
+                <Card
+                  padding="$4"
+                  borderRadius="$4"
+                  backgroundColor="$surface"
+                  shadowColor="$shadow"
+                  shadowOffset={{ width: 0, height: 2 }}
+                  shadowOpacity={0.1}
+                  shadowRadius={8}
+                  elevation={4}
+                >
+                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
+                    <H3 fontSize="$6" color="$text" fontWeight="600">
+                      今日任务
+                    </H3>
+                    <XStack space="$2" alignItems="center">
+                      <Text fontSize="$3" color="$primary">查看全部</Text>
+                      <ChevronRight size={16} color={COLORS.primary} />
                     </XStack>
-                  ))}
-                </YStack>
-              </Card>
-            )}
+                  </XStack>
 
-            {/* Device Manager */}
-            <DeviceManager onManageDevices={() => navigation.navigate('DeviceManagement')} />
+                  {todayTasks.length > 0 ? (
+                    <YStack space="$3">
+                      {todayTasks.map((task) => {
+                        const TaskIcon = getTaskIcon(task.icon);
+                        return (
+                          <TouchableOpacity
+                            key={task.id}
+                            onPress={() => navigation.navigate('TaskDetail', { taskId: task.id })}
+                          >
+                            <View
+                              padding="$3"
+                              borderRadius="$3"
+                              backgroundColor="$background"
+                              borderLeftWidth={3}
+                              borderLeftColor={task.color}
+                            >
+                              <XStack space="$3" alignItems="center">
+                                <View
+                                  width={36}
+                                  height={36}
+                                  borderRadius={18}
+                                  backgroundColor={`${task.color}20`}
+                                  justifyContent="center"
+                                  alignItems="center"
+                                >
+                                  <TaskIcon size={18} color={task.color} />
+                                </View>
+                                <YStack flex={1}>
+                                  <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
+                                    {task.title}
+                                  </Text>
+                                  {task.startTime && (
+                                    <XStack space="$1" alignItems="center">
+                                      <Clock size={12} color={COLORS.textSecondary} />
+                                      <Text fontSize="$2" color="$textSecondary">
+                                        {task.startTime}
+                                      </Text>
+                                    </XStack>
+                                  )}
+                                </YStack>
+                                <ChevronRight size={18} color={COLORS.textSecondary} />
+                              </XStack>
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </YStack>
+                  ) : (
+                    <View paddingVertical="$4" alignItems="center">
+                      <CheckCircle size={48} color={COLORS.success} />
+                      <Text fontSize="$4" color="$textSecondary" marginTop="$2">
+                        今日任务已全部完成！
+                      </Text>
+                    </View>
+                  )}
+                </Card>
+              </TouchableOpacity>
+            )}
 
             {/* Bottom padding for safe area */}
             <View height={20} />

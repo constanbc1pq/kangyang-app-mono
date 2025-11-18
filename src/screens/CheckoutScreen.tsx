@@ -11,7 +11,7 @@ import { getCaregiverById, getPackageById } from '@/services/elderlyService';
 import type { Caregiver, ServicePackage } from '@/types/elderly';
 
 interface RouteParams {
-  itemType: 'meal_plan' | 'consultation' | 'elderly_service';
+  itemType: 'meal_plan' | 'consultation' | 'elderly_service' | 'legal_membership';
   itemId: string;
   itemName: string;
   itemImage?: string;
@@ -31,6 +31,8 @@ interface RouteParams {
   elderlyServiceType?: 'elderly-care' | 'escort' | 'medical-staff';
   serviceDate?: string;      // 服务日期（从AI对话传入）
   serviceTime?: string;       // 服务时间（从AI对话传入）
+  // 法律尊享计划专用
+  metadata?: Record<string, any>;  // 会员计划的详细信息
 }
 
 const CYCLE_OPTIONS = [
@@ -70,10 +72,10 @@ const CheckoutScreen: React.FC = () => {
     id: 'addr_1',
     recipientName: '张先生',
     recipientPhone: '138****8888',
-    province: '北京市',
-    city: '北京市',
-    district: '朝阳区',
-    detailAddress: '望京SOHO T3座 2008室',
+    province: '广东省',
+    city: '深圳市',
+    district: '南山区',
+    detailAddress: '科技园软件产业基地 T3座 2008室',
     isDefault: true,
   };
 
@@ -102,6 +104,7 @@ const CheckoutScreen: React.FC = () => {
   const isMealPlan = params.itemType === 'meal_plan';
   const isConsultation = params.itemType === 'consultation';
   const isElderlyService = params.itemType === 'elderly_service';
+  const isLegalMembership = params.itemType === 'legal_membership';
 
   // 获取养老服务的价格
   const getElderlyServicePrice = (): number => {
@@ -116,8 +119,9 @@ const CheckoutScreen: React.FC = () => {
 
   // 咨询订单：固定价格，不按周期计算
   // 养老服务：使用套餐价格
+  // 法律会员：固定年费价格
   // 套餐订单：价格 × 天数 × 折扣
-  const subtotal = isConsultation
+  const subtotal = isConsultation || isLegalMembership
     ? params.price
     : isElderlyService && packageData
     ? getElderlyServicePrice()
@@ -159,7 +163,7 @@ const CheckoutScreen: React.FC = () => {
         itemImage: params.itemImage || params.packageIcon,
         price: isElderlyService && packageData ? getElderlyServicePrice() : params.price,
         quantity: 1,
-        unit: isElderlyService && packageData ? packageData.prices[0].unit : (isMealPlan ? '天' : '次'),
+        unit: isElderlyService && packageData ? packageData.prices[0].unit : (isMealPlan ? '天' : (isLegalMembership ? '年' : '次')),
         cycle: isMealPlan ? selectedCycle : undefined,
         cycleDiscount: isMealPlan ? cycleOption.discount : undefined,
         deliveryTimeSlots: isMealPlan ? selectedTimeSlots.map(slotId => {
@@ -174,7 +178,7 @@ const CheckoutScreen: React.FC = () => {
         serviceTime: isElderlyService ? serviceTime : (isConsultation ? params.appointmentTime : undefined),
         providerId: isElderlyService ? params.caregiverId : params.providerId,
         providerName: isElderlyService && caregiverData ? caregiverData.name : params.providerName,
-        metadata: isElderlyService ? {
+        metadata: isLegalMembership ? params.metadata : (isElderlyService ? {
           caregiverId: params.caregiverId,
           caregiverName: caregiverData?.name,
           qualification: caregiverData?.qualificationBadge,
@@ -184,7 +188,8 @@ const CheckoutScreen: React.FC = () => {
         } : (isConsultation ? {
           serviceType: params.serviceType,
           duration: params.duration,
-        } : undefined),
+        } : undefined)),
+        addedAt: new Date().toISOString(),
       };
 
       // 创建订单
@@ -258,7 +263,7 @@ const CheckoutScreen: React.FC = () => {
                 <Text fontSize="$5" fontWeight="700" color={COLORS.primary}>
                   ¥{params.price}
                   <Text fontSize="$2" color="$textSecondary">
-                    /{isMealPlan ? '天' : '次'}
+                    /{isMealPlan ? '天' : (isLegalMembership ? '年' : '次')}
                   </Text>
                 </Text>
               </YStack>

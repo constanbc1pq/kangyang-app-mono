@@ -270,22 +270,64 @@ export interface CommunityActivity {
 }
 
 /**
+ * 家庭成员健康档案
+ * 每个成员都有自己的健康数据集
+ */
+export interface MemberHealthProfile {
+  // 基础健康信息
+  height?: number; // 身高(cm)
+  weight?: number; // 体重(kg)
+  age?: number;
+  healthStatus: 'excellent' | 'good' | 'attention'; // 健康状态
+  healthScore: number; // 健康评分(0-100)
+
+  // 关联的设备和数据
+  devices: HealthDevice[]; // 该成员使用的设备
+  healthMetrics: HealthMetric[]; // 健康指标
+  medications: Medication[]; // 用药记录
+  healthReports: HealthReport[]; // AI健康报告
+  consultations: AIConsultation[]; // AI咨询历史
+  tasks: HealthTask[]; // 健康任务
+
+  // AI分析数据
+  aiInterpretation?: string; // AI健康解读
+  aiSuggestion?: string; // AI建议
+  aiInsights?: Array<{ // AI洞察
+    id: string;
+    type: 'trend' | 'warning' | 'suggestion' | 'positive';
+    title: string;
+    description: string;
+  }>;
+
+  // 元数据
+  lastUpdated: string;
+  dataSource: string[]; // 数据来源设备ID列表
+}
+
+/**
  * 家庭成员信息
  */
 export interface FamilyMember {
   id: string;
   name: string;
-  relationship: string; // 关系
+  relationship: string; // 关系：本人/父亲/母亲/配偶/子女等
   gender: 'male' | 'female' | 'other';
   birthDate: string;
-  avatar?: string;
+  avatar?: string; // 头像emoji或图片URL
+
+  // 健康档案
+  healthProfile: MemberHealthProfile;
+
+  // 数据共享权限
   sharedData: {
-    // 共享数据权限
     healthMetrics: boolean;
     devices: boolean;
     reports: boolean;
   };
+
   linkedUserId?: string; // 如果该成员也是APP用户
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

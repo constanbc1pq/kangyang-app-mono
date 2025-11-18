@@ -36,7 +36,7 @@ export const ArticleListScreen: React.FC<ArticleListScreenProps> = ({ navigation
   const [selectedCategory, setSelectedCategory] = useState('全部');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const categories = ['全部', '疾病预防', '慢病管理', '老年健康', '营养饮食', '中医养生'];
+  const categories = ['全部', '生活窍门', '美食烹饪', '育儿教育', '家居装修', '职场技能', '兴趣爱好'];
 
   const loadArticles = async () => {
     setLoading(true);
@@ -76,7 +76,7 @@ export const ArticleListScreen: React.FC<ArticleListScreenProps> = ({ navigation
             <XStack space="$2" alignItems="center">
               <ArrowLeft size={24} color={COLORS.text} />
               <Text fontSize="$5" color="$text" fontWeight="600">
-                健康资讯
+                邻里分享
               </Text>
             </XStack>
           </Pressable>

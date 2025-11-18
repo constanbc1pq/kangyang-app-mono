@@ -103,7 +103,18 @@ const OrderDetailScreen: React.FC = () => {
         navigation.navigate('NutritionistDetail' as never, {
           nutritionistId: order.metadata?.nutritionistId,
         } as never);
+      } else if (order.itemType === 'private_doctor') {
+        navigation.navigate('PrivateDoctorList' as never);
       }
+    }
+  };
+
+  // 进入私人医生服务台
+  const handleGoToServiceDesk = () => {
+    if (order && order.metadata?.subscriptionId) {
+      navigation.navigate('PrivateDoctorServiceDesk' as never, {
+        subscriptionId: order.metadata.subscriptionId,
+      } as never);
     }
   };
 
@@ -164,22 +175,41 @@ const OrderDetailScreen: React.FC = () => {
 
       case 'paid':
       case 'processing':
-        buttons.push(
-          <Pressable key="contact" onPress={handleContactService} style={{ flex: 1 }}>
-            <View
-              height={48}
-              borderRadius="$3"
-              borderWidth={1}
-              borderColor={COLORS.primary}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Text fontSize="$4" color={COLORS.primary} fontWeight="600">
-                联系客服
-              </Text>
-            </View>
-          </Pressable>
-        );
+        // 私人医生订阅订单显示"进入服务台"按钮
+        if (order.itemType === 'private_doctor') {
+          buttons.push(
+            <Pressable key="serviceDesk" onPress={handleGoToServiceDesk} style={{ flex: 1 }}>
+              <View
+                height={48}
+                borderRadius="$3"
+                backgroundColor={COLORS.primary}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Text fontSize="$4" color="white" fontWeight="600">
+                  进入服务台
+                </Text>
+              </View>
+            </Pressable>
+          );
+        } else {
+          buttons.push(
+            <Pressable key="contact" onPress={handleContactService} style={{ flex: 1 }}>
+              <View
+                height={48}
+                borderRadius="$3"
+                borderWidth={1}
+                borderColor={COLORS.primary}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Text fontSize="$4" color={COLORS.primary} fontWeight="600">
+                  联系客服
+                </Text>
+              </View>
+            </Pressable>
+          );
+        }
         break;
 
       case 'shipping':
@@ -235,21 +265,40 @@ const OrderDetailScreen: React.FC = () => {
 
       case 'cancelled':
       case 'refunded':
-        buttons.push(
-          <Pressable key="buyAgain" onPress={handleBuyAgain} style={{ flex: 1 }}>
-            <View
-              height={48}
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Text fontSize="$4" color="white" fontWeight="600">
-                重新下单
-              </Text>
-            </View>
-          </Pressable>
-        );
+        // 私人医生订阅订单显示"进入服务台"按钮
+        if (order.itemType === 'private_doctor' && order.metadata?.subscriptionId) {
+          buttons.push(
+            <Pressable key="serviceDesk" onPress={handleGoToServiceDesk} style={{ flex: 1 }}>
+              <View
+                height={48}
+                borderRadius="$3"
+                backgroundColor={COLORS.primary}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Text fontSize="$4" color="white" fontWeight="600">
+                  进入服务台
+                </Text>
+              </View>
+            </Pressable>
+          );
+        } else {
+          buttons.push(
+            <Pressable key="buyAgain" onPress={handleBuyAgain} style={{ flex: 1 }}>
+              <View
+                height={48}
+                borderRadius="$3"
+                backgroundColor={COLORS.primary}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Text fontSize="$4" color="white" fontWeight="600">
+                  重新下单
+                </Text>
+              </View>
+            </Pressable>
+          );
+        }
         break;
     }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, Modal, TextInput, StyleSheet, Pressable } from 'react-native';
+import { TouchableOpacity, Modal, TextInput, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { View, Text, ScrollView, YStack, XStack, Theme, Card, Progress, Input } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,11 +24,19 @@ import {
   AlertCircle,
   ChevronRight,
   Edit,
+  Camera,
+  Upload,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 import { useNavigation } from '@react-navigation/native';
 import { getDevices, addDevice, deleteDevice as deleteDeviceService } from '@/services/userDataService';
 import { HealthDevice, DeviceEvent } from '@/types/userData';
+import { ImagePickerModal } from '@/components/device/ImagePickerModal';
+import { recognizeImageWithRetry } from '@/services/ocrService';
+import { parseDeviceData } from '@/services/deviceDataParser';
+import { saveDeviceData, getLatestDeviceData, DataSource } from '@/services/deviceDataService';
+import { DeviceType } from '@/types/common';
+import { ConfirmedData } from '@/screens/device/DataConfirmationScreen';
 
 interface DeviceManagementScreenProps {
   route?: {
@@ -49,6 +57,10 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
   const [selectedConnectionType, setSelectedConnectionType] = useState<'bluetooth' | 'wifi' | 'manual' | null>(null);
   const [devices, setDevices] = useState<HealthDevice[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // OCR上传相关状态
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [isRecognizing, setIsRecognizing] = useState(false);
 
   // 设备类型中文名称映射
   const deviceTypeNameMap: Record<HealthDevice['type'], string> = {
@@ -185,6 +197,150 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
     showToast('同步完成');
   };
 
+  /**
+   * 将HealthDevice type映射到DeviceType
+   */
+  const mapHealthDeviceTypeToDeviceType = (type: HealthDevice['type']): DeviceType => {
+    const mapping: Record<HealthDevice['type'], DeviceType> = {
+      'smartwatch': 'fitness_tracker',
+      'blood-pressure': 'blood_pressure_monitor',
+      'glucose-meter': 'glucometer',
+      'scale': 'smart_scale',
+      'thermometer': 'heart_rate_monitor', // 暂时映射到心率监测器
+      'smart-toilet': 'smart_scale', // 暂时映射到体脂秤
+    };
+    return mapping[type] || 'fitness_tracker';
+  };
+
+  /**
+   * 处理上传数据按钮点击（手动类型设备）
+   */
+  const handleUploadData = () => {
+    if (!selectedDevice) return;
+
+    // 打开图片选择器
+    setShowImagePicker(true);
+  };
+
+  /**
+   * 图片选中后的处理
+   */
+  const handleImageSelected = async (imageUri: string) => {
+    if (!selectedDevice) return;
+
+    try {
+      setIsRecognizing(true);
+
+      // 1. OCR识别
+      const ocrResult = await recognizeImageWithRetry(imageUri);
+
+      if (!ocrResult.success) {
+        Alert.alert(
+          '识别失败',
+          ocrResult.error || '无法识别图片中的数据，是否手动输入？',
+          [
+            { text: '取消', style: 'cancel' },
+            { text: '手动输入', onPress: () => {
+              // TODO: 打开手动输入页面
+              Alert.alert('提示', '手动输入功能开发中');
+            }},
+          ]
+        );
+        return;
+      }
+
+      // 2. 解析数据
+      const deviceType = mapHealthDeviceTypeToDeviceType(selectedDevice.type);
+      const parsedData = parseDeviceData(ocrResult.text, deviceType);
+
+      if (!parsedData.success) {
+        Alert.alert(
+          '数据解析失败',
+          `无法解析设备数据：\n${parsedData.errors.join('\n')}\n\n是否手动输入？`,
+          [
+            { text: '取消', style: 'cancel' },
+            { text: '手动输入', onPress: () => {
+              Alert.alert('提示', '手动输入功能开发中');
+            }},
+          ]
+        );
+        return;
+      }
+
+      // 3. 跳转到确认页面
+      (navigation as any).navigate('DataConfirmation', {
+        parsedData,
+        imageUri,
+        deviceId: String(selectedDevice.id),
+        deviceName: selectedDevice.name,
+        onDataConfirmed: handleDataConfirmed,
+      });
+
+    } catch (error) {
+      console.error('OCR识别错误:', error);
+      Alert.alert('错误', '处理失败，请重试');
+    } finally {
+      setIsRecognizing(false);
+    }
+  };
+
+  /**
+   * 数据确认后的处理
+   */
+  const handleDataConfirmed = async (confirmedData: ConfirmedData) => {
+    if (!selectedDevice) return;
+
+    try {
+      // 保存数据到本地存储
+      const savedRecord = await saveDeviceData(String(selectedDevice.id), {
+        deviceId: String(selectedDevice.id),
+        deviceType: confirmedData.deviceType,
+        measurements: confirmedData.fields,
+        timestamp: confirmedData.timestamp,
+        source: DataSource.MANUAL_PHOTO,
+        imageUri: confirmedData.imageUri,
+        verified: true,
+      });
+
+      console.log('数据已保存:', savedRecord);
+
+      // 更新设备的最后同步时间
+      const updatedDevices = devices.map((d) =>
+        d.id === selectedDevice.id
+          ? { ...d, lastSync: '刚刚' }
+          : d
+      );
+      setDevices(updatedDevices);
+
+      if (selectedDevice) {
+        setSelectedDevice({ ...selectedDevice, lastSync: '刚刚' });
+      }
+
+      // 刷新设备数据显示
+      await loadDeviceLatestData(selectedDevice.id);
+
+      showToast('数据保存成功');
+    } catch (error) {
+      console.error('保存数据失败:', error);
+      Alert.alert('保存失败', '请重试');
+    }
+  };
+
+  /**
+   * 加载设备最新数据
+   */
+  const loadDeviceLatestData = async (deviceId: number) => {
+    try {
+      const latestData = await getLatestDeviceData(String(deviceId));
+      if (latestData) {
+        console.log('最新设备数据:', latestData);
+        // TODO: 更新UI显示最新数据
+      }
+    } catch (error) {
+      console.error('加载最新数据失败:', error);
+    }
+  };
+
   // 设备列表页面
   if (!selectedDevice) {
     return (
@@ -263,26 +419,27 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                           <Text fontSize="$3" color="$textSecondary" marginBottom="$2">
                             {device.model}
                           </Text>
-                          <XStack space="$2" alignItems="center" flexWrap="wrap">
-                            <XStack space="$1" alignItems="center">
-                              {device.connection === 'wifi' ? (
-                                <Wifi size={12} color={COLORS.textSecondary} />
-                              ) : device.connection === 'bluetooth' ? (
-                                <Bluetooth size={12} color={COLORS.textSecondary} />
-                              ) : (
-                                <Edit size={12} color={COLORS.textSecondary} />
-                              )}
-                              <Text fontSize="$1" color="$textSecondary">
-                                {device.connection === 'wifi' ? 'WiFi' : device.connection === 'bluetooth' ? '蓝牙' : '手动'}
-                              </Text>
+                          {/* 手动上传类型设备不显示连接方式 */}
+                          {device.syncType !== 'manual' && (
+                            <XStack space="$2" alignItems="center" flexWrap="wrap">
+                              <XStack space="$1" alignItems="center">
+                                {device.connection === 'wifi' ? (
+                                  <Wifi size={12} color={COLORS.textSecondary} />
+                                ) : (
+                                  <Bluetooth size={12} color={COLORS.textSecondary} />
+                                )}
+                                <Text fontSize="$1" color="$textSecondary">
+                                  {device.connection === 'wifi' ? 'WiFi' : '蓝牙'}
+                                </Text>
+                              </XStack>
                             </XStack>
-                          </XStack>
+                          )}
                         </YStack>
                       </XStack>
                     </XStack>
 
-                    {/* Battery - 手动类型不显示 */}
-                    {device.connection !== 'manual' && (
+                    {/* Battery - 手动上传类型不显示 */}
+                    {device.syncType !== 'manual' && (
                       <YStack space="$1" marginBottom="$3">
                         <XStack justifyContent="space-between" alignItems="center">
                           <XStack space="$1" alignItems="center">
@@ -301,10 +458,10 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                       </YStack>
                     )}
 
-                    {/* Last Sync */}
+                    {/* Last Sync/Upload */}
                     <XStack justifyContent="space-between" marginBottom="$3">
                       <Text fontSize="$2" color="$textSecondary">
-                        最后同步
+                        {device.syncType === 'manual' ? '最后上传' : '最后同步'}
                       </Text>
                       <Text fontSize="$3" fontWeight="500">
                         {device.lastSync}
@@ -675,30 +832,31 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
             <Card backgroundColor="white" borderLeftWidth={4} borderLeftColor={COLORS.primary} padding="$4">
               <XStack justifyContent="space-between" marginBottom="$4">
                 <XStack space="$2" alignItems="center">
-                  {/* 手动类型不显示连接状态 */}
-                  {selectedDevice.connection !== 'manual' && getStatusBadge(selectedDevice.status)}
+                  {/* 手动上传类型不显示连接状态 */}
+                  {selectedDevice.syncType !== 'manual' && getStatusBadge(selectedDevice.status)}
                   <View borderWidth={1} borderColor="#e0e0e0" paddingHorizontal="$2" paddingVertical="$1" borderRadius="$2">
                     <Text fontSize="$1" color="$textSecondary">
                       {selectedDevice.syncType === 'auto' ? '自动同步' : '手动上传'}
                     </Text>
                   </View>
                 </XStack>
-                <XStack space="$1" alignItems="center">
-                  {selectedDevice.connection === 'wifi' ? (
-                    <Wifi size={16} color={COLORS.textSecondary} />
-                  ) : selectedDevice.connection === 'bluetooth' ? (
-                    <Bluetooth size={16} color={COLORS.textSecondary} />
-                  ) : (
-                    <Edit size={16} color={COLORS.textSecondary} />
-                  )}
-                  <Text fontSize="$2" color="$textSecondary">
-                    {selectedDevice.connection === 'wifi' ? 'WiFi' : selectedDevice.connection === 'bluetooth' ? '蓝牙' : '手动'}
-                  </Text>
-                </XStack>
+                {/* 手动上传类型不显示连接方式 */}
+                {selectedDevice.syncType !== 'manual' && (
+                  <XStack space="$1" alignItems="center">
+                    {selectedDevice.connection === 'wifi' ? (
+                      <Wifi size={16} color={COLORS.textSecondary} />
+                    ) : (
+                      <Bluetooth size={16} color={COLORS.textSecondary} />
+                    )}
+                    <Text fontSize="$2" color="$textSecondary">
+                      {selectedDevice.connection === 'wifi' ? 'WiFi' : '蓝牙'}
+                    </Text>
+                  </XStack>
+                )}
               </XStack>
 
-              {/* 手动类型不显示电量和最后同步 */}
-              {selectedDevice.connection !== 'manual' && (
+              {/* 自动同步设备显示电量和最后同步 */}
+              {selectedDevice.syncType !== 'manual' && (
                 <XStack space="$4" marginBottom="$4">
                   <YStack flex={1} space="$1">
                     <XStack space="$1" alignItems="center">
@@ -730,25 +888,68 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                 </XStack>
               )}
 
+              {/* 手动上传设备只显示最后上传时间 */}
+              {selectedDevice.syncType === 'manual' && (
+                <YStack space="$1" marginBottom="$4">
+                  <XStack space="$1" alignItems="center">
+                    <Clock size={16} color={COLORS.textSecondary} />
+                    <Text fontSize="$2" color="$textSecondary">
+                      最后上传
+                    </Text>
+                  </XStack>
+                  <Text fontSize="$3" fontWeight="500">
+                    {selectedDevice.lastSync}
+                  </Text>
+                </YStack>
+              )}
+
               {/* Action Buttons */}
               <XStack space="$2">
                 <TouchableOpacity
                   style={{ flex: 1 }}
-                  onPress={() => handleSync(selectedDevice)}
-                  disabled={selectedDevice.status === 'disconnected' || isSyncing}
+                  onPress={() => {
+                    // 手动上传类型设备：使用OCR上传
+                    if (selectedDevice.syncType === 'manual') {
+                      handleUploadData();
+                    } else {
+                      // 自动同步设备：使用原有同步逻辑
+                      handleSync(selectedDevice);
+                    }
+                  }}
+                  disabled={
+                    selectedDevice.syncType !== 'manual' &&
+                    (selectedDevice.status === 'disconnected' || isSyncing)
+                  }
                 >
                   <View
                     backgroundColor={
-                      selectedDevice.status === 'disconnected' || isSyncing ? '#d0d0d0' : COLORS.primary
+                      selectedDevice.syncType !== 'manual' &&
+                      (selectedDevice.status === 'disconnected' || isSyncing)
+                        ? '#d0d0d0'
+                        : COLORS.primary
                     }
                     paddingVertical="$3"
                     borderRadius="$3"
                     alignItems="center"
                   >
                     <XStack space="$2" alignItems="center">
-                      <RefreshCw size={16} color="white" style={{ transform: [{ rotate: isSyncing ? '180deg' : '0deg' }] }} />
+                      {selectedDevice.syncType === 'manual' ? (
+                        <Camera size={16} color="white" />
+                      ) : (
+                        <RefreshCw
+                          size={16}
+                          color="white"
+                          style={{ transform: [{ rotate: isSyncing ? '180deg' : '0deg' }] }}
+                        />
+                      )}
                       <Text fontSize="$3" color="white" fontWeight="600">
-                        {isSyncing ? '同步中...' : selectedDevice.syncType === 'auto' ? '立即同步' : '上传数据'}
+                        {selectedDevice.syncType === 'manual'
+                          ? '拍照上传'
+                          : isSyncing
+                          ? '同步中...'
+                          : selectedDevice.syncType === 'auto'
+                          ? '立即同步'
+                          : '上传数据'}
                       </Text>
                     </XStack>
                   </View>
@@ -865,6 +1066,39 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
             </YStack>
           </YStack>
         </ScrollView>
+
+        {/* 图片选择Modal */}
+        <ImagePickerModal
+          visible={showImagePicker}
+          onClose={() => setShowImagePicker(false)}
+          onImageSelected={handleImageSelected}
+        />
+
+        {/* OCR识别中的Loading遮罩 */}
+        <Modal visible={isRecognizing} transparent animationType="fade">
+          <View
+            flex={1}
+            backgroundColor="rgba(0,0,0,0.7)"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <View
+              backgroundColor="white"
+              borderRadius="$4"
+              padding="$6"
+              alignItems="center"
+              minWidth={200}
+            >
+              <ActivityIndicator size="large" color={COLORS.primary} />
+              <Text fontSize="$4" fontWeight="600" marginTop="$4" color="$text">
+                正在识别...
+              </Text>
+              <Text fontSize="$2" color="$textSecondary" marginTop="$2" textAlign="center">
+                请稍候，正在识别图片中的数据
+              </Text>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </Theme>
   );

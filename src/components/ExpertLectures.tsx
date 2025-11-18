@@ -42,7 +42,7 @@ export const ExpertLectures: React.FC<ExpertLecturesProps> = ({ navigation }) =>
       title: '冬季养生：中医调理与现代保健',
       expert: '张明华',
       expertTitle: '主任医师，中医养生专家',
-      hospital: '北京中医医院',
+      hospital: '深圳市中医院',
       type: 'live',
       status: 'upcoming',
       startTime: '今晚 20:00',

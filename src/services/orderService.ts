@@ -526,3 +526,100 @@ export const createNutritionistOrder = async (params: {
     return null;
   }
 };
+
+/**
+ * 创建私人医生订阅订单
+ */
+export const createPrivateDoctorOrder = async (params: {
+  userId: string;
+  doctorId: string;
+  doctorName: string;
+  packageName: string;
+  packageLevel: string;
+  price: number;
+  subscriptionId: string;
+  startDate: string;
+  endDate: string;
+  subscription?: any; // 完整的订阅对象
+}): Promise<Order | null> => {
+  try {
+    const { userId, doctorId, doctorName, packageName, packageLevel, price, subscriptionId, startDate, endDate, subscription } = params;
+
+    const now = new Date().toISOString();
+    const orderId = `KY${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}${new Date().getDate().toString().padStart(2, '0')}${Date.now().toString().slice(-6)}`;
+
+    const orderItem: OrderItem = {
+      id: `order_item_${Date.now()}`,
+      itemType: 'private_doctor',
+      itemId: doctorId,
+      itemName: `${doctorName} - ${packageName}`,
+      price,
+      quantity: 1,
+      unit: '年',
+      subtotal: price,
+      providerId: doctorId,
+      providerName: doctorName,
+      metadata: {
+        packageLevel,
+        subscriptionId,
+        startDate,
+        endDate,
+      },
+    };
+
+    const newOrder: Order = {
+      id: orderId,
+      userId,
+      itemType: 'private_doctor',
+      itemName: `${doctorName} - ${packageName}`,
+      items: [orderItem],
+      subtotal: price,
+      discountAmount: 0,
+      couponAmount: 0,
+      deliveryFee: 0,
+      totalAmount: price,
+      status: 'paid',
+      statusHistory: [
+        {
+          status: 'pending',
+          timestamp: now,
+          note: '订单已创建',
+        },
+        {
+          status: 'paid',
+          timestamp: now,
+          note: '支付成功，订阅已激活',
+        },
+      ],
+      metadata: {
+        doctorId,
+        subscriptionId,
+        packageLevel,
+        startDate,
+        endDate,
+        subscription, // 存储完整的订阅对象
+      },
+      paymentTime: now,
+      paidAt: now,
+      isReviewed: false,
+      canCancel: false,
+      canRefund: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const orders = await getOrders();
+    orders.unshift(newOrder);
+    const success = await saveOrderList(orders);
+
+    if (success) {
+      console.log(`✅ 私人医生订阅订单创建成功: ${orderId}`);
+      return newOrder;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('创建私人医生订单失败:', error);
+    return null;
+  }
+};

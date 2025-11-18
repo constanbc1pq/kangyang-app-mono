@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Search,
   Heart,
+  Scale,
 } from 'lucide-react-native';
 import {
   COLORS,
@@ -90,6 +91,10 @@ const OrderListScreen: React.FC = () => {
         return <Calendar size={20} color={COLORS.primary} />;
       case 'course':
         return <Package size={20} color={COLORS.primary} />;
+      case 'private_doctor':
+        return <MessageSquare size={20} color={COLORS.primary} />;
+      case 'legal_membership':
+        return <Scale size={20} color={COLORS.primary} />;
       default:
         return <Package size={20} color={COLORS.primary} />;
     }

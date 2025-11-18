@@ -4,7 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserData, HealthDevice, DeviceEvent, HealthTask, TaskCompletionRecord, TaskAchievement } from '@/types/userData';
+import { UserData, HealthDevice, DeviceEvent, HealthTask, TaskCompletionRecord, TaskAchievement, FamilyMember, MemberHealthProfile } from '@/types/userData';
 
 const USER_DATA_KEY = '@kangyang_user_data';
 
@@ -341,6 +341,270 @@ const initializeDefaultTasks = (): HealthTask[] => {
 };
 
 /**
+ * 初始化默认家庭成员数据
+ */
+const initializeDefaultFamilyMembers = (): FamilyMember[] => {
+  const now = new Date();
+  const nowISO = now.toISOString();
+  const today = now.toISOString().split('T')[0];
+
+  // 本人（自己）- 数据来自主Profile
+  const selfMember: FamilyMember = {
+    id: 'self',
+    name: '王先生',
+    relationship: '本人',
+    gender: 'male',
+    birthDate: '1960-01-01',
+    avatar: '👨',
+    healthProfile: {
+      height: 172,
+      weight: 68.5,
+      age: 65,
+      healthStatus: 'excellent',
+      healthScore: 92,
+      devices: initializeDefaultDevices(), // 使用默认设备
+      healthMetrics: [],
+      medications: [],
+      healthReports: [],
+      consultations: [],
+      tasks: initializeDefaultTasks(), // 使用默认任务
+      aiInterpretation: '您的血压控制良好，体重稳步下降中。整体健康状况优秀，各项指标都在正常范围内。',
+      aiSuggestion: '继续保持规律运动和清淡饮食，建议增加有氧运动频率',
+      aiInsights: [
+        {
+          id: 'insight-self-1',
+          type: 'trend',
+          title: '本周体重下降趋势明显',
+          description: '相较上周下降0.8kg，主要归因于规律运动和饮食控制。建议继续保持当前生活方式。',
+        },
+        {
+          id: 'insight-self-2',
+          type: 'positive',
+          title: '睡眠质量持续改善',
+          description: '深度睡眠时长增加30分钟，睡眠效率达到91%。继续保持规律作息！',
+        },
+      ],
+      lastUpdated: nowISO,
+      dataSource: ['1', '2', '4'],
+    },
+    sharedData: {
+      healthMetrics: true,
+      devices: true,
+      reports: true,
+    },
+    createdAt: nowISO,
+    updatedAt: nowISO,
+  };
+
+  // 母亲
+  const motherMember: FamilyMember = {
+    id: 'mother',
+    name: '张妈妈',
+    relationship: '母亲',
+    gender: 'female',
+    birthDate: '1955-03-15',
+    avatar: '👵',
+    healthProfile: {
+      height: 158,
+      weight: 62.0,
+      age: 70,
+      healthStatus: 'attention',
+      healthScore: 78,
+      devices: [
+        {
+          id: 11,
+          name: '血压计',
+          type: 'blood-pressure',
+          status: 'connected',
+          battery: 75,
+          lastSync: '30分钟前',
+          connection: 'bluetooth',
+          model: '欧姆龙 HEM-7136',
+          syncType: 'manual',
+          isPinned: true,
+          events: [
+            { id: '11', deviceId: 11, timestamp: `${today}T08:30:00`, type: '血压', value: '145/90', unit: 'mmHg', status: 'warning' },
+          ],
+          createdAt: nowISO,
+          updatedAt: nowISO,
+        },
+        {
+          id: 12,
+          name: '血糖仪',
+          type: 'glucose-meter',
+          status: 'connected',
+          battery: 60,
+          lastSync: '1小时前',
+          connection: 'bluetooth',
+          model: '罗氏 Accu-Chek',
+          syncType: 'manual',
+          isPinned: true,
+          events: [
+            { id: '12', deviceId: 12, timestamp: `${today}T07:00:00`, type: '空腹血糖', value: '6.8', unit: 'mmol/L', status: 'warning' },
+          ],
+          createdAt: nowISO,
+          updatedAt: nowISO,
+        },
+      ],
+      healthMetrics: [],
+      medications: [],
+      healthReports: [],
+      consultations: [],
+      tasks: [],
+      aiInterpretation: '血压和血糖略高于正常范围，需要注意饮食控制和定期监测。',
+      aiSuggestion: '建议减少盐分摄入，控制碳水化合物，保持每日散步30分钟',
+      aiInsights: [
+        {
+          id: 'insight-mother-1',
+          type: 'warning',
+          title: '血压连续3天偏高',
+          description: '建议减少盐分摄入，避免油腻食物，如持续偏高请就医。',
+        },
+        {
+          id: 'insight-mother-2',
+          type: 'suggestion',
+          title: '血糖需要密切关注',
+          description: '空腹血糖略高，建议控制主食摄入量，增加蔬菜比例。',
+        },
+      ],
+      lastUpdated: nowISO,
+      dataSource: ['11', '12'],
+    },
+    sharedData: {
+      healthMetrics: true,
+      devices: true,
+      reports: true,
+    },
+    createdAt: nowISO,
+    updatedAt: nowISO,
+  };
+
+  // 父亲
+  const fatherMember: FamilyMember = {
+    id: 'father',
+    name: '王爸爸',
+    relationship: '父亲',
+    gender: 'male',
+    birthDate: '1953-07-20',
+    avatar: '👴',
+    healthProfile: {
+      height: 170,
+      weight: 72.0,
+      age: 72,
+      healthStatus: 'good',
+      healthScore: 83,
+      devices: [
+        {
+          id: 21,
+          name: '智能手环',
+          type: 'smartwatch',
+          status: 'connected',
+          battery: 68,
+          lastSync: '5分钟前',
+          connection: 'bluetooth',
+          model: '华为手环 6',
+          syncType: 'auto',
+          isPinned: true,
+          events: [
+            { id: '21', deviceId: 21, timestamp: `${today}T10:00:00`, type: '心率', value: '76', unit: 'bpm', status: 'normal' },
+            { id: '22', deviceId: 21, timestamp: `${today}T08:00:00`, type: '步数', value: '4823', unit: '步', status: 'normal' },
+          ],
+          createdAt: nowISO,
+          updatedAt: nowISO,
+        },
+      ],
+      healthMetrics: [],
+      medications: [],
+      healthReports: [],
+      consultations: [],
+      tasks: [],
+      aiInterpretation: '整体健康状况良好，心率平稳，运动量适中。',
+      aiSuggestion: '继续保持每日散步习惯，注意防寒保暖',
+      aiInsights: [
+        {
+          id: 'insight-father-1',
+          type: 'positive',
+          title: '运动习惯保持良好',
+          description: '每日步数稳定，心率正常，继续保持！',
+        },
+      ],
+      lastUpdated: nowISO,
+      dataSource: ['21'],
+    },
+    sharedData: {
+      healthMetrics: true,
+      devices: true,
+      reports: true,
+    },
+    createdAt: nowISO,
+    updatedAt: nowISO,
+  };
+
+  // 儿子
+  const sonMember: FamilyMember = {
+    id: 'son',
+    name: '小明',
+    relationship: '儿子',
+    gender: 'male',
+    birthDate: '2008-06-10',
+    avatar: '👦',
+    healthProfile: {
+      height: 165,
+      weight: 55.0,
+      age: 17,
+      healthStatus: 'excellent',
+      healthScore: 95,
+      devices: [
+        {
+          id: 31,
+          name: '智能手环',
+          type: 'smartwatch',
+          status: 'connected',
+          battery: 92,
+          lastSync: '刚刚',
+          connection: 'bluetooth',
+          model: '小米手环 8',
+          syncType: 'auto',
+          isPinned: true,
+          events: [
+            { id: '31', deviceId: 31, timestamp: `${today}T15:00:00`, type: '心率', value: '68', unit: 'bpm', status: 'normal' },
+            { id: '32', deviceId: 31, timestamp: `${today}T12:00:00`, type: '步数', value: '12543', unit: '步', status: 'normal' },
+          ],
+          createdAt: nowISO,
+          updatedAt: nowISO,
+        },
+      ],
+      healthMetrics: [],
+      medications: [],
+      healthReports: [],
+      consultations: [],
+      tasks: [],
+      aiInterpretation: '健康状况优秀，各项指标正常。活力充沛，运动量充足。',
+      aiSuggestion: '保持良好生活习惯，注意学习时的坐姿和用眼卫生',
+      aiInsights: [
+        {
+          id: 'insight-son-1',
+          type: 'positive',
+          title: '运动量充足',
+          description: '每日步数超过10000步，身体素质优秀！',
+        },
+      ],
+      lastUpdated: nowISO,
+      dataSource: ['31'],
+    },
+    sharedData: {
+      healthMetrics: true,
+      devices: true,
+      reports: true,
+    },
+    createdAt: nowISO,
+    updatedAt: nowISO,
+  };
+
+  return [selfMember, motherMember, fatherMember, sonMember];
+};
+
+/**
  * 初始化默认用户数据
  */
 const initializeDefaultUserData = (): UserData => {
@@ -374,7 +638,7 @@ const initializeDefaultUserData = (): UserData => {
     healthGoals: [],
     tasks: initializeDefaultTasks(),
     communityActivities: [],
-    familyMembers: [],
+    familyMembers: initializeDefaultFamilyMembers(), // 使用默认家庭成员数据
     settings: {
       theme: 'light',
       language: 'zh-CN',
@@ -400,6 +664,20 @@ const initializeDefaultUserData = (): UserData => {
 };
 
 /**
+ * 清除所有用户数据（用于重置）
+ */
+export const clearUserData = async (): Promise<boolean> => {
+  try {
+    await AsyncStorage.removeItem(USER_DATA_KEY);
+    console.log('✅ 用户数据已清除');
+    return true;
+  } catch (error) {
+    console.error('清除用户数据失败:', error);
+    return false;
+  }
+};
+
+/**
  * 获取用户数据，如果不存在则初始化
  */
 export const getUserData = async (): Promise<UserData> => {
@@ -407,8 +685,18 @@ export const getUserData = async (): Promise<UserData> => {
     const jsonValue = await AsyncStorage.getItem(USER_DATA_KEY);
 
     if (jsonValue !== null) {
-      // 已有数据，直接返回
-      return JSON.parse(jsonValue);
+      // 已有数据，检查是否包含 familyMembers
+      const userData = JSON.parse(jsonValue);
+
+      // 如果旧数据中没有 familyMembers，添加默认值
+      if (!userData.familyMembers || userData.familyMembers.length === 0) {
+        console.log('⚠️ 检测到旧数据格式，正在添加家庭成员数据...');
+        userData.familyMembers = initializeDefaultFamilyMembers();
+        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+        console.log('✅ 家庭成员数据已添加');
+      }
+
+      return userData;
     } else {
       // 首次使用，初始化默认数据
       const defaultData = initializeDefaultUserData();
@@ -499,21 +787,6 @@ export const deleteDevice = async (deviceId: number): Promise<boolean> => {
   userData.devices = userData.devices.filter(d => d.id !== deviceId);
   return await saveUserData(userData);
 };
-
-/**
- * 清除所有用户数据（用于测试或重置）
- */
-export const clearUserData = async (): Promise<boolean> => {
-  try {
-    await AsyncStorage.removeItem(USER_DATA_KEY);
-    console.log('✅ 用户数据已清除');
-    return true;
-  } catch (error) {
-    console.error('清除用户数据失败:', error);
-    return false;
-  }
-};
-
 // ==================== 任务管理相关方法 ====================
 
 /**
@@ -721,6 +994,203 @@ export const addTaskAchievement = async (
 
   userData.tasks[taskIndex].achievements.push(newAchievement);
   userData.tasks[taskIndex].updatedAt = new Date().toISOString();
+
+  return await saveUserData(userData);
+};
+
+// ==================== 家庭成员管理相关方法 ====================
+
+/**
+ * 获取所有家庭成员
+ */
+export const getFamilyMembers = async (): Promise<FamilyMember[]> => {
+  const userData = await getUserData();
+  return userData.familyMembers || [];
+};
+
+/**
+ * 根据ID获取家庭成员
+ */
+export const getFamilyMemberById = async (memberId: string): Promise<FamilyMember | null> => {
+  const members = await getFamilyMembers();
+  return members.find(m => m.id === memberId) || null;
+};
+
+/**
+ * 获取家庭成员的健康档案
+ */
+export const getMemberHealthProfile = async (memberId: string): Promise<MemberHealthProfile | null> => {
+  const member = await getFamilyMemberById(memberId);
+  return member?.healthProfile || null;
+};
+
+/**
+ * 添加家庭成员
+ */
+export const addFamilyMember = async (
+  memberData: Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<FamilyMember> => {
+  const userData = await getUserData();
+
+  const now = new Date().toISOString();
+  const newMember: FamilyMember = {
+    ...memberData,
+    id: `member_${Date.now()}`,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  userData.familyMembers.push(newMember);
+  await saveUserData(userData);
+
+  return newMember;
+};
+
+/**
+ * 更新家庭成员信息
+ */
+export const updateFamilyMember = async (
+  memberId: string,
+  updates: Partial<Omit<FamilyMember, 'id' | 'createdAt'>>
+): Promise<boolean> => {
+  const userData = await getUserData();
+  const memberIndex = userData.familyMembers.findIndex(m => m.id === memberId);
+
+  if (memberIndex === -1) {
+    return false;
+  }
+
+  userData.familyMembers[memberIndex] = {
+    ...userData.familyMembers[memberIndex],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  return await saveUserData(userData);
+};
+
+/**
+ * 更新家庭成员的健康档案
+ */
+export const updateMemberHealthProfile = async (
+  memberId: string,
+  profileUpdates: Partial<MemberHealthProfile>
+): Promise<boolean> => {
+  const userData = await getUserData();
+  const memberIndex = userData.familyMembers.findIndex(m => m.id === memberId);
+
+  if (memberIndex === -1) {
+    return false;
+  }
+
+  userData.familyMembers[memberIndex].healthProfile = {
+    ...userData.familyMembers[memberIndex].healthProfile,
+    ...profileUpdates,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  userData.familyMembers[memberIndex].updatedAt = new Date().toISOString();
+
+  return await saveUserData(userData);
+};
+
+/**
+ * 删除家庭成员
+ */
+export const deleteFamilyMember = async (memberId: string): Promise<boolean> => {
+  // 不允许删除本人
+  if (memberId === 'self') {
+    console.warn('不能删除本人');
+    return false;
+  }
+
+  const userData = await getUserData();
+  userData.familyMembers = userData.familyMembers.filter(m => m.id !== memberId);
+  return await saveUserData(userData);
+};
+
+/**
+ * 为家庭成员添加设备
+ */
+export const addDeviceToMember = async (
+  memberId: string,
+  device: Omit<HealthDevice, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<HealthDevice | null> => {
+  const userData = await getUserData();
+  const memberIndex = userData.familyMembers.findIndex(m => m.id === memberId);
+
+  if (memberIndex === -1) {
+    return null;
+  }
+
+  const member = userData.familyMembers[memberIndex];
+  const maxId = member.healthProfile.devices.length > 0
+    ? Math.max(...member.healthProfile.devices.map(d => d.id))
+    : (memberId === 'self' ? 0 : parseInt(memberId.charCodeAt(0)) * 10);
+
+  const now = new Date().toISOString();
+  const newDevice: HealthDevice = {
+    ...device,
+    id: maxId + 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  member.healthProfile.devices.push(newDevice);
+  member.healthProfile.lastUpdated = now;
+  member.updatedAt = now;
+
+  await saveUserData(userData);
+  return newDevice;
+};
+
+/**
+ * 获取家庭成员的设备列表
+ */
+export const getMemberDevices = async (memberId: string): Promise<HealthDevice[]> => {
+  const member = await getFamilyMemberById(memberId);
+  return member?.healthProfile.devices || [];
+};
+
+/**
+ * 获取家庭成员的AI洞察
+ */
+export const getMemberAIInsights = async (memberId: string) => {
+  const member = await getFamilyMemberById(memberId);
+  return member?.healthProfile.aiInsights || [];
+};
+
+/**
+ * 更新家庭成员的AI分析数据
+ */
+export const updateMemberAIAnalysis = async (
+  memberId: string,
+  aiData: {
+    aiInterpretation?: string;
+    aiSuggestion?: string;
+    aiInsights?: MemberHealthProfile['aiInsights'];
+  }
+): Promise<boolean> => {
+  const userData = await getUserData();
+  const memberIndex = userData.familyMembers.findIndex(m => m.id === memberId);
+
+  if (memberIndex === -1) {
+    return false;
+  }
+
+  const member = userData.familyMembers[memberIndex];
+  if (aiData.aiInterpretation !== undefined) {
+    member.healthProfile.aiInterpretation = aiData.aiInterpretation;
+  }
+  if (aiData.aiSuggestion !== undefined) {
+    member.healthProfile.aiSuggestion = aiData.aiSuggestion;
+  }
+  if (aiData.aiInsights !== undefined) {
+    member.healthProfile.aiInsights = aiData.aiInsights;
+  }
+
+  member.healthProfile.lastUpdated = new Date().toISOString();
+  member.updatedAt = new Date().toISOString();
 
   return await saveUserData(userData);
 };

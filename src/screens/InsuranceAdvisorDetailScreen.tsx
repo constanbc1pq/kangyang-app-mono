@@ -1,0 +1,578 @@
+import React, { useState, useEffect } from 'react';
+import { ScrollView, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, XStack, YStack, Card } from 'tamagui';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  ArrowLeft,
+  Award,
+  MessageCircle,
+  Phone,
+  Video,
+  Home,
+  Star,
+  Users,
+  Clock,
+  CheckCircle,
+  MapPin,
+} from 'lucide-react-native';
+import { COLORS } from '@/constants/app';
+import { getAdvisorById } from '@/services/insuranceAdvisorService';
+import { InsuranceAdvisor } from '@/types/insurance';
+
+type RouteParams = {
+  InsuranceAdvisorDetail: {
+    advisorId: string;
+  };
+};
+
+const InsuranceAdvisorDetailScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RouteParams, 'InsuranceAdvisorDetail'>>();
+  const { advisorId } = route.params;
+  const insets = useSafeAreaInsets();
+
+  const [loading, setLoading] = useState(true);
+  const [advisor, setAdvisor] = useState<InsuranceAdvisor | null>(null);
+
+  useEffect(() => {
+    loadAdvisorDetail();
+  }, [advisorId]);
+
+  const loadAdvisorDetail = async () => {
+    try {
+      setLoading(true);
+      const result = await getAdvisorById(advisorId);
+      setAdvisor(result);
+    } catch (error) {
+      console.error('加载顾问详情失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getOnlineStatusColor = (status: string) => {
+    switch (status) {
+      case 'online':
+        return COLORS.success;
+      case 'busy':
+        return COLORS.warning;
+      case 'offline':
+        return COLORS.textSecondary;
+      default:
+        return COLORS.textSecondary;
+    }
+  };
+
+  const getOnlineStatusLabel = (status: string) => {
+    switch (status) {
+      case 'online':
+        return '在线';
+      case 'busy':
+        return '忙碌中';
+      case 'offline':
+        return '离线';
+      default:
+        return '未知';
+    }
+  };
+
+  const handleConsultation = (type: 'text' | 'phone' | 'video' | 'home_visit') => {
+    console.log('🔔 handleConsultation clicked:', type);
+    if (!advisor) {
+      console.log('❌ No advisor data');
+      return;
+    }
+
+    const typeLabels = {
+      text: '图文咨询',
+      phone: '电话咨询',
+      video: '视频咨询',
+      home_visit: '上门服务',
+    };
+
+    const screenMap = {
+      text: 'InsuranceTextConsultation',
+      phone: 'InsurancePhoneConsultation',
+      video: 'InsuranceVideoConsultation',
+      home_visit: 'InsuranceHomeVisit',
+    };
+
+    console.log('✅ Preparing to navigate for:', typeLabels[type]);
+    console.log('📍 Screen:', screenMap[type]);
+    console.log('📍 Advisor:', advisor.id, advisor.name);
+
+    // 在Web环境下，Alert可能不工作，直接导航
+    // 如果是原生环境，可以加上确认对话框
+    if (Platform.OS === 'web') {
+      // Web环境：直接导航
+      console.log('🌐 Web environment - navigating directly');
+      navigation.navigate(screenMap[type] as never, {
+        advisorId: advisor.id,
+        advisorName: advisor.name,
+      } as never);
+    } else {
+      // 原生环境：显示确认对话框
+      console.log('📱 Native environment - showing alert');
+      Alert.alert(
+        `${typeLabels[type]}`,
+        `您即将向${advisor.name}顾问发起${typeLabels[type]}，该服务完全免费。\n\n平均响应时间：${advisor.avgResponseTime}`,
+        [
+          { text: '取消', style: 'cancel' },
+          {
+            text: '继续',
+            onPress: () => {
+              console.log('📍 Alert confirmed - Navigating to:', screenMap[type]);
+              navigation.navigate(screenMap[type] as never, {
+                advisorId: advisor.id,
+                advisorName: advisor.name,
+              } as never);
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text marginTop="$3" color="$textSecondary">
+          加载中...
+        </Text>
+      </View>
+    );
+  }
+
+  if (!advisor) {
+    return (
+      <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
+        <Text fontSize="$4" color="$textSecondary">
+          顾问不存在
+        </Text>
+        <Pressable onPress={() => navigation.goBack()}>
+          <Text fontSize="$3" color={COLORS.primary} marginTop="$3">
+            返回列表
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View flex={1} backgroundColor="$background">
+      {/* Header */}
+      <XStack
+        height={56}
+        alignItems="center"
+        paddingHorizontal="$4"
+        backgroundColor="$surface"
+        borderBottomWidth={1}
+        borderBottomColor="$borderColor"
+      >
+        <Pressable onPress={() => navigation.goBack()}>
+          <ArrowLeft size={24} color={COLORS.text} />
+        </Pressable>
+        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
+          顾问详情
+        </Text>
+      </XStack>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* 顾问基本信息 */}
+        <YStack padding="$4" backgroundColor="$surface" borderBottomWidth={1} borderBottomColor="$borderColor">
+          <XStack gap="$3" marginBottom="$3">
+            {/* 头像 */}
+            <View
+              width={80}
+              height={80}
+              borderRadius={40}
+              overflow="hidden"
+              backgroundColor="$borderColor"
+            >
+              <View
+                width={80}
+                height={80}
+                backgroundColor={COLORS.primary}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Text fontSize="$8" color="white" fontWeight="600">
+                  {advisor.name.charAt(0)}
+                </Text>
+              </View>
+            </View>
+
+            {/* 基本信息 */}
+            <YStack flex={1} gap="$2">
+              <XStack alignItems="center" gap="$2">
+                <Text fontSize="$6" fontWeight="700" color="$text">
+                  {advisor.name}
+                </Text>
+                <View
+                  width={10}
+                  height={10}
+                  borderRadius={5}
+                  backgroundColor={getOnlineStatusColor(advisor.onlineStatus)}
+                />
+              </XStack>
+
+              <Text fontSize="$3" color="$textSecondary">
+                {advisor.organization}
+              </Text>
+
+              <Text fontSize="$3" color="$textSecondary">
+                工号：{advisor.employeeId}
+              </Text>
+
+              <XStack alignItems="center" gap="$2">
+                <Text fontSize="$3" color={getOnlineStatusColor(advisor.onlineStatus)}>
+                  {getOnlineStatusLabel(advisor.onlineStatus)}
+                </Text>
+                <Text fontSize="$3" color="$textSecondary">
+                  · 平均{advisor.avgResponseTime}响应
+                </Text>
+              </XStack>
+            </YStack>
+          </XStack>
+
+          {/* 专业资质 */}
+          <YStack gap="$2" marginBottom="$3">
+            <Text fontSize="$4" fontWeight="600" color="$text">
+              专业资质
+            </Text>
+            <XStack gap="$2" flexWrap="wrap">
+              {advisor.certifications.map((cert, idx) => (
+                <View
+                  key={idx}
+                  backgroundColor={`${COLORS.success}20`}
+                  paddingHorizontal="$3"
+                  paddingVertical="$2"
+                  borderRadius="$2"
+                >
+                  <XStack alignItems="center" gap="$1">
+                    <Award size={14} color={COLORS.success} />
+                    <Text fontSize="$3" color={COLORS.success} fontWeight="600">
+                      {cert}
+                    </Text>
+                  </XStack>
+                </View>
+              ))}
+            </XStack>
+          </YStack>
+
+          {/* 服务数据 */}
+          <XStack justifyContent="space-around" paddingVertical="$3">
+            <YStack alignItems="center">
+              <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+                {advisor.yearsOfExperience}年
+              </Text>
+              <Text fontSize="$2" color="$textSecondary">
+                从业经验
+              </Text>
+            </YStack>
+            <YStack alignItems="center">
+              <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+                {advisor.clientsServed}
+              </Text>
+              <Text fontSize="$2" color="$textSecondary">
+                服务客户
+              </Text>
+            </YStack>
+            <YStack alignItems="center">
+              <Text fontSize="$6" fontWeight="700" color={COLORS.warning}>
+                {advisor.satisfactionRate}%
+              </Text>
+              <Text fontSize="$2" color="$textSecondary">
+                满意度
+              </Text>
+            </YStack>
+          </XStack>
+        </YStack>
+
+        {/* 擅长领域 */}
+        <YStack padding="$4" backgroundColor="$surface" marginTop="$2">
+          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            擅长领域
+          </Text>
+          <XStack gap="$2" flexWrap="wrap">
+            {advisor.specialties.map((specialty, idx) => (
+              <View
+                key={idx}
+                backgroundColor="$borderColor"
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+                borderRadius="$2"
+              >
+                <Text fontSize="$3" color="$text">
+                  {specialty}
+                </Text>
+              </View>
+            ))}
+          </XStack>
+        </YStack>
+
+        {/* 服务区域 */}
+        <YStack padding="$4" backgroundColor="$surface" marginTop="$2">
+          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            服务区域
+          </Text>
+          <XStack gap="$2" flexWrap="wrap">
+            {advisor.serviceCities.map((city, idx) => (
+              <View
+                key={idx}
+                backgroundColor={`${COLORS.primary}15`}
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+                borderRadius="$2"
+              >
+                <XStack alignItems="center" gap="$1">
+                  <MapPin size={14} color={COLORS.primary} />
+                  <Text fontSize="$3" color={COLORS.primary}>
+                    {city}
+                  </Text>
+                </XStack>
+              </View>
+            ))}
+          </XStack>
+        </YStack>
+
+        {/* 顾问介绍 */}
+        <YStack padding="$4" backgroundColor="$surface" marginTop="$2">
+          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            顾问介绍
+          </Text>
+          <Text fontSize="$3" color="$text" lineHeight={24}>
+            {advisor.introduction}
+          </Text>
+        </YStack>
+
+        {/* 成功案例 */}
+        <YStack padding="$4" backgroundColor="$surface" marginTop="$2">
+          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            成功案例
+          </Text>
+          <YStack gap="$2">
+            {advisor.successCases.map((caseItem, idx) => (
+              <XStack key={idx} gap="$2" alignItems="flex-start">
+                <CheckCircle size={16} color={COLORS.success} style={{ marginTop: 2 }} />
+                <Text flex={1} fontSize="$3" color="$text" lineHeight={22}>
+                  {caseItem}
+                </Text>
+              </XStack>
+            ))}
+          </YStack>
+        </YStack>
+
+        {/* 咨询方式 */}
+        <YStack padding="$4" backgroundColor="$surface" marginTop="$2" marginBottom="$6">
+          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            咨询方式（完全免费）
+          </Text>
+          <YStack gap="$3">
+            {/* 图文咨询 */}
+            <Pressable onPress={() => handleConsultation('text')}>
+              <Card bordered padding="$3" backgroundColor="$background" pressStyle={{ scale: 0.98 }}>
+                <XStack justifyContent="space-between" alignItems="center">
+                  <XStack gap="$3" alignItems="center">
+                    <View
+                      width={48}
+                      height={48}
+                      borderRadius={24}
+                      backgroundColor={`${COLORS.primary}15`}
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <MessageCircle size={24} color={COLORS.primary} />
+                    </View>
+                    <YStack>
+                      <Text fontSize="$4" fontWeight="600" color="$text">
+                        图文咨询
+                      </Text>
+                      <Text fontSize="$2" color="$textSecondary">
+                        发送文字和图片，顾问在线解答
+                      </Text>
+                    </YStack>
+                  </XStack>
+                  <View
+                    paddingHorizontal="$3"
+                    paddingVertical="$2"
+                    borderRadius="$2"
+                    backgroundColor={COLORS.primary}
+                  >
+                    <Text fontSize="$3" color="white" fontWeight="600">
+                      免费
+                    </Text>
+                  </View>
+                </XStack>
+              </Card>
+            </Pressable>
+
+            {/* 电话咨询 */}
+            <Pressable onPress={() => handleConsultation('phone')}>
+              <Card bordered padding="$3" backgroundColor="$background" pressStyle={{ scale: 0.98 }}>
+                <XStack justifyContent="space-between" alignItems="center">
+                  <XStack gap="$3" alignItems="center">
+                    <View
+                      width={48}
+                      height={48}
+                      borderRadius={24}
+                      backgroundColor={`${COLORS.success}15`}
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Phone size={24} color={COLORS.success} />
+                    </View>
+                    <YStack>
+                      <Text fontSize="$4" fontWeight="600" color="$text">
+                        电话咨询
+                      </Text>
+                      <Text fontSize="$2" color="$textSecondary">
+                        预约电话，一对一深度沟通
+                      </Text>
+                    </YStack>
+                  </XStack>
+                  <View
+                    paddingHorizontal="$3"
+                    paddingVertical="$2"
+                    borderRadius="$2"
+                    backgroundColor={COLORS.success}
+                  >
+                    <Text fontSize="$3" color="white" fontWeight="600">
+                      免费
+                    </Text>
+                  </View>
+                </XStack>
+              </Card>
+            </Pressable>
+
+            {/* 视频咨询 */}
+            <Pressable onPress={() => handleConsultation('video')}>
+              <Card bordered padding="$3" backgroundColor="$background" pressStyle={{ scale: 0.98 }}>
+                <XStack justifyContent="space-between" alignItems="center">
+                  <XStack gap="$3" alignItems="center">
+                    <View
+                      width={48}
+                      height={48}
+                      borderRadius={24}
+                      backgroundColor={`${COLORS.warning}15`}
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Video size={24} color={COLORS.warning} />
+                    </View>
+                    <YStack>
+                      <Text fontSize="$4" fontWeight="600" color="$text">
+                        视频咨询
+                      </Text>
+                      <Text fontSize="$2" color="$textSecondary">
+                        视频通话，面对面交流更清晰
+                      </Text>
+                    </YStack>
+                  </XStack>
+                  <View
+                    paddingHorizontal="$3"
+                    paddingVertical="$2"
+                    borderRadius="$2"
+                    backgroundColor={COLORS.warning}
+                  >
+                    <Text fontSize="$3" color="white" fontWeight="600">
+                      免费
+                    </Text>
+                  </View>
+                </XStack>
+              </Card>
+            </Pressable>
+
+            {/* 上门服务 */}
+            <Pressable onPress={() => handleConsultation('home_visit')}>
+              <Card bordered padding="$3" backgroundColor="$background" pressStyle={{ scale: 0.98 }}>
+                <XStack justifyContent="space-between" alignItems="center">
+                  <XStack gap="$3" alignItems="center">
+                    <View
+                      width={48}
+                      height={48}
+                      borderRadius={24}
+                      backgroundColor={`#8B5CF615`}
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Home size={24} color="#8B5CF6" />
+                    </View>
+                    <YStack>
+                      <Text fontSize="$4" fontWeight="600" color="$text">
+                        上门服务
+                      </Text>
+                      <Text fontSize="$2" color="$textSecondary">
+                        预约顾问上门，提供便捷服务
+                      </Text>
+                    </YStack>
+                  </XStack>
+                  <View
+                    paddingHorizontal="$3"
+                    paddingVertical="$2"
+                    borderRadius="$2"
+                    backgroundColor="#8B5CF6"
+                  >
+                    <Text fontSize="$3" color="white" fontWeight="600">
+                      免费
+                    </Text>
+                  </View>
+                </XStack>
+              </Card>
+            </Pressable>
+          </YStack>
+        </YStack>
+
+        {/* 底部占位，避免被按钮遮挡 */}
+        <View height={120} />
+      </ScrollView>
+
+      {/* Bottom Action Bar */}
+      <View
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
+        backgroundColor="$surface"
+        borderTopWidth={1}
+        borderTopColor="$borderColor"
+        elevation={10}
+        zIndex={999}
+        shadowColor="#000"
+        shadowOffset={{ width: 0, height: -2 }}
+        shadowOpacity={0.1}
+        shadowRadius={4}
+        paddingBottom={insets.bottom}
+      >
+        <XStack padding="$4">
+          <Pressable
+            onPress={() => {
+              console.log('🟢 Button pressed!');
+              handleConsultation('text');
+            }}
+            style={{ flex: 1 }}
+          >
+            <View
+              height={48}
+              borderRadius="$3"
+              backgroundColor={COLORS.primary}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <XStack alignItems="center" gap="$2">
+                <MessageCircle size={20} color="white" />
+                <Text color="white" fontSize="$4" fontWeight="600">
+                  立即咨询（免费）
+                </Text>
+              </XStack>
+            </View>
+          </Pressable>
+        </XStack>
+      </View>
+    </View>
+  );
+};
+
+export default InsuranceAdvisorDetailScreen;

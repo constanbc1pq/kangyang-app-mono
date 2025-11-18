@@ -50,11 +50,19 @@ import {
 } from '@/constants/app';
 import { getOrders, Order } from '@/services/orderService';
 import { ItemType } from '@/types/commerce';
+import {
+  getFamilyMembers,
+  addFamilyMember,
+  updateFamilyMember,
+  deleteFamilyMember,
+} from '@/services/userDataService';
+import { FamilyMember } from '@/types/userData';
 
 export const PersonalCenterScreen: React.FC = () => {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState<Order[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
 
   const userProfile = {
     name: '张健康',
@@ -70,35 +78,6 @@ export const PersonalCenterScreen: React.FC = () => {
     achievements: 12,
   };
 
-  const familyMembers = [
-    {
-      id: 1,
-      name: '张妈妈',
-      relationship: '母亲',
-      age: 68,
-      healthStatus: '良好',
-      lastCheckIn: '今天',
-      conditions: ['高血压', '糖尿病'],
-    },
-    {
-      id: 2,
-      name: '张爸爸',
-      relationship: '父亲',
-      age: 70,
-      healthStatus: '注意',
-      lastCheckIn: '昨天',
-      conditions: ['心脏病'],
-    },
-    {
-      id: 3,
-      name: '小明',
-      relationship: '儿子',
-      age: 18,
-      healthStatus: '优秀',
-      lastCheckIn: '3天前',
-      conditions: [],
-    },
-  ];
 
   const healthRecords = [
     {
@@ -196,9 +175,34 @@ export const PersonalCenterScreen: React.FC = () => {
     }
   };
 
+  // 加载家庭成员数据
+  const loadFamilyMembers = async () => {
+    try {
+      const members = await getFamilyMembers();
+      console.log('✅ 家庭成员数据已加载:', members.length, '位成员');
+      setFamilyMembers(members);
+    } catch (error) {
+      console.error('❌ 加载家庭成员失败:', error);
+    }
+  };
+
+  // 删除家庭成员
+  const handleDeleteMember = async (memberId: string) => {
+    try {
+      const success = await deleteFamilyMember(memberId);
+      if (success) {
+        console.log('✅ 家庭成员已删除:', memberId);
+        await loadFamilyMembers(); // 重新加载列表
+      }
+    } catch (error) {
+      console.error('❌ 删除家庭成员失败:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadOrders();
+      loadFamilyMembers();
     }, [])
   );
 
@@ -217,6 +221,8 @@ export const PersonalCenterScreen: React.FC = () => {
   const consultationOrders = getOrdersByType('consultation');
   // 商品类订单
   const productOrders = getOrdersByType('product');
+  // 私人医生订单
+  const privateDoctorOrders = getOrdersByType('private_doctor');
 
   // 获取订单图标
   const getOrderIcon = (type: ItemType) => {
@@ -229,6 +235,8 @@ export const PersonalCenterScreen: React.FC = () => {
         return <Heart size={20} color={COLORS.primary} />;
       case 'product':
         return <Package size={20} color={COLORS.primary} />;
+      case 'private_doctor':
+        return <User size={20} color={COLORS.primary} />;
       default:
         return <Package size={20} color={COLORS.primary} />;
     }
@@ -683,6 +691,65 @@ export const PersonalCenterScreen: React.FC = () => {
                       </View>
                     )}
                   </YStack>
+
+                  {/* 私人医生订单 */}
+                  <YStack gap="$3">
+                    <H4 fontSize="$4" fontWeight="600" color="$text">
+                      私人医生订单
+                    </H4>
+                    {privateDoctorOrders.length > 0 ? (
+                      privateDoctorOrders.map(order => (
+                        <Card
+                          key={order.id}
+                          bordered
+                          padding="$3"
+                          pressStyle={{ scale: 0.98 }}
+                          onPress={() => {
+                            navigation.navigate('OrderDetail' as never, { orderId: order.id } as never);
+                          }}
+                        >
+                          <XStack gap="$3" alignItems="center">
+                            {getOrderIcon(order.itemType)}
+                            <YStack flex={1} gap="$1">
+                              <Text fontSize="$3" fontWeight="600" color="$text">
+                                {order.itemName}
+                              </Text>
+                              {order.metadata?.startDate && order.metadata?.endDate && (
+                                <XStack gap="$1" alignItems="center">
+                                  <Clock size={12} color={COLORS.textSecondary} />
+                                  <Text fontSize="$2" color="$textSecondary">
+                                    {order.metadata.startDate} 至 {order.metadata.endDate}
+                                  </Text>
+                                </XStack>
+                              )}
+                            </YStack>
+                            <YStack alignItems="flex-end" gap="$1">
+                              <Text fontSize="$4" fontWeight="700" color={COLORS.primary}>
+                                ¥{order.totalAmount.toFixed(2)}
+                              </Text>
+                              <View
+                                backgroundColor={`${getStatusColor(order.status)}20`}
+                                paddingHorizontal="$2"
+                                paddingVertical="$0.5"
+                                borderRadius="$2"
+                              >
+                                <Text fontSize="$1" color={getStatusColor(order.status)} fontWeight="600">
+                                  {getStatusLabel(order.status)}
+                                </Text>
+                              </View>
+                            </YStack>
+                          </XStack>
+                        </Card>
+                      ))
+                    ) : (
+                      <View paddingVertical="$6" alignItems="center">
+                        <User size={48} color={COLORS.textSecondary} />
+                        <Text fontSize="$3" color="$textSecondary" marginTop="$2">
+                          暂无私人医生订单
+                        </Text>
+                      </View>
+                    )}
+                  </YStack>
                 </YStack>
               )}
 
@@ -717,7 +784,7 @@ export const PersonalCenterScreen: React.FC = () => {
                             <Text fontSize="$2" color="$text" textAlign="center">账户设置</Text>
                           </View>
                         </Pressable>
-                        <Pressable style={{ flex: 1 }} onPress={() => console.log('消息通知')}>
+                        <Pressable style={{ flex: 1 }} onPress={() => navigation.navigate('ChatList' as never)}>
                           <View
                             flex={1}
                             height={70}
@@ -729,8 +796,8 @@ export const PersonalCenterScreen: React.FC = () => {
                             alignItems="center"
                             space="$2"
                           >
-                            <Bell size={20} color={COLORS.primary} />
-                            <Text fontSize="$2" color="$text" textAlign="center">消息通知</Text>
+                            <MessageSquare size={20} color={COLORS.primary} />
+                            <Text fontSize="$2" color="$text" textAlign="center">消息中心</Text>
                           </View>
                         </Pressable>
                       </XStack>
@@ -765,6 +832,172 @@ export const PersonalCenterScreen: React.FC = () => {
                           >
                             <CreditCard size={20} color={COLORS.primary} />
                             <Text fontSize="$2" color="$text" textAlign="center">支付管理</Text>
+                          </View>
+                        </Pressable>
+                      </XStack>
+                    </YStack>
+                  </Card>
+
+                  {/* Expert Identity - 达人身份卡片 */}
+                  <Card
+                    padding="$4"
+                    borderRadius="$4"
+                    backgroundColor="$surface"
+                    borderWidth={1}
+                    borderColor="$borderColor"
+                  >
+                    <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
+                      <H3 fontSize="$5" color="$text" fontWeight="600">
+                        我的达人身份
+                      </H3>
+                      <Pressable onPress={() => navigation.navigate('ExpertCertification' as never)}>
+                        <View
+                          paddingHorizontal="$3"
+                          paddingVertical="$1"
+                          borderRadius="$6"
+                          backgroundColor={`${COLORS.primary}20`}
+                        >
+                          <Text fontSize="$2" color={COLORS.primary} fontWeight="600">
+                            立即认证
+                          </Text>
+                        </View>
+                      </Pressable>
+                    </XStack>
+
+                    <Pressable onPress={() => navigation.navigate('ExpertCertification' as never)}>
+                      <View
+                        backgroundColor={`${COLORS.warning}10`}
+                        borderRadius="$3"
+                        padding="$4"
+                        borderWidth={1}
+                        borderColor={COLORS.warning}
+                        borderStyle="dashed"
+                      >
+                        <YStack alignItems="center" space="$2">
+                          <View
+                            width={56}
+                            height={56}
+                            borderRadius={28}
+                            backgroundColor={`${COLORS.warning}30`}
+                            justifyContent="center"
+                            alignItems="center"
+                          >
+                            <Award size={32} color={COLORS.warning} />
+                          </View>
+                          <Text fontSize="$4" fontWeight="600" color="$text">
+                            成为康养达人
+                          </Text>
+                          <Text fontSize="$3" color="$textSecondary" textAlign="center">
+                            认证成为达人，开启接单赚钱之旅
+                          </Text>
+                          <XStack space="$4" marginTop="$2">
+                            <YStack alignItems="center" space="$1">
+                              <Text fontSize="$2" color="$textSecondary">
+                                灵活接单
+                              </Text>
+                              <Text fontSize="$5" color={COLORS.warning} fontWeight="bold">
+                                💰
+                              </Text>
+                            </YStack>
+                            <YStack alignItems="center" space="$1">
+                              <Text fontSize="$2" color="$textSecondary">
+                                收入可观
+                              </Text>
+                              <Text fontSize="$5" color={COLORS.warning} fontWeight="bold">
+                                💯
+                              </Text>
+                            </YStack>
+                            <YStack alignItems="center" space="$1">
+                              <Text fontSize="$2" color="$textSecondary">
+                                平台保障
+                              </Text>
+                              <Text fontSize="$5" color={COLORS.warning} fontWeight="bold">
+                                🛡️
+                              </Text>
+                            </YStack>
+                          </XStack>
+                        </YStack>
+                      </View>
+                    </Pressable>
+                  </Card>
+
+                  {/* Community Features - 新增社区功能区 */}
+                  <Card
+                    padding="$4"
+                    borderRadius="$4"
+                    backgroundColor="$surface"
+                    borderWidth={1}
+                    borderColor="$borderColor"
+                  >
+                    <H3 fontSize="$5" color="$text" fontWeight="600" marginBottom="$3">
+                      社区服务
+                    </H3>
+                    <YStack space="$2">
+                      <XStack space="$2">
+                        <Pressable style={{ flex: 1 }} onPress={() => navigation.navigate('ExpertList' as never)}>
+                          <View
+                            flex={1}
+                            height={70}
+                            backgroundColor="$background"
+                            borderRadius="$3"
+                            borderWidth={1}
+                            borderColor="$borderColor"
+                            justifyContent="center"
+                            alignItems="center"
+                            space="$2"
+                          >
+                            <Award size={20} color={COLORS.warning} />
+                            <Text fontSize="$2" color="$text" textAlign="center">认证达人</Text>
+                          </View>
+                        </Pressable>
+                        <Pressable style={{ flex: 1 }} onPress={() => navigation.navigate('JobList' as never)}>
+                          <View
+                            flex={1}
+                            height={70}
+                            backgroundColor="$background"
+                            borderRadius="$3"
+                            borderWidth={1}
+                            borderColor="$borderColor"
+                            justifyContent="center"
+                            alignItems="center"
+                            space="$2"
+                          >
+                            <Users size={20} color={COLORS.success} />
+                            <Text fontSize="$2" color="$text" textAlign="center">邻里帮</Text>
+                          </View>
+                        </Pressable>
+                      </XStack>
+                      <XStack space="$2">
+                        <Pressable style={{ flex: 1 }} onPress={() => navigation.navigate('SecondHandList' as never)}>
+                          <View
+                            flex={1}
+                            height={70}
+                            backgroundColor="$background"
+                            borderRadius="$3"
+                            borderWidth={1}
+                            borderColor="$borderColor"
+                            justifyContent="center"
+                            alignItems="center"
+                            space="$2"
+                          >
+                            <Package size={20} color={COLORS.error} />
+                            <Text fontSize="$2" color="$text" textAlign="center">邻里闲物</Text>
+                          </View>
+                        </Pressable>
+                        <Pressable style={{ flex: 1 }} onPress={() => console.log('我的发布')}>
+                          <View
+                            flex={1}
+                            height={70}
+                            backgroundColor="$background"
+                            borderRadius="$3"
+                            borderWidth={1}
+                            borderColor="$borderColor"
+                            justifyContent="center"
+                            alignItems="center"
+                            space="$2"
+                          >
+                            <FileText size={20} color={COLORS.primary} />
+                            <Text fontSize="$2" color="$text" textAlign="center">我的发布</Text>
                           </View>
                         </Pressable>
                       </XStack>
@@ -878,7 +1111,7 @@ export const PersonalCenterScreen: React.FC = () => {
                           为家人创建健康档案，共同管理家庭健康
                         </Text>
                       </YStack>
-                      <Pressable>
+                      <Pressable onPress={() => console.log('TODO: 添加家庭成员')}>
                         <View
                           backgroundColor={COLORS.primary}
                           borderRadius="$3"
@@ -897,128 +1130,170 @@ export const PersonalCenterScreen: React.FC = () => {
                   </Card>
 
                   {/* Family Members */}
-                  <YStack space="$3">
-                    {familyMembers.map((member) => (
-                      <Card
-                        key={member.id}
-                        padding="$4"
-                        borderRadius="$4"
-                        backgroundColor="$surface"
-                        borderWidth={1}
-                        borderColor="$borderColor"
-                      >
-                        <XStack space="$4" alignItems="center" marginBottom="$3">
-                          <View
-                            width={60}
-                            height={60}
-                            backgroundColor="$background"
-                            borderRadius={30}
-                            justifyContent="center"
-                            alignItems="center"
-                          >
-                            <User size={24} color={COLORS.textSecondary} />
-                          </View>
-                          <YStack flex={1}>
-                            <XStack space="$2" alignItems="center" marginBottom="$1">
-                              <H3 fontSize="$5" fontWeight="600" color="$text">
-                                {member.name}
-                              </H3>
-                              <View
-                                backgroundColor="$background"
-                                paddingHorizontal="$2"
-                                paddingVertical="$1"
-                                borderRadius="$2"
-                              >
-                                <Text fontSize="$2" color="$textSecondary">
-                                  {member.relationship}
-                                </Text>
-                              </View>
-                            </XStack>
-                            <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
-                              {member.age}岁 · 最后打卡: {member.lastCheckIn}
-                            </Text>
-                            <XStack space="$1" alignItems="center">
-                              <Activity
-                                size={16}
-                                color={
-                                  member.healthStatus === '优秀'
-                                    ? COLORS.success
-                                    : member.healthStatus === '良好'
-                                    ? COLORS.secondary
-                                    : COLORS.warning
-                                }
-                              />
-                              <Text
-                                fontSize="$3"
-                                fontWeight="600"
-                                color={
-                                  member.healthStatus === '优秀'
-                                    ? COLORS.success
-                                    : member.healthStatus === '良好'
-                                    ? COLORS.secondary
-                                    : COLORS.warning
-                                }
-                              >
-                                {member.healthStatus}
-                              </Text>
-                            </XStack>
-                          </YStack>
-                        </XStack>
+                  {familyMembers.length > 0 ? (
+                    <YStack space="$3">
+                      {familyMembers.map((member) => {
+                        // 获取健康状态颜色
+                        const getHealthStatusColor = () => {
+                          switch (member.healthProfile.healthStatus) {
+                            case 'excellent':
+                              return COLORS.success;
+                            case 'good':
+                              return COLORS.primary;
+                            case 'attention':
+                              return COLORS.warning;
+                            default:
+                              return COLORS.textSecondary;
+                          }
+                        };
 
-                        {member.conditions.length > 0 && (
-                          <YStack space="$2" marginBottom="$3">
-                            <Text fontSize="$3" color="$textSecondary">关注疾病:</Text>
-                            <XStack flexWrap="wrap" gap="$2">
-                              {member.conditions.map((condition, index) => (
+                        // 获取健康状态文本
+                        const getHealthStatusText = () => {
+                          switch (member.healthProfile.healthStatus) {
+                            case 'excellent':
+                              return '优秀';
+                            case 'good':
+                              return '良好';
+                            case 'attention':
+                              return '需关注';
+                            default:
+                              return '未知';
+                          }
+                        };
+
+                        return (
+                          <Card
+                            key={member.id}
+                            padding="$4"
+                            borderRadius="$4"
+                            backgroundColor="$surface"
+                            borderWidth={1}
+                            borderColor="$borderColor"
+                          >
+                            <XStack space="$4" alignItems="center" marginBottom="$3">
+                              {/* 头像 */}
+                              <View
+                                width={60}
+                                height={60}
+                                backgroundColor={`${getHealthStatusColor()}20`}
+                                borderRadius={30}
+                                justifyContent="center"
+                                alignItems="center"
+                              >
+                                <Text fontSize={32}>{member.avatar || '👤'}</Text>
+                              </View>
+
+                              {/* 信息 */}
+                              <YStack flex={1}>
+                                <XStack space="$2" alignItems="center" marginBottom="$1">
+                                  <H3 fontSize="$5" fontWeight="600" color="$text">
+                                    {member.name}
+                                  </H3>
+                                  <View
+                                    backgroundColor="$background"
+                                    paddingHorizontal="$2"
+                                    paddingVertical="$1"
+                                    borderRadius="$2"
+                                  >
+                                    <Text fontSize="$2" color="$textSecondary">
+                                      {member.relationship}
+                                    </Text>
+                                  </View>
+                                </XStack>
+
+                                {/* 年龄和健康评分 */}
+                                <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
+                                  {member.healthProfile.age}岁 · 健康评分: {member.healthProfile.healthScore}
+                                </Text>
+
+                                {/* 健康状态 */}
+                                <XStack space="$1" alignItems="center">
+                                  <Activity size={16} color={getHealthStatusColor()} />
+                                  <Text fontSize="$3" fontWeight="600" color={getHealthStatusColor()}>
+                                    健康状态{getHealthStatusText()}
+                                  </Text>
+                                </XStack>
+                              </YStack>
+                            </XStack>
+
+                            {/* 设备数量和数据来源 */}
+                            <View
+                              backgroundColor="$background"
+                              padding="$3"
+                              borderRadius="$3"
+                              marginBottom="$3"
+                            >
+                              <XStack justifyContent="space-between" alignItems="center">
+                                <YStack>
+                                  <Text fontSize="$2" color="$textSecondary" marginBottom="$1">
+                                    已连接设备
+                                  </Text>
+                                  <Text fontSize="$4" fontWeight="600" color="$text">
+                                    {member.healthProfile.devices.length} 个
+                                  </Text>
+                                </YStack>
+                                <YStack alignItems="flex-end">
+                                  <Text fontSize="$2" color="$textSecondary" marginBottom="$1">
+                                    最后更新
+                                  </Text>
+                                  <Text fontSize="$3" fontWeight="500" color="$text">
+                                    {new Date(member.healthProfile.lastUpdated).toLocaleDateString('zh-CN')}
+                                  </Text>
+                                </YStack>
+                              </XStack>
+                            </View>
+
+                            {/* 操作按钮 */}
+                            <XStack space="$2">
+                              <Pressable style={{ flex: 1 }} onPress={() => {
+                                // 跳转到康页面，自动切换到该成员
+                                navigation.navigate('康' as never);
+                              }}>
                                 <View
-                                  key={index}
-                                  backgroundColor="$secondary"
-                                  paddingHorizontal="$2"
-                                  paddingVertical="$1"
-                                  borderRadius="$2"
+                                  flex={1}
+                                  backgroundColor={COLORS.primary}
+                                  borderRadius="$3"
+                                  paddingVertical="$2"
+                                  justifyContent="center"
+                                  alignItems="center"
                                 >
-                                  <Text fontSize="$2" color="white">
-                                    {condition}
+                                  <Text fontSize="$3" color="white" fontWeight="600">
+                                    查看健康数据
                                   </Text>
                                 </View>
-                              ))}
+                              </Pressable>
+                              {member.relationship !== '本人' && (
+                                <Pressable onPress={() => handleDeleteMember(member.id)}>
+                                  <View
+                                    borderWidth={1}
+                                    borderColor={COLORS.error}
+                                    backgroundColor="transparent"
+                                    borderRadius="$3"
+                                    paddingVertical="$2"
+                                    paddingHorizontal="$3"
+                                    justifyContent="center"
+                                    alignItems="center"
+                                  >
+                                    <Text fontSize="$3" color={COLORS.error}>删除</Text>
+                                  </View>
+                                </Pressable>
+                              )}
                             </XStack>
-                          </YStack>
-                        )}
-
-                        <XStack space="$2">
-                          <Pressable style={{ flex: 1 }}>
-                            <View
-                              flex={1}
-                              borderWidth={1}
-                              borderColor="$borderColor"
-                              backgroundColor="transparent"
-                              borderRadius="$3"
-                              paddingVertical="$2"
-                              justifyContent="center"
-                              alignItems="center"
-                            >
-                              <Text fontSize="$3" color="$text">查看详情</Text>
-                            </View>
-                          </Pressable>
-                          <Pressable style={{ flex: 1 }}>
-                            <View
-                              flex={1}
-                              borderWidth={1}
-                              borderColor="$borderColor"
-                              backgroundColor="transparent"
-                              borderRadius="$3"
-                              paddingVertical="$2"
-                              justifyContent="center"
-                              alignItems="center"
-                            >
-                              <Text fontSize="$3" color="$text">健康提醒</Text>
-                            </View>
-                          </Pressable>
-                        </XStack>
-                      </Card>
-                    ))}
-                  </YStack>
+                          </Card>
+                        );
+                      })}
+                    </YStack>
+                  ) : (
+                    <View paddingVertical="$8" alignItems="center">
+                      <Users size={64} color={COLORS.textSecondary} />
+                      <Text fontSize="$5" color="$textSecondary" marginTop="$3">
+                        暂无家庭成员
+                      </Text>
+                      <Text fontSize="$3" color="$textSecondary" marginTop="$2">
+                        点击上方按钮添加家庭成员
+                      </Text>
+                    </View>
+                  )}
                 </YStack>
               )}
 
