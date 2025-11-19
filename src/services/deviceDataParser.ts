@@ -77,16 +77,23 @@ const DEVICE_RECOGNITION_RULES: Record<DeviceType, {
         range: [2.0, 30.0],
       },
       {
-        // 备用规则：匹配纯数字（如 5.6、6.2）
+        // 备用规则：匹配纯小数（如 5.6、6.2）
         field: 'glucose',
         regex: /^[\s]*(\d+\.\d+)[\s]*$/,
         unit: 'mmol/L',
         range: [2.0, 30.0],
       },
       {
-        // 备用规则2：匹配整数或小数
+        // 备用规则2：匹配1-2位整数+小数
         field: 'glucose',
         regex: /(\d{1,2}\.\d{1,2})/,
+        unit: 'mmol/L',
+        range: [2.0, 30.0],
+      },
+      {
+        // 备用规则3：匹配任意数字（测试用，会提示数值异常）
+        field: 'glucose',
+        regex: /(\d+)/,
         unit: 'mmol/L',
         range: [2.0, 30.0],
       },
