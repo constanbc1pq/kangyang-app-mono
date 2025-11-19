@@ -187,6 +187,38 @@ const DEVICE_RECOGNITION_RULES: Record<DeviceType, {
     ],
     requiredFields: ['heartRate'],
   },
+
+  // 智能座便器
+  smart_toilet: {
+    patterns: [
+      {
+        field: 'temperature',
+        regex: /(?:体温|温度|TEMP|temperature)[:\s：]*(\d+\.?\d*)/i,
+        unit: '°C',
+        range: [35.0, 42.0],
+      },
+      {
+        // 备用规则：匹配36-42范围的小数（体温常见范围）
+        field: 'temperature',
+        regex: /(3[5-9]\.\d|4[0-2]\.\d)/,
+        unit: '°C',
+        range: [35.0, 42.0],
+      },
+      {
+        field: 'heartRate',
+        regex: /(?:心率|HR|bpm|脉搏)[:\s：]*(\d{2,3})/i,
+        unit: 'bpm',
+        range: [40, 180],
+      },
+      {
+        field: 'bloodOxygen',
+        regex: /(?:血氧|SpO2|oxygen)[:\s：]*(\d{2,3})/i,
+        unit: '%',
+        range: [70, 100],
+      },
+    ],
+    requiredFields: ['temperature'],
+  },
 };
 
 /**
@@ -317,6 +349,7 @@ export const getFieldDisplayName = (field: string): string => {
     muscleMass: '肌肉量',
     boneMass: '骨量',
     waterPercentage: '水分',
+    temperature: '体温',
   };
 
   return nameMap[field] || field;
@@ -356,6 +389,7 @@ export const getDeviceTypeDisplayName = (deviceType: DeviceType): string => {
     fitness_tracker: '智能手环',
     smart_scale: '体脂秤',
     heart_rate_monitor: '心率监测器',
+    smart_toilet: '智能座便器',
   };
 
   return nameMap[deviceType] || deviceType;
@@ -400,6 +434,12 @@ export const getHealthAdvice = (
   if (field === 'bmi') {
     if (value >= 28) return 'BMI偏高，建议控制体重';
     if (value < 18.5) return 'BMI偏低，建议增加营养';
+  }
+
+  // 体温建议
+  if (field === 'temperature') {
+    if (value >= 37.3) return '体温偏高，可能发烧，建议观察或就医';
+    if (value < 36.0) return '体温偏低，注意保暖';
   }
 
   return '';

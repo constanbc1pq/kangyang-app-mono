@@ -70,12 +70,15 @@ const imageURIToBase64 = async (uri: string): Promise<string> => {
 /**
  * 压缩优化图片
  * 减少文件大小，提高识别速度
+ * 注意：rotate 0度会强制应用EXIF方向信息
  */
 export const optimizeImage = async (uri: string): Promise<string> => {
   try {
     const manipResult = await ImageManipulator.manipulateAsync(
       uri,
       [
+        // rotate 0度会强制根据EXIF方向信息校正图片
+        { rotate: 0 },
         {
           resize: {
             width: OCR_CONFIG.IMAGE_MAX_WIDTH,
