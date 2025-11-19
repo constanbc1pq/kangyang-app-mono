@@ -214,20 +214,10 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
               <Text fontSize={40}>{healthStatus.emoji}</Text>
             </View>
 
-            {/* 健康评分 */}
-            <H2 fontSize="$11" fontWeight="bold" color="white" marginBottom="$1">
-              {healthScore}分
-            </H2>
-            <View
-              backgroundColor="rgba(255,255,255,0.2)"
-              paddingHorizontal="$3"
-              paddingVertical="$1"
-              borderRadius="$3"
-            >
-              <Text fontSize="$4" color="white" fontWeight="600">
-                健康状态{healthStatus.status}
-              </Text>
-            </View>
+            {/* 健康状态提示 */}
+            <Text fontSize="$8" color="white" fontWeight="700">
+              健康状态{healthStatus.status}
+            </Text>
           </YStack>
 
           {/* AI解读区域 */}
