@@ -391,7 +391,7 @@ export const PersonalCenterScreen: React.FC = () => {
                       color={activeTab === 'profile' ? 'white' : '$textSecondary'}
                       fontWeight={activeTab === 'profile' ? '600' : '400'}
                     >
-                      个人信息
+                      个人
                     </Text>
                   </View>
                 </Pressable>
@@ -413,7 +413,7 @@ export const PersonalCenterScreen: React.FC = () => {
                       color={activeTab === 'family' ? 'white' : '$textSecondary'}
                       fontWeight={activeTab === 'family' ? '600' : '400'}
                     >
-                      家庭成员
+                      家庭
                     </Text>
                   </View>
                 </Pressable>
@@ -435,7 +435,7 @@ export const PersonalCenterScreen: React.FC = () => {
                       color={activeTab === 'membership' ? 'white' : '$textSecondary'}
                       fontWeight={activeTab === 'membership' ? '600' : '400'}
                     >
-                      会员中心
+                      会员
                     </Text>
                   </View>
                 </Pressable>
