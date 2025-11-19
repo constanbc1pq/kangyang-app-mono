@@ -43,9 +43,10 @@ import {
   getMemberHealthProfile,
   getMemberAIInsights,
   getMemberDevices,
+  getDevices,
   clearUserData,
 } from '@/services/userDataService';
-import { HealthTask, MemberHealthProfile, FamilyMember as FamilyMemberType } from '@/types/userData';
+import { HealthTask, MemberHealthProfile, FamilyMember as FamilyMemberType, HealthDevice } from '@/types/userData';
 import * as Icons from 'lucide-react-native';
 
 export const HealthScreen: React.FC = () => {
@@ -54,6 +55,7 @@ export const HealthScreen: React.FC = () => {
   const [currentMemberId, setCurrentMemberId] = useState<string>('self'); // 当前查看的家庭成员
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [currentMemberProfile, setCurrentMemberProfile] = useState<MemberHealthProfile | null>(null);
+  const [devices, setDevices] = useState<HealthDevice[]>([]); // 设备列表（从主数据源获取）
   const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation<any>();
 
@@ -65,8 +67,19 @@ export const HealthScreen: React.FC = () => {
     React.useCallback(() => {
       loadFamilyData();
       loadTodayTasks();
+      loadDevices();
     }, [])
   );
+
+  // 加载设备列表
+  const loadDevices = async () => {
+    try {
+      const deviceList = await getDevices();
+      setDevices(deviceList);
+    } catch (error) {
+      console.error('加载设备数据失败:', error);
+    }
+  };
 
   // 当切换家庭成员时，重新加载该成员的健康数据
   React.useEffect(() => {
@@ -434,17 +447,15 @@ export const HealthScreen: React.FC = () => {
             {aiInsights.length > 0 && <AIInsights insights={aiInsights} />}
 
             {/* 设备状态快览 */}
-            {currentMemberProfile && (
-              <DeviceStatusOverview
-                devices={currentMemberProfile.devices || []}
-                onAddDevice={() => navigation.navigate('DeviceManagement')}
-                onDevicePress={(deviceId) => {
-                  console.log('点击设备:', deviceId);
-                  navigation.navigate('DeviceManagement', { deviceId });
-                }}
-                onManageDevices={() => navigation.navigate('DeviceManagement')}
-              />
-            )}
+            <DeviceStatusOverview
+              devices={devices}
+              onAddDevice={() => navigation.navigate('DeviceManagement')}
+              onDevicePress={(deviceId) => {
+                console.log('点击设备:', deviceId);
+                navigation.navigate('DeviceManagement', { deviceId });
+              }}
+              onManageDevices={() => navigation.navigate('DeviceManagement')}
+            />
 
             {/* Health Trends */}
             <HealthTrends

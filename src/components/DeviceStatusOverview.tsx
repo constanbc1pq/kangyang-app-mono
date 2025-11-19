@@ -30,10 +30,14 @@ export const DeviceStatusOverview: React.FC<DeviceStatusOverviewProps> = ({
   onDevicePress,
   onManageDevices,
 }) => {
-  // 统计设备状态
-  const connectedCount = devices.filter(d => d.status === 'connected').length;
-  const disconnectedCount = devices.filter(d => d.status === 'disconnected').length;
-  const syncingCount = devices.filter(d => d.status === 'syncing').length;
+  // 统计设备状态（区分自动连接和手动录入设备）
+  const autoDevices = devices.filter(d => d.connection !== 'manual');
+  const manualDevices = devices.filter(d => d.connection === 'manual');
+
+  const connectedCount = autoDevices.filter(d => d.status === 'connected').length;
+  const disconnectedCount = autoDevices.filter(d => d.status === 'disconnected').length;
+  const syncingCount = autoDevices.filter(d => d.status === 'syncing').length;
+  const manualCount = manualDevices.length;
 
   // 获取设备图标
   const getDeviceIcon = (type: HealthDevice['type']): string => {
@@ -83,11 +87,19 @@ export const DeviceStatusOverview: React.FC<DeviceStatusOverviewProps> = ({
     }
   };
 
-  // 判断设备是否需要关注（离线或长时间未同步）
+  // 判断设备是否需要关注（只对自动连接设备检查离线状态）
   const needsAttention = (device: HealthDevice) => {
+    // 手动录入设备不需要关注连接状态
+    if (device.connection === 'manual') return false;
     if (device.status === 'disconnected') return true;
     // 可以添加更多判断逻辑，比如最后同步时间超过24小时等
     return false;
+  };
+
+  // 获取设备连接方式文本
+  const getConnectionText = (device: HealthDevice) => {
+    if (device.connection === 'manual') return '手动录入';
+    return getStatusText(device.status);
   };
 
   // 需要关注的设备
@@ -130,14 +142,16 @@ export const DeviceStatusOverview: React.FC<DeviceStatusOverviewProps> = ({
           backgroundColor="$background"
           borderRadius="$3"
         >
-          <YStack flex={1} alignItems="center">
-            <Text fontSize="$6" fontWeight="bold" color={COLORS.success}>
-              {connectedCount}
-            </Text>
-            <Text fontSize="$2" color="$textSecondary" marginTop="$1">
-              在线
-            </Text>
-          </YStack>
+          {connectedCount > 0 && (
+            <YStack flex={1} alignItems="center">
+              <Text fontSize="$6" fontWeight="bold" color={COLORS.success}>
+                {connectedCount}
+              </Text>
+              <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+                在线
+              </Text>
+            </YStack>
+          )}
           {syncingCount > 0 && (
             <YStack flex={1} alignItems="center">
               <Text fontSize="$6" fontWeight="bold" color={COLORS.primary}>
@@ -145,6 +159,16 @@ export const DeviceStatusOverview: React.FC<DeviceStatusOverviewProps> = ({
               </Text>
               <Text fontSize="$2" color="$textSecondary" marginTop="$1">
                 同步中
+              </Text>
+            </YStack>
+          )}
+          {manualCount > 0 && (
+            <YStack flex={1} alignItems="center">
+              <Text fontSize="$6" fontWeight="bold" color={COLORS.primary}>
+                {manualCount}
+              </Text>
+              <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+                手动
               </Text>
             </YStack>
           )}
@@ -225,15 +249,22 @@ export const DeviceStatusOverview: React.FC<DeviceStatusOverviewProps> = ({
 
                     {/* 状态指示器 */}
                     <XStack space="$1" alignItems="center">
-                      {device.status === 'connected' ? (
+                      {device.connection === 'manual' ? (
+                        // 手动录入设备显示编辑图标
+                        <Text fontSize={12}>✏️</Text>
+                      ) : device.status === 'connected' ? (
                         <Wifi size={16} color={getStatusColor(device.status)} />
                       ) : device.status === 'syncing' ? (
                         <Wifi size={16} color={getStatusColor(device.status)} />
                       ) : (
                         <WifiOff size={16} color={getStatusColor(device.status)} />
                       )}
-                      <Text fontSize="$2" color={getStatusColor(device.status)} fontWeight="600">
-                        {getStatusText(device.status)}
+                      <Text
+                        fontSize="$2"
+                        color={device.connection === 'manual' ? COLORS.primary : getStatusColor(device.status)}
+                        fontWeight="600"
+                      >
+                        {getConnectionText(device)}
                       </Text>
                     </XStack>
                   </XStack>

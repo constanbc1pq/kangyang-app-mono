@@ -262,7 +262,7 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
           {/* 识别到的数据 */}
           <View>
             <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
-              📊 识别到的数据
+              识别到的数据
             </Text>
 
             {Object.entries(editableFields).map(([field, data]) =>
@@ -295,14 +295,14 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
             )}
 
             <Text fontSize="$2" color="$textSecondary" marginTop="$3">
-              💡 点击数值可以修改
+              点击数值可以修改
             </Text>
           </View>
 
           {/* 测量时间 */}
           <View>
             <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
-              📅 测量时间
+              测量时间
             </Text>
 
             <Pressable onPress={() => setShowDatePicker(true)}>
@@ -364,7 +364,7 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
             marginTop="$2"
           >
             <Text fontSize="$2" color="$textSecondary" lineHeight={18}>
-              ⚠️ 请确认数据准确性：
+              请确认数据准确性：
             </Text>
             <Text fontSize="$2" color="$textSecondary" lineHeight={18} marginTop="$1">
               • 自动识别可能存在误差，请仔细核对
@@ -390,7 +390,7 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
                   <ActivityIndicator size="small" color="white" />
                 ) : (
                   <Text fontSize="$4" fontWeight="600" color="white">
-                    ✅ 确认保存
+                    确认保存
                   </Text>
                 )}
               </View>
@@ -404,7 +404,7 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
                 alignItems="center"
               >
                 <Text fontSize="$4" fontWeight="600" color="$textSecondary">
-                  🔄 重新拍摄
+                  重新拍摄
                 </Text>
               </View>
             </Pressable>

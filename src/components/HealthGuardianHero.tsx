@@ -206,11 +206,12 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
               backgroundColor={healthStatus.bgColor}
               justifyContent="center"
               alignItems="center"
-              marginBottom="$3"
+              marginBottom="$5"
               borderWidth={3}
               borderColor="rgba(255,255,255,0.3)"
+              overflow="hidden"
             >
-              <Text fontSize={48}>{healthStatus.emoji}</Text>
+              <Text fontSize={40}>{healthStatus.emoji}</Text>
             </View>
 
             {/* 健康评分 */}

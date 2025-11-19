@@ -278,19 +278,26 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   // 发布服务需求
   const handlePublishJob = () => {
     setShowPublishMenu(false);
-    navigation.navigate('JobPublish' as never);
+    // 延迟导航确保modal完全关闭
+    setTimeout(() => {
+      navigation.navigate('JobPublish' as never);
+    }, 100);
   };
 
   // 发布闲置物品
   const handlePublishItem = () => {
     setShowPublishMenu(false);
-    navigation.navigate('SecondHandPublish' as never);
+    setTimeout(() => {
+      navigation.navigate('SecondHandPublish' as never);
+    }, 100);
   };
 
   // 发布文章
   const handlePublishPost = () => {
     setShowPublishMenu(false);
-    navigation.navigate('PostPublish' as never);
+    setTimeout(() => {
+      navigation.navigate('PostPublish' as never);
+    }, 100);
   };
 
   // 处理Feed卡片点击

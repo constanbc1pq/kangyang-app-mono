@@ -190,7 +190,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
             ) : (
               <>
                 {/* 移动端：拍照选项 */}
-                <Pressable onPress={handleTakePhoto}>
+                <Pressable onPress={handleTakePhoto} style={{ marginBottom: 12 }}>
                   <XStack
                     space="$3"
                     alignItems="center"

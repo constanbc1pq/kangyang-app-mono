@@ -304,20 +304,108 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
 
       console.log('数据已保存:', savedRecord);
 
-      // 更新设备的最后同步时间
+      // 将保存的数据转换为 DeviceEvent 格式并添加到设备事件列表
+      const newEvents: DeviceEvent[] = Object.entries(confirmedData.fields).map(([fieldName, fieldData], index) => {
+        // 确定事件状态
+        let status: DeviceEvent['status'] = 'normal';
+        const value = typeof fieldData.value === 'number' ? fieldData.value : parseFloat(String(fieldData.value));
+
+        // 根据字段类型判断状态（支持所有设备类型）
+        switch (fieldName) {
+          // 血糖仪
+          case 'glucose':
+            if (value >= 7.0 || value < 3.9) status = 'warning';
+            if (value >= 11.1 || value < 2.8) status = 'danger';
+            break;
+          // 血压计
+          case 'systolic':
+            if (value >= 140 || value < 90) status = 'warning';
+            if (value >= 180 || value < 70) status = 'danger';
+            break;
+          case 'diastolic':
+            if (value >= 90 || value < 60) status = 'warning';
+            if (value >= 120 || value < 50) status = 'danger';
+            break;
+          // 心率（手环、血压计、心率监测器）
+          case 'heartRate':
+            if (value >= 100 || value < 60) status = 'warning';
+            if (value >= 120 || value < 50) status = 'danger';
+            break;
+          // 血氧（手环）
+          case 'bloodOxygen':
+            if (value < 95) status = 'warning';
+            if (value < 90) status = 'danger';
+            break;
+          // 体脂秤
+          case 'weight':
+            // 体重无标准范围，不判断
+            break;
+          case 'bodyFat':
+            if (value >= 30 || value < 10) status = 'warning';
+            if (value >= 40 || value < 5) status = 'danger';
+            break;
+          case 'bmi':
+            if (value >= 24 || value < 18.5) status = 'warning';
+            if (value >= 28 || value < 16) status = 'danger';
+            break;
+          // 体温计
+          case 'temperature':
+            if (value >= 37.3 || value < 36) status = 'warning';
+            if (value >= 38.5 || value < 35) status = 'danger';
+            break;
+          default:
+            break;
+        }
+
+        // 字段名称映射（支持所有设备类型）
+        const fieldNameMap: Record<string, string> = {
+          // 血糖仪
+          glucose: '血糖',
+          // 血压计
+          systolic: '收缩压',
+          diastolic: '舒张压',
+          // 心率
+          heartRate: '心率',
+          // 血氧
+          bloodOxygen: '血氧',
+          // 体脂秤
+          weight: '体重',
+          bodyFat: '体脂率',
+          bmi: 'BMI',
+          muscleMass: '肌肉量',
+          boneMass: '骨量',
+          waterPercentage: '水分',
+          // 手环
+          steps: '步数',
+          calories: '卡路里',
+          // 体温计
+          temperature: '体温',
+        };
+
+        return {
+          id: `${Date.now()}-${index}`,
+          type: fieldNameMap[fieldName] || fieldName,
+          value: String(fieldData.value),
+          unit: fieldData.unit,
+          timestamp: new Date(confirmedData.timestamp).toLocaleString('zh-CN'),
+          status,
+          note: status === 'warning' ? '数值偏高/偏低，请注意' : status === 'danger' ? '数值异常，建议就医' : undefined,
+        };
+      });
+
+      // 更新设备的事件列表和最后同步时间
+      const updatedDevice = {
+        ...selectedDevice,
+        lastSync: '刚刚',
+        events: [...newEvents, ...selectedDevice.events], // 新数据放在前面
+      };
+
       const updatedDevices = devices.map((d) =>
-        d.id === selectedDevice.id
-          ? { ...d, lastSync: '刚刚' }
-          : d
+        d.id === selectedDevice.id ? updatedDevice : d
       );
+
       setDevices(updatedDevices);
-
-      if (selectedDevice) {
-        setSelectedDevice({ ...selectedDevice, lastSync: '刚刚' });
-      }
-
-      // 刷新设备数据显示
-      await loadDeviceLatestData(selectedDevice.id);
+      setSelectedDevice(updatedDevice);
 
       showToast('数据保存成功');
     } catch (error) {
