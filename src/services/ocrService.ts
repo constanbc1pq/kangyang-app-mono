@@ -1,11 +1,13 @@
 /**
  * OCR识别服务
- * 使用Google Cloud Vision API进行文字识别
+ * 支持 Tesseract.js（免费离线）和 Google Cloud Vision API
  */
 
 import * as ImageManipulator from 'expo-image-manipulator';
+import Tesseract from 'tesseract.js';
 import {
   OCR_CONFIG,
+  OCRProvider,
   OCRFeatureType,
   VisionAPIRequest,
   VisionAPIResponse,
@@ -80,6 +82,46 @@ export const optimizeImage = async (uri: string): Promise<string> => {
     console.error('图片优化失败:', error);
     // 优化失败时返回原图
     return uri;
+  }
+};
+
+/**
+ * 使用 Tesseract.js 进行 OCR 识别
+ */
+const callTesseractOCR = async (imageUri: string): Promise<OCRResult> => {
+  try {
+    console.log('开始 Tesseract OCR 识别...');
+
+    const result = await Tesseract.recognize(
+      imageUri,
+      OCR_CONFIG.TESSERACT_LANG,
+      {
+        logger: (info) => {
+          if (info.status === 'recognizing text') {
+            console.log(`识别进度: ${Math.round(info.progress * 100)}%`);
+          }
+        },
+      }
+    );
+
+    const text = result.data.text.trim();
+
+    if (!text) {
+      return {
+        success: false,
+        text: '',
+        error: '未识别到文字内容',
+      };
+    }
+
+    return {
+      success: true,
+      text: text,
+      confidence: result.data.confidence / 100, // Tesseract 返回 0-100，转换为 0-1
+    };
+  } catch (error: any) {
+    console.error('Tesseract OCR 失败:', error);
+    throw new Error(`OCR识别失败: ${error.message}`);
   }
 };
 
@@ -239,21 +281,31 @@ export const recognizeImage = async (
     }
 
     console.log('开始OCR识别:', imageUri);
+    console.log('使用OCR提供者:', OCR_CONFIG.PROVIDER);
 
     // 1. 优化图片
     const optimizedUri = await optimizeImage(imageUri);
     console.log('图片优化完成');
 
-    // 2. 转换为Base64
-    const base64Image = await imageURIToBase64(optimizedUri);
-    console.log('图片转Base64完成');
+    let result: OCRResult;
 
-    // 3. 调用Google Vision API
-    const apiResponse = await callGoogleVisionAPI(base64Image);
-    console.log('API调用完成');
+    // 2. 根据配置选择 OCR 提供者
+    if (OCR_CONFIG.PROVIDER === OCRProvider.TESSERACT) {
+      // 使用 Tesseract.js（免费离线）
+      result = await callTesseractOCR(optimizedUri);
+    } else if (OCR_CONFIG.PROVIDER === OCRProvider.GOOGLE_VISION) {
+      // 使用 Google Vision API
+      const base64Image = await imageURIToBase64(optimizedUri);
+      console.log('图片转Base64完成');
 
-    // 4. 解析响应
-    const result = parseVisionAPIResponse(apiResponse);
+      const apiResponse = await callGoogleVisionAPI(base64Image);
+      console.log('API调用完成');
+
+      result = parseVisionAPIResponse(apiResponse);
+    } else {
+      throw new Error(`不支持的OCR提供者: ${OCR_CONFIG.PROVIDER}`);
+    }
+
     console.log('OCR识别结果:', result);
 
     // 5. 缓存结果（成功时）

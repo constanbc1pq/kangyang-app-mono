@@ -1,16 +1,32 @@
 /**
  * OCR识别配置
- * Google Cloud Vision API配置
+ * 支持 Tesseract.js（免费离线）和 Google Cloud Vision API
  */
+
+/**
+ * OCR 提供者类型
+ */
+export enum OCRProvider {
+  TESSERACT = 'tesseract', // 免费离线 OCR
+  GOOGLE_VISION = 'google_vision', // Google Cloud Vision API（付费）
+  BAIDU = 'baidu', // 百度 OCR（有免费额度）
+}
 
 // ⚠️ 测试阶段配置 - 生产环境需要移到后端
 export const OCR_CONFIG = {
-  // Google Vision API Key
+  // 当前使用的 OCR 提供者
+  PROVIDER: OCRProvider.TESSERACT,
+
+  // Google Vision API Key（切换到 GOOGLE_VISION 时需要配置）
   // 获取方式：https://console.cloud.google.com/ → 创建项目 → 启用Cloud Vision API → 创建API密钥
   GOOGLE_VISION_API_KEY: 'YOUR_GOOGLE_VISION_API_KEY_HERE',
 
   // API端点
   GOOGLE_VISION_API_ENDPOINT: 'https://vision.googleapis.com/v1/images:annotate',
+
+  // Tesseract.js 配置
+  TESSERACT_LANG: 'chi_sim+eng', // 简体中文 + 英文
+  TESSERACT_WORKER_PATH: undefined, // 使用默认 CDN
 
   // 请求配置
   REQUEST_TIMEOUT: 30000, // 30秒超时
