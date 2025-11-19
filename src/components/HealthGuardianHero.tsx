@@ -215,9 +215,16 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
             </View>
 
             {/* 健康状态提示 */}
-            <Text fontSize="$8" color="white" fontWeight="700">
-              健康状态{healthStatus.status}
-            </Text>
+            <View
+              backgroundColor="rgba(255,255,255,0.2)"
+              paddingHorizontal="$3"
+              paddingVertical="$1"
+              borderRadius="$3"
+            >
+              <Text fontSize="$4" color="white" fontWeight="600">
+                健康状态{healthStatus.status}
+              </Text>
+            </View>
           </YStack>
 
           {/* AI解读区域 */}

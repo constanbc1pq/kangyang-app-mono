@@ -207,7 +207,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
       'glucose-meter': 'glucometer',
       'scale': 'smart_scale',
       'thermometer': 'heart_rate_monitor', // 暂时映射到心率监测器
-      'smart-toilet': 'smart_scale', // 暂时映射到体脂秤
+      'smart-toilet': 'smart_toilet',
     };
     return mapping[type] || 'fitness_tracker';
   };
@@ -254,16 +254,11 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
       const parsedData = parseDeviceData(ocrResult.text, deviceType);
 
       if (!parsedData.success) {
-        Alert.alert(
-          '数据解析失败',
-          `无法解析设备数据：\n${parsedData.errors.join('\n')}\n\n是否手动输入？`,
-          [
-            { text: '取消', style: 'cancel' },
-            { text: '手动输入', onPress: () => {
-              Alert.alert('提示', '手动输入功能开发中');
-            }},
-          ]
-        );
+        // 使用友好的toast提示
+        toast.show('无法识别数据', {
+          message: '请确保照片清晰，数字完整可见',
+          duration: 3000,
+        });
         return;
       }
 
