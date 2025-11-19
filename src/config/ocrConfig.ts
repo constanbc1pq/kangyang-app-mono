@@ -7,15 +7,16 @@
  * OCR 提供者类型
  */
 export enum OCRProvider {
-  TESSERACT = 'tesseract', // 免费离线 OCR
+  ML_KIT = 'ml_kit', // Google ML Kit（免费离线，推荐移动端使用）
+  TESSERACT = 'tesseract', // 免费离线 OCR（仅 Web 端）
   GOOGLE_VISION = 'google_vision', // Google Cloud Vision API（付费）
   BAIDU = 'baidu', // 百度 OCR（有免费额度）
 }
 
 // ⚠️ 测试阶段配置 - 生产环境需要移到后端
 export const OCR_CONFIG = {
-  // 当前使用的 OCR 提供者
-  PROVIDER: OCRProvider.TESSERACT,
+  // 当前使用的 OCR 提供者（移动端推荐使用 ML_KIT）
+  PROVIDER: OCRProvider.ML_KIT,
 
   // Google Vision API Key（切换到 GOOGLE_VISION 时需要配置）
   // 获取方式：https://console.cloud.google.com/ → 创建项目 → 启用Cloud Vision API → 创建API密钥

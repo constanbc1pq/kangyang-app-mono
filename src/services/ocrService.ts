@@ -4,7 +4,7 @@
  */
 
 import * as ImageManipulator from 'expo-image-manipulator';
-import Tesseract from 'tesseract.js';
+import TextRecognition from '@react-native-ml-kit/text-recognition';
 import {
   OCR_CONFIG,
   OCRProvider,
@@ -14,6 +14,17 @@ import {
   isAPIKeyConfigured,
   getAPIURL,
 } from '@/config/ocrConfig';
+
+// Tesseract.js 仅在 Web 端可用，移动端不导入
+let Tesseract: any = null;
+if (typeof window !== 'undefined' && typeof Worker !== 'undefined') {
+  // Web 环境，可以使用 Tesseract
+  try {
+    Tesseract = require('tesseract.js');
+  } catch (e) {
+    console.log('Tesseract.js 不可用');
+  }
+}
 
 /**
  * OCR识别结果
@@ -86,9 +97,58 @@ export const optimizeImage = async (uri: string): Promise<string> => {
 };
 
 /**
- * 使用 Tesseract.js 进行 OCR 识别
+ * 使用 Google ML Kit 进行 OCR 识别（推荐移动端使用）
+ */
+const callMLKitOCR = async (imageUri: string): Promise<OCRResult> => {
+  try {
+    console.log('开始 ML Kit OCR 识别...');
+
+    const result = await TextRecognition.recognize(imageUri);
+
+    const text = result.text.trim();
+
+    if (!text) {
+      return {
+        success: false,
+        text: '',
+        error: '未识别到文字内容',
+      };
+    }
+
+    // 计算平均置信度（ML Kit 的 blocks 中包含置信度信息）
+    let totalConfidence = 0;
+    let blockCount = 0;
+    if (result.blocks && result.blocks.length > 0) {
+      result.blocks.forEach((block: any) => {
+        if (block.confidence !== undefined) {
+          totalConfidence += block.confidence;
+          blockCount++;
+        }
+      });
+    }
+    const avgConfidence = blockCount > 0 ? totalConfidence / blockCount : 0.85;
+
+    console.log(`ML Kit 识别完成，文本长度: ${text.length}，置信度: ${avgConfidence}`);
+
+    return {
+      success: true,
+      text: text,
+      confidence: avgConfidence,
+    };
+  } catch (error: any) {
+    console.error('ML Kit OCR 失败:', error);
+    throw new Error(`OCR识别失败: ${error.message}`);
+  }
+};
+
+/**
+ * 使用 Tesseract.js 进行 OCR 识别（仅 Web 端）
  */
 const callTesseractOCR = async (imageUri: string): Promise<OCRResult> => {
+  if (!Tesseract) {
+    throw new Error('Tesseract.js 在当前环境不可用，请使用 ML Kit 或 Google Vision API');
+  }
+
   try {
     console.log('开始 Tesseract OCR 识别...');
 
@@ -96,7 +156,7 @@ const callTesseractOCR = async (imageUri: string): Promise<OCRResult> => {
       imageUri,
       OCR_CONFIG.TESSERACT_LANG,
       {
-        logger: (info) => {
+        logger: (info: any) => {
           if (info.status === 'recognizing text') {
             console.log(`识别进度: ${Math.round(info.progress * 100)}%`);
           }
@@ -290,11 +350,14 @@ export const recognizeImage = async (
     let result: OCRResult;
 
     // 2. 根据配置选择 OCR 提供者
-    if (OCR_CONFIG.PROVIDER === OCRProvider.TESSERACT) {
-      // 使用 Tesseract.js（免费离线）
+    if (OCR_CONFIG.PROVIDER === OCRProvider.ML_KIT) {
+      // 使用 Google ML Kit（免费离线，推荐移动端）
+      result = await callMLKitOCR(optimizedUri);
+    } else if (OCR_CONFIG.PROVIDER === OCRProvider.TESSERACT) {
+      // 使用 Tesseract.js（免费离线，仅 Web 端）
       result = await callTesseractOCR(optimizedUri);
     } else if (OCR_CONFIG.PROVIDER === OCRProvider.GOOGLE_VISION) {
-      // 使用 Google Vision API
+      // 使用 Google Vision API（付费）
       const base64Image = await imageURIToBase64(optimizedUri);
       console.log('图片转Base64完成');
 
