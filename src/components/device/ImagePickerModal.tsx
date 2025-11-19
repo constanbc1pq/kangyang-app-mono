@@ -80,6 +80,8 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
+        cameraType: ImagePicker.CameraType.back, // 强制使用后置摄像头
+        exif: true, // 保留 EXIF 方向信息
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -105,6 +107,7 @@ export const ImagePickerModal: React.FC<ImagePickerModalProps> = ({
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
+        exif: true, // 保留 EXIF 方向信息
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
