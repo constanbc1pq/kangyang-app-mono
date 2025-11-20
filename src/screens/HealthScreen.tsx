@@ -36,7 +36,7 @@ import { AIInsights, AIInsight } from '@/components/AIInsights';
 import { HealthTrends } from '@/components/HealthTrends';
 import { DeviceStatusOverview } from '@/components/DeviceStatusOverview';
 import { COLORS } from '@/constants/app';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import {
   getTodayTasks,
   getFamilyMembers,
@@ -58,6 +58,7 @@ export const HealthScreen: React.FC = () => {
   const [devices, setDevices] = useState<HealthDevice[]>([]); // 设备列表（从主数据源获取）
   const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
 
   // 获取当前成员信息
   const currentMember = familyMembers.find(m => m.id === currentMemberId) || familyMembers[0];
@@ -68,7 +69,14 @@ export const HealthScreen: React.FC = () => {
       loadFamilyData();
       loadTodayTasks();
       loadDevices();
-    }, [])
+
+      // 如果传入了memberId参数，切换到对应成员
+      if (route.params?.memberId) {
+        setCurrentMemberId(route.params.memberId);
+        // 清除参数，避免重复触发
+        navigation.setParams({ memberId: undefined });
+      }
+    }, [route.params?.memberId])
   );
 
   // 加载设备列表

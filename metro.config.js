@@ -40,4 +40,22 @@ config.resolver.alias = {
 // 确保Metro能找到所有模块
 config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
 
+// 为web平台提供原生模块的stub
+const originalResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  // Web平台下，将ML Kit替换为stub
+  if (platform === 'web' && moduleName === '@react-native-ml-kit/text-recognition') {
+    return {
+      filePath: path.resolve(__dirname, 'src/services/mlkitStub.web.ts'),
+      type: 'sourceFile',
+    };
+  }
+
+  // 使用默认解析器
+  if (originalResolveRequest) {
+    return originalResolveRequest(context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
 module.exports = config;
