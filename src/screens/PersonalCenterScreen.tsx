@@ -42,7 +42,7 @@ import {
   MapPin,
   Heart,
 } from 'lucide-react-native';
-import { Pressable } from 'react-native';
+import { Pressable, Modal } from 'react-native';
 import {
   COLORS,
   ORDER_STATUS_COLORS,
@@ -63,6 +63,8 @@ export const PersonalCenterScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const userProfile = {
     name: '张健康',
@@ -187,15 +189,25 @@ export const PersonalCenterScreen: React.FC = () => {
   };
 
   // 删除家庭成员
-  const handleDeleteMember = async (memberId: string) => {
+  const handleDeleteMember = (memberId: string, memberName: string) => {
+    setMemberToDelete({ id: memberId, name: memberName });
+    setShowDeleteConfirm(true);
+  };
+
+  // 确认删除家庭成员
+  const confirmDeleteMember = async () => {
+    if (!memberToDelete) return;
     try {
-      const success = await deleteFamilyMember(memberId);
+      const success = await deleteFamilyMember(memberToDelete.id);
       if (success) {
-        console.log('✅ 家庭成员已删除:', memberId);
+        console.log('✅ 家庭成员已删除:', memberToDelete.id);
         await loadFamilyMembers(); // 重新加载列表
       }
     } catch (error) {
       console.error('❌ 删除家庭成员失败:', error);
+    } finally {
+      setShowDeleteConfirm(false);
+      setMemberToDelete(null);
     }
   };
 
@@ -1102,7 +1114,7 @@ export const PersonalCenterScreen: React.FC = () => {
                     borderWidth={1}
                     borderColor="$borderColor"
                   >
-                    <XStack justifyContent="space-between" alignItems="center">
+                    <YStack space="$3">
                       <YStack>
                         <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
                           添加家庭成员
@@ -1126,7 +1138,7 @@ export const PersonalCenterScreen: React.FC = () => {
                           </XStack>
                         </View>
                       </Pressable>
-                    </XStack>
+                    </YStack>
                   </Card>
 
                   {/* Family Members */}
@@ -1247,7 +1259,7 @@ export const PersonalCenterScreen: React.FC = () => {
                             <XStack space="$2">
                               <Pressable style={{ flex: 1 }} onPress={() => {
                                 // 跳转到康页面，自动切换到该成员
-                                navigation.navigate('康' as never);
+                                navigation.navigate('HealthTab', { memberId: member.id });
                               }}>
                                 <View
                                   flex={1}
@@ -1263,7 +1275,7 @@ export const PersonalCenterScreen: React.FC = () => {
                                 </View>
                               </Pressable>
                               {member.relationship !== '本人' && (
-                                <Pressable onPress={() => handleDeleteMember(member.id)}>
+                                <Pressable onPress={() => handleDeleteMember(member.id, member.name)}>
                                   <View
                                     borderWidth={1}
                                     borderColor={COLORS.error}
@@ -1392,7 +1404,7 @@ export const PersonalCenterScreen: React.FC = () => {
                       end={{ x: 1, y: 1 }}
                       style={{ padding: 24 }}
                     >
-                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
+                      <YStack space="$3" marginBottom="$4">
                         <XStack space="$3" alignItems="center">
                           <Crown size={32} color="#D97706" />
                           <YStack>
@@ -1419,7 +1431,7 @@ export const PersonalCenterScreen: React.FC = () => {
                             </XStack>
                           </View>
                         </Pressable>
-                      </XStack>
+                      </YStack>
                       <Progress
                         value={75}
                         backgroundColor="rgba(146, 64, 14, 0.2)"
@@ -1606,6 +1618,85 @@ export const PersonalCenterScreen: React.FC = () => {
           </YStack>
         </ScrollView>
       </SafeAreaView>
+
+      {/* 删除家庭成员确认对话框 */}
+      <Modal
+        visible={showDeleteConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteConfirm(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={() => setShowDeleteConfirm(false)}
+        >
+          <Pressable
+            style={{ width: '80%', maxWidth: 400 }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View
+              backgroundColor="$background"
+              borderRadius="$4"
+              padding="$4"
+            >
+              <YStack space="$3">
+                <Text fontSize="$6" fontWeight="700" color={COLORS.error} textAlign="center">
+                  确认删除
+                </Text>
+
+                <Text fontSize="$4" color="$text" textAlign="center" lineHeight={22}>
+                  确定要删除家庭成员"{memberToDelete?.name}"吗？
+                </Text>
+
+                <Text fontSize="$3" color="$textSecondary" textAlign="center">
+                  删除后相关健康数据也将被清除
+                </Text>
+
+                <XStack space="$3" marginTop="$2">
+                  <Pressable
+                    onPress={() => setShowDeleteConfirm(false)}
+                    style={{ flex: 1 }}
+                  >
+                    <View
+                      height={48}
+                      borderRadius="$3"
+                      backgroundColor="$borderColor"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Text fontSize="$4" color="$textSecondary" fontWeight="600">
+                        取消
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={confirmDeleteMember}
+                    style={{ flex: 1 }}
+                  >
+                    <View
+                      height={48}
+                      borderRadius="$3"
+                      backgroundColor={COLORS.error}
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Text fontSize="$4" color="white" fontWeight="600">
+                        删除
+                      </Text>
+                    </View>
+                  </Pressable>
+                </XStack>
+              </YStack>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Theme>
   );
 };

@@ -4,6 +4,7 @@
  */
 
 import * as ImageManipulator from 'expo-image-manipulator';
+import { Platform } from 'react-native';
 import TextRecognition from '@react-native-ml-kit/text-recognition';
 import {
   OCR_CONFIG,
@@ -15,10 +16,9 @@ import {
   getAPIURL,
 } from '@/config/ocrConfig';
 
-// Tesseract.js 仅在 Web 端可用，移动端不导入
+// Tesseract.js 仅在 Web 端可用
 let Tesseract: any = null;
-if (typeof window !== 'undefined' && typeof Worker !== 'undefined') {
-  // Web 环境，可以使用 Tesseract
+if (Platform.OS === 'web') {
   try {
     Tesseract = require('tesseract.js');
   } catch (e) {
