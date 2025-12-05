@@ -1,86 +1,117 @@
-import React, { useEffect } from 'react';
+/**
+ * SplashScreen 启动页
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
+ */
+
+import React, { useEffect, useState } from 'react';
 import {
   YStack,
   XStack,
   Text,
   View,
-  H1,
   Theme,
+  useTheme,
+  styled,
 } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Heart } from 'lucide-react-native';
-import { Animated } from 'react-native';
-import { COLORS } from '@/constants/app';
 
 interface SplashScreenProps {
   onFinish?: () => void;
 }
 
+// 动画容器 - 使用 Tamagui styled 创建带动画的组件
+const AnimatedContainer = styled(YStack, {
+  alignItems: 'center',
+  opacity: 0,
+  scale: 0.5,
+
+  variants: {
+    visible: {
+      true: {
+        opacity: 1,
+        scale: 1,
+      },
+    },
+  } as const,
+});
+
+// 加载指示器点
+const LoadingDot = styled(View, {
+  width: 12,
+  height: 12,
+  backgroundColor: 'white',
+  borderRadius: '$12',
+
+  variants: {
+    pulse: {
+      true: {
+        scale: 1.2,
+        opacity: 1,
+      },
+      false: {
+        scale: 1,
+        opacity: 0.5,
+      },
+    },
+  } as const,
+});
+
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
-  const logoScale = new Animated.Value(0.5);
-  const logoOpacity = new Animated.Value(0);
-  const loadingScale = new Animated.Value(0.8);
+  const theme = useTheme();
+  const [isVisible, setIsVisible] = useState(false);
+  const [activeDot, setActiveDot] = useState(0);
+
+  // 主题色
+  const primaryColor = theme.primary?.val;
+  const accentColor = theme.accent?.val;
+
+  // 渐变色
+  const gradientColors = [primaryColor, accentColor] as [string, string];
 
   useEffect(() => {
-    // Logo animation
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(logoScale, {
-          toValue: 1,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(loadingScale, {
-            toValue: 1,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-          Animated.timing(loadingScale, {
-            toValue: 0.8,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-        ])
-      ),
-    ]).start();
+    // 启动入场动画
+    const showTimer = setTimeout(() => {
+      setIsVisible(true);
+    }, 100);
 
-    // Auto finish after 2.5 seconds
-    const timer = setTimeout(() => {
+    // 加载点动画
+    const dotInterval = setInterval(() => {
+      setActiveDot(prev => (prev + 1) % 3);
+    }, 400);
+
+    // 自动完成
+    const finishTimer = setTimeout(() => {
       onFinish?.();
     }, 2500);
 
-    return () => clearTimeout(timer);
-  }, [logoScale, logoOpacity, loadingScale, onFinish]);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(finishTimer);
+      clearInterval(dotInterval);
+    };
+  }, [onFinish]);
 
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1 }}>
         <LinearGradient
-          colors={[COLORS.primary, COLORS.accent]}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ flex: 1 }}
         >
           <YStack flex={1} justifyContent="center" alignItems="center" position="relative">
-            {/* Background decoration */}
+            {/* 背景装饰圆 */}
             <View
               position="absolute"
               top="20%"
               left="20%"
               width={180}
               height={180}
-              backgroundColor="rgba(200, 85, 240, 0.2)"
-              borderRadius={90}
+              backgroundColor="rgba(255, 255, 255, 0.1)"
+              borderRadius="$12"
               opacity={0.8}
             />
             <View
@@ -89,8 +120,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
               right="15%"
               width={220}
               height={220}
-              backgroundColor="rgba(137, 255, 253, 0.15)"
-              borderRadius={110}
+              backgroundColor="rgba(255, 255, 255, 0.08)"
+              borderRadius="$12"
               opacity={0.6}
             />
             <View
@@ -99,82 +130,68 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
               right="30%"
               width={100}
               height={100}
-              backgroundColor="rgba(244, 97, 224, 0.25)"
-              borderRadius={50}
+              backgroundColor="rgba(255, 255, 255, 0.12)"
+              borderRadius="$12"
               opacity={0.7}
             />
 
-            {/* Main content */}
-            <Animated.View
-              style={{
-                transform: [{ scale: logoScale }],
-                opacity: logoOpacity,
-                alignItems: 'center',
-              }}
+            {/* 主内容区域 */}
+            <AnimatedContainer
+              visible={isVisible}
+              animation="bouncy"
             >
               {/* App Logo */}
               <View
                 width={96}
                 height={96}
-                backgroundColor="$primary"
-                borderRadius={24}
+                backgroundColor="rgba(255, 255, 255, 0.2)"
+                borderRadius="$6"
                 justifyContent="center"
                 alignItems="center"
-                marginBottom="$4"
-                shadowColor="$primary"
-                shadowOffset={{ width: 0, height: 8 }}
-                shadowOpacity={0.3}
-                shadowRadius={20}
-                elevation={10}
+                marginBottom="$2"
+                borderWidth={2}
+                borderColor="rgba(255, 255, 255, 0.3)"
               >
                 <Heart size={48} color="white" />
               </View>
 
-              <H1
-                fontSize="$10"
-                fontWeight="bold"
+              {/* 应用名称 */}
+              <Text
+                fontSize="$9"
+                fontWeight="700"
                 color="white"
                 textAlign="center"
-                marginBottom="$2"
+                marginBottom="$1"
               >
                 九紫康养
-              </H1>
+              </Text>
 
+              {/* 副标题 */}
               <Text
-                fontSize="$5"
-                color="rgba(255, 255, 255, 0.8)"
+                fontSize="$4"
+                color="rgba(255, 255, 255, 0.85)"
                 textAlign="center"
-                marginBottom="$8"
+                marginBottom="$4"
               >
                 智慧健康管理平台
               </Text>
-            </Animated.View>
+            </AnimatedContainer>
 
-            {/* Loading indicator */}
-            <Animated.View style={{ transform: [{ scale: loadingScale }] }}>
-              <XStack space="$2" justifyContent="center">
-                <View
-                  width={12}
-                  height={12}
-                  backgroundColor="white"
-                  borderRadius={6}
-                />
-                <View
-                  width={12}
-                  height={12}
-                  backgroundColor="white"
-                  borderRadius={6}
-                  opacity={0.7}
-                />
-                <View
-                  width={12}
-                  height={12}
-                  backgroundColor="white"
-                  borderRadius={6}
-                  opacity={0.4}
-                />
-              </XStack>
-            </Animated.View>
+            {/* 加载指示器 */}
+            <XStack gap="$1.5" justifyContent="center" marginTop="$4">
+              <LoadingDot
+                pulse={activeDot === 0}
+                animation="quick"
+              />
+              <LoadingDot
+                pulse={activeDot === 1}
+                animation="quick"
+              />
+              <LoadingDot
+                pulse={activeDot === 2}
+                animation="quick"
+              />
+            </XStack>
           </YStack>
         </LinearGradient>
       </SafeAreaView>

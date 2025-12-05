@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, Pressable, Alert, TextInput } from 'react-native';
-import { View, Text, XStack, YStack, Card } from 'tamagui';
+/**
+ * GroceryCheckoutScreen 生鲜结算页面
+ * 确认收货地址、商品清单、备注、价格明细
+ * 遵循 CLAUDE.md 组件规范
+ */
+
+import React, { useState } from 'react';
+import { ScrollView, Pressable, Alert, TextInput, Image } from 'react-native';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, MapPin, Edit, Package } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
-import { Image } from 'react-native';
 import { getDefaultAddress } from '@/services/addressService';
 import { createOrder } from '@/services/orderService';
 import { groceryCartService } from '@/services/groceryCartService';
@@ -31,6 +35,11 @@ const GroceryCheckoutScreen: React.FC = () => {
   const route = useRoute();
   const params = (route.params || {}) as RouteParams;
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+
+  const primaryColor = theme.primary?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [address, setAddress] = useState<Address | null>(null);
@@ -123,54 +132,67 @@ const GroceryCheckoutScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      {/* TitleBar - 按照CLAUDE.md规范 */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          确认订单
-        </Text>
-        <View width={24} />
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            确认订单
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
       <ScrollView>
-        <YStack padding="$4" gap="$4">
+        <YStack padding="$2.5" gap="$3">
           {/* 收货地址 */}
           {address ? (
             <Pressable>
-              <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-                <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
+              <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
                   <XStack gap="$2" alignItems="center">
-                    <MapPin size={20} color={COLORS.primary} />
-                    <Text fontSize="$4" fontWeight="600" color="$text">
+                    <MapPin size={18} color={primaryColor} />
+                    <Text fontSize="$4" fontWeight="600" color="$color12">
                       收货地址
                     </Text>
                   </XStack>
-                  <XStack gap="$1" alignItems="center">
-                    <Edit size={16} color={COLORS.primary} />
-                    <Text fontSize="$2" color={COLORS.primary}>
+                  <XStack gap="$0.5" alignItems="center">
+                    <Edit size={14} color={primaryColor} />
+                    <Text fontSize="$2" color="$primary" fontWeight="500">
                       修改
                     </Text>
                   </XStack>
                 </XStack>
-                <YStack gap="$2">
-                  <XStack gap="$3">
-                    <Text fontSize="$3" fontWeight="600" color="$text">
+                <YStack gap="$1">
+                  <XStack gap="$2">
+                    <Text fontSize="$3" fontWeight="600" color="$color12">
                       {address.receiverName}
                     </Text>
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       {address.receiverPhone}
                     </Text>
                   </XStack>
-                  <Text fontSize="$3" color="$textSecondary" lineHeight={20}>
+                  <Text fontSize="$2" color="$color10" lineHeight={18}>
                     {address.province} {address.city} {address.district} {address.address}
                   </Text>
                 </YStack>
@@ -178,8 +200,8 @@ const GroceryCheckoutScreen: React.FC = () => {
             </Pressable>
           ) : (
             <Pressable>
-              <View backgroundColor="$surface" borderRadius="$4" padding="$4" alignItems="center">
-                <Text fontSize="$3" color="$textSecondary">
+              <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2" alignItems="center">
+                <Text fontSize="$3" color="$color10">
                   暂无收货地址，请添加
                 </Text>
               </View>
@@ -187,69 +209,69 @@ const GroceryCheckoutScreen: React.FC = () => {
           )}
 
           {/* 商品清单 */}
-          <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-            <XStack gap="$2" alignItems="center" marginBottom="$3">
-              <Package size={20} color={COLORS.primary} />
-              <Text fontSize="$4" fontWeight="600" color="$text">
+          <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+            <XStack gap="$2" alignItems="center" marginBottom="$2">
+              <Package size={18} color={primaryColor} />
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 商品清单
               </Text>
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 （共{items.reduce((sum, item) => sum + item.quantity, 0)}件）
               </Text>
             </XStack>
-            <YStack gap="$3">
+            <YStack gap="$2">
               {items.map((item) => (
-                <Card key={item.id} padding="$3" backgroundColor="$background" borderRadius="$3">
-                  <XStack gap="$3">
+                <View key={item.id} padding="$2" backgroundColor="$color4" borderRadius="$4">
+                  <XStack gap="$2">
                     <Image
                       source={{ uri: item.image }}
-                      style={{ width: 60, height: 60, borderRadius: 8 }}
+                      style={{ width: 56, height: 56, borderRadius: 8 }}
                     />
                     <YStack flex={1} justifyContent="space-between">
-                      <Text fontSize="$3" fontWeight="600" numberOfLines={2} color="$text">
+                      <Text fontSize="$3" fontWeight="600" numberOfLines={2} color="$color12">
                         {item.name}
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         {item.unit}
                       </Text>
                       <XStack justifyContent="space-between" alignItems="center">
-                        <Text fontSize="$4" fontWeight="700" color={COLORS.primary}>
+                        <Text fontSize="$4" fontWeight="700" color="$primary">
                           ¥{item.price}
                         </Text>
-                        <Text fontSize="$3" color="$textSecondary">
+                        <Text fontSize="$2" color="$color10">
                           x {item.quantity}
                         </Text>
                       </XStack>
                     </YStack>
                   </XStack>
-                </Card>
+                </View>
               ))}
             </YStack>
           </View>
 
           {/* 配送备注 */}
-          <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-            <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+          <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               配送备注
             </Text>
             <View
               borderWidth={1}
-              borderColor="$borderColor"
+              borderColor="$color5"
               borderRadius="$3"
-              backgroundColor="$background"
+              backgroundColor="$color4"
             >
               <TextInput
                 value={deliveryNotes}
                 onChangeText={setDeliveryNotes}
                 placeholder="请输入备注信息（选填）"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={color10}
                 multiline
                 numberOfLines={3}
                 style={{
                   padding: 12,
                   fontSize: 14,
-                  color: COLORS.text,
-                  minHeight: 80,
+                  color: color12,
+                  minHeight: 72,
                   textAlignVertical: 'top',
                 }}
               />
@@ -257,33 +279,33 @@ const GroceryCheckoutScreen: React.FC = () => {
           </View>
 
           {/* 价格明细 */}
-          <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-            <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+          <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               价格明细
             </Text>
-            <YStack gap="$2">
+            <YStack gap="$1.5">
               <XStack justifyContent="space-between">
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   商品小计
                 </Text>
-                <Text fontSize="$3" color="$text">
+                <Text fontSize="$3" color="$color12">
                   ¥{subtotal.toFixed(2)}
                 </Text>
               </XStack>
               <XStack justifyContent="space-between">
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   配送费 {subtotal >= 50 && '（满50免配送）'}
                 </Text>
-                <Text fontSize="$3" color={deliveryFee === 0 ? COLORS.primary : '$text'}>
+                <Text fontSize="$3" color={deliveryFee === 0 ? '$primary' : '$color12'}>
                   {deliveryFee === 0 ? '免费' : `¥${deliveryFee.toFixed(2)}`}
                 </Text>
               </XStack>
-              <View height={1} backgroundColor="$borderColor" marginVertical="$2" />
+              <View height={1} backgroundColor="$color5" marginVertical="$1" />
               <XStack justifyContent="space-between">
-                <Text fontSize="$4" fontWeight="700" color="$text">
+                <Text fontSize="$4" fontWeight="600" color="$color12">
                   总计
                 </Text>
-                <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+                <Text fontSize="$5" fontWeight="700" color="$primary">
                   ¥{totalAmount.toFixed(2)}
                 </Text>
               </XStack>
@@ -301,26 +323,27 @@ const GroceryCheckoutScreen: React.FC = () => {
         bottom={0}
         left={0}
         right={0}
-        backgroundColor="$surface"
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
-        padding="$4"
-        paddingBottom={insets.bottom + 16}
+        borderTopColor="$color5"
+        paddingHorizontal="$2.5"
+        paddingVertical="$2"
+        paddingBottom={insets.bottom + 8}
       >
         <XStack gap="$3" alignItems="center">
           <YStack flex={1}>
-            <Text fontSize="$2" color="$textSecondary">
+            <Text fontSize="$2" color="$color10">
               合计
             </Text>
-            <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+            <Text fontSize="$5" fontWeight="700" color="$primary">
               ¥{totalAmount.toFixed(2)}
             </Text>
           </YStack>
           <Pressable onPress={handleSubmitOrder} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              backgroundColor="$primary"
               justifyContent="center"
               alignItems="center"
             >

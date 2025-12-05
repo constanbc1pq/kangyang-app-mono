@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, RefreshControl } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   FileText,
@@ -15,8 +16,6 @@ import {
   Calendar,
   Plus,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface InsurancePolicy {
   id: string;
@@ -40,6 +39,14 @@ interface InsurancePolicy {
 
 const MyInsurancePoliciesScreen: React.FC = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const [policies, setPolicies] = useState<InsurancePolicy[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -143,48 +150,48 @@ const MyInsurancePoliciesScreen: React.FC = () => {
   };
 
   const getCategoryColor = (category: string) => {
-    const colorMap: { [key: string]: string } = {
-      医疗险: '#EF4444',
-      重疾险: '#8B5CF6',
-      意外险: '#F59E0B',
-      寿险: '#3B82F6',
-      年金险: '#10B981',
-      财产险: '#06B6D4',
-      其他: '#6B7280',
+    const colorMap: { [key: string]: string | undefined } = {
+      医疗险: errorColor,
+      重疾险: primaryColor,
+      意外险: warningColor,
+      寿险: successColor,
+      年金险: successColor,
+      财产险: primaryColor,
+      其他: color10,
     };
-    return colorMap[category] || '#6B7280';
+    return colorMap[category] || color10;
   };
 
   const getStatusConfig = (status: string) => {
     const configs = {
       active: {
         label: '正常',
-        color: COLORS.success,
-        bgColor: '#D1FAE5',
+        color: successColor,
+        bgColor: `${successColor}15`,
         icon: CheckCircle,
       },
       expiring_soon: {
         label: '即将到期',
-        color: COLORS.warning,
-        bgColor: '#FEF3C7',
+        color: warningColor,
+        bgColor: `${warningColor}15`,
         icon: Clock,
       },
       lapsed: {
         label: '已失效',
-        color: COLORS.error,
-        bgColor: '#FEE2E2',
+        color: errorColor,
+        bgColor: `${errorColor}15`,
         icon: AlertCircle,
       },
       claimed: {
         label: '已理赔',
-        color: COLORS.primary,
-        bgColor: '#DBEAFE',
+        color: primaryColor,
+        bgColor: `${primaryColor}15`,
         icon: CheckCircle,
       },
       surrendered: {
         label: '已退保',
-        color: COLORS.textSecondary,
-        bgColor: '#F3F4F6',
+        color: color10,
+        bgColor: `${color10}15`,
         icon: AlertCircle,
       },
     };
@@ -223,22 +230,22 @@ const MyInsurancePoliciesScreen: React.FC = () => {
         }}
       >
         <View
-          marginBottom="$3"
-          backgroundColor="$surface"
-          borderRadius="$4"
+          marginBottom="$2"
+          backgroundColor="$color2"
+          borderRadius="$5"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
           overflow="hidden"
         >
           {/* Header */}
-          <View padding="$3" backgroundColor={`${categoryColor}15`}>
+          <View padding="$2" backgroundColor={`${categoryColor}15`}>
             <XStack justifyContent="space-between" alignItems="center">
               <XStack alignItems="center" gap="$2" flex={1}>
                 <View
                   paddingHorizontal="$2"
-                  paddingVertical="$1"
+                  paddingVertical="$0.5"
                   backgroundColor={categoryColor}
-                  borderRadius="$2"
+                  borderRadius="$10"
                 >
                   <Text fontSize="$2" color="white" fontWeight="600">
                     {policy.category}
@@ -246,9 +253,9 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                 </View>
                 <View
                   paddingHorizontal="$2"
-                  paddingVertical="$1"
+                  paddingVertical="$0.5"
                   backgroundColor={statusConfig.bgColor}
-                  borderRadius="$2"
+                  borderRadius="$10"
                 >
                   <XStack alignItems="center" gap="$1">
                     <StatusIcon size={12} color={statusConfig.color} />
@@ -258,22 +265,22 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                   </XStack>
                 </View>
               </XStack>
-              <ChevronRight size={20} color={COLORS.textSecondary} />
+              <ChevronRight size={20} color={color10} />
             </XStack>
 
-            <Text fontSize="$4" fontWeight="600" color="$text" marginTop="$2">
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginTop="$2">
               {policy.productName}
             </Text>
-            <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+            <Text fontSize="$2" color="$color10" marginTop="$1">
               {policy.companyName} · {policy.policyNumber}
             </Text>
           </View>
 
           {/* Body */}
-          <View padding="$3">
+          <View padding="$2">
             <YStack gap="$2">
               <XStack justifyContent="space-between">
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   保额
                 </Text>
                 <Text fontSize="$4" fontWeight="600" color={categoryColor}>
@@ -282,19 +289,19 @@ const MyInsurancePoliciesScreen: React.FC = () => {
               </XStack>
 
               <XStack justifyContent="space-between">
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   年缴保费
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color="$text">
+                <Text fontSize="$3" fontWeight="600" color="$color12">
                   {policy.annualPremium}万元
                 </Text>
               </XStack>
 
               <XStack justifyContent="space-between">
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   缴费进度
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color="$text">
+                <Text fontSize="$3" fontWeight="600" color="$color12">
                   {policy.paidPeriods}/{policy.paymentTerm}期
                 </Text>
               </XStack>
@@ -302,15 +309,15 @@ const MyInsurancePoliciesScreen: React.FC = () => {
               {policy.nextPaymentDate && policy.status === 'active' && (
                 <XStack justifyContent="space-between" alignItems="center" marginTop="$1">
                   <XStack alignItems="center" gap="$1">
-                    <Calendar size={14} color={COLORS.textSecondary} />
-                    <Text fontSize="$2" color="$textSecondary">
+                    <Calendar size={14} color={color10} />
+                    <Text fontSize="$2" color="$color10">
                       下次缴费
                     </Text>
                   </XStack>
                   <Text
                     fontSize="$3"
                     fontWeight="600"
-                    color={daysUntil <= 30 ? COLORS.warning : COLORS.text}
+                    color={daysUntil <= 30 ? warningColor : color12}
                   >
                     {policy.nextPaymentDate} ({daysUntil}天后)
                   </Text>
@@ -321,14 +328,14 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                 <View
                   marginTop="$2"
                   padding="$2"
-                  backgroundColor="#FFF7ED"
-                  borderRadius="$2"
+                  backgroundColor={`${warningColor}10`}
+                  borderRadius="$4"
                   borderLeftWidth={3}
-                  borderLeftColor={COLORS.warning}
+                  borderLeftColor={warningColor}
                 >
                   <XStack alignItems="center" gap="$2">
-                    <Clock size={14} color={COLORS.warning} />
-                    <Text fontSize="$2" color="$text">
+                    <Clock size={14} color={warningColor} />
+                    <Text fontSize="$2" color="$color12">
                       距离下次缴费还有{daysUntil}天，请及时缴费避免保单失效
                     </Text>
                   </XStack>
@@ -344,58 +351,66 @@ const MyInsurancePoliciesScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          我的保单
-        </Text>
-        <Pressable
-          onPress={() => {
-            // Navigate to add policy or insurance home
-            navigation.navigate('InsuranceHome' as never);
-          }}
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
         >
-          <Plus size={24} color={COLORS.primary} />
-        </Pressable>
-      </XStack>
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            我的保单
+          </Text>
+          <Pressable
+            onPress={() => {
+              navigation.navigate('InsuranceHome' as never);
+            }}
+          >
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <Plus size={24} color={primaryColor} />
+            </View>
+          </Pressable>
+        </XStack>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Summary Card */}
-        <View margin="$4" padding="$4" backgroundColor="$surface" borderRadius="$4">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+        <View margin="$2.5" padding="$2" backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             保障总览
           </Text>
 
-          <YStack gap="$3">
+          <YStack gap="$2">
             <XStack justifyContent="space-between" alignItems="center">
               <XStack alignItems="center" gap="$2">
                 <View
                   width={36}
                   height={36}
                   borderRadius={18}
-                  backgroundColor={`${COLORS.primary}20`}
+                  backgroundColor={`${primaryColor}15`}
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <Shield size={18} color={COLORS.primary} />
+                  <Shield size={18} color={primaryColor} />
                 </View>
-                <Text fontSize="$3" color="$text">
+                <Text fontSize="$3" color="$color12">
                   总保额
                 </Text>
               </XStack>
-              <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+              <Text fontSize="$6" fontWeight="700" color={primaryColor}>
                 {totalCoverage}万元
               </Text>
             </XStack>
@@ -406,17 +421,17 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                   width={36}
                   height={36}
                   borderRadius={18}
-                  backgroundColor={`${COLORS.warning}20`}
+                  backgroundColor={`${warningColor}15`}
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <DollarSign size={18} color={COLORS.warning} />
+                  <DollarSign size={18} color={warningColor} />
                 </View>
-                <Text fontSize="$3" color="$text">
+                <Text fontSize="$3" color="$color12">
                   年度保费支出
                 </Text>
               </XStack>
-              <Text fontSize="$6" fontWeight="700" color={COLORS.warning}>
+              <Text fontSize="$6" fontWeight="700" color={warningColor}>
                 {totalAnnualPremium.toFixed(2)}万元
               </Text>
             </XStack>
@@ -427,17 +442,17 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                   width={36}
                   height={36}
                   borderRadius={18}
-                  backgroundColor={`${COLORS.success}20`}
+                  backgroundColor={`${successColor}15`}
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <FileText size={18} color={COLORS.success} />
+                  <FileText size={18} color={successColor} />
                 </View>
-                <Text fontSize="$3" color="$text">
+                <Text fontSize="$3" color="$color12">
                   保单数量
                 </Text>
               </XStack>
-              <Text fontSize="$6" fontWeight="700" color={COLORS.success}>
+              <Text fontSize="$6" fontWeight="700" color={successColor}>
                 {filteredPolicies.length}份
               </Text>
             </XStack>
@@ -445,13 +460,13 @@ const MyInsurancePoliciesScreen: React.FC = () => {
         </View>
 
         {/* Filters */}
-        <View marginHorizontal="$4" marginBottom="$4">
+        <View marginHorizontal="$2.5" marginBottom="$2.5">
           {/* Status Filter */}
-          <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+          <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
             保单状态
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <XStack gap="$2" marginBottom="$3">
+            <XStack gap="$2" marginBottom="$2">
               {[
                 { value: 'all', label: '全部' },
                 { value: 'active', label: '正常' },
@@ -461,14 +476,14 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                 <Pressable key={status.value} onPress={() => setSelectedStatus(status.value)}>
                   <View
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$2"
-                    backgroundColor={selectedStatus === status.value ? COLORS.primary : '$borderColor'}
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
+                    backgroundColor={selectedStatus === status.value ? '$primary' : '$color4'}
                   >
                     <Text
                       fontSize="$3"
-                      fontWeight="600"
-                      color={selectedStatus === status.value ? 'white' : '$text'}
+                      fontWeight="500"
+                      color={selectedStatus === status.value ? 'white' : '$color12'}
                     >
                       {status.label}
                     </Text>
@@ -479,7 +494,7 @@ const MyInsurancePoliciesScreen: React.FC = () => {
           </ScrollView>
 
           {/* Category Filter */}
-          <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+          <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
             险种类别
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -495,16 +510,14 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                 <Pressable key={category.value} onPress={() => setSelectedCategory(category.value)}>
                   <View
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$2"
-                    backgroundColor={
-                      selectedCategory === category.value ? COLORS.primary : '$borderColor'
-                    }
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
+                    backgroundColor={selectedCategory === category.value ? '$primary' : '$color4'}
                   >
                     <Text
                       fontSize="$3"
-                      fontWeight="600"
-                      color={selectedCategory === category.value ? 'white' : '$text'}
+                      fontWeight="500"
+                      color={selectedCategory === category.value ? 'white' : '$color12'}
                     >
                       {category.label}
                     </Text>
@@ -516,14 +529,14 @@ const MyInsurancePoliciesScreen: React.FC = () => {
         </View>
 
         {/* Policy List */}
-        <View paddingHorizontal="$4">
+        <View paddingHorizontal="$2.5">
           {filteredPolicies.length === 0 ? (
             <View padding="$8" alignItems="center">
-              <FileText size={48} color={COLORS.textSecondary} />
-              <Text fontSize="$4" color="$text" marginTop="$4">
+              <FileText size={48} color={color10} />
+              <Text fontSize="$4" color="$color12" marginTop="$4">
                 暂无保单记录
               </Text>
-              <Text fontSize="$3" color="$textSecondary" marginTop="$2" textAlign="center">
+              <Text fontSize="$3" color="$color10" marginTop="$2" textAlign="center">
                 快去选购适合您的保险产品吧
               </Text>
               <Pressable
@@ -533,10 +546,10 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                 <View
                   paddingHorizontal="$4"
                   paddingVertical="$2"
-                  backgroundColor={COLORS.primary}
-                  borderRadius="$2"
+                  backgroundColor="$primary"
+                  borderRadius="$10"
                 >
-                  <Text color="white" fontSize="$3" fontWeight="600">
+                  <Text color="white" fontSize="$3" fontWeight="500">
                     浏览保险产品
                   </Text>
                 </View>
@@ -550,8 +563,8 @@ const MyInsurancePoliciesScreen: React.FC = () => {
         </View>
 
         {/* Quick Actions */}
-        <View marginHorizontal="$4" marginBottom="$4">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+        <View marginHorizontal="$2.5" marginBottom="$2.5">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             快捷服务
           </Text>
 
@@ -562,11 +575,11 @@ const MyInsurancePoliciesScreen: React.FC = () => {
               }}
             >
               <View
-                padding="$3"
-                backgroundColor="$surface"
-                borderRadius="$3"
+                padding="$2"
+                backgroundColor="$color2"
+                borderRadius="$5"
                 borderWidth={1}
-                borderColor="$borderColor"
+                borderColor="$color5"
               >
                 <XStack alignItems="center" justifyContent="space-between">
                   <XStack alignItems="center" gap="$3">
@@ -574,17 +587,17 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                       width={40}
                       height={40}
                       borderRadius={20}
-                      backgroundColor={`${COLORS.primary}20`}
+                      backgroundColor={`${primaryColor}15`}
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <TrendingUp size={20} color={COLORS.primary} />
+                      <TrendingUp size={20} color={primaryColor} />
                     </View>
-                    <Text fontSize="$3" fontWeight="600" color="$text">
+                    <Text fontSize="$3" fontWeight="600" color="$color12">
                       保障缺口分析
                     </Text>
                   </XStack>
-                  <ChevronRight size={20} color={COLORS.textSecondary} />
+                  <ChevronRight size={20} color={color10} />
                 </XStack>
               </View>
             </Pressable>
@@ -595,11 +608,11 @@ const MyInsurancePoliciesScreen: React.FC = () => {
               }}
             >
               <View
-                padding="$3"
-                backgroundColor="$surface"
-                borderRadius="$3"
+                padding="$2"
+                backgroundColor="$color2"
+                borderRadius="$5"
                 borderWidth={1}
-                borderColor="$borderColor"
+                borderColor="$color5"
               >
                 <XStack alignItems="center" justifyContent="space-between">
                   <XStack alignItems="center" gap="$3">
@@ -607,17 +620,17 @@ const MyInsurancePoliciesScreen: React.FC = () => {
                       width={40}
                       height={40}
                       borderRadius={20}
-                      backgroundColor={`${COLORS.success}20`}
+                      backgroundColor={`${successColor}15`}
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <FileText size={20} color={COLORS.success} />
+                      <FileText size={20} color={successColor} />
                     </View>
-                    <Text fontSize="$3" fontWeight="600" color="$text">
+                    <Text fontSize="$3" fontWeight="600" color="$color12">
                       申请理赔
                     </Text>
                   </XStack>
-                  <ChevronRight size={20} color={COLORS.textSecondary} />
+                  <ChevronRight size={20} color={color10} />
                 </XStack>
               </View>
             </Pressable>

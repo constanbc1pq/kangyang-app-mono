@@ -1,29 +1,43 @@
+/**
+ * OrderDetailScreen - 订单详情页面
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
+ */
+
 import React, { useState, useCallback } from 'react';
-import { ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
-import { View, Text, XStack, YStack, Card, Separator, H3 } from 'tamagui';
+import { Pressable, Alert } from 'react-native';
+import {
+  YStack,
+  XStack,
+  Text,
+  View,
+  ScrollView,
+  useTheme,
+} from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
-  ArrowLeft,
   Package,
   Clock,
   MapPin,
-  Phone,
-  MessageSquare,
   Calendar,
   CheckCircle2,
   XCircle,
-  RefreshCcw,
   CreditCard,
+  MessageSquare,
+  RefreshCcw,
   Truck,
+  ShoppingBag,
+  User,
+  Heart,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import {
-  COLORS,
   ORDER_STATUS_STEPS,
   ORDER_STATUS_COLORS,
   ORDER_STATUS_LABELS,
 } from '@/constants/app';
 import { getOrderById, cancelOrder, confirmDelivery, Order } from '@/services/orderService';
-import { OrderStatus } from '@/types/commerce';
+import { OrderStatus, ItemType } from '@/types/commerce';
 
 interface RouteParams {
   orderId: string;
@@ -33,6 +47,14 @@ const OrderDetailScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const params = (route.params || {}) as RouteParams;
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,15 +110,18 @@ const OrderDetailScreen: React.FC = () => {
     }
   };
 
-  // 联系客服
+  // 联系客服 - 跳转到 CustomerServiceChat
   const handleContactService = () => {
-    Alert.alert('联系客服', '客服电话: 400-888-9999');
+    if (!order) return;
+    navigation.navigate('CustomerServiceChat' as never, {
+      orderId: order.id,
+      orderName: order.itemName,
+    } as never);
   };
 
   // 再次购买
   const handleBuyAgain = () => {
     if (order) {
-      // 根据订单类型跳转到对应页面
       if (order.itemType === 'meal_plan') {
         navigation.navigate('NutritionService' as never);
       } else if (order.itemType === 'consultation') {
@@ -134,6 +159,24 @@ const OrderDetailScreen: React.FC = () => {
     return ORDER_STATUS_STEPS.findIndex(step => step.status === status);
   };
 
+  // 获取订单图标
+  const getOrderIcon = (type: ItemType) => {
+    switch (type) {
+      case 'meal_plan':
+        return <ShoppingBag size={24} color={primaryColor} />;
+      case 'consultation':
+        return <MessageSquare size={24} color={primaryColor} />;
+      case 'elderly_service':
+        return <Heart size={24} color={primaryColor} />;
+      case 'product':
+        return <Package size={24} color={primaryColor} />;
+      case 'private_doctor':
+        return <User size={24} color={primaryColor} />;
+      default:
+        return <Package size={24} color={primaryColor} />;
+    }
+  };
+
   // 渲染操作按钮
   const renderActionButtons = () => {
     if (!order) return null;
@@ -146,13 +189,14 @@ const OrderDetailScreen: React.FC = () => {
           <Pressable key="cancel" onPress={handleCancelOrder} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$3"
+              borderRadius="$10"
               borderWidth={1}
-              borderColor={COLORS.textSecondary}
+              borderColor="$color5"
+              backgroundColor="$color2"
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$4" color="$text" fontWeight="600">
+              <Text fontSize="$4" color="$color12" fontWeight="500">
                 取消订单
               </Text>
             </View>
@@ -160,8 +204,8 @@ const OrderDetailScreen: React.FC = () => {
           <Pressable key="pay" onPress={handlePay} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              backgroundColor={primaryColor}
               justifyContent="center"
               alignItems="center"
             >
@@ -175,14 +219,13 @@ const OrderDetailScreen: React.FC = () => {
 
       case 'paid':
       case 'processing':
-        // 私人医生订阅订单显示"进入服务台"按钮
         if (order.itemType === 'private_doctor') {
           buttons.push(
             <Pressable key="serviceDesk" onPress={handleGoToServiceDesk} style={{ flex: 1 }}>
               <View
                 height={48}
-                borderRadius="$3"
-                backgroundColor={COLORS.primary}
+                borderRadius="$10"
+                backgroundColor={primaryColor}
                 justifyContent="center"
                 alignItems="center"
               >
@@ -197,15 +240,19 @@ const OrderDetailScreen: React.FC = () => {
             <Pressable key="contact" onPress={handleContactService} style={{ flex: 1 }}>
               <View
                 height={48}
-                borderRadius="$3"
+                borderRadius="$10"
                 borderWidth={1}
-                borderColor={COLORS.primary}
+                borderColor={primaryColor}
+                backgroundColor="$color2"
                 justifyContent="center"
                 alignItems="center"
               >
-                <Text fontSize="$4" color={COLORS.primary} fontWeight="600">
-                  联系客服
-                </Text>
+                <XStack gap="$1.5" alignItems="center">
+                  <MessageSquare size={18} color={primaryColor} />
+                  <Text fontSize="$4" color="$primary" fontWeight="500">
+                    咨询客服
+                  </Text>
+                </XStack>
               </View>
             </Pressable>
           );
@@ -218,22 +265,26 @@ const OrderDetailScreen: React.FC = () => {
           <Pressable key="contact" onPress={handleContactService} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$3"
+              borderRadius="$10"
               borderWidth={1}
-              borderColor={COLORS.textSecondary}
+              borderColor="$color5"
+              backgroundColor="$color2"
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$4" color="$text" fontWeight="600">
-                联系客服
-              </Text>
+              <XStack gap="$1.5" alignItems="center">
+                <MessageSquare size={18} color={color10} />
+                <Text fontSize="$4" color="$color12" fontWeight="500">
+                  咨询客服
+                </Text>
+              </XStack>
             </View>
           </Pressable>,
           <Pressable key="confirm" onPress={handleConfirmDelivery} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              backgroundColor={primaryColor}
               justifyContent="center"
               alignItems="center"
             >
@@ -247,17 +298,38 @@ const OrderDetailScreen: React.FC = () => {
 
       case 'completed':
         buttons.push(
-          <Pressable key="buyAgain" onPress={handleBuyAgain} style={{ flex: 1 }}>
+          <Pressable key="contact" onPress={handleContactService} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              borderWidth={1}
+              borderColor="$color5"
+              backgroundColor="$color2"
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$4" color="white" fontWeight="600">
-                再次购买
-              </Text>
+              <XStack gap="$1.5" alignItems="center">
+                <MessageSquare size={18} color={color10} />
+                <Text fontSize="$4" color="$color12" fontWeight="500">
+                  咨询客服
+                </Text>
+              </XStack>
+            </View>
+          </Pressable>,
+          <Pressable key="buyAgain" onPress={handleBuyAgain} style={{ flex: 1 }}>
+            <View
+              height={48}
+              borderRadius="$10"
+              backgroundColor={primaryColor}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <XStack gap="$1.5" alignItems="center">
+                <RefreshCcw size={18} color="white" />
+                <Text fontSize="$4" color="white" fontWeight="600">
+                  再次购买
+                </Text>
+              </XStack>
             </View>
           </Pressable>
         );
@@ -265,14 +337,13 @@ const OrderDetailScreen: React.FC = () => {
 
       case 'cancelled':
       case 'refunded':
-        // 私人医生订阅订单显示"进入服务台"按钮
         if (order.itemType === 'private_doctor' && order.metadata?.subscriptionId) {
           buttons.push(
             <Pressable key="serviceDesk" onPress={handleGoToServiceDesk} style={{ flex: 1 }}>
               <View
                 height={48}
-                borderRadius="$3"
-                backgroundColor={COLORS.primary}
+                borderRadius="$10"
+                backgroundColor={primaryColor}
                 justifyContent="center"
                 alignItems="center"
               >
@@ -284,11 +355,29 @@ const OrderDetailScreen: React.FC = () => {
           );
         } else {
           buttons.push(
+            <Pressable key="contact" onPress={handleContactService} style={{ flex: 1 }}>
+              <View
+                height={48}
+                borderRadius="$10"
+                borderWidth={1}
+                borderColor="$color5"
+                backgroundColor="$color2"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <XStack gap="$1.5" alignItems="center">
+                  <MessageSquare size={18} color={color10} />
+                  <Text fontSize="$4" color="$color12" fontWeight="500">
+                    咨询客服
+                  </Text>
+                </XStack>
+              </View>
+            </Pressable>,
             <Pressable key="buyAgain" onPress={handleBuyAgain} style={{ flex: 1 }}>
               <View
                 height={48}
-                borderRadius="$3"
-                backgroundColor={COLORS.primary}
+                borderRadius="$10"
+                backgroundColor={primaryColor}
                 justifyContent="center"
                 alignItems="center"
               >
@@ -303,7 +392,7 @@ const OrderDetailScreen: React.FC = () => {
     }
 
     return (
-      <XStack gap="$3" padding="$4" backgroundColor="$surface">
+      <XStack gap="$2" paddingHorizontal="$2.5" paddingTop="$2" paddingBottom={insets.bottom > 0 ? insets.bottom : 16}>
         {buttons}
       </XStack>
     );
@@ -311,256 +400,291 @@ const OrderDetailScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text marginTop="$3" color="$textSecondary">
-          加载订单详情...
-        </Text>
+      <View flex={1} backgroundColor="$background">
+        <View paddingTop={insets.top}>
+          <TitleBar title="订单详情" />
+        </View>
+        <View flex={1} justifyContent="center" alignItems="center">
+          <Text fontSize="$4" color="$color10">加载中...</Text>
+        </View>
       </View>
     );
   }
 
   if (!order) {
     return (
-      <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
-        <Text fontSize="$4" color="$textSecondary">
-          订单不存在
-        </Text>
+      <View flex={1} backgroundColor="$background">
+        <View paddingTop={insets.top}>
+          <TitleBar title="订单详情" />
+        </View>
+        <View flex={1} justifyContent="center" alignItems="center">
+          <Package size={48} color={color10} />
+          <Text fontSize="$4" color="$color10" marginTop="$2">
+            订单不存在
+          </Text>
+        </View>
       </View>
     );
   }
 
   const currentStepIndex = getCurrentStepIndex(order.status);
+  const statusColor = ORDER_STATUS_COLORS[order.status as keyof typeof ORDER_STATUS_COLORS];
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          订单详情
-        </Text>
-        <View width={24} />
-      </XStack>
+      {/* 顶部导航 */}
+      <View paddingTop={insets.top}>
+        <TitleBar title="订单详情" />
+      </View>
 
-      <ScrollView flex={1}>
-        <YStack gap="$3" paddingBottom="$20">
+      <ScrollView flex={1} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <YStack padding="$2.5" gap="$2">
           {/* 订单状态流程 */}
           {order.status !== 'cancelled' && order.status !== 'refunded' && (
-            <Card backgroundColor="$surface" padding="$4">
-              <YStack gap="$4">
-                <H3 fontSize="$5" fontWeight="600">
-                  订单状态
-                </H3>
-                <XStack justifyContent="space-between" position="relative">
-                  {/* 连接线 */}
-                  <View
-                    position="absolute"
-                    top={12}
-                    left="12.5%"
-                    right="12.5%"
-                    height={2}
-                    backgroundColor="$borderColor"
-                  />
-                  {ORDER_STATUS_STEPS.map((step, index) => {
-                    const isActive = index <= currentStepIndex;
-                    return (
-                      <YStack key={step.status} alignItems="center" flex={1} zIndex={1}>
-                        <View
-                          width={24}
-                          height={24}
-                          borderRadius={12}
-                          backgroundColor={isActive ? COLORS.primary : '$borderColor'}
-                          justifyContent="center"
-                          alignItems="center"
-                          marginBottom="$2"
-                        >
-                          {isActive ? (
-                            <CheckCircle2 size={16} color="white" />
-                          ) : (
-                            <View
-                              width={8}
-                              height={8}
-                              borderRadius={4}
-                              backgroundColor="white"
-                            />
-                          )}
-                        </View>
-                        <Text
-                          fontSize="$2"
-                          color={isActive ? '$text' : '$textSecondary'}
-                          fontWeight={isActive ? '600' : '400'}
-                          textAlign="center"
-                        >
-                          {step.label}
-                        </Text>
-                      </YStack>
-                    );
-                  })}
-                </XStack>
-              </YStack>
-            </Card>
+            <View
+              padding="$2"
+              backgroundColor="$color2"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$color5"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+                订单状态
+              </Text>
+
+              <XStack justifyContent="space-between" position="relative">
+                {/* 连接线 */}
+                <View
+                  position="absolute"
+                  top={12}
+                  left="12.5%"
+                  right="12.5%"
+                  height={2}
+                  backgroundColor="$color5"
+                />
+
+                {ORDER_STATUS_STEPS.map((step, index) => {
+                  const isActive = index <= currentStepIndex;
+                  return (
+                    <YStack key={step.status} alignItems="center" flex={1} zIndex={1}>
+                      <View
+                        width={24}
+                        height={24}
+                        borderRadius={12}
+                        backgroundColor={isActive ? primaryColor : '$color5'}
+                        justifyContent="center"
+                        alignItems="center"
+                        marginBottom="$1.5"
+                      >
+                        {isActive ? (
+                          <CheckCircle2 size={14} color="white" />
+                        ) : (
+                          <View
+                            width={8}
+                            height={8}
+                            borderRadius={4}
+                            backgroundColor="white"
+                          />
+                        )}
+                      </View>
+                      <Text
+                        fontSize="$2"
+                        color={isActive ? '$color12' : '$color10'}
+                        fontWeight={isActive ? '600' : '400'}
+                        textAlign="center"
+                      >
+                        {step.label}
+                      </Text>
+                    </YStack>
+                  );
+                })}
+              </XStack>
+            </View>
           )}
 
           {/* 取消/退款状态 */}
           {(order.status === 'cancelled' || order.status === 'refunded') && (
-            <Card backgroundColor="$surface" padding="$4">
-              <XStack gap="$3" alignItems="center">
-                <XCircle size={32} color={ORDER_STATUS_COLORS[order.status]} />
+            <View
+              padding="$2"
+              backgroundColor="$color2"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$color5"
+            >
+              <XStack gap="$2" alignItems="center">
+                <View
+                  width={48}
+                  height={48}
+                  borderRadius={24}
+                  backgroundColor={`${statusColor}15`}
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <XCircle size={24} color={statusColor} />
+                </View>
                 <YStack flex={1}>
-                  <Text fontSize="$5" fontWeight="600" color={ORDER_STATUS_COLORS[order.status]}>
+                  <Text fontSize="$5" fontWeight="600" color={statusColor}>
                     {order.status === 'cancelled' ? '订单已取消' : '订单已退款'}
                   </Text>
-                  <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+                  <Text fontSize="$2" color="$color10" marginTop="$0.5">
                     {order.status === 'cancelled'
                       ? '订单已取消，如有疑问请联系客服'
                       : '退款将在3-7个工作日内到账'}
                   </Text>
                 </YStack>
               </XStack>
-            </Card>
+            </View>
           )}
 
           {/* 订单信息 */}
-          <Card backgroundColor="$surface" padding="$4">
-            <YStack gap="$3">
-              <H3 fontSize="$5" fontWeight="600">
-                订单信息
-              </H3>
-              <YStack gap="$3">
-                <XStack gap="$3">
-                  <Package size={24} color={COLORS.primary} />
-                  <YStack flex={1}>
-                    <Text fontSize="$4" fontWeight="600" color="$text">
-                      {order.itemName}
-                    </Text>
-                    <Text fontSize="$2" color="$textSecondary" marginTop="$1">
-                      订单号: {order.id}
-                    </Text>
-                  </YStack>
-                  <Text fontSize="$5" fontWeight="700" color={COLORS.primary}>
-                    ¥{order.totalAmount.toFixed(2)}
-                  </Text>
-                </XStack>
+          <View
+            padding="$2"
+            backgroundColor="$color2"
+            borderRadius="$5"
+            borderWidth={1}
+            borderColor="$color5"
+          >
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+              订单信息
+            </Text>
 
-                {order.metadata?.appointmentDate && order.metadata?.appointmentTime && (
-                  <>
-                    <Separator />
-                    <XStack gap="$3" alignItems="center">
-                      <Calendar size={20} color={COLORS.textSecondary} />
-                      <Text fontSize="$3" color="$text">
-                        预约时间
-                      </Text>
-                      <Text fontSize="$3" color="$textSecondary" flex={1} textAlign="right">
-                        {order.metadata.appointmentDate} {order.metadata.appointmentTime}
-                      </Text>
-                    </XStack>
-                  </>
-                )}
-
-                <Separator />
-                <XStack gap="$3" alignItems="center">
-                  <Clock size={20} color={COLORS.textSecondary} />
-                  <Text fontSize="$3" color="$text">
-                    下单时间
-                  </Text>
-                  <Text fontSize="$3" color="$textSecondary" flex={1} textAlign="right">
-                    {order.createdAt}
-                  </Text>
-                </XStack>
-
-                {order.paidAt && (
-                  <>
-                    <Separator />
-                    <XStack gap="$3" alignItems="center">
-                      <CreditCard size={20} color={COLORS.textSecondary} />
-                      <Text fontSize="$3" color="$text">
-                        支付时间
-                      </Text>
-                      <Text fontSize="$3" color="$textSecondary" flex={1} textAlign="right">
-                        {order.paidAt}
-                      </Text>
-                    </XStack>
-                  </>
-                )}
+            <XStack gap="$2" alignItems="flex-start" marginBottom="$2">
+              <View
+                width={48}
+                height={48}
+                borderRadius={24}
+                backgroundColor={`${primaryColor}15`}
+                justifyContent="center"
+                alignItems="center"
+              >
+                {getOrderIcon(order.itemType)}
+              </View>
+              <YStack flex={1}>
+                <Text fontSize="$4" fontWeight="600" color="$color12">
+                  {order.itemName}
+                </Text>
+                <Text fontSize="$2" color="$color10" marginTop="$0.5">
+                  订单号: {order.id}
+                </Text>
               </YStack>
-            </YStack>
-          </Card>
+              <Text fontSize="$5" fontWeight="700" color="$primary">
+                ¥{order.totalAmount.toFixed(2)}
+              </Text>
+            </XStack>
+
+            <View height={1} backgroundColor="$color5" marginVertical="$1.5" />
+
+            {/* 预约时间 */}
+            {order.metadata?.appointmentDate && order.metadata?.appointmentTime && (
+              <>
+                <XStack gap="$2" alignItems="center" paddingVertical="$1.5">
+                  <Calendar size={18} color={color10} />
+                  <Text fontSize="$3" color="$color12" flex={1}>预约时间</Text>
+                  <Text fontSize="$3" color="$color10">
+                    {order.metadata.appointmentDate} {order.metadata.appointmentTime}
+                  </Text>
+                </XStack>
+                <View height={1} backgroundColor="$color5" />
+              </>
+            )}
+
+            {/* 下单时间 */}
+            <XStack gap="$2" alignItems="center" paddingVertical="$1.5">
+              <Clock size={18} color={color10} />
+              <Text fontSize="$3" color="$color12" flex={1}>下单时间</Text>
+              <Text fontSize="$3" color="$color10">{order.createdAt}</Text>
+            </XStack>
+
+            {/* 支付时间 */}
+            {order.paidAt && (
+              <>
+                <View height={1} backgroundColor="$color5" />
+                <XStack gap="$2" alignItems="center" paddingVertical="$1.5">
+                  <CreditCard size={18} color={color10} />
+                  <Text fontSize="$3" color="$color12" flex={1}>支付时间</Text>
+                  <Text fontSize="$3" color="$color10">{order.paidAt}</Text>
+                </XStack>
+              </>
+            )}
+          </View>
 
           {/* 收货信息 */}
           {order.deliveryAddress && (
-            <Card backgroundColor="$surface" padding="$4">
-              <YStack gap="$3">
-                <H3 fontSize="$5" fontWeight="600">
-                  收货信息
-                </H3>
-                <XStack gap="$3">
-                  <MapPin size={20} color={COLORS.primary} />
-                  <YStack flex={1} gap="$2">
-                    <XStack justifyContent="space-between">
-                      <Text fontSize="$4" fontWeight="600" color="$text">
-                        {order.deliveryAddress.name}
-                      </Text>
-                      <Text fontSize="$3" color="$textSecondary">
-                        {order.deliveryAddress.phone}
-                      </Text>
-                    </XStack>
-                    <Text fontSize="$3" color="$textSecondary" lineHeight={20}>
-                      {order.deliveryAddress.province} {order.deliveryAddress.city}{' '}
-                      {order.deliveryAddress.district} {order.deliveryAddress.detail}
+            <View
+              padding="$2"
+              backgroundColor="$color2"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$color5"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+                收货信息
+              </Text>
+
+              <XStack gap="$2" alignItems="flex-start">
+                <View
+                  width={40}
+                  height={40}
+                  borderRadius={20}
+                  backgroundColor={`${primaryColor}15`}
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <MapPin size={20} color={primaryColor} />
+                </View>
+                <YStack flex={1} gap="$1">
+                  <XStack justifyContent="space-between" alignItems="center">
+                    <Text fontSize="$4" fontWeight="600" color="$color12">
+                      {order.deliveryAddress.name}
                     </Text>
-                  </YStack>
-                </XStack>
-              </YStack>
-            </Card>
+                    <Text fontSize="$3" color="$color10">
+                      {order.deliveryAddress.phone}
+                    </Text>
+                  </XStack>
+                  <Text fontSize="$3" color="$color10" lineHeight={20}>
+                    {order.deliveryAddress.province} {order.deliveryAddress.city}{' '}
+                    {order.deliveryAddress.district} {order.deliveryAddress.detail}
+                  </Text>
+                </YStack>
+              </XStack>
+            </View>
           )}
 
           {/* 价格明细 */}
-          <Card backgroundColor="$surface" padding="$4">
-            <YStack gap="$3">
-              <H3 fontSize="$5" fontWeight="600">
-                价格明细
-              </H3>
-              <YStack gap="$2">
-                <XStack justifyContent="space-between">
-                  <Text fontSize="$3" color="$textSecondary">
-                    商品金额
-                  </Text>
-                  <Text fontSize="$3" color="$text">
-                    ¥{order.totalAmount.toFixed(2)}
-                  </Text>
+          <View
+            padding="$2"
+            backgroundColor="$color2"
+            borderRadius="$5"
+            borderWidth={1}
+            borderColor="$color5"
+          >
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+              价格明细
+            </Text>
+
+            <YStack gap="$1.5">
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text fontSize="$3" color="$color10">商品金额</Text>
+                <Text fontSize="$3" color="$color12">¥{order.totalAmount.toFixed(2)}</Text>
+              </XStack>
+
+              {order.discountAmount && order.discountAmount > 0 && (
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="$3" color="$color10">优惠折扣</Text>
+                  <Text fontSize="$3" color="$primary">-¥{order.discountAmount.toFixed(2)}</Text>
                 </XStack>
-                {order.discountAmount && order.discountAmount > 0 && (
-                  <XStack justifyContent="space-between">
-                    <Text fontSize="$3" color="$textSecondary">
-                      优惠折扣
-                    </Text>
-                    <Text fontSize="$3" color={COLORS.primary}>
-                      -¥{order.discountAmount.toFixed(2)}
-                    </Text>
-                  </XStack>
-                )}
-                <Separator />
-                <XStack justifyContent="space-between">
-                  <Text fontSize="$4" fontWeight="600" color="$text">
-                    实付金额
-                  </Text>
-                  <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
-                    ¥{order.totalAmount.toFixed(2)}
-                  </Text>
-                </XStack>
-              </YStack>
+              )}
+
+              <View height={1} backgroundColor="$color5" marginVertical="$1" />
+
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text fontSize="$4" fontWeight="600" color="$color12">实付金额</Text>
+                <Text fontSize="$6" fontWeight="700" color="$primary">
+                  ¥{order.totalAmount.toFixed(2)}
+                </Text>
+              </XStack>
             </YStack>
-          </Card>
+          </View>
         </YStack>
       </ScrollView>
 
@@ -570,9 +694,9 @@ const OrderDetailScreen: React.FC = () => {
         bottom={0}
         left={0}
         right={0}
-        backgroundColor="$surface"
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
+        borderTopColor="$color5"
       >
         {renderActionButtons()}
       </View>

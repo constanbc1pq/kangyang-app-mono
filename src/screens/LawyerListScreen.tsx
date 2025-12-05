@@ -9,21 +9,14 @@
  * - 展示专业律师列表，支持多维度筛选和排序
  * - 帮助用户快速找到合适的法律专家
  *
- * 【主要功能】
- * 1. 律师卡片展示：头像、姓名、专业领域、评分、服务人数、在线状态
- * 2. 专业领域筛选：遗嘱继承、养老赡养、房产纠纷、婚姻家庭等
- * 3. 在线状态筛选：仅显示在线律师
- * 4. 价格排序：按图文咨询价格升序/降序
- * 5. 评分排序：按评分高低排序
- * 6. 点击进入律师详情页
- *
+ * Design: Following CLAUDE.md specs
  * ============================================================================
  */
 
 import React, { useState, useMemo } from 'react';
-import { Alert, Image as RNImage, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { YStack, XStack, Text, Card, View, ScrollView, Button, Theme } from 'tamagui';
+import { Alert, Image as RNImage, ActivityIndicator, Pressable } from 'react-native';
+import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   MessageSquare,
@@ -37,24 +30,23 @@ import {
   Briefcase,
   CheckCircle,
   Star,
-  User,
   MessageCircle,
-  Pill
+  Pill,
+  ChevronRight,
 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LawyerProfile, LawyerSpecialty } from '../types/legalService';
 import { getLawyers } from '../services/legalService';
-import { COLORS } from '@/constants/app';
+import { getAvatarSource } from '@/constants/avatars';
+
+const GOLD_COLOR = '#D4AF37';
 
 interface Props {
   navigation: any;
 }
 
-// 排序方式
 type SortType = 'default' | 'price_asc' | 'price_desc' | 'rating_desc';
 
-// Icon mapping
 const getIconForSpecialty = (specialty: string) => {
   const iconMap: Record<string, any> = {
     all: List,
@@ -70,7 +62,6 @@ const getIconForSpecialty = (specialty: string) => {
   return iconMap[specialty] || FileText;
 };
 
-// 专业领域选项
 const SPECIALTY_OPTIONS = [
   { value: 'all', label: '全部', icon: 'all' },
   { value: LawyerSpecialty.INHERITANCE, label: '遗嘱继承', icon: LawyerSpecialty.INHERITANCE },
@@ -83,7 +74,6 @@ const SPECIALTY_OPTIONS = [
   { value: LawyerSpecialty.LABOR, label: '劳动争议', icon: LawyerSpecialty.LABOR },
 ];
 
-// 排序选项
 const SORT_OPTIONS = [
   { value: 'default' as SortType, label: '默认排序' },
   { value: 'rating_desc' as SortType, label: '评分最高' },
@@ -92,6 +82,14 @@ const SORT_OPTIONS = [
 ];
 
 const LawyerListScreen: React.FC<Props> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [lawyers, setLawyers] = useState<LawyerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
@@ -100,7 +98,6 @@ const LawyerListScreen: React.FC<Props> = ({ navigation }) => {
 
   useFocusEffect(
     React.useCallback(() => {
-      console.log('LawyerListScreen focused - refreshing lawyers');
       loadLawyers();
     }, [])
   );
@@ -164,220 +161,218 @@ const LawyerListScreen: React.FC<Props> = ({ navigation }) => {
       <XStack
         key={specialty}
         alignItems="center"
-        paddingHorizontal="$2"
+        paddingHorizontal="$1.5"
         paddingVertical="$0.5"
-        backgroundColor={`${COLORS.primary}15`}
-        borderRadius={10}
-        gap="$1"
+        borderRadius="$10"
+        gap="$0.5"
+        style={{ backgroundColor: `${primaryColor}15` }}
       >
-        <IconComponent size={12} color={COLORS.primary} />
-        <Text fontSize="$1" color={COLORS.primary}>{option.label}</Text>
+        <IconComponent size={10} color={primaryColor} />
+        <Text fontSize={10} color="$primary">{option.label}</Text>
       </XStack>
     );
   };
 
   const renderLawyerCard = (lawyer: LawyerProfile) => {
     return (
-      <Card
+      <Pressable
         key={lawyer.id}
-        padding="$4"
-        borderRadius="$3"
-        backgroundColor="$cardBg"
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.05}
-        shadowRadius={4}
-        elevation={2}
-        pressStyle={{ scale: 0.98 }}
         onPress={() => navigation.navigate('LawyerDetail', { lawyerId: lawyer.id })}
-        position="relative"
       >
-        {lawyer.isOnline && (
-          <View
-            position="absolute"
-            top={12}
-            right={12}
-            width={8}
-            height={8}
-            borderRadius={4}
-            backgroundColor={COLORS.success}
-          />
-        )}
+        <View
+          padding="$2"
+          borderRadius="$5"
+          backgroundColor="$color2"
+          borderWidth={1}
+          borderColor="$color5"
+          position="relative"
+        >
+          {lawyer.isOnline && (
+            <View
+              position="absolute"
+              top={10}
+              right={10}
+              width={8}
+              height={8}
+              borderRadius={4}
+              backgroundColor="$success"
+            />
+          )}
 
-        <XStack>
-          <View marginRight="$3" position="relative">
-            {lawyer.avatar ? (
-              <RNImage source={{ uri: lawyer.avatar }} style={{ width: 80, height: 80, borderRadius: 8 }} />
-            ) : (
-              <View
-                width={80}
-                height={80}
-                borderRadius={8}
-                backgroundColor={COLORS.surface}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <User size={40} color={COLORS.textSecondary} />
+          <XStack gap="$2.5">
+            <View position="relative">
+              <View width={72} height={72} borderRadius="$3" overflow="hidden">
+                <RNImage
+                  source={getAvatarSource(lawyer.avatar, lawyer.name)}
+                  style={{ width: 72, height: 72 }}
+                  resizeMode="cover"
+                />
               </View>
-            )}
-            {lawyer.isOnline && (
-              <View
-                position="absolute"
-                bottom={-4}
-                left={0}
-                right={0}
-                backgroundColor={COLORS.success}
-                paddingVertical="$0.5"
-                borderRadius={4}
-              >
-                <Text fontSize="$1" color="white" textAlign="center" fontWeight="500">
-                  在线
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <YStack flex={1}>
-            <XStack alignItems="center" justifyContent="space-between" marginBottom="$1">
-              <Text fontSize="$6" fontWeight="bold" color={COLORS.text}>{lawyer.name}</Text>
-              <XStack alignItems="center" gap="$0.5">
-                <Star size={16} color="#fadb14" fill="#fadb14" />
-                <Text fontSize="$4" fontWeight="600" color={COLORS.text}>{lawyer.rating.toFixed(1)}</Text>
-              </XStack>
-            </XStack>
-
-            <Text fontSize="$3" color={COLORS.textSecondary} marginBottom="$2" numberOfLines={1}>
-              {lawyer.lawFirm}
-            </Text>
-
-            <XStack flexWrap="wrap" gap="$1.5" marginBottom="$2">
-              {lawyer.specialties.slice(0, 3).map(specialty => renderSpecialtyBadge(specialty))}
-              {lawyer.specialties.length > 3 && (
-                <Text fontSize="$1" color={COLORS.textSecondary} paddingHorizontal="$1.5">
-                  +{lawyer.specialties.length - 3}
-                </Text>
+              {lawyer.isOnline && (
+                <View
+                  position="absolute"
+                  bottom={-4}
+                  left={0}
+                  right={0}
+                  backgroundColor="$success"
+                  paddingVertical="$0.5"
+                  borderRadius="$2"
+                >
+                  <Text fontSize={10} color="white" textAlign="center" fontWeight="500">
+                    在线
+                  </Text>
+                </View>
               )}
-            </XStack>
+            </View>
 
-            <XStack gap="$3" marginBottom="$3">
-              <XStack alignItems="center" gap="$0.5">
-                <Briefcase size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color={COLORS.textSecondary}>{lawyer.yearsOfExperience}年经验</Text>
+            <YStack flex={1} gap="$1">
+              <XStack alignItems="center" justifyContent="space-between">
+                <Text fontSize="$4" fontWeight="700" color="$color12">{lawyer.name}</Text>
+                <XStack alignItems="center" gap="$0.5">
+                  <Star size={14} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                  <Text fontSize="$3" fontWeight="600" color="$color12">{lawyer.rating.toFixed(1)}</Text>
+                </XStack>
               </XStack>
-              <XStack alignItems="center" gap="$0.5">
-                <Users size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color={COLORS.textSecondary}>{lawyer.caseCount}个案件</Text>
-              </XStack>
-              <XStack alignItems="center" gap="$0.5">
-                <MessageCircle size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color={COLORS.textSecondary}>{lawyer.reviewCount}条评价</Text>
-              </XStack>
-            </XStack>
 
-            <XStack alignItems="center" justifyContent="space-between">
-              <XStack alignItems="baseline" gap="$1">
-                <Text fontSize="$2" color={COLORS.textSecondary}>图文咨询</Text>
-                <Text fontSize="$6" fontWeight="bold" color={COLORS.error}>¥{lawyer.textConsultationPrice}</Text>
+              <Text fontSize="$2" color="$color10" numberOfLines={1}>
+                {lawyer.lawFirm}
+              </Text>
+
+              <XStack flexWrap="wrap" gap="$1">
+                {lawyer.specialties.slice(0, 2).map(specialty => renderSpecialtyBadge(specialty))}
+                {lawyer.specialties.length > 2 && (
+                  <Text fontSize={10} color="$color10">
+                    +{lawyer.specialties.length - 2}
+                  </Text>
+                )}
               </XStack>
-              <Button
-                backgroundColor={COLORS.primary}
-                paddingHorizontal="$5"
-                paddingVertical="$2"
-                borderRadius={16}
-                onPress={() => navigation.navigate('LawyerDetail', { lawyerId: lawyer.id })}
-                pressStyle={{ scale: 0.95 }}
-              >
-                <Text fontSize="$4" fontWeight="500" color="white">立即咨询</Text>
-              </Button>
-            </XStack>
-          </YStack>
-        </XStack>
-      </Card>
+
+              <XStack gap="$2.5">
+                <XStack alignItems="center" gap="$0.5">
+                  <Briefcase size={12} color={color10} />
+                  <Text fontSize="$2" color="$color10">{lawyer.yearsOfExperience}年</Text>
+                </XStack>
+                <XStack alignItems="center" gap="$0.5">
+                  <Users size={12} color={color10} />
+                  <Text fontSize="$2" color="$color10">{lawyer.caseCount}案件</Text>
+                </XStack>
+                <XStack alignItems="center" gap="$0.5">
+                  <MessageCircle size={12} color={color10} />
+                  <Text fontSize="$2" color="$color10">{lawyer.reviewCount}评价</Text>
+                </XStack>
+              </XStack>
+
+              <XStack alignItems="center" justifyContent="space-between" marginTop="$0.5">
+                <XStack alignItems="baseline" gap="$1">
+                  <Text fontSize="$2" color="$color10">图文咨询</Text>
+                  <Text fontSize="$4" fontWeight="700" color="$error">¥{lawyer.textConsultationPrice}</Text>
+                </XStack>
+                <View
+                  backgroundColor="$primary"
+                  paddingHorizontal="$3"
+                  paddingVertical="$1.5"
+                  borderRadius="$10"
+                >
+                  <Text fontSize="$3" fontWeight="500" color="white">立即咨询</Text>
+                </View>
+              </XStack>
+            </YStack>
+          </XStack>
+        </View>
+      </Pressable>
     );
   };
 
   const renderFilters = () => {
     return (
-      <YStack backgroundColor="$cardBg" paddingBottom="$3" borderBottomWidth={8} borderBottomColor={COLORS.background}>
-        <Text fontSize="$4" fontWeight="600" color={COLORS.text} paddingHorizontal="$4" paddingTop="$4" paddingBottom="$3">
+      <YStack backgroundColor="$color2" paddingBottom="$2" borderBottomWidth={1} borderBottomColor="$color5">
+        <Text fontSize="$3" fontWeight="600" color="$color12" paddingHorizontal="$2.5" paddingTop="$2" paddingBottom="$1.5">
           专业领域
         </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} paddingHorizontal="$4">
-          <XStack gap="$2">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <XStack gap="$1.5" paddingHorizontal="$2.5">
             {SPECIALTY_OPTIONS.map(option => {
               const IconComponent = getIconForSpecialty(option.icon);
               const isActive = selectedSpecialty === option.value;
               return (
-                <Button
-                  key={option.value}
-                  paddingHorizontal="$3"
-                  paddingVertical="$1.5"
-                  backgroundColor={isActive ? COLORS.primary : COLORS.surface}
-                  borderRadius={16}
-                  borderWidth={1}
-                  borderColor={isActive ? COLORS.primary : COLORS.surface}
-                  onPress={() => setSelectedSpecialty(option.value)}
-                  pressStyle={{ scale: 0.95 }}
-                >
-                  <XStack alignItems="center" gap="$1">
-                    <IconComponent size={16} color={isActive ? 'white' : COLORS.textSecondary} />
-                    <Text fontSize="$3" color={isActive ? 'white' : COLORS.textSecondary} fontWeight={isActive ? '500' : '400'}>
-                      {option.label}
-                    </Text>
-                  </XStack>
-                </Button>
+                <Pressable key={option.value} onPress={() => setSelectedSpecialty(option.value)}>
+                  <View
+                    paddingHorizontal="$2.5"
+                    paddingVertical="$1.5"
+                    backgroundColor={isActive ? '$primary' : '$color4'}
+                    borderRadius="$10"
+                  >
+                    <XStack alignItems="center" gap="$1">
+                      <IconComponent size={14} color={isActive ? 'white' : color10} />
+                      <Text
+                        fontSize="$2"
+                        color={isActive ? 'white' : '$color10'}
+                        fontWeight={isActive ? '500' : '400'}
+                      >
+                        {option.label}
+                      </Text>
+                    </XStack>
+                  </View>
+                </Pressable>
               );
             })}
           </XStack>
         </ScrollView>
 
-        <XStack paddingHorizontal="$4" paddingTop="$3" gap="$3">
-          <Button
-            paddingHorizontal="$3"
-            paddingVertical="$1.5"
-            backgroundColor={onlineOnly ? '#f0f9ff' : COLORS.surface}
-            borderRadius={16}
-            borderWidth={1}
-            borderColor={onlineOnly ? COLORS.success : COLORS.surface}
-            onPress={() => setOnlineOnly(!onlineOnly)}
-            pressStyle={{ scale: 0.95 }}
-          >
-            <XStack alignItems="center" gap="$1">
-              <CheckCircle size={16} color={onlineOnly ? COLORS.success : COLORS.textSecondary} />
-              <Text fontSize="$3" color={onlineOnly ? COLORS.success : COLORS.textSecondary} fontWeight={onlineOnly ? '500' : '400'}>
-                仅在线
-              </Text>
-            </XStack>
-          </Button>
+        <XStack paddingHorizontal="$2.5" paddingTop="$2" gap="$2">
+          <Pressable onPress={() => setOnlineOnly(!onlineOnly)}>
+            <View
+              paddingHorizontal="$2.5"
+              paddingVertical="$1.5"
+              borderRadius="$10"
+              borderWidth={1}
+              borderColor={onlineOnly ? '$success' : '$color5'}
+              style={{ backgroundColor: onlineOnly ? `${successColor}15` : undefined }}
+            >
+              <XStack alignItems="center" gap="$1">
+                <CheckCircle size={14} color={onlineOnly ? successColor : color10} />
+                <Text
+                  fontSize="$2"
+                  color={onlineOnly ? '$success' : '$color10'}
+                  fontWeight={onlineOnly ? '500' : '400'}
+                >
+                  仅在线
+                </Text>
+              </XStack>
+            </View>
+          </Pressable>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <XStack gap="$2">
+            <XStack gap="$1.5">
               {SORT_OPTIONS.map(option => {
                 const isActive = sortType === option.value;
                 return (
-                  <Button
-                    key={option.value}
-                    paddingHorizontal="$2.5"
-                    paddingVertical="$1.5"
-                    backgroundColor={isActive ? `${COLORS.primary}15` : COLORS.surface}
-                    borderRadius={14}
-                    onPress={() => setSortType(option.value)}
-                    pressStyle={{ scale: 0.95 }}
-                  >
-                    <Text fontSize="$2" color={isActive ? COLORS.primary : COLORS.textSecondary} fontWeight={isActive ? '500' : '400'}>
-                      {option.label}
-                    </Text>
-                  </Button>
+                  <Pressable key={option.value} onPress={() => setSortType(option.value)}>
+                    <View
+                      paddingHorizontal="$2"
+                      paddingVertical="$1.5"
+                      borderRadius="$10"
+                      style={{ backgroundColor: isActive ? `${primaryColor}15` : undefined }}
+                    >
+                      <Text
+                        fontSize="$2"
+                        color={isActive ? '$primary' : '$color10'}
+                        fontWeight={isActive ? '500' : '400'}
+                      >
+                        {option.label}
+                      </Text>
+                    </View>
+                  </Pressable>
                 );
               })}
             </XStack>
           </ScrollView>
         </XStack>
 
-        <Text fontSize="$3" color={COLORS.textSecondary} paddingHorizontal="$4" paddingTop="$3">
+        <Text fontSize="$2" color="$color10" paddingHorizontal="$2.5" paddingTop="$2">
           共找到 {filteredAndSortedLawyers.length} 位律师
           {onlineOnly && (
-            <Text color={COLORS.success}>
+            <Text color="$success">
               {' '}({filteredAndSortedLawyers.filter(l => l.isOnline).length} 位在线)
             </Text>
           )}
@@ -388,69 +383,73 @@ const LawyerListScreen: React.FC<Props> = ({ navigation }) => {
 
   const renderEmptyState = () => {
     return (
-      <YStack alignItems="center" justifyContent="center" paddingVertical="$15">
-        <Users size={80} color={COLORS.border} />
-        <Text fontSize="$5" color={COLORS.textSecondary} marginTop="$4">暂无符合条件的律师</Text>
-        <Text fontSize="$3" color={COLORS.border} marginTop="$2">尝试调整筛选条件</Text>
-        <Button
-          marginTop="$6"
-          paddingHorizontal="$6"
-          paddingVertical="$2.5"
-          backgroundColor={COLORS.primary}
-          borderRadius={20}
+      <YStack alignItems="center" justifyContent="center" paddingVertical="$10">
+        <Users size={64} color={color10} />
+        <Text fontSize="$4" color="$color10" marginTop="$3">暂无符合条件的律师</Text>
+        <Text fontSize="$2" color="$color10" marginTop="$1">尝试调整筛选条件</Text>
+        <Pressable
+          style={{ marginTop: 24 }}
           onPress={() => {
             setSelectedSpecialty('all');
             setOnlineOnly(false);
             setSortType('default');
           }}
-          pressStyle={{ scale: 0.98 }}
         >
-          <Text fontSize="$4" color="white" fontWeight="500">重置筛选</Text>
-        </Button>
+          <View
+            paddingHorizontal="$4"
+            paddingVertical="$2"
+            backgroundColor="$primary"
+            borderRadius="$10"
+          >
+            <Text fontSize="$3" color="white" fontWeight="500">重置筛选</Text>
+          </View>
+        </Pressable>
       </YStack>
     );
   };
 
   return (
-    <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-        <XStack
-          alignItems="center"
-          justifyContent="space-between"
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          backgroundColor="$cardBg"
-          borderBottomWidth={1}
-          borderBottomColor={COLORS.border}
-        >
-          <Button chromeless padding="$1" onPress={() => navigation.goBack()} pressStyle={{ opacity: 0.6 }}>
-            <ArrowLeft size={24} color={COLORS.text} />
-          </Button>
-          <Text fontSize="$6" fontWeight="bold" color={COLORS.text}>专业律师</Text>
-          <Button chromeless padding="$1" onPress={() => navigation.navigate('AILegalAssistant')} pressStyle={{ opacity: 0.6 }}>
-            <MessageSquare size={22} color={COLORS.primary} />
-          </Button>
+    <View flex={1} backgroundColor="$background">
+      {/* TitleBar */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
+        borderBottomWidth={1}
+        borderBottomColor="$color5"
+      >
+        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">专业律师</Text>
+          <Pressable onPress={() => navigation.navigate('AILegalAssistant')}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <MessageSquare size={22} color={primaryColor} />
+            </View>
+          </Pressable>
         </XStack>
+      </View>
 
-        {loading ? (
-          <YStack flex={1} justifyContent="center" alignItems="center">
-            <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text marginTop="$3" fontSize="$4" color={COLORS.textSecondary}>加载律师列表...</Text>
-          </YStack>
-        ) : (
-          <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-            {renderFilters()}
-            {filteredAndSortedLawyers.length > 0 ? (
-              <YStack padding="$4" gap="$3">
-                {filteredAndSortedLawyers.map(lawyer => renderLawyerCard(lawyer))}
-              </YStack>
-            ) : (
-              renderEmptyState()
-            )}
-          </ScrollView>
-        )}
-      </SafeAreaView>
-    </Theme>
+      {loading ? (
+        <YStack flex={1} justifyContent="center" alignItems="center">
+          <ActivityIndicator size="large" color={primaryColor} />
+          <Text marginTop="$2" fontSize="$3" color="$color10">加载律师列表...</Text>
+        </YStack>
+      ) : (
+        <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+          {renderFilters()}
+          {filteredAndSortedLawyers.length > 0 ? (
+            <YStack padding="$2.5" gap="$2">
+              {filteredAndSortedLawyers.map(lawyer => renderLawyerCard(lawyer))}
+            </YStack>
+          ) : (
+            renderEmptyState()
+          )}
+        </ScrollView>
+      )}
+    </View>
   );
 };
 

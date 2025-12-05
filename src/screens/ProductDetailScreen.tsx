@@ -1,3 +1,9 @@
+/**
+ * ProductDetailScreen 商品详情页面
+ * 展示商品图片、价格、描述、评价、FAQ
+ * 遵循 CLAUDE.md 组件规范
+ */
+
 import React, { useState, useRef } from 'react';
 import {
   Pressable,
@@ -6,10 +12,10 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import { View, Text, YStack, XStack, Card, Theme, H2, H3 } from 'tamagui';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, YStack, XStack, useTheme } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ChevronLeft,
+  ArrowLeft,
   Share2,
   Heart,
   Star,
@@ -18,9 +24,7 @@ import {
   Truck,
   RotateCcw,
   ThumbsUp,
-  MessageCircle,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { useNavigation } from '@react-navigation/native';
 import { groceryCartService } from '@/services/groceryCartService';
 import { getProductById } from '@/data/groceryProducts';
@@ -39,8 +43,16 @@ type TabType = 'detail' | 'reviews' | 'qa';
 
 export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route }) => {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const imageScrollRef = useRef<RNScrollView>(null);
-  const productId = route?.params?.productId || 1; // 默认商品ID
+  const productId = route?.params?.productId || 1;
+
+  const primaryColor = theme.primary?.val;
+  const errorColor = theme.error?.val;
+  const goldColor = theme.gold?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const [activeTab, setActiveTab] = useState<TabType>('detail');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -165,65 +177,62 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
   };
 
   return (
-    <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
-        {/* Header */}
-        <XStack
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          zIndex={10}
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
+    <View flex={1} backgroundColor="$background">
+      {/* Header - 浮动在图片上方 */}
+      <XStack
+        position="absolute"
+        top={insets.top}
+        left={0}
+        right={0}
+        zIndex={10}
+        paddingHorizontal="$2.5"
+        paddingVertical="$2"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Pressable onPress={() => navigation.goBack()}>
+          <View
+            width={40}
+            height={40}
+            borderRadius={20}
+            backgroundColor="rgba(0,0,0,0.5)"
+            justifyContent="center"
+            alignItems="center"
           >
-            <ChevronLeft size={24} color="white" />
-          </Pressable>
-          <XStack space="$3">
-            <TouchableOpacity
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: 'rgba(0,0,0,0.5)',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
+            <ArrowLeft size={22} color="white" />
+          </View>
+        </Pressable>
+        <XStack gap="$2">
+          <TouchableOpacity>
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor="rgba(0,0,0,0.5)"
+              justifyContent="center"
+              alignItems="center"
             >
               <Share2 size={20} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setIsFavorite(!isFavorite)}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: 'rgba(0,0,0,0.5)',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsFavorite(!isFavorite)}>
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor="rgba(0,0,0,0.5)"
+              justifyContent="center"
+              alignItems="center"
             >
-              <Heart size={20} color={isFavorite ? COLORS.error : 'white'} fill={isFavorite ? COLORS.error : 'none'} />
-            </TouchableOpacity>
-          </XStack>
+              <Heart size={20} color={isFavorite ? errorColor : 'white'} fill={isFavorite ? errorColor : 'none'} />
+            </View>
+          </TouchableOpacity>
         </XStack>
+      </XStack>
 
-        <RNScrollView showsVerticalScrollIndicator={false}>
-          {/* Product Images Carousel */}
-          <View height={SCREEN_WIDTH}>
+      <RNScrollView showsVerticalScrollIndicator={false}>
+        {/* Product Images Carousel */}
+        <View height={SCREEN_WIDTH}>
             <RNScrollView
               ref={imageScrollRef}
               horizontal
@@ -268,41 +277,42 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
           </View>
 
           {/* Product Info */}
-          <YStack padding="$4" space="$3" backgroundColor="white">
+          <YStack padding="$2.5" gap="$2" backgroundColor="$color2">
             {/* Price & Title */}
-            <YStack space="$2">
-              <XStack alignItems="baseline" space="$2">
-                <Text fontSize="$9" fontWeight="bold" color={COLORS.error}>
+            <YStack gap="$1.5">
+              <XStack alignItems="baseline" gap="$2">
+                <Text fontSize="$8" fontWeight="700" color="$primary">
                   ¥{product.price}
                 </Text>
-                <Text fontSize="$4" color="$textSecondary" textDecorationLine="line-through">
+                <Text fontSize="$3" color="$color10" textDecorationLine="line-through">
                   ¥{product.originalPrice}
                 </Text>
-                <View backgroundColor={COLORS.error} paddingHorizontal="$2" paddingVertical="$1" borderRadius="$2">
-                  <Text fontSize="$2" color="white" fontWeight="600">
+                <View backgroundColor="$warning" paddingHorizontal="$1.5" paddingVertical="$0.5" borderRadius="$2">
+                  <Text fontSize={10} color="white" fontWeight="600">
                     {product.tag}
                   </Text>
                 </View>
               </XStack>
-              <H2 fontSize="$7" fontWeight="600" color="$text">
+              <Text fontSize="$5" fontWeight="600" color="$color12">
                 {product.name}
-              </H2>
-              <Text fontSize="$3" color="$textSecondary">
+              </Text>
+              <Text fontSize="$3" color="$color10">
                 {product.unit}
               </Text>
             </YStack>
 
             {/* Tags */}
-            <XStack flexWrap="wrap" gap="$2">
+            <XStack flexWrap="wrap" gap="$1.5">
               {product.tags.map((tag, index) => (
                 <View
                   key={index}
-                  backgroundColor={`${COLORS.primary}10`}
-                  paddingHorizontal="$3"
-                  paddingVertical="$1"
-                  borderRadius="$3"
+                  paddingHorizontal="$2"
+                  paddingVertical="$0.5"
+                  borderRadius="$10"
+                  borderWidth={1}
+                  borderColor="$primary"
                 >
-                  <Text fontSize="$2" color={COLORS.primary} fontWeight="600">
+                  <Text fontSize="$2" color="$primary" fontWeight="500">
                     {tag}
                   </Text>
                 </View>
@@ -310,33 +320,33 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
             </XStack>
 
             {/* Stats */}
-            <XStack space="$4" paddingVertical="$3" borderTopWidth={1} borderTopColor="$borderColor">
-              <XStack space="$1" alignItems="center">
-                <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
-                <Text fontSize="$3" fontWeight="600">
+            <XStack gap="$3" paddingTop="$2" borderTopWidth={1} borderTopColor="$color5" alignItems="center">
+              <XStack gap="$1" alignItems="center">
+                <Star size={14} color={goldColor} fill={goldColor} />
+                <Text fontSize="$3" fontWeight="600" color="$color12">
                   {product.rating}
                 </Text>
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   评分
                 </Text>
               </XStack>
-              <View width={1} height={16} backgroundColor="$borderColor" />
-              <Text fontSize="$3" color="$textSecondary">
+              <View width={1} height={14} backgroundColor="$color5" />
+              <Text fontSize="$2" color="$color10">
                 已售 {product.sales}
               </Text>
-              <View width={1} height={16} backgroundColor="$borderColor" />
-              <Text fontSize="$3" color="$textSecondary">
+              <View width={1} height={14} backgroundColor="$color5" />
+              <Text fontSize="$2" color="$color10">
                 库存 {product.stock}
               </Text>
             </XStack>
           </YStack>
 
           {/* Features */}
-          <YStack backgroundColor="white" marginTop="$3" padding="$4" space="$3">
-            <H3 fontSize="$5" fontWeight="600">
+          <YStack backgroundColor="$color2" marginTop="$2" padding="$2" gap="$2">
+            <Text fontSize="$4" fontWeight="600" color="$color12">
               服务保障
-            </H3>
-            <XStack flexWrap="wrap" gap="$3">
+            </Text>
+            <XStack flexWrap="wrap" gap="$2">
               {product.features.map((feature, index) => {
                 const IconComponent = feature.icon;
                 return (
@@ -344,27 +354,27 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
                     key={index}
                     flex={1}
                     minWidth="45%"
-                    space="$2"
+                    gap="$2"
                     alignItems="center"
-                    padding="$3"
-                    backgroundColor="$background"
-                    borderRadius="$3"
+                    padding="$2"
+                    backgroundColor="$color4"
+                    borderRadius="$4"
                   >
                     <View
-                      width={40}
-                      height={40}
-                      borderRadius={20}
-                      backgroundColor={`${COLORS.primary}10`}
+                      width={36}
+                      height={36}
+                      borderRadius={18}
                       justifyContent="center"
                       alignItems="center"
+                      style={{ backgroundColor: `${primaryColor}10` }}
                     >
-                      <IconComponent size={20} color={COLORS.primary} />
+                      <IconComponent size={18} color={primaryColor} />
                     </View>
                     <YStack flex={1}>
-                      <Text fontSize="$3" fontWeight="600" marginBottom="$1">
+                      <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$0.5">
                         {feature.title}
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary" numberOfLines={1}>
+                      <Text fontSize="$2" color="$color10" numberOfLines={1}>
                         {feature.desc}
                       </Text>
                     </YStack>
@@ -375,8 +385,8 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
           </YStack>
 
           {/* Tabs */}
-          <YStack backgroundColor="white" marginTop="$3">
-            <XStack borderBottomWidth={1} borderBottomColor="$borderColor">
+          <YStack backgroundColor="$color2" marginTop="$2">
+            <XStack borderBottomWidth={1} borderBottomColor="$color5">
               {[
                 { key: 'detail', label: '商品详情' },
                 { key: 'reviews', label: '用户评价' },
@@ -388,19 +398,15 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
                   onPress={() => setActiveTab(tab.key as TabType)}
                 >
                   <View
-                    paddingVertical="$3"
+                    paddingVertical="$2"
                     alignItems="center"
-                    borderBottomWidth={activeTab === tab.key ? 3 : 0}
-                    borderBottomColor={COLORS.primary}
-                    backgroundColor={activeTab === tab.key ? `${COLORS.primary}10` : 'transparent'}
+                    borderBottomWidth={activeTab === tab.key ? 2 : 0}
+                    borderBottomColor="$primary"
                   >
                     <Text
-                      fontSize="$4"
-                      fontWeight={activeTab === tab.key ? '600' : 'normal'}
-                      color={activeTab === tab.key ? 'white' : '$textSecondary'}
-                      style={{
-                        color: activeTab === tab.key ? COLORS.primary : COLORS.textSecondary,
-                      }}
+                      fontSize="$3"
+                      fontWeight={activeTab === tab.key ? '600' : '400'}
+                      color={activeTab === tab.key ? '$primary' : '$color10'}
                     >
                       {tab.label}
                     </Text>
@@ -410,35 +416,35 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
             </XStack>
 
             {/* Tab Content */}
-            <YStack padding="$4" space="$4" minHeight={300}>
+            <YStack padding="$2" gap="$2" minHeight={300}>
               {activeTab === 'detail' && (
-                <YStack space="$4">
-                  <YStack space="$2">
-                    <H3 fontSize="$5" fontWeight="600">
+                <YStack gap="$2">
+                  <YStack gap="$1">
+                    <Text fontSize="$4" fontWeight="600" color="$color12">
                       商品描述
-                    </H3>
-                    <Text fontSize="$4" color="$text" lineHeight={24}>
+                    </Text>
+                    <Text fontSize="$3" color="$color12" lineHeight={20}>
                       {product.description}
                     </Text>
                   </YStack>
 
-                  <YStack space="$2">
-                    <H3 fontSize="$5" fontWeight="600">
+                  <YStack gap="$1">
+                    <Text fontSize="$4" fontWeight="600" color="$color12">
                       营养成分
-                    </H3>
-                    <YStack space="$2">
+                    </Text>
+                    <YStack gap="$1">
                       {product.nutrition.map((item, index) => (
                         <XStack
                           key={index}
                           justifyContent="space-between"
-                          padding="$3"
-                          backgroundColor="$background"
+                          padding="$2"
+                          backgroundColor="$color4"
                           borderRadius="$3"
                         >
-                          <Text fontSize="$4">{item.name}</Text>
-                          <Text fontSize="$4" fontWeight="600">
+                          <Text fontSize="$3" color="$color12">{item.name}</Text>
+                          <Text fontSize="$3" fontWeight="600" color="$color12">
                             {item.value}
-                            <Text fontSize="$3" color="$textSecondary">
+                            <Text fontSize="$2" color="$color10">
                               {' '}
                               {item.unit}
                             </Text>
@@ -451,119 +457,111 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
               )}
 
               {activeTab === 'reviews' && (
-                <YStack space="$4">
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                    <H3 fontSize="$5" fontWeight="600">
+                <YStack gap="$1.5">
+                  <XStack justifyContent="space-between" alignItems="center">
+                    <Text fontSize="$4" fontWeight="600" color="$color12">
                       用户评价 ({reviews.length})
-                    </H3>
-                    <XStack space="$1" alignItems="center">
-                      <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
-                      <Text fontSize="$4" fontWeight="600">
+                    </Text>
+                    <XStack gap="$1" alignItems="center">
+                      <Star size={14} color={goldColor} fill={goldColor} />
+                      <Text fontSize="$3" fontWeight="600" color="$color12">
                         {product.rating}
                       </Text>
                     </XStack>
                   </XStack>
 
                   {reviews.map((review) => (
-                    <Card key={review.id} padding="$4" backgroundColor="$background" borderRadius="$4">
-                      <XStack space="$3" marginBottom="$3">
+                    <View key={review.id} padding="$2" backgroundColor="$color4" borderRadius="$4">
+                      <XStack gap="$2" marginBottom="$1.5">
                         <Image
                           source={{ uri: review.avatar }}
-                          style={{ width: 40, height: 40, borderRadius: 20 }}
+                          style={{ width: 32, height: 32, borderRadius: 16 }}
                         />
                         <YStack flex={1}>
-                          <XStack justifyContent="space-between" marginBottom="$1">
-                            <Text fontSize="$4" fontWeight="600">
+                          <XStack justifyContent="space-between" alignItems="center">
+                            <Text fontSize="$3" fontWeight="600" color="$color12">
                               {review.user}
                             </Text>
-                            <XStack space="$1">
+                            <XStack gap="$0.5">
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  size={12}
-                                  color={i < review.rating ? COLORS.warning : COLORS.textSecondary}
-                                  fill={i < review.rating ? COLORS.warning : 'none'}
+                                  size={10}
+                                  color={i < review.rating ? goldColor : color10}
+                                  fill={i < review.rating ? goldColor : 'none'}
                                 />
                               ))}
                             </XStack>
                           </XStack>
-                          <Text fontSize="$2" color="$textSecondary">
+                          <Text fontSize="$2" color="$color10">
                             {review.date}
                           </Text>
                         </YStack>
                       </XStack>
-                      <Text fontSize="$4" color="$text" lineHeight={22} marginBottom="$3">
+                      <Text fontSize="$3" color="$color12" lineHeight={18} marginBottom="$1.5">
                         {review.content}
                       </Text>
                       {review.images.length > 0 && (
-                        <XStack space="$2" marginBottom="$3">
+                        <XStack gap="$1.5" marginBottom="$1.5">
                           {review.images.map((img, index) => (
                             <Image
                               key={index}
                               source={{ uri: img }}
-                              style={{ width: 80, height: 80, borderRadius: 8 }}
+                              style={{ width: 64, height: 64, borderRadius: 6 }}
                             />
                           ))}
                         </XStack>
                       )}
-                      <XStack space="$4">
-                        <XStack space="$1" alignItems="center">
-                          <ThumbsUp size={14} color={COLORS.textSecondary} />
-                          <Text fontSize="$3" color="$textSecondary">
-                            {review.likes}
-                          </Text>
-                        </XStack>
-                        <XStack space="$1" alignItems="center">
-                          <MessageCircle size={14} color={COLORS.textSecondary} />
-                          <Text fontSize="$3" color="$textSecondary">
-                            回复
-                          </Text>
-                        </XStack>
+                      <XStack gap="$1" alignItems="center">
+                        <ThumbsUp size={12} color={color10} />
+                        <Text fontSize="$2" color="$color10">
+                          {review.likes}
+                        </Text>
                       </XStack>
-                    </Card>
+                    </View>
                   ))}
                 </YStack>
               )}
 
               {activeTab === 'qa' && (
-                <YStack space="$3">
+                <YStack gap="$1.5">
                   {faqs.map((faq, index) => (
-                    <Card key={index} padding="$4" backgroundColor="$background" borderRadius="$4">
-                      <XStack space="$2" alignItems="flex-start" marginBottom="$2">
+                    <View key={index} padding="$2" backgroundColor="$color4" borderRadius="$4">
+                      <XStack gap="$1.5" alignItems="flex-start" marginBottom="$1.5">
                         <View
-                          width={24}
-                          height={24}
-                          borderRadius={12}
-                          backgroundColor={COLORS.primary}
+                          width={20}
+                          height={20}
+                          borderRadius={10}
+                          backgroundColor="$primary"
                           justifyContent="center"
                           alignItems="center"
                         >
-                          <Text fontSize="$3" fontWeight="bold" color="white">
+                          <Text fontSize={10} fontWeight="700" color="white">
                             Q
                           </Text>
                         </View>
-                        <Text fontSize="$4" fontWeight="600" flex={1}>
+                        <Text fontSize="$3" fontWeight="600" color="$color12" flex={1}>
                           {faq.question}
                         </Text>
                       </XStack>
-                      <XStack space="$2" alignItems="flex-start">
+                      <XStack gap="$1.5" alignItems="flex-start">
                         <View
-                          width={24}
-                          height={24}
-                          borderRadius={12}
-                          backgroundColor={COLORS.success}
+                          width={20}
+                          height={20}
+                          borderRadius={10}
+                          backgroundColor="$success"
                           justifyContent="center"
                           alignItems="center"
                         >
-                          <Text fontSize="$3" fontWeight="bold" color="white">
+                          <Text fontSize={10} fontWeight="700" color="white">
                             A
                           </Text>
                         </View>
-                        <Text fontSize="$4" color="$text" flex={1} lineHeight={22}>
+                        <Text fontSize="$3" color="$color12" flex={1} lineHeight={18}>
                           {faq.answer}
                         </Text>
                       </XStack>
-                    </Card>
+                    </View>
                   ))}
                 </YStack>
               )}
@@ -571,83 +569,84 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
           </YStack>
 
           {/* Bottom Padding */}
-          <View height={100} />
-        </RNScrollView>
+        <View height={100} />
+      </RNScrollView>
 
-        {/* Bottom Action Bar */}
-        <View
-          position="absolute"
-          bottom={0}
-          left={0}
-          right={0}
-          backgroundColor="white"
-          borderTopWidth={1}
-          borderTopColor="$borderColor"
-          padding="$4"
-        >
-          <XStack space="$3" alignItems="center">
-            {/* Quantity Selector */}
-            <XStack
-              space="$2"
-              alignItems="center"
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-              backgroundColor="$background"
-              borderRadius="$3"
+      {/* Bottom Action Bar */}
+      <View
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
+        backgroundColor="$color2"
+        borderTopWidth={1}
+        borderTopColor="$color5"
+        paddingHorizontal="$2.5"
+        paddingVertical="$2"
+        paddingBottom={insets.bottom + 8}
+      >
+        <XStack gap="$2" alignItems="center">
+          {/* Quantity Selector */}
+          <XStack
+            gap="$2"
+            alignItems="center"
+            paddingHorizontal="$2"
+            paddingVertical="$1.5"
+            backgroundColor="$color4"
+            borderRadius="$3"
+          >
+            <TouchableOpacity
+              onPress={() => setQuantity(Math.max(1, quantity - 1))}
+              disabled={quantity <= 1}
             >
-              <TouchableOpacity
-                onPress={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
-              >
-                <View
-                  width={28}
-                  height={28}
-                  borderRadius={14}
-                  backgroundColor={quantity <= 1 ? '$borderColor' : COLORS.primary}
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Text color="white" fontWeight="bold">
-                    -
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <Text fontSize="$5" fontWeight="600" minWidth={40} textAlign="center">
-                {quantity}
-              </Text>
-              <TouchableOpacity onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}>
-                <View
-                  width={28}
-                  height={28}
-                  borderRadius={14}
-                  backgroundColor={COLORS.primary}
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Text color="white" fontWeight="bold">
-                    +
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </XStack>
-
-            {/* Action Button */}
-            <TouchableOpacity style={{ flex: 1 }} onPress={handleAddToCart}>
               <View
-                flex={1}
-                backgroundColor={COLORS.primary}
-                paddingVertical="$3"
-                borderRadius="$4"
+                width={28}
+                height={28}
+                borderRadius={14}
+                backgroundColor={quantity <= 1 ? '$color5' : '$primary'}
+                justifyContent="center"
                 alignItems="center"
               >
-                <Text fontSize="$5" color="white" fontWeight="600">
-                  加入购物车
+                <Text color="white" fontWeight="700">
+                  -
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <Text fontSize="$4" fontWeight="600" color="$color12" minWidth={36} textAlign="center">
+              {quantity}
+            </Text>
+            <TouchableOpacity onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}>
+              <View
+                width={28}
+                height={28}
+                borderRadius={14}
+                backgroundColor="$primary"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Text color="white" fontWeight="700">
+                  +
                 </Text>
               </View>
             </TouchableOpacity>
           </XStack>
-        </View>
-      </SafeAreaView>
-    </Theme>
+
+          {/* Action Button */}
+          <TouchableOpacity style={{ flex: 1 }} onPress={handleAddToCart}>
+            <View
+              flex={1}
+              backgroundColor="$primary"
+              paddingVertical="$2.5"
+              borderRadius="$10"
+              alignItems="center"
+            >
+              <Text fontSize="$4" color="white" fontWeight="600">
+                加入购物车
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </XStack>
+      </View>
+    </View>
   );
 };

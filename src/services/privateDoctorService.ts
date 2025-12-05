@@ -44,8 +44,8 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       // 1. 心内科 - 主任医师 - 协和医院
       {
         id: 'doctor_001',
-        name: '王明教授',
-        avatar: 'https://ui-avatars.com/api/?name=王明&background=0D47A1&color=fff&size=200&bold=true&font-size=0.4',
+        name: '王明远教授',
+        avatar: 'local:doctor_001',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '博士',
         department: DoctorDepartment.CARDIOLOGY,
@@ -102,8 +102,8 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       // 2. 消化内科 - 主任医师 - 上海瑞金医院
       {
         id: 'doctor_002',
-        name: '李华教授',
-        avatar: 'https://ui-avatars.com/api/?name=李华&background=1B5E20&color=fff&size=200&bold=true&font-size=0.4',
+        name: '李慧教授',
+        avatar: 'local:doctor_002',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '博士生导师',
         department: DoctorDepartment.GASTROENTEROLOGY,
@@ -157,7 +157,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       {
         id: 'doctor_003',
         name: '张伟教授',
-        avatar: 'https://ui-avatars.com/api/?name=张伟&background=4A148C&color=fff&size=200&bold=true&font-size=0.4',
+        avatar: 'local:doctor_003',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '博士',
         department: DoctorDepartment.ENDOCRINOLOGY,
@@ -203,8 +203,8 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       // 4. 呼吸内科 - 副主任医师 - 中日友好医院
       {
         id: 'doctor_004',
-        name: '陈静副教授',
-        avatar: 'https://ui-avatars.com/api/?name=陈静&background=D84315&color=fff&size=200&bold=true&font-size=0.4',
+        name: '陈静怡副教授',
+        avatar: 'local:doctor_004',
         title: DoctorTitle.ASSOCIATE_CHIEF,
         degree: '博士',
         department: DoctorDepartment.RESPIRATORY,
@@ -250,8 +250,8 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       // 5. 全科医学 - 主任医师 - 国际医院
       {
         id: 'doctor_005',
-        name: '刘芳医生',
-        avatar: 'https://ui-avatars.com/api/?name=刘芳&background=00838F&color=fff&size=200&bold=true&font-size=0.4',
+        name: '刘芳华医生',
+        avatar: 'local:doctor_005',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '硕士',
         department: DoctorDepartment.GENERAL_MEDICINE,
@@ -299,7 +299,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       {
         id: 'doctor_006',
         name: '赵敏教授',
-        avatar: 'https://ui-avatars.com/api/?name=赵敏&background=6A1B9A&color=fff&size=200&bold=true&font-size=0.4',
+        avatar: 'local:doctor_006',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '博士',
         department: DoctorDepartment.NEUROLOGY,
@@ -344,8 +344,8 @@ export const initializePrivateDoctors = async (): Promise<void> => {
 
       {
         id: 'doctor_007',
-        name: '孙强教授',
-        avatar: 'https://ui-avatars.com/api/?name=孙强&background=AD1457&color=fff&size=200&bold=true&font-size=0.4',
+        name: '孙志强教授',
+        avatar: 'local:doctor_007',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '博士',
         department: DoctorDepartment.NEPHROLOGY,
@@ -383,7 +383,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       {
         id: 'doctor_008',
         name: '周莉副教授',
-        avatar: 'https://ui-avatars.com/api/?name=周莉&background=E65100&color=fff&size=200&bold=true&font-size=0.4',
+        avatar: 'local:doctor_008',
         title: DoctorTitle.ASSOCIATE_CHIEF,
         degree: '博士',
         department: DoctorDepartment.ONCOLOGY,
@@ -429,7 +429,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       {
         id: 'doctor_009',
         name: '吴磊医生',
-        avatar: 'https://ui-avatars.com/api/?name=吴磊&background=558B2F&color=fff&size=200&bold=true&font-size=0.4',
+        avatar: 'local:doctor_009',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '硕士',
         department: DoctorDepartment.GENERAL_MEDICINE,
@@ -474,8 +474,8 @@ export const initializePrivateDoctors = async (): Promise<void> => {
 
       {
         id: 'doctor_010',
-        name: '马云教授',
-        avatar: 'https://ui-avatars.com/api/?name=马云&background=795548&color=fff&size=200&bold=true&font-size=0.4',
+        name: '马小康教授',
+        avatar: 'local:doctor_010',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '博士',
         department: DoctorDepartment.NUTRITION,
@@ -514,7 +514,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       {
         id: 'doctor_011',
         name: '郑雪医生',
-        avatar: 'https://ui-avatars.com/api/?name=郑雪&background=0097A7&color=fff&size=200&bold=true&font-size=0.4',
+        avatar: 'local:doctor_011',
         title: DoctorTitle.ATTENDING,
         degree: '硕士',
         department: DoctorDepartment.GENERAL_MEDICINE,
@@ -559,8 +559,8 @@ export const initializePrivateDoctors = async (): Promise<void> => {
 
       {
         id: 'doctor_012',
-        name: '林海教授',
-        avatar: 'https://ui-avatars.com/api/?name=林海&background=283593&color=fff&size=200&bold=true&font-size=0.4',
+        name: '林燕教授',
+        avatar: 'local:doctor_012',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '博士',
         department: DoctorDepartment.CARDIOLOGY,
@@ -606,7 +606,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       {
         id: 'doctor_013',
         name: '黄丽副教授',
-        avatar: 'https://ui-avatars.com/api/?name=黄丽&background=C2185B&color=fff&size=200&bold=true&font-size=0.4',
+        avatar: 'local:doctor_013',
         title: DoctorTitle.ASSOCIATE_CHIEF,
         degree: '博士',
         department: DoctorDepartment.ENDOCRINOLOGY,
@@ -644,7 +644,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       {
         id: 'doctor_014',
         name: '钱伟医生',
-        avatar: 'https://ui-avatars.com/api/?name=钱伟&background=00695C&color=fff&size=200&bold=true&font-size=0.4',
+        avatar: 'local:doctor_014',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '硕士',
         department: DoctorDepartment.GENERAL_MEDICINE,
@@ -678,7 +678,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
         specialties: ['家庭健康管理', '慢病管理', '健康风险评估', '预防医学'],
         philosophy: '家庭医生是您健康的第一道防线，也是最后的守护者。',
         memberCount: 187,
-        rating: 4.93,
+        rating: 4.98,
         reviewCount: 367,
         isOnline: true,
         responseRate: 99,
@@ -690,7 +690,7 @@ export const initializePrivateDoctors = async (): Promise<void> => {
       {
         id: 'doctor_015',
         name: '宋梅教授',
-        avatar: 'https://ui-avatars.com/api/?name=宋梅&background=5D4037&color=fff&size=200&bold=true&font-size=0.4',
+        avatar: 'local:doctor_015',
         title: DoctorTitle.CHIEF_PHYSICIAN,
         degree: '博士',
         department: DoctorDepartment.RHEUMATOLOGY,
@@ -812,7 +812,7 @@ const createDoctorPackages = (doctorId: string): PrivateDoctorPackage[] => {
       name: '标准版',
       level: PackageLevel.STANDARD,
       duration: 'yearly',
-      price: 39800,
+      price: 49800,
       originalPrice: 49800,
       isRecommended: true,
       services: {
@@ -852,7 +852,7 @@ const createDoctorPackages = (doctorId: string): PrivateDoctorPackage[] => {
       name: '尊享版',
       level: PackageLevel.PREMIUM,
       duration: 'yearly',
-      price: 79800,
+      price: 99800,
       originalPrice: 99800,
       isRecommended: false,
       services: {
@@ -894,8 +894,8 @@ const createDoctorPackages = (doctorId: string): PrivateDoctorPackage[] => {
       name: 'VIP家庭版',
       level: PackageLevel.VIP_FAMILY,
       duration: 'yearly',
-      price: 198000,
-      originalPrice: 258000,
+      price: 199800,
+      originalPrice: 199800,
       isRecommended: false,
       services: {
         onlineConsultations: -1,
@@ -1146,6 +1146,48 @@ export const getMySubscription = async (userId: string): Promise<DoctorSubscript
   } catch (error) {
     console.error('❌ getMySubscription 失败:', error);
     return null;
+  }
+};
+
+/**
+ * 获取用户所有私人医生签约 - 支持多个签约
+ */
+export const getAllMySubscriptions = async (userId: string): Promise<DoctorSubscription[]> => {
+  try {
+    console.log('🔍 getAllMySubscriptions: 从订单中查找用户所有签约, userId:', userId);
+
+    const orders = await getOrders();
+    console.log('📦 getAllMySubscriptions: 订单总数:', orders.length);
+
+    // 查找该用户所有的私人医生订单（仅 paid 状态）
+    const privateDoctorOrders = orders.filter(
+      (order: any) =>
+        order.userId === userId &&
+        order.itemType === 'private_doctor' &&
+        order.status === 'paid'
+    );
+
+    if (privateDoctorOrders.length === 0) {
+      console.log('❌ getAllMySubscriptions: 未找到私人医生签约订单');
+      return [];
+    }
+
+    console.log('✅ getAllMySubscriptions: 找到', privateDoctorOrders.length, '个有效签约');
+
+    // 从每个订单中提取签约信息
+    const subscriptions: DoctorSubscription[] = [];
+    for (const order of privateDoctorOrders) {
+      if (order.metadata?.subscription) {
+        const subscription = order.metadata.subscription;
+        subscription.status = 'active';
+        subscriptions.push(subscription);
+      }
+    }
+
+    return subscriptions;
+  } catch (error) {
+    console.error('❌ getAllMySubscriptions 失败:', error);
+    return [];
   }
 };
 
@@ -1975,6 +2017,7 @@ const privateDoctorService = {
   // 签约管理
   subscribeToDoctor,
   getMySubscription,
+  getAllMySubscriptions,
   cancelSubscription,
   renewSubscription,
 

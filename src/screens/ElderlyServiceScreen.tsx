@@ -1,11 +1,32 @@
+/**
+ * ElderlyServiceScreen 养老服务页面
+ * 提供长者照顾、陪诊服务、医护替补三大服务
+ * 遵循 CLAUDE.md 组件规范
+ */
+
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Pressable } from 'react-native';
-import { View, Text, XStack, YStack, Card } from 'tamagui';
+import { ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Phone, Heart, ChevronDown, ChevronUp, CheckCircle, Info, Shield, Award, Home, Ambulance, Stethoscope, Users } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
-import { LinearGradient } from 'expo-linear-gradient';
+import {
+  ArrowLeft,
+  Heart,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight,
+  CheckCircle,
+  Info,
+  Shield,
+  Award,
+  Home,
+  Ambulance,
+  Stethoscope,
+  Users,
+  BadgeCheck,
+  Building2,
+  FileCheck,
+} from 'lucide-react-native';
 import {
   servicePackages,
   qualificationDetails,
@@ -21,50 +42,50 @@ import {
 import type { ServiceType, Caregiver } from '@/types/elderly';
 import { CaregiverCard } from '@/components/CaregiverCard';
 
+// 合作机构数据
+const partnershipInfo = {
+  title: '权威合作 · 品质保障',
+  description: '康养平台与多家知名护理服务机构建立战略合作，确保为您提供专业、安全、贴心的养老护理服务。',
+  partners: [
+    { name: '深圳市养老服务协会', type: '行业协会' },
+    { name: '香港护理专业学会', type: '专业学会' },
+    { name: '粤港澳大湾区健康产业联盟', type: '产业联盟' },
+  ],
+  certifications: [
+    { name: '养老服务机构等级认证', level: 'AAA级' },
+    { name: 'ISO 9001质量管理体系', level: '认证通过' },
+    { name: '深圳市家政服务诚信企业', level: '五星级' },
+  ],
+  qualifications: [
+    '深圳市民政局备案养老服务机构',
+    '深圳市人力资源保障局认可培训机构',
+    '商业意外险与责任险双重保障',
+  ],
+};
+
 const ElderlyServiceScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const goldColor = theme.gold?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [selectedService, setSelectedService] = useState<ServiceType>('elderly-care');
-  const [currentBanner, setCurrentBanner] = useState(0);
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
   const [showAllFAQ, setShowAllFAQ] = useState(false);
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
   const [showAllCaregivers, setShowAllCaregivers] = useState(false);
-
-  const banners = [
-    {
-      image: '/banner-elderly-care.jpg',
-      title: '专业养老护理服务',
-      subtitle: '持牌护理团队 · 贴心照护每一天',
-      colors: ['#f97316', '#ec4899'],
-    },
-    {
-      image: '/banner-escort-service.jpg',
-      title: '安心陪诊护送',
-      subtitle: '专业陪同 · 让就医不再孤单',
-      colors: ['#3b82f6', '#06b6d4'],
-    },
-    {
-      image: '/banner-medical-staff.jpg',
-      title: '医护人员替补',
-      subtitle: '快速配对 · 解决人手短缺',
-      colors: ['#8b5cf6', '#ec4899'],
-    },
-  ];
 
   const serviceTypes = [
     { id: 'elderly-care', name: '长者照顾', icon: Home, description: '日常起居照顾' },
     { id: 'escort', name: '陪诊服务', icon: Ambulance, description: '就医陪同护送' },
     { id: 'medical-staff', name: '医护替补', icon: Stethoscope, description: '机构人手支援' },
   ];
-
-  // Banner自动轮播
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   // 加载护理人员数据
   useEffect(() => {
@@ -76,7 +97,7 @@ const ElderlyServiceScreen: React.FC = () => {
   useEffect(() => {
     setExpandedFAQ(null);
     setShowAllFAQ(false);
-    setShowAllCaregivers(false); // 重置护理人员展开状态
+    setShowAllCaregivers(false);
   }, [selectedService]);
 
   const handleCaregiverPress = (caregiverId: string) => {
@@ -87,111 +108,75 @@ const ElderlyServiceScreen: React.FC = () => {
   };
 
   const handleOnlineConsult = () => {
-    // 导航到AI咨询，标记来源为养老服务
     navigation.navigate('AIConsultation' as never, { source: 'elderly_service' } as never);
   };
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      {/* TitleBar - 按照CLAUDE.md规范 */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <YStack flex={1} marginLeft="$3">
-          <Text fontSize="$5" fontWeight="600" color="$text">
-            养老服务
-          </Text>
-          <Text fontSize="$2" color="$textSecondary">
-            专业照护 · 温暖陪伴
-          </Text>
-        </YStack>
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <YStack flex={1} marginLeft="$2">
+            <Text fontSize="$5" fontWeight="600" color="$color12">
+              养老服务
+            </Text>
+            <Text fontSize="$2" color="$color10">
+              专业照护 · 温暖陪伴
+            </Text>
+          </YStack>
+        </XStack>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack>
-          {/* Banner轮播区 */}
-          <View height={200} position="relative">
-            {banners.map((banner, index) => (
-              <View
-                key={index}
-                position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
-                opacity={currentBanner === index ? 1 : 0}
-                style={{ transition: 'opacity 0.5s' }}
-              >
-                <LinearGradient
-                  colors={banner.colors}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ flex: 1, padding: 24, justifyContent: 'flex-end' }}
-                >
-                  <XStack alignItems="center" marginBottom="$2">
-                    <Heart size={20} color="white" />
-                    <Text fontSize="$7" fontWeight="bold" color="white" marginLeft="$2">
-                      {banner.title}
-                    </Text>
-                  </XStack>
-                  <Text fontSize="$3" color="rgba(255,255,255,0.9)">
-                    {banner.subtitle}
-                  </Text>
-                  <YStack marginTop="$4">
-                    <XStack gap="$3">
-                      <View backgroundColor="rgba(255,255,255,0.2)" borderRadius="$3" padding="$3" flex={1}>
-                        <Text fontSize="$6" fontWeight="bold" color="white">500+</Text>
-                        <Text fontSize="$2" color="rgba(255,255,255,0.9)">服务家庭</Text>
-                      </View>
-                      <View backgroundColor="rgba(255,255,255,0.2)" borderRadius="$3" padding="$3" flex={1}>
-                        <Text fontSize="$6" fontWeight="bold" color="white">50+</Text>
-                        <Text fontSize="$2" color="rgba(255,255,255,0.9)">专业护理员</Text>
-                      </View>
-                      <View backgroundColor="rgba(255,255,255,0.2)" borderRadius="$3" padding="$3" flex={1}>
-                        <Text fontSize="$6" fontWeight="bold" color="white">4.9</Text>
-                        <Text fontSize="$2" color="rgba(255,255,255,0.9)">服务评分</Text>
-                      </View>
-                    </XStack>
-                  </YStack>
-                </LinearGradient>
-              </View>
-            ))}
-
-            {/* Banner指示器 */}
-            <XStack
-              position="absolute"
-              bottom={16}
-              left={0}
-              right={0}
-              justifyContent="center"
-              gap="$2"
-            >
-              {banners.map((_, index) => (
-                <View
-                  key={index}
-                  width={currentBanner === index ? 24 : 8}
-                  height={8}
-                  borderRadius={4}
-                  backgroundColor={currentBanner === index ? 'white' : 'rgba(255,255,255,0.5)'}
-                  style={{ transition: 'all 0.3s' }}
-                />
-              ))}
+          {/* 顶部统计区 */}
+          <View backgroundColor="$color2" padding="$2" paddingTop="$3">
+            <XStack gap="$2" justifyContent="space-around">
+              <YStack alignItems="center" flex={1}>
+                <Text fontSize="$6" fontWeight="700" color="$primary">500+</Text>
+                <Text fontSize="$2" color="$color10">服务家庭</Text>
+              </YStack>
+              <View width={1} backgroundColor="$color5" />
+              <YStack alignItems="center" flex={1}>
+                <Text fontSize="$6" fontWeight="700" color="$primary">50+</Text>
+                <Text fontSize="$2" color="$color10">专业护理员</Text>
+              </YStack>
+              <View width={1} backgroundColor="$color5" />
+              <YStack alignItems="center" flex={1}>
+                <XStack alignItems="center" gap="$1">
+                  <Text fontSize="$6" fontWeight="700" color="$primary">4.9</Text>
+                </XStack>
+                <Text fontSize="$2" color="$color10">服务评分</Text>
+              </YStack>
             </XStack>
           </View>
 
           {/* 服务类型Tab */}
-          <View backgroundColor="$surface" padding="$4" borderBottomWidth={1} borderBottomColor="$borderColor">
-            <XStack gap="$3">
+          <View backgroundColor="$color2" padding="$2" borderBottomWidth={1} borderBottomColor="$color5">
+            <XStack gap="$2">
               {serviceTypes.map((type) => {
                 const IconComponent = type.icon;
+                const isSelected = selectedService === type.id;
                 return (
                   <Pressable
                     key={type.id}
@@ -199,18 +184,18 @@ const ElderlyServiceScreen: React.FC = () => {
                     style={{ flex: 1 }}
                   >
                     <View
-                      backgroundColor={selectedService === type.id ? COLORS.primary : '$background'}
-                      borderRadius="$3"
-                      padding="$3"
+                      backgroundColor={isSelected ? '$primary' : '$color4'}
+                      borderRadius="$4"
+                      padding="$2"
                       alignItems="center"
                       borderWidth={1}
-                      borderColor={selectedService === type.id ? COLORS.primary : '$borderColor'}
+                      borderColor={isSelected ? '$primary' : '$color5'}
                     >
-                      <IconComponent size={24} color={selectedService === type.id ? 'white' : COLORS.text} />
+                      <IconComponent size={22} color={isSelected ? 'white' : color12} />
                       <Text
                         fontSize="$3"
-                        fontWeight={selectedService === type.id ? '600' : '400'}
-                        color={selectedService === type.id ? 'white' : '$text'}
+                        fontWeight={isSelected ? '600' : '400'}
+                        color={isSelected ? 'white' : '$color12'}
                         marginTop="$1"
                       >
                         {type.name}
@@ -222,27 +207,92 @@ const ElderlyServiceScreen: React.FC = () => {
             </XStack>
           </View>
 
+          {/* 平台合作与资质介绍 */}
+          <View backgroundColor="$color2" padding="$2" marginTop="$2">
+            <XStack gap="$2" alignItems="center" marginBottom="$2">
+              <BadgeCheck size={20} color={primaryColor} />
+              <Text fontSize="$4" fontWeight="600" color="$color12">
+                {partnershipInfo.title}
+              </Text>
+            </XStack>
+            <Text fontSize="$3" color="$color10" lineHeight={20} marginBottom="$3">
+              {partnershipInfo.description}
+            </Text>
+
+            {/* 合作机构 */}
+            <YStack gap="$2" marginBottom="$3">
+              <XStack gap="$1" alignItems="center">
+                <Building2 size={16} color={primaryColor} />
+                <Text fontSize="$3" fontWeight="600" color="$color12">合作机构</Text>
+              </XStack>
+              <XStack flexWrap="wrap" gap="$1.5">
+                {partnershipInfo.partners.map((partner, index) => (
+                  <View
+                    key={index}
+                    paddingHorizontal="$2"
+                    paddingVertical="$1"
+                    borderRadius="$3"
+                    borderWidth={1}
+                    borderColor="$primary"
+                  >
+                    <Text fontSize="$2" color="$primary" fontWeight="500">
+                      {partner.name}
+                    </Text>
+                  </View>
+                ))}
+              </XStack>
+            </YStack>
+
+            {/* 资质认证 */}
+            <YStack gap="$2" marginBottom="$3">
+              <XStack gap="$1" alignItems="center">
+                <FileCheck size={16} color={successColor} />
+                <Text fontSize="$3" fontWeight="600" color="$color12">资质认证</Text>
+              </XStack>
+              <YStack gap="$1.5">
+                {partnershipInfo.certifications.map((cert, index) => (
+                  <XStack key={index} justifyContent="space-between" alignItems="center" padding="$2" backgroundColor="$color4" borderRadius="$3">
+                    <Text fontSize="$3" color="$color12">{cert.name}</Text>
+                    <View backgroundColor="$success" paddingHorizontal="$2" paddingVertical="$0.5" borderRadius="$2">
+                      <Text fontSize={10} color="white" fontWeight="600">{cert.level}</Text>
+                    </View>
+                  </XStack>
+                ))}
+              </YStack>
+            </YStack>
+
+            {/* 服务保障 */}
+            <YStack gap="$1">
+              {partnershipInfo.qualifications.map((qual, index) => (
+                <XStack key={index} gap="$2" alignItems="center">
+                  <CheckCircle size={14} color={successColor} />
+                  <Text fontSize="$2" color="$color10">{qual}</Text>
+                </XStack>
+              ))}
+            </YStack>
+          </View>
+
           {/* ========== 长者照顾服务 sections ========== */}
           {selectedService === 'elderly-care' && (
             <>
               {/* 为什么需要长者照顾服务？ */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   {elderlyWhyNeed.title}
                 </Text>
-                <Text fontSize="$3" color="$textSecondary" marginBottom="$3" lineHeight={22}>
+                <Text fontSize="$3" color="$color10" marginBottom="$2" lineHeight={20}>
                   {elderlyWhyNeed.content}
                 </Text>
-                <XStack flexWrap="wrap" gap="$2">
+                <XStack flexWrap="wrap" gap="$1.5">
                   {elderlyWhyNeed.situations.map((situation, index) => (
                     <View
                       key={index}
-                      backgroundColor="rgba(99, 102, 241, 0.1)"
-                      paddingHorizontal="$3"
-                      paddingVertical="$2"
-                      borderRadius="$6"
+                      paddingHorizontal="$2"
+                      paddingVertical="$1"
+                      borderRadius="$10"
+                      style={{ backgroundColor: `${primaryColor}15` }}
                     >
-                      <Text fontSize="$2" color={COLORS.primary}>
+                      <Text fontSize="$2" color="$primary" fontWeight="500">
                         {situation}
                       </Text>
                     </View>
@@ -251,63 +301,63 @@ const ElderlyServiceScreen: React.FC = () => {
               </View>
 
               {/* 服务套餐 */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   服务套餐
                 </Text>
-                <YStack gap="$3">
+                <YStack gap="$2">
                   {servicePackages.map((pkg) => (
-                    <Card
+                    <View
                       key={pkg.id}
-                      padding="$4"
-                      backgroundColor={pkg.popular ? 'rgba(99, 102, 241, 0.05)' : '$background'}
+                      padding="$2"
+                      backgroundColor={pkg.popular ? '$color4' : '$color4'}
                       borderRadius="$4"
                       borderWidth={pkg.popular ? 2 : 1}
-                      borderColor={pkg.popular ? COLORS.primary : '$borderColor'}
+                      borderColor={pkg.popular ? '$primary' : '$color5'}
                       position="relative"
                     >
                       {pkg.popular && (
                         <View
                           position="absolute"
-                          top={-8}
-                          right={16}
-                          backgroundColor={COLORS.primary}
+                          top={-10}
+                          right={12}
+                          backgroundColor="$warning"
                           paddingHorizontal="$2"
-                          paddingVertical="$1"
+                          paddingVertical="$0.5"
                           borderRadius="$2"
                         >
-                          <Text fontSize="$1" color="white" fontWeight="600">
+                          <Text fontSize={10} color="white" fontWeight="600">
                             最受欢迎
                           </Text>
                         </View>
                       )}
 
-                      <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$3">
+                      <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$2">
                         <YStack>
-                          <Text fontSize="$5" fontWeight="bold" color="$text">
+                          <Text fontSize="$4" fontWeight="600" color="$color12">
                             {pkg.name}
                           </Text>
-                          <Text fontSize="$2" color="$textSecondary">
+                          <Text fontSize="$2" color="$color10">
                             {pkg.description}
                           </Text>
                         </YStack>
                       </XStack>
 
-                      <YStack gap="$2" marginBottom="$3">
+                      <YStack gap="$1.5" marginBottom="$2">
                         {pkg.prices.map((price, index) => (
                           <XStack key={index} justifyContent="space-between" alignItems="center">
-                            <Text fontSize="$3" color="$textSecondary">
+                            <Text fontSize="$3" color="$color10">
                               {price.type}
                             </Text>
                             <XStack alignItems="baseline" gap="$1">
-                              <Text fontSize="$5" fontWeight="bold" color={COLORS.primary}>
+                              <Text fontSize="$4" fontWeight="700" color="$primary">
                                 ¥{price.price}
                               </Text>
-                              <Text fontSize="$2" color="$textSecondary">
+                              <Text fontSize="$2" color="$color10">
                                 {price.unit}
                               </Text>
                               {price.save && (
-                                <Text fontSize="$1" color={COLORS.success}>
+                                <Text fontSize={10} color="$success" fontWeight="500">
                                   {price.save}
                                 </Text>
                               )}
@@ -316,28 +366,28 @@ const ElderlyServiceScreen: React.FC = () => {
                         ))}
                       </YStack>
 
-                      <YStack gap="$1" marginBottom="$3">
+                      <YStack gap="$1" marginBottom="$2">
                         {pkg.features.map((feature, index) => (
-                          <XStack key={index} alignItems="center" gap="$2">
-                            <CheckCircle size={12} color={COLORS.primary} />
-                            <Text fontSize="$2" color="$textSecondary">
+                          <XStack key={index} alignItems="center" gap="$1.5">
+                            <CheckCircle size={12} color={successColor} />
+                            <Text fontSize="$2" color="$color10">
                               {feature}
                             </Text>
                           </XStack>
                         ))}
                       </YStack>
 
-                      <View backgroundColor="rgba(99, 102, 241, 0.1)" padding="$2" borderRadius="$2">
-                        <Text fontSize="$2" color="$text">
-                          💡 {pkg.note}
+                      <View backgroundColor="$color2" padding="$2" borderRadius="$3">
+                        <Text fontSize="$2" color="$color12">
+                          {pkg.note}
                           {pkg.discount && ` · ${pkg.discount}`}
                         </Text>
                       </View>
-                    </Card>
+                    </View>
                   ))}
                 </YStack>
 
-                <View backgroundColor={COLORS.primaryLight} padding="$3" borderRadius="$3" marginTop="$3">
+                <View backgroundColor="$primary" padding="$2" borderRadius="$4" marginTop="$2">
                   <XStack alignItems="center" gap="$2">
                     <Info size={16} color="white" />
                     <Text fontSize="$2" color="white" flex={1}>
@@ -348,8 +398,8 @@ const ElderlyServiceScreen: React.FC = () => {
               </View>
 
               {/* 信任徽章 */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <XStack gap="$4" justifyContent="space-around">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <XStack gap="$2" justifyContent="space-around">
                   {[
                     { icon: Shield, title: '资质认证', desc: '持证上岗' },
                     { icon: Award, title: '专业培训', desc: '定期考核' },
@@ -358,21 +408,21 @@ const ElderlyServiceScreen: React.FC = () => {
                   ].map((badge, index) => {
                     const IconComponent = badge.icon;
                     return (
-                      <YStack key={index} alignItems="center" gap="$2">
+                      <YStack key={index} alignItems="center" gap="$1">
                         <View
-                          width={48}
-                          height={48}
-                          borderRadius={24}
-                          backgroundColor={COLORS.primaryLight}
+                          width={44}
+                          height={44}
+                          borderRadius={22}
+                          backgroundColor="$primary"
                           justifyContent="center"
                           alignItems="center"
                         >
-                          <IconComponent size={24} color="white" />
+                          <IconComponent size={22} color="white" />
                         </View>
-                        <Text fontSize="$2" fontWeight="600" color="$text">
+                        <Text fontSize="$2" fontWeight="600" color="$color12">
                           {badge.title}
                         </Text>
-                        <Text fontSize="$1" color="$textSecondary">
+                        <Text fontSize={10} color="$color10">
                           {badge.desc}
                         </Text>
                       </YStack>
@@ -387,28 +437,28 @@ const ElderlyServiceScreen: React.FC = () => {
           {selectedService === 'escort' && (
             <>
               {/* 什么是陪诊服务？ */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   {escortWhyNeed.title}
                 </Text>
-                <Text fontSize="$3" color="$textSecondary" marginBottom="$3" lineHeight={22}>
+                <Text fontSize="$3" color="$color10" marginBottom="$2" lineHeight={20}>
                   {escortWhyNeed.content}
                 </Text>
-                <Text fontSize="$3" color="$textSecondary" lineHeight={22}>
+                <Text fontSize="$3" color="$color10" lineHeight={20}>
                   {escortWhyNeed.additionalInfo}
                 </Text>
               </View>
 
               {/* 服务内容 */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   服务内容
                 </Text>
-                <YStack gap="$2">
+                <YStack gap="$1.5">
                   {escortServiceDetails.services.map((service, index) => (
                     <XStack key={index} alignItems="flex-start" gap="$2">
-                      <CheckCircle size={16} color={COLORS.success} />
-                      <Text fontSize="$3" color="$text" flex={1}>
+                      <CheckCircle size={16} color={successColor} />
+                      <Text fontSize="$3" color="$color12" flex={1}>
                         {service}
                       </Text>
                     </XStack>
@@ -417,15 +467,15 @@ const ElderlyServiceScreen: React.FC = () => {
               </View>
 
               {/* 适用人群 */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   适用人群
                 </Text>
-                <YStack gap="$2">
+                <YStack gap="$1.5">
                   {escortServiceDetails.suitableFor.map((person, index) => (
                     <XStack key={index} alignItems="center" gap="$2">
-                      <Users size={16} color={COLORS.primary} />
-                      <Text fontSize="$3" color="$text">
+                      <Users size={16} color={primaryColor} />
+                      <Text fontSize="$3" color="$color12">
                         {person}
                       </Text>
                     </XStack>
@@ -434,17 +484,17 @@ const ElderlyServiceScreen: React.FC = () => {
               </View>
 
               {/* 为什么需要陪诊员？ */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   为什么需要陪诊员？
                 </Text>
-                <YStack gap="$4">
+                <YStack gap="$2">
                   {escortWhyNeedDetails.sections.map((section, index) => (
                     <YStack key={index}>
-                      <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+                      <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
                         {section.title}
                       </Text>
-                      <Text fontSize="$3" color="$textSecondary" lineHeight={20}>
+                      <Text fontSize="$3" color="$color10" lineHeight={20}>
                         {section.content}
                       </Text>
                     </YStack>
@@ -453,32 +503,32 @@ const ElderlyServiceScreen: React.FC = () => {
               </View>
 
               {/* CTA */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <LinearGradient
-                  colors={['#3b82f6', '#06b6d4']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ borderRadius: 16, padding: 24, alignItems: 'center' }}
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <View
+                  backgroundColor="$primary"
+                  borderRadius="$4"
+                  padding="$3"
+                  alignItems="center"
                 >
-                  <Text fontSize="$6" fontWeight="bold" color="white" marginBottom="$2">
+                  <Text fontSize="$5" fontWeight="600" color="white" marginBottom="$1">
                     需要陪诊服务？
                   </Text>
-                  <Text fontSize="$3" color="rgba(255,255,255,0.9)" marginBottom="$4">
+                  <Text fontSize="$3" color="white" opacity={0.9} marginBottom="$3">
                     超过500位经专业培训的陪诊员，获9成客户给予五星好评
                   </Text>
-                  <Pressable>
+                  <Pressable onPress={handleOnlineConsult}>
                     <View
                       backgroundColor="white"
-                      paddingHorizontal="$6"
-                      paddingVertical="$3"
-                      borderRadius="$3"
+                      paddingHorizontal="$4"
+                      paddingVertical="$2"
+                      borderRadius="$10"
                     >
-                      <Text fontSize="$4" fontWeight="600" color={COLORS.primary}>
+                      <Text fontSize="$3" fontWeight="600" color="$primary">
                         立即咨询预约
                       </Text>
                     </View>
                   </Pressable>
-                </LinearGradient>
+                </View>
               </View>
             </>
           )}
@@ -487,23 +537,23 @@ const ElderlyServiceScreen: React.FC = () => {
           {selectedService === 'medical-staff' && (
             <>
               {/* 什么时候需要医护人员替补？ */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   {medicalStaffWhyNeed.title}
                 </Text>
-                <Text fontSize="$3" color="$textSecondary" marginBottom="$3" lineHeight={22}>
+                <Text fontSize="$3" color="$color10" marginBottom="$2" lineHeight={20}>
                   {medicalStaffWhyNeed.content}
                 </Text>
-                <XStack flexWrap="wrap" gap="$2">
+                <XStack flexWrap="wrap" gap="$1.5">
                   {medicalStaffWhyNeed.situations.map((situation, index) => (
                     <View
                       key={index}
-                      backgroundColor="rgba(139, 92, 246, 0.1)"
-                      paddingHorizontal="$3"
-                      paddingVertical="$2"
-                      borderRadius="$6"
+                      paddingHorizontal="$2"
+                      paddingVertical="$1"
+                      borderRadius="$10"
+                      style={{ backgroundColor: `${primaryColor}15` }}
                     >
-                      <Text fontSize="$2" color="#8b5cf6">
+                      <Text fontSize="$2" color="$primary" fontWeight="500">
                         {situation}
                       </Text>
                     </View>
@@ -512,51 +562,51 @@ const ElderlyServiceScreen: React.FC = () => {
               </View>
 
               {/* 医护人员类别 */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   医护人员类别
                 </Text>
-                <YStack gap="$3">
+                <YStack gap="$2">
                   {medicalStaffDetails.staffTypes.map((staff, index) => (
-                    <Card key={index} padding="$4" backgroundColor="rgba(139, 92, 246, 0.05)" borderRadius="$3">
-                      <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$3">
-                        <Text fontSize="$4" fontWeight="600" color="$text">
+                    <View key={index} padding="$2" backgroundColor="$color4" borderRadius="$4">
+                      <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$2">
+                        <Text fontSize="$4" fontWeight="600" color="$color12">
                           {staff.type}
                         </Text>
-                        <Text fontSize="$3" fontWeight="600" color="#8b5cf6">
+                        <Text fontSize="$3" fontWeight="600" color="$primary">
                           {staff.pricing}
                         </Text>
                       </XStack>
                       <YStack gap="$1">
                         {staff.services.map((service, sIndex) => (
-                          <XStack key={sIndex} alignItems="center" gap="$2">
-                            <CheckCircle size={12} color="#8b5cf6" />
-                            <Text fontSize="$2" color="$textSecondary">
+                          <XStack key={sIndex} alignItems="center" gap="$1.5">
+                            <CheckCircle size={12} color={successColor} />
+                            <Text fontSize="$2" color="$color10">
                               {service}
                             </Text>
                           </XStack>
                         ))}
                       </YStack>
-                    </Card>
+                    </View>
                   ))}
                 </YStack>
               </View>
 
               {/* 适用机构 */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   适用机构
                 </Text>
-                <XStack flexWrap="wrap" gap="$2">
+                <XStack flexWrap="wrap" gap="$1.5">
                   {medicalStaffDetails.suitableOrganizations.map((org, index) => (
                     <View
                       key={index}
-                      backgroundColor="rgba(139, 92, 246, 0.1)"
-                      paddingHorizontal="$3"
-                      paddingVertical="$2"
-                      borderRadius="$6"
+                      paddingHorizontal="$2"
+                      paddingVertical="$1"
+                      borderRadius="$10"
+                      style={{ backgroundColor: `${primaryColor}15` }}
                     >
-                      <Text fontSize="$2" color="#8b5cf6">
+                      <Text fontSize="$2" color="$primary" fontWeight="500">
                         {org}
                       </Text>
                     </View>
@@ -565,30 +615,30 @@ const ElderlyServiceScreen: React.FC = () => {
               </View>
 
               {/* 服务流程 */}
-              <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" padding="$2" marginTop="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   服务流程
                 </Text>
-                <YStack gap="$3">
+                <YStack gap="$2">
                   {medicalStaffDetails.process.map((item) => (
-                    <XStack key={item.step} gap="$3" alignItems="flex-start">
+                    <XStack key={item.step} gap="$2" alignItems="flex-start">
                       <View
-                        width={32}
-                        height={32}
-                        borderRadius={16}
-                        backgroundColor="#8b5cf6"
+                        width={28}
+                        height={28}
+                        borderRadius={14}
+                        backgroundColor="$primary"
                         justifyContent="center"
                         alignItems="center"
                       >
-                        <Text fontSize="$3" fontWeight="bold" color="white">
+                        <Text fontSize="$3" fontWeight="700" color="white">
                           {item.step}
                         </Text>
                       </View>
                       <YStack flex={1}>
-                        <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$1">
+                        <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$0.5">
                           {item.title}
                         </Text>
-                        <Text fontSize="$2" color="$textSecondary" lineHeight={18}>
+                        <Text fontSize="$2" color="$color10" lineHeight={18}>
                           {item.desc}
                         </Text>
                       </YStack>
@@ -601,19 +651,19 @@ const ElderlyServiceScreen: React.FC = () => {
 
           {/* ========== 通用sections（护理人员、FAQ） ========== */}
 
-          {/* 护理人员展示 - 统一双列布局 */}
+          {/* 护理人员展示 */}
           {caregivers.length > 0 && (
-            <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-              <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                <Text fontSize="$4" fontWeight="bold" color="$text">
+            <View backgroundColor="$color2" padding="$2" marginTop="$2">
+              <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12">
                   {selectedService === 'escort' ? '专业陪诊团队' :
                    selectedService === 'medical-staff' ? '专业医护团队' : '推荐护理人员'}
-                  <Text fontSize="$3" fontWeight="normal" color="$textSecondary">
+                  <Text fontSize="$3" fontWeight="400" color="$color10">
                     {' '}({caregivers.length}人)
                   </Text>
                 </Text>
               </XStack>
-              <XStack flexDirection="row" flexWrap="wrap" gap="$3">
+              <XStack flexDirection="row" flexWrap="wrap" gap="$2">
                 {(showAllCaregivers ? caregivers : caregivers.slice(0, 6)).map((caregiver) => (
                   <View key={caregiver.id} flex={1} minWidth="45%" maxWidth="48%">
                     <CaregiverCard
@@ -627,14 +677,14 @@ const ElderlyServiceScreen: React.FC = () => {
               {caregivers.length > 6 && (
                 <Pressable onPress={() => setShowAllCaregivers(!showAllCaregivers)}>
                   <View
-                    marginTop="$3"
-                    borderRadius="$3"
+                    marginTop="$2"
+                    borderRadius="$10"
                     borderWidth={1}
-                    borderColor={COLORS.primary}
+                    borderColor="$primary"
                     paddingVertical="$2"
                     alignItems="center"
                   >
-                    <Text fontSize="$3" color={COLORS.primary} fontWeight="600">
+                    <Text fontSize="$3" color="$primary" fontWeight="500">
                       {showAllCaregivers ? '收起' : `展示更多 (${caregivers.length - 6})`}
                     </Text>
                   </View>
@@ -643,52 +693,52 @@ const ElderlyServiceScreen: React.FC = () => {
             </View>
           )}
 
-          {/* 了解护理资质 - Only for elderly-care, moved before FAQ */}
+          {/* 了解护理资质 - Only for elderly-care */}
           {selectedService === 'elderly-care' && (
-            <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-              <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+            <View backgroundColor="$color2" padding="$2" marginTop="$2">
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 了解护理资质
               </Text>
 
-              <YStack gap="$3">
+              <YStack gap="$2">
                 {qualificationDetails.map((detail) => (
-                  <Card key={detail.id} padding="$4" backgroundColor="$background" borderRadius="$3">
+                  <View key={detail.id} padding="$2" backgroundColor="$color4" borderRadius="$4">
                     <YStack marginBottom="$2">
-                      <XStack alignItems="center" gap="$2" marginBottom="$1">
-                        <Text fontSize="$4" fontWeight="bold" color="$text">
+                      <XStack alignItems="center" gap="$2" marginBottom="$0.5">
+                        <Text fontSize="$4" fontWeight="600" color="$color12">
                           {detail.title}
                         </Text>
                         {detail.badge && (
                           <View
-                            backgroundColor={COLORS.primary}
-                            paddingHorizontal="$2"
-                            paddingVertical="$1"
+                            backgroundColor="$warning"
+                            paddingHorizontal="$1.5"
+                            paddingVertical="$0.5"
                             borderRadius="$2"
                           >
-                            <Text fontSize="$1" color="white" fontWeight="600">
+                            <Text fontSize={10} color="white" fontWeight="600">
                               {detail.badge}
                             </Text>
                           </View>
                         )}
                       </XStack>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         {detail.subtitle}
                       </Text>
                     </YStack>
 
-                    <Text fontSize="$3" color="$text" marginBottom="$3">
+                    <Text fontSize="$3" color="$color12" marginBottom="$2">
                       {detail.description}
                     </Text>
 
-                    <YStack marginBottom="$3">
-                      <Text fontSize="$2" fontWeight="600" color="$text" marginBottom="$2">
+                    <YStack marginBottom="$2">
+                      <Text fontSize="$2" fontWeight="600" color="$color12" marginBottom="$1">
                         服务范围：
                       </Text>
                       <YStack gap="$1">
                         {detail.services.map((service, index) => (
-                          <XStack key={index} alignItems="center" gap="$2">
-                            <CheckCircle size={12} color={COLORS.success} />
-                            <Text fontSize="$2" color="$textSecondary">
+                          <XStack key={index} alignItems="center" gap="$1.5">
+                            <CheckCircle size={12} color={successColor} />
+                            <Text fontSize="$2" color="$color10">
                               {service}
                             </Text>
                           </XStack>
@@ -696,73 +746,73 @@ const ElderlyServiceScreen: React.FC = () => {
                       </YStack>
                     </YStack>
 
-                    <View backgroundColor="$surface" padding="$2" borderRadius="$2">
+                    <View backgroundColor="$color2" padding="$2" borderRadius="$3">
                       <XStack alignItems="center" gap="$1">
-                        <Info size={12} color={COLORS.textSecondary} />
-                        <Text fontSize="$2" color="$textSecondary" flex={1}>
+                        <Info size={12} color={color10} />
+                        <Text fontSize="$2" color="$color10" flex={1}>
                           {detail.requirements}
                         </Text>
                       </XStack>
                     </View>
-                  </Card>
+                  </View>
                 ))}
               </YStack>
             </View>
           )}
 
           {/* 常见问题FAQ */}
-          <View backgroundColor="$surface" padding="$4" marginBottom="$2">
-            <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-              <Text fontSize="$4" fontWeight="bold" color="$text">
+          <View backgroundColor="$color2" padding="$2" marginTop="$2">
+            <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 常见问题
               </Text>
               <Pressable onPress={() => setShowAllFAQ(!showAllFAQ)}>
-                <XStack alignItems="center" gap="$1">
-                  <Text fontSize="$3" color={COLORS.primary}>
+                <XStack alignItems="center" gap="$0.5">
+                  <Text fontSize="$3" color="$primary" fontWeight="500">
                     {showAllFAQ ? '收起' : '展开全部'}
                   </Text>
                   {showAllFAQ ? (
-                    <ChevronUp size={16} color={COLORS.primary} />
+                    <ChevronUp size={14} color={primaryColor} />
                   ) : (
-                    <ChevronDown size={16} color={COLORS.primary} />
+                    <ChevronDown size={14} color={primaryColor} />
                   )}
                 </XStack>
               </Pressable>
             </XStack>
 
-            <YStack gap="$2">
+            <YStack gap="$1.5">
               {(showAllFAQ ? faqsByServiceType[selectedService] : faqsByServiceType[selectedService].slice(0, 3)).map((faq, index) => (
-                <Card
+                <View
                   key={index}
-                  backgroundColor="$background"
-                  borderRadius="$3"
+                  backgroundColor="$color4"
+                  borderRadius="$4"
                   overflow="hidden"
                 >
                   <Pressable onPress={() => setExpandedFAQ(expandedFAQ === index ? null : index)}>
                     <XStack
                       justifyContent="space-between"
                       alignItems="center"
-                      padding="$3"
+                      padding="$2"
                     >
-                      <Text fontSize="$3" fontWeight="600" color="$text" flex={1} marginRight="$2">
+                      <Text fontSize="$3" fontWeight="600" color="$color12" flex={1} marginRight="$2">
                         {faq.question}
                       </Text>
                       {expandedFAQ === index ? (
-                        <ChevronUp size={16} color={COLORS.textSecondary} />
+                        <ChevronUp size={16} color={color10} />
                       ) : (
-                        <ChevronDown size={16} color={COLORS.textSecondary} />
+                        <ChevronDown size={16} color={color10} />
                       )}
                     </XStack>
                   </Pressable>
 
                   {expandedFAQ === index && (
-                    <View paddingHorizontal="$3" paddingBottom="$3">
-                      <Text fontSize="$3" color="$textSecondary" lineHeight={20}>
+                    <View paddingHorizontal="$2" paddingBottom="$2">
+                      <Text fontSize="$3" color="$color10" lineHeight={20}>
                         {faq.answer}
                       </Text>
                     </View>
                   )}
-                </Card>
+                </View>
               ))}
             </YStack>
           </View>
@@ -778,17 +828,18 @@ const ElderlyServiceScreen: React.FC = () => {
         bottom={0}
         left={0}
         right={0}
-        backgroundColor="$surface"
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
-        padding="$4"
-        paddingBottom={insets.bottom + 16}
+        borderTopColor="$color5"
+        paddingHorizontal="$2.5"
+        paddingVertical="$2"
+        paddingBottom={insets.bottom + 8}
       >
         <Pressable onPress={handleOnlineConsult}>
           <View
             height={48}
-            borderRadius="$3"
-            backgroundColor={COLORS.primary}
+            borderRadius="$10"
+            backgroundColor="$primary"
             justifyContent="center"
             alignItems="center"
           >

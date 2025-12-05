@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, Alert } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   TrendingUp,
@@ -14,7 +15,6 @@ import {
   Save,
   MessageCircle,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 interface PlannerData {
   age: string;
@@ -62,6 +62,13 @@ const InsurancePlanResultScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RouteParams, 'InsurancePlanResult'>>();
   const { plannerData } = route.params;
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const [selectedPlan, setSelectedPlan] = useState<string>('standard');
   const [plans, setPlans] = useState<InsurancePlan[]>([]);
@@ -271,10 +278,10 @@ const InsurancePlanResultScreen: React.FC = () => {
 
   const renderPlanCard = (plan: InsurancePlan) => {
     const isSelected = selectedPlan === plan.id;
-    const tierColors = {
-      basic: '#10B981',
-      standard: '#3B82F6',
-      premium: '#8B5CF6',
+    const tierColors: { [key: string]: string | undefined } = {
+      basic: successColor,
+      standard: primaryColor,
+      premium: primaryColor,
     };
     const tierLabels = {
       basic: '基础',
@@ -286,10 +293,10 @@ const InsurancePlanResultScreen: React.FC = () => {
       <Pressable key={plan.id} onPress={() => setSelectedPlan(plan.id)}>
         <View
           marginBottom="$3"
-          backgroundColor="$surface"
+          backgroundColor="$color2"
           borderRadius="$4"
           borderWidth={2}
-          borderColor={isSelected ? tierColors[plan.tier] : '$borderColor'}
+          borderColor={isSelected ? tierColors[plan.tier] : '$color5'}
           overflow="hidden"
         >
           {/* Plan Header */}
@@ -327,40 +334,40 @@ const InsurancePlanResultScreen: React.FC = () => {
           </View>
 
           {/* Coverage Summary */}
-          <View padding="$3" borderBottomWidth={1} borderBottomColor="$borderColor">
-            <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+          <View padding="$3" borderBottomWidth={1} borderBottomColor="$color5">
+            <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
               保障额度
             </Text>
             <YStack gap="$2">
               <XStack justifyContent="space-between">
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   医疗保障
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color="$text">
+                <Text fontSize="$3" fontWeight="600" color="$color12">
                   {plan.coverage.medical}
                 </Text>
               </XStack>
               <XStack justifyContent="space-between">
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   重疾保障
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color="$text">
+                <Text fontSize="$3" fontWeight="600" color="$color12">
                   {plan.coverage.criticalIllness}
                 </Text>
               </XStack>
               <XStack justifyContent="space-between">
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   意外保障
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color="$text">
+                <Text fontSize="$3" fontWeight="600" color="$color12">
                   {plan.coverage.accident}
                 </Text>
               </XStack>
               <XStack justifyContent="space-between">
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   寿险保障
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color="$text">
+                <Text fontSize="$3" fontWeight="600" color="$color12">
                   {plan.coverage.lifeInsurance}
                 </Text>
               </XStack>
@@ -368,15 +375,15 @@ const InsurancePlanResultScreen: React.FC = () => {
           </View>
 
           {/* Highlights */}
-          <View padding="$3" borderBottomWidth={1} borderBottomColor="$borderColor">
-            <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+          <View padding="$3" borderBottomWidth={1} borderBottomColor="$color5">
+            <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
               方案亮点
             </Text>
             <YStack gap="$1.5">
               {plan.highlights.map((highlight, index) => (
                 <XStack key={index} alignItems="center" gap="$2">
                   <Check size={14} color={tierColors[plan.tier]} />
-                  <Text fontSize="$2" color="$text">
+                  <Text fontSize="$2" color="$color12">
                     {highlight}
                   </Text>
                 </XStack>
@@ -386,7 +393,7 @@ const InsurancePlanResultScreen: React.FC = () => {
 
           {/* Products */}
           <View padding="$3">
-            <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+            <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
               推荐产品 ({plan.products.length}款)
             </Text>
             <YStack gap="$2">
@@ -399,10 +406,10 @@ const InsurancePlanResultScreen: React.FC = () => {
                 >
                   <XStack justifyContent="space-between" alignItems="center">
                     <YStack flex={1}>
-                      <Text fontSize="$3" fontWeight="600" color="$text">
+                      <Text fontSize="$3" fontWeight="600" color="$color12">
                         {product.name}
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary" marginTop="$0.5">
+                      <Text fontSize="$2" color="$color10" marginTop="$0.5">
                         {product.company} · {product.type}
                       </Text>
                     </YStack>
@@ -422,11 +429,11 @@ const InsurancePlanResultScreen: React.FC = () => {
   if (analyzing) {
     return (
       <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
-        <TrendingUp size={48} color={COLORS.primary} />
-        <Text fontSize="$5" fontWeight="600" color="$text" marginTop="$4">
+        <TrendingUp size={48} color={primaryColor} />
+        <Text fontSize="$5" fontWeight="600" color="$color12" marginTop="$4">
           AI正在分析您的保障需求...
         </Text>
-        <Text fontSize="$3" color="$textSecondary" marginTop="$2">
+        <Text fontSize="$3" color="$color10" marginTop="$2">
           基于您的年龄、健康状况和预算生成个性化方案
         </Text>
       </View>
@@ -436,38 +443,43 @@ const InsurancePlanResultScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-          AI保险规划方案
-        </Text>
-        <View flex={1} />
-        <XStack gap="$3">
-          <Pressable onPress={handleSharePlan}>
-            <Share2 size={22} color={COLORS.text} />
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
           </Pressable>
-          <Pressable onPress={handleSavePlan}>
-            <Save size={22} color={COLORS.text} />
-          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            AI保险规划方案
+          </Text>
+          <XStack gap="$2">
+            <Pressable onPress={handleSharePlan}>
+              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+                <Share2 size={22} color={color12} />
+              </View>
+            </Pressable>
+          </XStack>
         </XStack>
-      </XStack>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Coverage Gap Analysis */}
         {gapAnalysis && (
-          <View margin="$4" padding="$4" backgroundColor="$surface" borderRadius="$4">
-            <XStack alignItems="center" gap="$2" marginBottom="$3">
-              <Shield size={24} color={COLORS.primary} />
-              <Text fontSize="$4" fontWeight="600" color="$text">
+          <View marginHorizontal="$2.5" marginTop="$2" padding="$2" backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5">
+            <XStack alignItems="center" gap="$2" marginBottom="$2">
+              <Shield size={24} color={primaryColor} />
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 保障缺口分析
               </Text>
             </XStack>
@@ -475,18 +487,18 @@ const InsurancePlanResultScreen: React.FC = () => {
             <YStack gap="$3">
               <View>
                 <XStack justifyContent="space-between" marginBottom="$1">
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     家庭责任总额
                   </Text>
-                  <Text fontSize="$4" fontWeight="600" color="$text">
+                  <Text fontSize="$4" fontWeight="600" color="$color12">
                     {gapAnalysis.familyResponsibility}万
                   </Text>
                 </XStack>
-                <View height={8} backgroundColor="$borderColor" borderRadius="$2">
+                <View height={8} backgroundColor="$color5" borderRadius="$2">
                   <View
                     width="100%"
                     height="100%"
-                    backgroundColor={COLORS.primary}
+                    backgroundColor={primaryColor}
                     borderRadius="$2"
                   />
                 </View>
@@ -494,18 +506,18 @@ const InsurancePlanResultScreen: React.FC = () => {
 
               <View>
                 <XStack justifyContent="space-between" marginBottom="$1">
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     现有保障额度
                   </Text>
-                  <Text fontSize="$4" fontWeight="600" color={COLORS.success}>
+                  <Text fontSize="$4" fontWeight="600" color={successColor}>
                     {gapAnalysis.existingCoverage}万
                   </Text>
                 </XStack>
-                <View height={8} backgroundColor="$borderColor" borderRadius="$2">
+                <View height={8} backgroundColor="$color5" borderRadius="$2">
                   <View
                     width={`${(gapAnalysis.existingCoverage / gapAnalysis.familyResponsibility) * 100}%`}
                     height="100%"
-                    backgroundColor={COLORS.success}
+                    backgroundColor={successColor}
                     borderRadius="$2"
                   />
                 </View>
@@ -513,18 +525,18 @@ const InsurancePlanResultScreen: React.FC = () => {
 
               <View>
                 <XStack justifyContent="space-between" marginBottom="$1">
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     保障缺口
                   </Text>
-                  <Text fontSize="$4" fontWeight="600" color={COLORS.warning}>
+                  <Text fontSize="$4" fontWeight="600" color={warningColor}>
                     {gapAnalysis.coverageGap}万
                   </Text>
                 </XStack>
-                <View height={8} backgroundColor="$borderColor" borderRadius="$2">
+                <View height={8} backgroundColor="$color5" borderRadius="$2">
                   <View
                     width={`${(gapAnalysis.coverageGap / gapAnalysis.familyResponsibility) * 100}%`}
                     height="100%"
-                    backgroundColor={COLORS.warning}
+                    backgroundColor={warningColor}
                     borderRadius="$2"
                   />
                 </View>
@@ -534,14 +546,14 @@ const InsurancePlanResultScreen: React.FC = () => {
             <View
               marginTop="$3"
               padding="$2"
-              backgroundColor="#FFF7ED"
+              backgroundColor={`${warningColor}10`}
               borderRadius="$2"
               borderLeftWidth={3}
-              borderLeftColor={COLORS.warning}
+              borderLeftColor={warningColor}
             >
               <XStack alignItems="flex-start" gap="$2">
-                <AlertCircle size={16} color={COLORS.warning} style={{ marginTop: 2 }} />
-                <Text fontSize="$2" color="$text" flex={1}>
+                <AlertCircle size={16} color={warningColor} style={{ marginTop: 2 }} />
+                <Text fontSize="$2" color="$color12" flex={1}>
                   您的家庭保障缺口较大，建议尽快配置充足的保险保障，避免因意外或疾病导致家庭经济压力
                 </Text>
               </XStack>
@@ -550,14 +562,14 @@ const InsurancePlanResultScreen: React.FC = () => {
         )}
 
         {/* AI Recommendation Explanation */}
-        <View marginHorizontal="$4" marginBottom="$4" padding="$4" backgroundColor="#EEF2FF" borderRadius="$4">
+        <View marginHorizontal="$2.5" marginBottom="$2" padding="$2" backgroundColor={`${primaryColor}10`} borderRadius="$4" borderLeftWidth={3} borderLeftColor={primaryColor}>
           <XStack alignItems="center" gap="$2" marginBottom="$2">
-            <TrendingUp size={20} color={COLORS.primary} />
-            <Text fontSize="$4" fontWeight="600" color="$text">
+            <TrendingUp size={20} color={primaryColor} />
+            <Text fontSize="$4" fontWeight="600" color="$color12">
               AI推荐理由
             </Text>
           </XStack>
-          <Text fontSize="$3" color="$text" lineHeight={22}>
+          <Text fontSize="$3" color="$color12" lineHeight={22}>
             基于您{plannerData.age}岁的年龄、{plannerData.healthStatus === 'good' ? '良好' : '一般'}的健康状况、
             {plannerData.budget}万的预算，以及{plannerData.coverageNeeds.length}项保障需求，
             AI为您量身定制了{plans.length}套方案。推荐选择「全面保障方案」，
@@ -567,30 +579,30 @@ const InsurancePlanResultScreen: React.FC = () => {
 
         {/* Plan Cards */}
         <View paddingHorizontal="$4">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$3">
             为您推荐{plans.length}套方案
           </Text>
           {plans.map(plan => renderPlanCard(plan))}
         </View>
 
         {/* Consult Advisor CTA */}
-        <View margin="$4" padding="$4" backgroundColor="$surface" borderRadius="$4">
-          <XStack alignItems="center" gap="$3">
+        <View marginHorizontal="$2.5" marginTop="$2" padding="$2" backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5">
+          <XStack alignItems="center" gap="$2">
             <View
-              width={48}
-              height={48}
-              borderRadius={24}
-              backgroundColor={`${COLORS.primary}20`}
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor={`${primaryColor}15`}
               justifyContent="center"
               alignItems="center"
             >
-              <MessageCircle size={24} color={COLORS.primary} />
+              <MessageCircle size={24} color={primaryColor} />
             </View>
             <YStack flex={1}>
-              <Text fontSize="$4" fontWeight="600" color="$text">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 需要专业顾问精细化调整？
               </Text>
-              <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+              <Text fontSize="$2" color="$color10" marginTop="$1">
                 预约专业顾问为您量身定制保险方案
               </Text>
             </YStack>
@@ -598,8 +610,8 @@ const InsurancePlanResultScreen: React.FC = () => {
           <Pressable onPress={handleConsultAdvisor} style={{ marginTop: 12 }}>
             <View
               height={44}
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              backgroundColor={primaryColor}
               justifyContent="center"
               alignItems="center"
             >

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Pressable, ActivityIndicator, Dimensions } from 'react-native';
-import { View, Text, XStack, YStack, Card, H3 } from 'tamagui';
+import { ScrollView, Pressable, Dimensions } from 'react-native';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Shield,
@@ -14,19 +15,12 @@ import {
   TrendingUp,
   AlertCircle,
   Users,
-  Briefcase,
   ChevronRight,
   BookOpen,
   Video,
   HelpCircle,
-  Sparkles,
-  CheckCircle2,
 } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '@/constants/app';
 import {
-  INSURANCE_CATEGORY_LABELS,
-  INSURANCE_CATEGORY_COLORS,
   HOME_QUICK_ENTRIES,
 } from '@/constants/insurance';
 import { getProducts } from '@/services/insuranceProductService';
@@ -37,7 +31,12 @@ const { width } = Dimensions.get('window');
 
 const InsuranceHomeScreen: React.FC = () => {
   const navigation = useNavigation();
-  const [loading, setLoading] = useState(true);
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
   const [hotProducts, setHotProducts] = useState<InsuranceProduct[]>([]);
   const [topAdvisors, setTopAdvisors] = useState<InsuranceAdvisor[]>([]);
 
@@ -56,99 +55,108 @@ const InsuranceHomeScreen: React.FC = () => {
       setTopAdvisors(advisorsRes.slice(0, 3));
     } catch (error) {
       console.error('加载数据失败:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
-  // 保险类别配置（6个，一行3个）
+  // 保险类别配置（6个，一行3个）- 使用主题色和柔和色调
   const categories = [
-    { id: 'medical', label: '医疗险', icon: Activity, color: '#3B82F6' },
-    { id: 'critical_illness', label: '重疾险', icon: Heart, color: '#EF4444' },
-    { id: 'annuity', label: '年金险', icon: TrendingUp, color: '#10B981' },
-    { id: 'life', label: '寿险', icon: Shield, color: '#8B5CF6' },
-    { id: 'accident', label: '意外险', icon: AlertCircle, color: '#F59E0B' },
-    { id: 'long_term_care', label: '护理险', icon: Users, color: '#EC4899' },
+    { id: 'medical', label: '医疗险', icon: Activity, color: primaryColor },
+    { id: 'critical_illness', label: '重疾险', icon: Heart, color: theme.error?.val },
+    { id: 'annuity', label: '年金险', icon: TrendingUp, color: successColor },
+    { id: 'life', label: '寿险', icon: Shield, color: primaryColor },
+    { id: 'accident', label: '意外险', icon: AlertCircle, color: theme.warning?.val },
+    { id: 'long_term_care', label: '护理险', icon: Users, color: primaryColor },
   ];
-
-  if (loading) {
-    return (
-      <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text marginTop="$3" color="$textSecondary">
-          加载中...
-        </Text>
-      </View>
-    );
-  }
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      {/* Header - 标准居中TitleBar */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <YStack flex={1} marginLeft="$3">
-          <Text fontSize="$5" fontWeight="600" color="$text">
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             保险规划
           </Text>
-          <Text fontSize="$2" color="$textSecondary">
-            智能规划 · 专业守护
-          </Text>
-        </YStack>
-      </XStack>
+          <View width={40} />
+        </XStack>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* 主Banner - 渐变背景 */}
-        <View height={200} overflow="hidden" marginBottom="$4">
-          <LinearGradient
-            colors={['#3b82f6', '#8b5cf6']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ flex: 1, padding: 24, justifyContent: 'flex-end' }}
-          >
-            <XStack alignItems="center" marginBottom="$2">
-              <Shield size={24} color="white" />
-              <Text fontSize="$7" fontWeight="bold" color="white" marginLeft="$2">
-                智能保险规划
+        {/* 平台介绍 */}
+        <View
+          marginHorizontal="$2.5"
+          marginTop="$2"
+          marginBottom="$2"
+          padding="$2"
+          backgroundColor="$color2"
+          borderRadius="$5"
+          borderWidth={1}
+          borderColor="$color5"
+        >
+          <XStack alignItems="center" gap="$2" marginBottom="$2">
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor={`${primaryColor}15`}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Shield size={20} color={primaryColor} />
+            </View>
+            <YStack flex={1}>
+              <Text fontSize="$4" fontWeight="600" color="$color12">
+                保险信息聚合平台
+              </Text>
+              <Text fontSize="$2" color="$color10">
+                一站式保险产品比价与咨询
+              </Text>
+            </YStack>
+          </XStack>
+          <YStack gap="$1.5">
+            <XStack gap="$2" alignItems="center">
+              <View width={6} height={6} borderRadius={3} backgroundColor={successColor} />
+              <Text fontSize="$2" color="$color12">
+                聚合50+保险公司、1000+产品信息，方便对比选择
               </Text>
             </XStack>
-            <Text fontSize="$3" color="rgba(255,255,255,0.9)" marginBottom="$4">
-              AI规划 · 顾问咨询 · 理赔协助 全部免费
-            </Text>
-            <XStack gap="$3">
-              <View backgroundColor="rgba(255,255,255,0.2)" borderRadius="$3" padding="$3" flex={1}>
-                <Text fontSize="$6" fontWeight="bold" color="white">1000+</Text>
-                <Text fontSize="$2" color="rgba(255,255,255,0.9)">保障方案</Text>
-              </View>
-              <View backgroundColor="rgba(255,255,255,0.2)" borderRadius="$3" padding="$3" flex={1}>
-                <Text fontSize="$6" fontWeight="bold" color="white">100+</Text>
-                <Text fontSize="$2" color="rgba(255,255,255,0.9)">专业顾问</Text>
-              </View>
-              <View backgroundColor="rgba(255,255,255,0.2)" borderRadius="$3" padding="$3" flex={1}>
-                <Text fontSize="$6" fontWeight="bold" color="white">98%</Text>
-                <Text fontSize="$2" color="rgba(255,255,255,0.9)">满意度</Text>
-              </View>
+            <XStack gap="$2" alignItems="center">
+              <View width={6} height={6} borderRadius={3} backgroundColor={successColor} />
+              <Text fontSize="$2" color="$color12">
+                对接专业保险顾问，提供免费咨询服务
+              </Text>
             </XStack>
-          </LinearGradient>
+            <XStack gap="$2" alignItems="center">
+              <View width={6} height={6} borderRadius={3} backgroundColor={successColor} />
+              <Text fontSize="$2" color="$color12">
+                投保由正规保险公司承保，保单权益受法律保护
+              </Text>
+            </XStack>
+          </YStack>
         </View>
 
         {/* 快速入口 */}
-        <YStack space="$3" paddingHorizontal="$4">
-          <Text fontSize="$4" fontWeight="600" color="$text">
+        <YStack gap="$3" paddingHorizontal="$2.5">
+          <Text fontSize="$4" fontWeight="600" color="$color12">
             快速入口
           </Text>
 
           {/* 第一行：前2个入口 */}
-          <XStack space="$3">
+          <XStack gap="$3">
             {HOME_QUICK_ENTRIES.slice(0, 2).map(entry => {
               const Icon = {
                 cpu: Cpu,
@@ -158,44 +166,44 @@ const InsuranceHomeScreen: React.FC = () => {
               }[entry.icon] || Shield;
 
               return (
-                <Card
+                <Pressable
                   key={entry.id}
-                  flex={1}
-                  padding="$4"
-                  borderRadius="$4"
-                  backgroundColor="$cardBg"
-                  pressStyle={{ scale: 0.98 }}
-                  shadowColor="$shadow"
-                  shadowOffset={{ width: 0, height: 2 }}
-                  shadowOpacity={0.1}
-                  shadowRadius={8}
-                  elevation={4}
+                  style={{ flex: 1 }}
                   onPress={() => navigation.navigate(entry.route as never)}
                 >
                   <View
-                    width={48}
-                    height={48}
-                    borderRadius={24}
-                    backgroundColor={`${entry.color}15`}
-                    justifyContent="center"
-                    alignItems="center"
-                    marginBottom="$3"
+                    flex={1}
+                    padding="$2"
+                    borderRadius="$5"
+                    backgroundColor="$color2"
+                    borderWidth={1}
+                    borderColor="$color5"
                   >
-                    <Icon size={24} color={entry.color} />
+                    <View
+                      width={48}
+                      height={48}
+                      borderRadius={24}
+                      backgroundColor={`${primaryColor}15`}
+                      justifyContent="center"
+                      alignItems="center"
+                      marginBottom="$2"
+                    >
+                      <Icon size={24} color={primaryColor} />
+                    </View>
+                    <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1">
+                      {entry.label}
+                    </Text>
+                    <Text fontSize="$2" color="$color10">
+                      {entry.description}
+                    </Text>
                   </View>
-                  <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
-                    {entry.label}
-                  </Text>
-                  <Text fontSize="$2" color="$textSecondary">
-                    {entry.description}
-                  </Text>
-                </Card>
+                </Pressable>
               );
             })}
           </XStack>
 
           {/* 第二行：后2个入口 */}
-          <XStack space="$3">
+          <XStack gap="$3">
             {HOME_QUICK_ENTRIES.slice(2, 4).map(entry => {
               const Icon = {
                 cpu: Cpu,
@@ -205,62 +213,64 @@ const InsuranceHomeScreen: React.FC = () => {
               }[entry.icon] || Shield;
 
               return (
-                <Card
+                <Pressable
                   key={entry.id}
-                  flex={1}
-                  padding="$4"
-                  borderRadius="$4"
-                  backgroundColor="$cardBg"
-                  pressStyle={{ scale: 0.98 }}
-                  shadowColor="$shadow"
-                  shadowOffset={{ width: 0, height: 2 }}
-                  shadowOpacity={0.1}
-                  shadowRadius={8}
-                  elevation={4}
+                  style={{ flex: 1 }}
                   onPress={() => navigation.navigate(entry.route as never)}
                 >
                   <View
-                    width={48}
-                    height={48}
-                    borderRadius={24}
-                    backgroundColor={`${entry.color}15`}
-                    justifyContent="center"
-                    alignItems="center"
-                    marginBottom="$3"
+                    flex={1}
+                    padding="$2"
+                    borderRadius="$5"
+                    backgroundColor="$color2"
+                    borderWidth={1}
+                    borderColor="$color5"
                   >
-                    <Icon size={24} color={entry.color} />
+                    <View
+                      width={48}
+                      height={48}
+                      borderRadius={24}
+                      backgroundColor={`${primaryColor}15`}
+                      justifyContent="center"
+                      alignItems="center"
+                      marginBottom="$2"
+                    >
+                      <Icon size={24} color={primaryColor} />
+                    </View>
+                    <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1">
+                      {entry.label}
+                    </Text>
+                    <Text fontSize="$2" color="$color10">
+                      {entry.description}
+                    </Text>
                   </View>
-                  <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
-                    {entry.label}
-                  </Text>
-                  <Text fontSize="$2" color="$textSecondary">
-                    {entry.description}
-                  </Text>
-                </Card>
+                </Pressable>
               );
             })}
           </XStack>
         </YStack>
 
-        {/* 保险分类 */}
-        <YStack padding="$4" paddingTop="$2">
+        {/* 保险产品 - 分类 + 热销 */}
+        <YStack padding="$2.5" paddingTop="$2">
           <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-            <Text fontSize="$4" fontWeight="600" color="$text">
-              保险分类
+            <Text fontSize="$4" fontWeight="600" color="$color12">
+              保险产品
             </Text>
             <Pressable onPress={() => navigation.navigate('InsuranceProductList' as never)}>
-              <XStack alignItems="center" gap="$1">
-                <Text fontSize="$3" color={COLORS.primary}>
+              <XStack alignItems="center" gap="$0.5">
+                <Text fontSize="$3" color="$primary" fontWeight="500">
                   查看全部
                 </Text>
-                <ChevronRight size={16} color={COLORS.primary} />
+                <ChevronRight size={14} color={primaryColor} />
               </XStack>
             </Pressable>
           </XStack>
 
-          <XStack gap="$3" flexWrap="wrap">
-            {categories.map(category => {
+          {/* 分类网格 - 每行3个 */}
+          <XStack flexWrap="wrap" marginBottom="$3">
+            {categories.map((category, index) => {
               const Icon = category.icon;
+              const isLastInRow = (index + 1) % 3 === 0;
               return (
                 <Pressable
                   key={category.id}
@@ -269,20 +279,20 @@ const InsuranceHomeScreen: React.FC = () => {
                       category: category.id,
                     } as never)
                   }
-                  style={{ width: (width - 64) / 3 }}
+                  style={{ width: '33.33%', paddingRight: isLastInRow ? 0 : 8, marginBottom: 12 }}
                 >
-                  <YStack alignItems="center" gap="$2">
+                  <YStack alignItems="center" gap="$1.5">
                     <View
-                      width={56}
-                      height={56}
-                      borderRadius={28}
-                      backgroundColor={`${category.color}20`}
+                      width={48}
+                      height={48}
+                      borderRadius={24}
+                      backgroundColor={`${category.color}15`}
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Icon size={28} color={category.color} />
+                      <Icon size={24} color={category.color} />
                     </View>
-                    <Text fontSize="$2" color="$text" textAlign="center">
+                    <Text fontSize="$2" color="$color12" textAlign="center">
                       {category.label}
                     </Text>
                   </YStack>
@@ -290,29 +300,9 @@ const InsuranceHomeScreen: React.FC = () => {
               );
             })}
           </XStack>
-        </YStack>
 
-        {/* 热销产品 */}
-        <YStack padding="$4" paddingTop="$2">
-          <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-            <Text fontSize="$4" fontWeight="600" color="$text">
-              热销产品
-            </Text>
-            <Pressable
-              onPress={() =>
-                navigation.navigate('InsuranceProductList' as never, { sortBy: 'sales' } as never)
-              }
-            >
-              <XStack alignItems="center" gap="$1">
-                <Text fontSize="$3" color={COLORS.primary}>
-                  更多产品
-                </Text>
-                <ChevronRight size={16} color={COLORS.primary} />
-              </XStack>
-            </Pressable>
-          </XStack>
-
-          <YStack gap="$3">
+          {/* 热销产品列表 */}
+          <YStack gap="$2">
             {hotProducts.map(product => (
               <Pressable
                 key={product.id}
@@ -322,26 +312,26 @@ const InsuranceHomeScreen: React.FC = () => {
                   } as never)
                 }
               >
-                <Card bordered padding="$4" backgroundColor="$surface" pressStyle={{ scale: 0.98 }}>
-                  <YStack gap="$3">
+                <View borderWidth={1} borderColor="$color5" borderRadius="$5" padding="$2" backgroundColor="$color2">
+                  <YStack gap="$2">
                     <XStack justifyContent="space-between" alignItems="flex-start">
                       <YStack flex={1} gap="$2">
-                        <Text fontSize="$4" fontWeight="600" color="$text">
+                        <Text fontSize="$4" fontWeight="600" color="$color12">
                           {product.name}
                         </Text>
-                        <Text fontSize="$2" color="$textSecondary" numberOfLines={2}>
+                        <Text fontSize="$2" color="$color10" numberOfLines={2}>
                           {product.description}
                         </Text>
                         <XStack gap="$2" flexWrap="wrap">
                           {product.highlights.slice(0, 2).map((highlight, idx) => (
                             <View
                               key={idx}
-                              backgroundColor={`${COLORS.primary}15`}
+                              backgroundColor={`${primaryColor}15`}
                               paddingHorizontal="$2"
-                              paddingVertical="$1"
-                              borderRadius="$2"
+                              paddingVertical="$0.5"
+                              borderRadius="$10"
                             >
-                              <Text fontSize="$1" color={COLORS.primary}>
+                              <Text fontSize="$1" color="$primary">
                                 {highlight}
                               </Text>
                             </View>
@@ -351,53 +341,53 @@ const InsuranceHomeScreen: React.FC = () => {
                     </XStack>
                     <XStack justifyContent="space-between" alignItems="center">
                       <YStack>
-                        <Text fontSize="$2" color="$textSecondary">
+                        <Text fontSize="$2" color="$color10">
                           {product.companyName}
                         </Text>
                         <XStack alignItems="baseline" gap="$1">
-                          <Text fontSize="$2" color="$textSecondary">
+                          <Text fontSize="$2" color="$primary">
                             ¥
                           </Text>
-                          <Text fontSize="$5" fontWeight="700" color={COLORS.primary}>
+                          <Text fontSize="$5" fontWeight="700" color="$primary">
                             {product.premiumStartFrom}
                           </Text>
-                          <Text fontSize="$2" color="$textSecondary">
+                          <Text fontSize="$2" color="$color10">
                             起/年
                           </Text>
                         </XStack>
                       </YStack>
-                      <XStack gap="$2">
-                        <Text fontSize="$2" color="$textSecondary">
+                      <XStack gap="$2" alignItems="center">
+                        <Text fontSize="$2" color="$color10">
                           ⭐ {product.rating}
                         </Text>
-                        <ChevronRight size={20} color={COLORS.textSecondary} />
+                        <ChevronRight size={18} color={color10} />
                       </XStack>
                     </XStack>
                   </YStack>
-                </Card>
+                </View>
               </Pressable>
             ))}
           </YStack>
         </YStack>
 
         {/* 推荐顾问 */}
-        <YStack padding="$4" paddingTop="$2">
+        <YStack padding="$2.5" paddingTop="$2">
           <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-            <Text fontSize="$4" fontWeight="600" color="$text">
+            <Text fontSize="$4" fontWeight="600" color="$color12">
               推荐顾问
             </Text>
             <Pressable onPress={() => navigation.navigate('InsuranceAdvisorList' as never)}>
-              <XStack alignItems="center" gap="$1">
-                <Text fontSize="$3" color={COLORS.primary}>
+              <XStack alignItems="center" gap="$0.5">
+                <Text fontSize="$3" color="$primary" fontWeight="500">
                   更多顾问
                 </Text>
-                <ChevronRight size={16} color={COLORS.primary} />
+                <ChevronRight size={14} color={primaryColor} />
               </XStack>
             </Pressable>
           </XStack>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <XStack gap="$3">
+            <XStack gap="$2">
               {topAdvisors.map(advisor => (
                 <Pressable
                   key={advisor.id}
@@ -407,26 +397,26 @@ const InsuranceHomeScreen: React.FC = () => {
                     } as never)
                   }
                 >
-                  <Card
-                    bordered
-                    padding="$4"
-                    backgroundColor="$surface"
+                  <View
+                    borderWidth={1}
+                    borderColor="$color5"
+                    borderRadius="$5"
+                    padding="$2"
+                    backgroundColor="$color2"
                     width={200}
-                    pressStyle={{ scale: 0.98 }}
                   >
-                    <YStack gap="$3" alignItems="center">
+                    <YStack gap="$2" alignItems="center">
                       <View
                         width={64}
                         height={64}
                         borderRadius={32}
                         overflow="hidden"
-                        backgroundColor="$borderColor"
+                        backgroundColor="$color5"
                       >
-                        {/* TODO: 添加头像图片 */}
                         <View
                           width={64}
                           height={64}
-                          backgroundColor={COLORS.primary}
+                          backgroundColor="$primary"
                           justifyContent="center"
                           alignItems="center"
                         >
@@ -436,10 +426,10 @@ const InsuranceHomeScreen: React.FC = () => {
                         </View>
                       </View>
                       <YStack alignItems="center" gap="$1">
-                        <Text fontSize="$4" fontWeight="600" color="$text">
+                        <Text fontSize="$4" fontWeight="600" color="$color12">
                           {advisor.name}
                         </Text>
-                        <Text fontSize="$2" color="$textSecondary">
+                        <Text fontSize="$2" color="$color10">
                           {advisor.yearsOfExperience}年经验 · {advisor.organization}
                         </Text>
                       </YStack>
@@ -447,12 +437,12 @@ const InsuranceHomeScreen: React.FC = () => {
                         {advisor.specialties.slice(0, 2).map((specialty, idx) => (
                           <View
                             key={idx}
-                            backgroundColor="$borderColor"
+                            backgroundColor="$color4"
                             paddingHorizontal="$2"
-                            paddingVertical="$1"
-                            borderRadius="$2"
+                            paddingVertical="$0.5"
+                            borderRadius="$10"
                           >
-                            <Text fontSize="$1" color="$text">
+                            <Text fontSize="$1" color="$color12">
                               {specialty}
                             </Text>
                           </View>
@@ -460,24 +450,24 @@ const InsuranceHomeScreen: React.FC = () => {
                       </XStack>
                       <XStack justifyContent="space-between" width="100%">
                         <YStack alignItems="center">
-                          <Text fontSize="$4" fontWeight="600" color={COLORS.primary}>
+                          <Text fontSize="$4" fontWeight="600" color="$primary">
                             {advisor.clientsServed}
                           </Text>
-                          <Text fontSize="$1" color="$textSecondary">
+                          <Text fontSize="$1" color="$color10">
                             服务客户
                           </Text>
                         </YStack>
                         <YStack alignItems="center">
-                          <Text fontSize="$4" fontWeight="600" color={COLORS.success}>
+                          <Text fontSize="$4" fontWeight="600" color="$success">
                             {advisor.satisfactionRate}%
                           </Text>
-                          <Text fontSize="$1" color="$textSecondary">
+                          <Text fontSize="$1" color="$color10">
                             满意度
                           </Text>
                         </YStack>
                       </XStack>
                     </YStack>
-                  </Card>
+                  </View>
                 </Pressable>
               ))}
             </XStack>
@@ -485,11 +475,11 @@ const InsuranceHomeScreen: React.FC = () => {
         </YStack>
 
         {/* 知识中心 */}
-        <YStack padding="$4" paddingTop="$2" paddingBottom="$6">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+        <YStack padding="$2.5" paddingTop="$2" paddingBottom="$6">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$3">
             知识中心
           </Text>
-          <XStack gap="$3">
+          <XStack gap="$2">
             {[
               { id: 'articles', label: '保险文章', icon: BookOpen, route: 'InsuranceArticle' },
               { id: 'videos', label: '视频课堂', icon: Video, route: 'InsuranceVideo' },
@@ -502,19 +492,20 @@ const InsuranceHomeScreen: React.FC = () => {
                   onPress={() => navigation.navigate(item.route as never)}
                   style={{ flex: 1 }}
                 >
-                  <Card
-                    bordered
-                    padding="$3"
-                    backgroundColor="$surface"
-                    pressStyle={{ scale: 0.98 }}
+                  <View
+                    borderWidth={1}
+                    borderColor="$color5"
+                    borderRadius="$5"
+                    padding="$2"
+                    backgroundColor="$color2"
                   >
                     <YStack alignItems="center" gap="$2">
-                      <Icon size={32} color={COLORS.primary} />
-                      <Text fontSize="$3" color="$text">
+                      <Icon size={32} color={primaryColor} />
+                      <Text fontSize="$3" color="$color12">
                         {item.label}
                       </Text>
                     </YStack>
-                  </Card>
+                  </View>
                 </Pressable>
               );
             })}

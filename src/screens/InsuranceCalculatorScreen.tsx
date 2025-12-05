@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ScrollView, Pressable, TextInput } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Calculator,
@@ -11,12 +12,20 @@ import {
   Heart,
   Briefcase,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 type CalculatorType = 'premium' | 'pension' | 'life_coverage' | 'critical_illness' | 'annuity_return';
 
 const InsuranceCalculatorScreen: React.FC = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [activeCalculator, setActiveCalculator] = useState<CalculatorType>('premium');
 
   // 保费计算器状态
@@ -53,11 +62,11 @@ const InsuranceCalculatorScreen: React.FC = () => {
   const [annuityReturnResult, setAnnuityReturnResult] = useState<any>(null);
 
   const calculators = [
-    { id: 'premium', label: '保费计算', icon: Calculator, color: '#3B82F6' },
-    { id: 'pension', label: '养老金缺口', icon: TrendingUp, color: '#10B981' },
-    { id: 'life_coverage', label: '寿险保额', icon: Shield, color: '#8B5CF6' },
-    { id: 'critical_illness', label: '重疾保额', icon: Heart, color: '#EF4444' },
-    { id: 'annuity_return', label: '年金收益', icon: Briefcase, color: '#F59E0B' },
+    { id: 'premium', label: '保费计算', icon: Calculator, color: primaryColor },
+    { id: 'pension', label: '养老金缺口', icon: TrendingUp, color: successColor },
+    { id: 'life_coverage', label: '寿险保额', icon: Shield, color: primaryColor },
+    { id: 'critical_illness', label: '重疾保额', icon: Heart, color: errorColor },
+    { id: 'annuity_return', label: '年金收益', icon: Briefcase, color: warningColor },
   ];
 
   // 保费计算
@@ -135,56 +144,56 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
   const renderPremiumCalculator = () => (
     <View>
-      <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+      <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$3">
         保费试算
       </Text>
-      <Text fontSize="$2" color="$textSecondary" marginBottom="$4" lineHeight={20}>
+      <Text fontSize="$2" color="$color10" marginBottom="$4" lineHeight={20}>
         根据年龄、性别和保额，估算年度保费。实际保费以保险公司核保为准。
       </Text>
 
       <YStack gap="$3">
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             投保年龄
           </Text>
           <TextInput
             placeholder="请输入年龄（18-65岁）"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={premiumAge}
             onChangeText={setPremiumAge}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             性别
           </Text>
           <XStack gap="$2">
             <Pressable style={{ flex: 1 }} onPress={() => setPremiumGender('male')}>
               <View
                 height={44}
-                borderRadius="$3"
+                borderRadius="$10"
                 borderWidth={1}
-                borderColor={premiumGender === 'male' ? COLORS.primary : '$borderColor'}
-                backgroundColor={premiumGender === 'male' ? `${COLORS.primary}20` : '$surface'}
+                borderColor={premiumGender === 'male' ? primaryColor : '$color5'}
+                backgroundColor={premiumGender === 'male' ? `${primaryColor}15` : '$color2'}
                 justifyContent="center"
                 alignItems="center"
               >
                 <Text
                   fontSize="$3"
                   fontWeight="600"
-                  color={premiumGender === 'male' ? COLORS.primary : '$text'}
+                  color={premiumGender === 'male' ? primaryColor : '$color12'}
                 >
                   男
                 </Text>
@@ -193,17 +202,17 @@ const InsuranceCalculatorScreen: React.FC = () => {
             <Pressable style={{ flex: 1 }} onPress={() => setPremiumGender('female')}>
               <View
                 height={44}
-                borderRadius="$3"
+                borderRadius="$10"
                 borderWidth={1}
-                borderColor={premiumGender === 'female' ? COLORS.primary : '$borderColor'}
-                backgroundColor={premiumGender === 'female' ? `${COLORS.primary}20` : '$surface'}
+                borderColor={premiumGender === 'female' ? primaryColor : '$color5'}
+                backgroundColor={premiumGender === 'female' ? `${primaryColor}15` : '$color2'}
                 justifyContent="center"
                 alignItems="center"
               >
                 <Text
                   fontSize="$3"
                   fontWeight="600"
-                  color={premiumGender === 'female' ? COLORS.primary : '$text'}
+                  color={premiumGender === 'female' ? primaryColor : '$color12'}
                 >
                   女
                 </Text>
@@ -213,24 +222,24 @@ const InsuranceCalculatorScreen: React.FC = () => {
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             保额（万元）
           </Text>
           <TextInput
             placeholder="请输入保额"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={premiumCoverage}
             onChangeText={setPremiumCoverage}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
@@ -238,8 +247,8 @@ const InsuranceCalculatorScreen: React.FC = () => {
         <Pressable onPress={calculatePremium}>
           <View
             height={48}
-            borderRadius="$3"
-            backgroundColor={COLORS.primary}
+            borderRadius="$10"
+            backgroundColor={primaryColor}
             justifyContent="center"
             alignItems="center"
             marginTop="$2"
@@ -252,28 +261,28 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
         {premiumResult !== null && (
           <View
-            padding="$4"
-            backgroundColor="#E0F2FE"
-            borderRadius="$3"
+            padding="$2"
+            backgroundColor={`${primaryColor}10`}
+            borderRadius="$4"
             borderLeftWidth={3}
-            borderLeftColor={COLORS.primary}
-            marginTop="$3"
+            borderLeftColor={primaryColor}
+            marginTop="$2"
           >
-            <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+            <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
               计算结果
             </Text>
             <XStack alignItems="baseline" gap="$2">
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 预估年保费：
               </Text>
-              <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+              <Text fontSize="$6" fontWeight="700" color={primaryColor}>
                 {premiumResult.toLocaleString()}
               </Text>
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 元/年
               </Text>
             </XStack>
-            <Text fontSize="$2" color="$textSecondary" marginTop="$2" lineHeight={18}>
+            <Text fontSize="$2" color="$color10" marginTop="$2" lineHeight={18}>
               *此为估算结果，实际保费需根据健康状况、职业等因素核保确定
             </Text>
           </View>
@@ -284,102 +293,102 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
   const renderPensionCalculator = () => (
     <View>
-      <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+      <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$3">
         养老金缺口计算
       </Text>
-      <Text fontSize="$2" color="$textSecondary" marginBottom="$4" lineHeight={20}>
+      <Text fontSize="$2" color="$color10" marginBottom="$4" lineHeight={20}>
         计算退休后的养老金缺口，帮助您规划养老储蓄。
       </Text>
 
       <YStack gap="$3">
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             当前年龄
           </Text>
           <TextInput
             placeholder="请输入当前年龄"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={currentAge}
             onChangeText={setCurrentAge}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             计划退休年龄
           </Text>
           <TextInput
             placeholder="请输入退休年龄"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={retireAge}
             onChangeText={setRetireAge}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             预期月生活费（元）
           </Text>
           <TextInput
             placeholder="请输入月生活费"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={monthlyExpense}
             onChangeText={setMonthlyExpense}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             现有养老储蓄（万元）
           </Text>
           <TextInput
             placeholder="请输入现有储蓄"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={currentSavings}
             onChangeText={setCurrentSavings}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
@@ -387,8 +396,8 @@ const InsuranceCalculatorScreen: React.FC = () => {
         <Pressable onPress={calculatePensionGap}>
           <View
             height={48}
-            borderRadius="$3"
-            backgroundColor={COLORS.primary}
+            borderRadius="$10"
+            backgroundColor={primaryColor}
             justifyContent="center"
             alignItems="center"
             marginTop="$2"
@@ -401,34 +410,34 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
         {pensionGap !== null && (
           <View
-            padding="$4"
-            backgroundColor={pensionGap > 0 ? '#FEF3C7' : '#DCFCE7'}
-            borderRadius="$3"
+            padding="$2"
+            backgroundColor={pensionGap > 0 ? `${warningColor}10` : `${successColor}10`}
+            borderRadius="$4"
             borderLeftWidth={3}
-            borderLeftColor={pensionGap > 0 ? COLORS.warning : COLORS.success}
-            marginTop="$3"
+            borderLeftColor={pensionGap > 0 ? warningColor : successColor}
+            marginTop="$2"
           >
-            <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+            <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
               计算结果
             </Text>
             <XStack alignItems="baseline" gap="$2">
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 养老金缺口：
               </Text>
               <Text
                 fontSize="$6"
                 fontWeight="700"
-                color={pensionGap > 0 ? COLORS.warning : COLORS.success}
+                color={pensionGap > 0 ? warningColor : successColor}
               >
                 {pensionGap > 0 ? pensionGap.toLocaleString() : '无缺口'}
               </Text>
               {pensionGap > 0 && (
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   万元
                 </Text>
               )}
             </XStack>
-            <Text fontSize="$2" color="$textSecondary" marginTop="$2" lineHeight={18}>
+            <Text fontSize="$2" color="$color10" marginTop="$2" lineHeight={18}>
               {pensionGap > 0
                 ? `建议通过年金险、增额终身寿等方式补充养老储蓄`
                 : `您的养老储蓄充足，可以安心退休`}
@@ -441,102 +450,102 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
   const renderLifeCoverageCalculator = () => (
     <View>
-      <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+      <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$3">
         寿险保额计算
       </Text>
-      <Text fontSize="$2" color="$textSecondary" marginBottom="$4" lineHeight={20}>
+      <Text fontSize="$2" color="$color10" marginBottom="$4" lineHeight={20}>
         根据家庭责任计算所需寿险保额，确保家人生活无忧。
       </Text>
 
       <YStack gap="$3">
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             家庭债务（万元）
           </Text>
           <TextInput
             placeholder="如房贷、车贷等"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={familyDebt}
             onChangeText={setFamilyDebt}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             子女教育费用（万元）
           </Text>
           <TextInput
             placeholder="至独立为止的教育费用"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={childEducation}
             onChangeText={setChildEducation}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             父母赡养费用（万元）
           </Text>
           <TextInput
             placeholder="预计赡养费用"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={parentSupport}
             onChangeText={setParentSupport}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             家庭生活费（万元）
           </Text>
           <TextInput
             placeholder="5-10年生活费"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={livingExpense}
             onChangeText={setLivingExpense}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
@@ -544,8 +553,8 @@ const InsuranceCalculatorScreen: React.FC = () => {
         <Pressable onPress={calculateLifeCoverage}>
           <View
             height={48}
-            borderRadius="$3"
-            backgroundColor={COLORS.primary}
+            borderRadius="$10"
+            backgroundColor={primaryColor}
             justifyContent="center"
             alignItems="center"
             marginTop="$2"
@@ -558,28 +567,28 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
         {lifeCoverageResult !== null && (
           <View
-            padding="$4"
-            backgroundColor="#E0F2FE"
-            borderRadius="$3"
+            padding="$2"
+            backgroundColor={`${primaryColor}10`}
+            borderRadius="$4"
             borderLeftWidth={3}
-            borderLeftColor={COLORS.primary}
-            marginTop="$3"
+            borderLeftColor={primaryColor}
+            marginTop="$2"
           >
-            <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+            <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
               计算结果
             </Text>
             <XStack alignItems="baseline" gap="$2">
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 建议寿险保额：
               </Text>
-              <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+              <Text fontSize="$6" fontWeight="700" color={primaryColor}>
                 {lifeCoverageResult.toLocaleString()}
               </Text>
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 万元
               </Text>
             </XStack>
-            <Text fontSize="$2" color="$textSecondary" marginTop="$2" lineHeight={18}>
+            <Text fontSize="$2" color="$color10" marginTop="$2" lineHeight={18}>
               这个保额可以覆盖您的家庭责任，为家人提供充分保障
             </Text>
           </View>
@@ -590,39 +599,39 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
   const renderCriticalIllnessCalculator = () => (
     <View>
-      <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+      <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$3">
         重疾保额计算
       </Text>
-      <Text fontSize="$2" color="$textSecondary" marginBottom="$4" lineHeight={20}>
+      <Text fontSize="$2" color="$color10" marginBottom="$4" lineHeight={20}>
         根据收入损失和医疗费用，计算合理的重疾险保额。
       </Text>
 
       <YStack gap="$3">
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             年收入（万元）
           </Text>
           <TextInput
             placeholder="请输入年收入"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={annualIncome}
             onChangeText={setAnnualIncome}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             预计康复年限
           </Text>
           <XStack gap="$2">
@@ -634,17 +643,17 @@ const InsuranceCalculatorScreen: React.FC = () => {
               >
                 <View
                   height={44}
-                  borderRadius="$3"
+                  borderRadius="$10"
                   borderWidth={1}
-                  borderColor={recoveryYears === year ? COLORS.primary : '$borderColor'}
-                  backgroundColor={recoveryYears === year ? `${COLORS.primary}20` : '$surface'}
+                  borderColor={recoveryYears === year ? primaryColor : '$color5'}
+                  backgroundColor={recoveryYears === year ? `${primaryColor}15` : '$color2'}
                   justifyContent="center"
                   alignItems="center"
                 >
                   <Text
                     fontSize="$3"
                     fontWeight="600"
-                    color={recoveryYears === year ? COLORS.primary : '$text'}
+                    color={recoveryYears === year ? primaryColor : '$color12'}
                   >
                     {year}年
                   </Text>
@@ -655,7 +664,7 @@ const InsuranceCalculatorScreen: React.FC = () => {
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             预估医疗费用（万元）
           </Text>
           <XStack gap="$2">
@@ -667,17 +676,17 @@ const InsuranceCalculatorScreen: React.FC = () => {
               >
                 <View
                   height={44}
-                  borderRadius="$3"
+                  borderRadius="$10"
                   borderWidth={1}
-                  borderColor={medicalCost === cost ? COLORS.primary : '$borderColor'}
-                  backgroundColor={medicalCost === cost ? `${COLORS.primary}20` : '$surface'}
+                  borderColor={medicalCost === cost ? primaryColor : '$color5'}
+                  backgroundColor={medicalCost === cost ? `${primaryColor}15` : '$color2'}
                   justifyContent="center"
                   alignItems="center"
                 >
                   <Text
                     fontSize="$3"
                     fontWeight="600"
-                    color={medicalCost === cost ? COLORS.primary : '$text'}
+                    color={medicalCost === cost ? primaryColor : '$color12'}
                   >
                     {cost}万
                   </Text>
@@ -690,8 +699,8 @@ const InsuranceCalculatorScreen: React.FC = () => {
         <Pressable onPress={calculateCriticalIllness}>
           <View
             height={48}
-            borderRadius="$3"
-            backgroundColor={COLORS.primary}
+            borderRadius="$10"
+            backgroundColor={primaryColor}
             justifyContent="center"
             alignItems="center"
             marginTop="$2"
@@ -704,28 +713,28 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
         {criticalIllnessResult !== null && (
           <View
-            padding="$4"
-            backgroundColor="#FEE2E2"
-            borderRadius="$3"
+            padding="$2"
+            backgroundColor={`${errorColor}10`}
+            borderRadius="$4"
             borderLeftWidth={3}
-            borderLeftColor={COLORS.error}
-            marginTop="$3"
+            borderLeftColor={errorColor}
+            marginTop="$2"
           >
-            <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$2">
+            <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
               计算结果
             </Text>
             <XStack alignItems="baseline" gap="$2">
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 建议重疾保额：
               </Text>
-              <Text fontSize="$6" fontWeight="700" color={COLORS.error}>
+              <Text fontSize="$6" fontWeight="700" color={errorColor}>
                 {criticalIllnessResult.toLocaleString()}
               </Text>
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 万元
               </Text>
             </XStack>
-            <Text fontSize="$2" color="$textSecondary" marginTop="$2" lineHeight={18}>
+            <Text fontSize="$2" color="$color10" marginTop="$2" lineHeight={18}>
               包含{recoveryYears}年收入损失（{parseFloat(annualIncome) * parseInt(recoveryYears)}
               万）+ 医疗费用（{medicalCost}万）
             </Text>
@@ -737,39 +746,39 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
   const renderAnnuityReturnCalculator = () => (
     <View>
-      <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+      <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$3">
         年金收益计算
       </Text>
-      <Text fontSize="$2" color="$textSecondary" marginBottom="$4" lineHeight={20}>
+      <Text fontSize="$2" color="$color10" marginBottom="$4" lineHeight={20}>
         计算年金险或增额终身寿的长期收益情况。
       </Text>
 
       <YStack gap="$3">
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             年投入金额（万元）
           </Text>
           <TextInput
             placeholder="每年投入金额"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             value={annuityAmount}
             onChangeText={setAnnuityAmount}
             keyboardType="numeric"
             style={{
               height: 44,
               borderWidth: 1,
-              borderColor: COLORS.borderColor,
+              borderColor: color10,
               borderRadius: 8,
               paddingHorizontal: 12,
               fontSize: 14,
-              color: COLORS.text,
-              backgroundColor: COLORS.surface,
+              color: color12,
+              backgroundColor: 'white',
             }}
           />
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             缴费年限
           </Text>
           <XStack gap="$2">
@@ -781,17 +790,17 @@ const InsuranceCalculatorScreen: React.FC = () => {
               >
                 <View
                   height={44}
-                  borderRadius="$3"
+                  borderRadius="$10"
                   borderWidth={1}
-                  borderColor={annuityYears === year ? COLORS.primary : '$borderColor'}
-                  backgroundColor={annuityYears === year ? `${COLORS.primary}20` : '$surface'}
+                  borderColor={annuityYears === year ? primaryColor : '$color5'}
+                  backgroundColor={annuityYears === year ? `${primaryColor}15` : '$color2'}
                   justifyContent="center"
                   alignItems="center"
                 >
                   <Text
                     fontSize="$3"
                     fontWeight="600"
-                    color={annuityYears === year ? COLORS.primary : '$text'}
+                    color={annuityYears === year ? primaryColor : '$color12'}
                   >
                     {year}年
                   </Text>
@@ -802,7 +811,7 @@ const InsuranceCalculatorScreen: React.FC = () => {
         </View>
 
         <View>
-          <Text fontSize="$3" color="$text" marginBottom="$2">
+          <Text fontSize="$3" color="$color12" marginBottom="$2">
             预定利率（%）
           </Text>
           <XStack gap="$2">
@@ -814,17 +823,17 @@ const InsuranceCalculatorScreen: React.FC = () => {
               >
                 <View
                   height={44}
-                  borderRadius="$3"
+                  borderRadius="$10"
                   borderWidth={1}
-                  borderColor={annuityRate === rate ? COLORS.primary : '$borderColor'}
-                  backgroundColor={annuityRate === rate ? `${COLORS.primary}20` : '$surface'}
+                  borderColor={annuityRate === rate ? primaryColor : '$color5'}
+                  backgroundColor={annuityRate === rate ? `${primaryColor}15` : '$color2'}
                   justifyContent="center"
                   alignItems="center"
                 >
                   <Text
                     fontSize="$3"
                     fontWeight="600"
-                    color={annuityRate === rate ? COLORS.primary : '$text'}
+                    color={annuityRate === rate ? primaryColor : '$color12'}
                   >
                     {rate}%
                   </Text>
@@ -837,8 +846,8 @@ const InsuranceCalculatorScreen: React.FC = () => {
         <Pressable onPress={calculateAnnuityReturn}>
           <View
             height={48}
-            borderRadius="$3"
-            backgroundColor={COLORS.primary}
+            borderRadius="$10"
+            backgroundColor={primaryColor}
             justifyContent="center"
             alignItems="center"
             marginTop="$2"
@@ -851,46 +860,46 @@ const InsuranceCalculatorScreen: React.FC = () => {
 
         {annuityReturnResult && (
           <View
-            padding="$4"
-            backgroundColor="#FEF3C7"
-            borderRadius="$3"
+            padding="$2"
+            backgroundColor={`${warningColor}10`}
+            borderRadius="$4"
             borderLeftWidth={3}
-            borderLeftColor={COLORS.warning}
-            marginTop="$3"
+            borderLeftColor={warningColor}
+            marginTop="$2"
           >
-            <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$3">
+            <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$3">
               计算结果
             </Text>
             <YStack gap="$2">
               <XStack justifyContent="space-between">
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   总投入：
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color="$text">
+                <Text fontSize="$3" fontWeight="600" color="$color12">
                   {annuityReturnResult.totalInvest.toLocaleString()}万元
                 </Text>
               </XStack>
               <XStack justifyContent="space-between">
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   账户价值：
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color={COLORS.warning}>
+                <Text fontSize="$3" fontWeight="600" color={warningColor}>
                   {annuityReturnResult.futureValue.toLocaleString()}万元
                 </Text>
               </XStack>
               <XStack justifyContent="space-between">
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   累计收益：
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color={COLORS.success}>
+                <Text fontSize="$3" fontWeight="600" color={successColor}>
                   {annuityReturnResult.totalReturn.toLocaleString()}万元
                 </Text>
               </XStack>
               <XStack justifyContent="space-between">
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   内部收益率（IRR）：
                 </Text>
-                <Text fontSize="$3" fontWeight="600" color={COLORS.primary}>
+                <Text fontSize="$3" fontWeight="600" color={primaryColor}>
                   {annuityReturnResult.irr}%
                 </Text>
               </XStack>
@@ -898,17 +907,17 @@ const InsuranceCalculatorScreen: React.FC = () => {
                 marginTop="$2"
                 paddingTop="$2"
                 borderTopWidth={1}
-                borderTopColor="$borderColor"
+                borderTopColor="$color5"
               >
                 <XStack justifyContent="space-between">
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     预计月领取：
                   </Text>
-                  <Text fontSize="$4" fontWeight="700" color={COLORS.warning}>
+                  <Text fontSize="$4" fontWeight="700" color={warningColor}>
                     {annuityReturnResult.monthlyReceive.toLocaleString()}元
                   </Text>
                 </XStack>
-                <Text fontSize="$1" color="$textSecondary" marginTop="$1">
+                <Text fontSize="$1" color="$color10" marginTop="$1">
                   *假设60岁开始领取，领取25年
                 </Text>
               </View>
@@ -939,25 +948,33 @@ const InsuranceCalculatorScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-          保险计算器
-        </Text>
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            保险计算器
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
       {/* 计算器类型标签 */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 60 }}>
-        <XStack paddingHorizontal="$4" paddingVertical="$3" gap="$2">
+        <XStack paddingHorizontal="$2.5" paddingVertical="$2" gap="$2">
           {calculators.map(calc => {
             const Icon = calc.icon;
             const isActive = activeCalculator === calc.id;
@@ -965,15 +982,13 @@ const InsuranceCalculatorScreen: React.FC = () => {
               <Pressable key={calc.id} onPress={() => setActiveCalculator(calc.id as CalculatorType)}>
                 <View
                   paddingHorizontal="$3"
-                  paddingVertical="$2"
-                  borderRadius="$3"
-                  backgroundColor={isActive ? calc.color : '$surface'}
-                  borderWidth={1}
-                  borderColor={isActive ? calc.color : '$borderColor'}
+                  paddingVertical="$1.5"
+                  borderRadius="$10"
+                  backgroundColor={isActive ? calc.color : '$color4'}
                 >
                   <XStack alignItems="center" gap="$2">
                     <Icon size={16} color={isActive ? 'white' : calc.color} />
-                    <Text fontSize="$3" fontWeight="600" color={isActive ? 'white' : calc.color}>
+                    <Text fontSize="$3" fontWeight={isActive ? '600' : '400'} color={isActive ? 'white' : calc.color}>
                       {calc.label}
                     </Text>
                   </XStack>
@@ -985,7 +1000,7 @@ const InsuranceCalculatorScreen: React.FC = () => {
       </ScrollView>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View padding="$4">{renderCalculator()}</View>
+        <View padding="$2.5">{renderCalculator()}</View>
         <View height={20} />
       </ScrollView>
     </View>

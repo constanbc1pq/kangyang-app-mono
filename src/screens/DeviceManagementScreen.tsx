@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, Modal, TextInput, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
-import { View, Text, ScrollView, YStack, XStack, Theme, Card, Progress, Input } from 'tamagui';
+import React, { useState, useEffect, useCallback } from 'react';
+import { TouchableOpacity, Modal, TextInput, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, YStack, XStack, Theme, Card, Progress, Input, useTheme } from 'tamagui';
 import { useToastController } from '@tamagui/toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Plus,
   Bluetooth,
   Wifi,
@@ -27,8 +26,8 @@ import {
   Camera,
   Upload,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { useNavigation } from '@react-navigation/native';
+import { useDeviceLimit } from '@/hooks/useMembershipBenefit';
 import { getDevices, addDevice, deleteDevice as deleteDeviceService } from '@/services/userDataService';
 import { HealthDevice, DeviceEvent } from '@/types/userData';
 import { ImagePickerModal } from '@/components/device/ImagePickerModal';
@@ -37,6 +36,7 @@ import { parseDeviceData } from '@/services/deviceDataParser';
 import { saveDeviceData, getLatestDeviceData, DataSource } from '@/services/deviceDataService';
 import { DeviceType } from '@/types/common';
 import { ConfirmedData } from '@/screens/device/DataConfirmationScreen';
+import { TitleBar } from '@/components/TitleBar';
 
 interface DeviceManagementScreenProps {
   route?: {
@@ -49,6 +49,17 @@ interface DeviceManagementScreenProps {
 export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ route }) => {
   const navigation = useNavigation();
   const toast = useToastController();
+  const theme = useTheme();
+
+  // 主题色值
+  const primaryColor = theme.primary?.val || '#6366F1';
+  const successColor = theme.success?.val || '#10B981';
+  const warningColor = theme.warning?.val || '#F59E0B';
+  const errorColor = theme.error?.val || '#EF4444';
+  const textColor = theme.color12?.val || '#1F2937';
+  const textSecondaryColor = theme.color10?.val || '#6B7280';
+  const backgroundColor = theme.color2?.val || '#FAFCFF';
+
   const [selectedDevice, setSelectedDevice] = useState<HealthDevice | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -57,6 +68,31 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
   const [selectedConnectionType, setSelectedConnectionType] = useState<'bluetooth' | 'wifi' | 'manual' | null>(null);
   const [devices, setDevices] = useState<HealthDevice[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 设备绑定限制 Hook
+  const {
+    canBind,
+    remaining: deviceRemaining,
+    limit: deviceLimit,
+    message: deviceLimitMessage,
+    isUnlimited: isDeviceUnlimited,
+    refresh: refreshDeviceLimit,
+  } = useDeviceLimit();
+
+  // 显示设备限制升级提示
+  const showDeviceLimitAlert = useCallback(() => {
+    Alert.alert(
+      '设备绑定数量已达上限',
+      `免费用户最多可绑定${deviceLimit}个设备。升级会员可无限绑定！`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '升级会员',
+          onPress: () => navigation.navigate('MembershipCenter' as never),
+        },
+      ]
+    );
+  }, [deviceLimit, navigation]);
 
   // OCR上传相关状态
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -121,27 +157,27 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
   const getDeviceIcon = (type: HealthDevice['type']) => {
     switch (type) {
       case 'smartwatch':
-        return <Watch size={24} color={COLORS.primary} />;
+        return <Watch size={24} color={primaryColor} />;
       case 'blood-pressure':
-        return <Heart size={24} color={COLORS.primary} />;
+        return <Heart size={24} color={primaryColor} />;
       case 'glucose-meter':
-        return <Activity size={24} color={COLORS.primary} />;
+        return <Activity size={24} color={primaryColor} />;
       case 'scale':
-        return <Scale size={24} color={COLORS.primary} />;
+        return <Scale size={24} color={primaryColor} />;
       case 'thermometer':
-        return <Thermometer size={24} color={COLORS.primary} />;
+        return <Thermometer size={24} color={primaryColor} />;
       case 'smart-toilet':
-        return <Activity size={24} color={COLORS.primary} />;
+        return <Activity size={24} color={primaryColor} />;
       default:
-        return <Activity size={24} color={COLORS.primary} />;
+        return <Activity size={24} color={primaryColor} />;
     }
   };
 
   const getStatusBadge = (status: HealthDevice['status']) => {
     const statusConfig = {
-      connected: { bg: COLORS.success, text: '已连接' },
-      disconnected: { bg: COLORS.error, text: '未连接' },
-      syncing: { bg: COLORS.warning, text: '同步中' },
+      connected: { bg: successColor, text: '已连接' },
+      disconnected: { bg: errorColor, text: '未连接' },
+      syncing: { bg: warningColor, text: '同步中' },
     };
     const config = statusConfig[status];
     return (
@@ -155,22 +191,22 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
 
   const getBatteryIcon = (battery: number) => {
     if (battery > 50) {
-      return <BatteryFull size={16} color={COLORS.success} />;
+      return <BatteryFull size={16} color={successColor} />;
     } else if (battery > 20) {
-      return <Battery size={16} color={COLORS.warning} />;
+      return <Battery size={16} color={warningColor} />;
     } else {
-      return <BatteryLow size={16} color={COLORS.error} />;
+      return <BatteryLow size={16} color={errorColor} />;
     }
   };
 
   const getEventStatusIcon = (status: DeviceEvent['status']) => {
     switch (status) {
       case 'normal':
-        return <CheckCircle2 size={20} color={COLORS.success} />;
+        return <CheckCircle2 size={20} color={successColor} />;
       case 'warning':
-        return <AlertCircle size={20} color={COLORS.warning} />;
+        return <AlertCircle size={20} color={warningColor} />;
       case 'danger':
-        return <AlertCircle size={20} color={COLORS.error} />;
+        return <AlertCircle size={20} color={errorColor} />;
     }
   };
 
@@ -428,46 +464,32 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
   if (!selectedDevice) {
     return (
       <Theme name="light">
-        <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor }}>
           {/* Header */}
-          <View
-            height={60}
-            backgroundColor="white"
-            borderBottomWidth={1}
-            borderBottomColor="#e0e0e0"
-            paddingHorizontal="$4"
-          >
-            <XStack justifyContent="space-between" alignItems="center" height="100%">
-              <XStack space="$3" alignItems="center">
-                <Pressable onPress={() => navigation.goBack()}>
-                  <ArrowLeft size={24} color={COLORS.text} />
-                </Pressable>
-                <YStack>
-                  <Text fontSize="$6" fontWeight="600" color="$text">
-                    设备管理
-                  </Text>
-                  <Text fontSize="$2" color="$textSecondary">
-                    {devices.length} 台设备
-                  </Text>
-                </YStack>
-              </XStack>
-
-              <TouchableOpacity onPress={() => setIsAddDialogOpen(true)}>
-                <View backgroundColor={COLORS.primary} paddingHorizontal="$3" paddingVertical="$2" borderRadius="$3">
-                  <XStack space="$2" alignItems="center">
+          <TitleBar
+            title="设备管理"
+            subtitle={`${devices.length} 台设备${isDeviceUnlimited ? ' (无限)' : ` / ${deviceLimit} 上限`}`}
+            renderRight={() => (
+              <TouchableOpacity onPress={() => {
+                if (!canBind) {
+                  showDeviceLimitAlert();
+                  return;
+                }
+                setIsAddDialogOpen(true);
+              }}>
+                <View backgroundColor="$primary" paddingHorizontal="$3" paddingVertical="$2" borderRadius="$10">
+                  <XStack gap="$1.5" alignItems="center">
                     <Plus size={16} color="white" />
-                    <Text fontSize="$3" color="white" fontWeight="600">
-                      添加
-                    </Text>
+                    <Text fontSize="$3" color="white" fontWeight="500">添加</Text>
                   </XStack>
                 </View>
               </TouchableOpacity>
-            </XStack>
-          </View>
+            )}
+          />
 
           {/* Device List */}
           <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-            <YStack padding="$4">
+            <YStack padding="$2.5">
               {devices.map((device, index) => (
                 <TouchableOpacity
                   key={device.id}
@@ -477,14 +499,14 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                   <Card
                     backgroundColor="white"
                     borderLeftWidth={4}
-                    borderLeftColor={COLORS.primary}
-                    padding="$4"
+                    borderLeftColor={primaryColor}
+                    padding="$2"
                     borderRadius="$3"
                   >
                     <XStack justifyContent="space-between" marginBottom="$3">
                       <XStack space="$3" flex={1}>
                         <View
-                          padding="$3"
+                          padding="$2"
                           borderRadius="$3"
                           backgroundColor="#f0fdf4"
                           justifyContent="center"
@@ -497,7 +519,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                             <Text fontSize="$5" fontWeight="600" color="$text">
                               {device.name}
                             </Text>
-                            <ChevronRight size={20} color={COLORS.textSecondary} />
+                            <ChevronRight size={20} color={textSecondaryColor} />
                           </XStack>
                           <Text fontSize="$3" color="$textSecondary" marginBottom="$2">
                             {device.model}
@@ -507,9 +529,9 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                             <XStack space="$2" alignItems="center" flexWrap="wrap">
                               <XStack space="$1" alignItems="center">
                                 {device.connection === 'wifi' ? (
-                                  <Wifi size={12} color={COLORS.textSecondary} />
+                                  <Wifi size={12} color={textSecondaryColor} />
                                 ) : (
-                                  <Bluetooth size={12} color={COLORS.textSecondary} />
+                                  <Bluetooth size={12} color={textSecondaryColor} />
                                 )}
                                 <Text fontSize="$1" color="$textSecondary">
                                   {device.connection === 'wifi' ? 'WiFi' : '蓝牙'}
@@ -536,7 +558,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                           </Text>
                         </XStack>
                         <Progress value={device.battery} height={8} backgroundColor="#f0f0f0">
-                          <Progress.Indicator backgroundColor={COLORS.primary} />
+                          <Progress.Indicator backgroundColor={primaryColor} />
                         </Progress>
                       </YStack>
                     )}
@@ -580,7 +602,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
 
               {/* Empty State */}
               {devices.length === 0 && (
-                <YStack alignItems="center" justifyContent="center" paddingVertical="$8">
+                <YStack alignItems="center" justifyContent="center" paddingVertical="$2">
                   <View
                     width={96}
                     height={96}
@@ -590,7 +612,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                     alignItems="center"
                     marginBottom="$4"
                   >
-                    <Watch size={48} color={COLORS.primary} />
+                    <Watch size={48} color={primaryColor} />
                   </View>
                   <Text fontSize="$5" fontWeight="600" marginBottom="$2">
                     暂无设备
@@ -599,7 +621,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                     添加您的健康监测设备，开始记录健康数据
                   </Text>
                   <TouchableOpacity onPress={() => setIsAddDialogOpen(true)}>
-                    <View backgroundColor={COLORS.primary} paddingHorizontal="$4" paddingVertical="$3" borderRadius="$3">
+                    <View backgroundColor={primaryColor} paddingHorizontal="$2.5" paddingVertical="$2" borderRadius="$3">
                       <XStack space="$2" alignItems="center">
                         <Plus size={16} color="white" />
                         <Text fontSize="$3" color="white" fontWeight="600">
@@ -620,9 +642,9 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
               backgroundColor="rgba(0,0,0,0.5)"
               justifyContent="center"
               alignItems="center"
-              padding="$4"
+              padding="$2.5"
             >
-              <View backgroundColor="white" borderRadius="$4" padding="$5" width="100%" maxWidth={400}>
+              <View backgroundColor="white" borderRadius="$4" padding="$2" width="100%" maxWidth={400}>
                 <Text fontSize="$6" fontWeight="600" marginBottom="$4">
                   添加新设备
                 </Text>
@@ -635,13 +657,13 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                         <View
                           height={96}
                           borderWidth={2}
-                          borderColor={selectedDeviceType === 'smartwatch' ? COLORS.primary : '#e0e0e0'}
+                          borderColor={selectedDeviceType === 'smartwatch' ? primaryColor : '#e0e0e0'}
                           borderRadius="$3"
                           justifyContent="center"
                           alignItems="center"
                           backgroundColor={selectedDeviceType === 'smartwatch' ? '#f0fdf4' : 'white'}
                         >
-                          <Watch size={32} color={COLORS.primary} />
+                          <Watch size={32} color={primaryColor} />
                           <Text fontSize="$3" fontWeight="500" marginTop="$2">
                             智能手环
                           </Text>
@@ -651,13 +673,13 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                         <View
                           height={96}
                           borderWidth={2}
-                          borderColor={selectedDeviceType === 'blood-pressure' ? COLORS.primary : '#e0e0e0'}
+                          borderColor={selectedDeviceType === 'blood-pressure' ? primaryColor : '#e0e0e0'}
                           borderRadius="$3"
                           justifyContent="center"
                           alignItems="center"
                           backgroundColor={selectedDeviceType === 'blood-pressure' ? '#f0fdf4' : 'white'}
                         >
-                          <Heart size={32} color={COLORS.primary} />
+                          <Heart size={32} color={primaryColor} />
                           <Text fontSize="$3" fontWeight="500" marginTop="$2">
                             血压计
                           </Text>
@@ -669,13 +691,13 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                         <View
                           height={96}
                           borderWidth={2}
-                          borderColor={selectedDeviceType === 'glucose-meter' ? COLORS.primary : '#e0e0e0'}
+                          borderColor={selectedDeviceType === 'glucose-meter' ? primaryColor : '#e0e0e0'}
                           borderRadius="$3"
                           justifyContent="center"
                           alignItems="center"
                           backgroundColor={selectedDeviceType === 'glucose-meter' ? '#f0fdf4' : 'white'}
                         >
-                          <Activity size={32} color={COLORS.primary} />
+                          <Activity size={32} color={primaryColor} />
                           <Text fontSize="$3" fontWeight="500" marginTop="$2">
                             血糖仪
                           </Text>
@@ -685,13 +707,13 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                         <View
                           height={96}
                           borderWidth={2}
-                          borderColor={selectedDeviceType === 'scale' ? COLORS.primary : '#e0e0e0'}
+                          borderColor={selectedDeviceType === 'scale' ? primaryColor : '#e0e0e0'}
                           borderRadius="$3"
                           justifyContent="center"
                           alignItems="center"
                           backgroundColor={selectedDeviceType === 'scale' ? '#f0fdf4' : 'white'}
                         >
-                          <Scale size={32} color={COLORS.primary} />
+                          <Scale size={32} color={primaryColor} />
                           <Text fontSize="$3" fontWeight="500" marginTop="$2">
                             体脂秤
                           </Text>
@@ -703,13 +725,13 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                         <View
                           height={96}
                           borderWidth={2}
-                          borderColor={selectedDeviceType === 'smart-toilet' ? COLORS.primary : '#e0e0e0'}
+                          borderColor={selectedDeviceType === 'smart-toilet' ? primaryColor : '#e0e0e0'}
                           borderRadius="$3"
                           justifyContent="center"
                           alignItems="center"
                           backgroundColor={selectedDeviceType === 'smart-toilet' ? '#f0fdf4' : 'white'}
                         >
-                          <Activity size={32} color={COLORS.primary} />
+                          <Activity size={32} color={primaryColor} />
                           <Text fontSize="$3" fontWeight="500" marginTop="$2">
                             智能座便器
                           </Text>
@@ -743,15 +765,15 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                     <XStack space="$2">
                       <TouchableOpacity style={{ flex: 1 }} onPress={() => setSelectedConnectionType('bluetooth')}>
                         <View
-                          backgroundColor={selectedConnectionType === 'bluetooth' ? COLORS.primary : 'white'}
+                          backgroundColor={selectedConnectionType === 'bluetooth' ? primaryColor : 'white'}
                           borderWidth={selectedConnectionType === 'bluetooth' ? 0 : 1}
                           borderColor="#e0e0e0"
-                          paddingVertical="$3"
+                          paddingVertical="$2"
                           borderRadius="$3"
                           alignItems="center"
                         >
                           <XStack space="$2" alignItems="center">
-                            <Bluetooth size={16} color={selectedConnectionType === 'bluetooth' ? 'white' : COLORS.text} />
+                            <Bluetooth size={16} color={selectedConnectionType === 'bluetooth' ? 'white' : textColor} />
                             <Text fontSize="$3" color={selectedConnectionType === 'bluetooth' ? 'white' : '$text'} fontWeight={selectedConnectionType === 'bluetooth' ? '600' : '500'}>
                               蓝牙搜索
                             </Text>
@@ -760,15 +782,15 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                       </TouchableOpacity>
                       <TouchableOpacity style={{ flex: 1 }} onPress={() => setSelectedConnectionType('wifi')}>
                         <View
-                          backgroundColor={selectedConnectionType === 'wifi' ? COLORS.primary : 'white'}
+                          backgroundColor={selectedConnectionType === 'wifi' ? primaryColor : 'white'}
                           borderWidth={selectedConnectionType === 'wifi' ? 0 : 1}
                           borderColor="#e0e0e0"
-                          paddingVertical="$3"
+                          paddingVertical="$2"
                           borderRadius="$3"
                           alignItems="center"
                         >
                           <XStack space="$2" alignItems="center">
-                            <Wifi size={16} color={selectedConnectionType === 'wifi' ? 'white' : COLORS.text} />
+                            <Wifi size={16} color={selectedConnectionType === 'wifi' ? 'white' : textColor} />
                             <Text fontSize="$3" color={selectedConnectionType === 'wifi' ? 'white' : '$text'} fontWeight={selectedConnectionType === 'wifi' ? '600' : '500'}>
                               WiFi连接
                             </Text>
@@ -778,15 +800,15 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                     </XStack>
                     <TouchableOpacity onPress={() => setSelectedConnectionType('manual')}>
                       <View
-                        backgroundColor={selectedConnectionType === 'manual' ? COLORS.primary : 'white'}
+                        backgroundColor={selectedConnectionType === 'manual' ? primaryColor : 'white'}
                         borderWidth={selectedConnectionType === 'manual' ? 0 : 1}
                         borderColor="#e0e0e0"
-                        paddingVertical="$3"
+                        paddingVertical="$2"
                         borderRadius="$3"
                         alignItems="center"
                       >
                         <XStack space="$2" alignItems="center">
-                          <Edit size={16} color={selectedConnectionType === 'manual' ? 'white' : COLORS.text} />
+                          <Edit size={16} color={selectedConnectionType === 'manual' ? 'white' : textColor} />
                           <Text fontSize="$3" color={selectedConnectionType === 'manual' ? 'white' : '$text'} fontWeight={selectedConnectionType === 'manual' ? '600' : '500'}>
                             手动录入
                           </Text>
@@ -806,7 +828,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                       <View
                         borderWidth={1}
                         borderColor="#e0e0e0"
-                        paddingVertical="$3"
+                        paddingVertical="$2"
                         borderRadius="$3"
                         alignItems="center"
                       >
@@ -821,6 +843,12 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                         // 验证必填项
                         if (!selectedDeviceType || !selectedConnectionType || !deviceName.trim()) {
                           showToast('请选择设备类型、连接方式并输入设备名称');
+                          return;
+                        }
+
+                        // 检查设备绑定数量限制
+                        if (!canBind) {
+                          showDeviceLimitAlert();
                           return;
                         }
 
@@ -841,6 +869,9 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                           // 更新本地设备列表
                           setDevices([...devices, newDevice]);
 
+                          // 刷新设备限制状态
+                          refreshDeviceLimit();
+
                           // 显示成功提示
                           showToast('设备添加成功');
 
@@ -856,8 +887,8 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                       }}
                     >
                       <View
-                        backgroundColor={COLORS.primary}
-                        paddingVertical="$3"
+                        backgroundColor={primaryColor}
+                        paddingVertical="$2"
                         borderRadius="$3"
                         alignItems="center"
                       >
@@ -879,40 +910,19 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
   // 设备详情页面
   return (
     <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor }}>
         {/* Header */}
-        <View height={60} backgroundColor="white" borderBottomWidth={1} borderBottomColor="#e0e0e0" paddingHorizontal="$4">
-          <XStack justifyContent="space-between" alignItems="center" height="100%">
-            <XStack space="$3" alignItems="center" flex={1}>
-              <Pressable onPress={() => setSelectedDevice(null)}>
-                <ArrowLeft size={24} color={COLORS.text} />
-              </Pressable>
-              <XStack space="$2" alignItems="center" flex={1}>
-                <View padding="$2" borderRadius="$2" backgroundColor="#f0fdf4">
-                  {getDeviceIcon(selectedDevice.type)}
-                </View>
-                <YStack flex={1}>
-                  <Text fontSize="$5" fontWeight="600" color="$text">
-                    {selectedDevice.name}
-                  </Text>
-                  <Text fontSize="$2" color="$textSecondary">
-                    {selectedDevice.model}
-                  </Text>
-                </YStack>
-              </XStack>
-            </XStack>
-            <TouchableOpacity>
-              <View padding="$2">
-                <Settings size={20} color={COLORS.textSecondary} />
-              </View>
-            </TouchableOpacity>
-          </XStack>
-        </View>
+        <TitleBar
+          title={selectedDevice.name}
+          subtitle={selectedDevice.model}
+          onBack={() => setSelectedDevice(null)}
+          actions={[{ icon: Settings, onPress: () => {} }]}
+        />
 
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-          <YStack padding="$4" space="$4">
+          <YStack padding="$2.5" space="$2">
             {/* Device Info Card */}
-            <Card backgroundColor="white" borderLeftWidth={4} borderLeftColor={COLORS.primary} padding="$4">
+            <Card backgroundColor="white" borderLeftWidth={4} borderLeftColor={primaryColor} padding="$2">
               <XStack justifyContent="space-between" marginBottom="$4">
                 <XStack space="$2" alignItems="center">
                   {/* 手动上传类型不显示连接状态 */}
@@ -927,9 +937,9 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                 {selectedDevice.syncType !== 'manual' && (
                   <XStack space="$1" alignItems="center">
                     {selectedDevice.connection === 'wifi' ? (
-                      <Wifi size={16} color={COLORS.textSecondary} />
+                      <Wifi size={16} color={textSecondaryColor} />
                     ) : (
-                      <Bluetooth size={16} color={COLORS.textSecondary} />
+                      <Bluetooth size={16} color={textSecondaryColor} />
                     )}
                     <Text fontSize="$2" color="$textSecondary">
                       {selectedDevice.connection === 'wifi' ? 'WiFi' : '蓝牙'}
@@ -950,7 +960,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                     </XStack>
                     <XStack space="$2" alignItems="center">
                       <Progress value={selectedDevice.battery} height={8} flex={1} backgroundColor="#f0f0f0">
-                        <Progress.Indicator backgroundColor={COLORS.primary} />
+                        <Progress.Indicator backgroundColor={primaryColor} />
                       </Progress>
                       <Text fontSize="$3" fontWeight="500">
                         {selectedDevice.battery}%
@@ -959,7 +969,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                   </YStack>
                   <YStack flex={1} space="$1">
                     <XStack space="$1" alignItems="center">
-                      <Clock size={16} color={COLORS.textSecondary} />
+                      <Clock size={16} color={textSecondaryColor} />
                       <Text fontSize="$2" color="$textSecondary">
                         最后同步
                       </Text>
@@ -975,7 +985,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
               {selectedDevice.syncType === 'manual' && (
                 <YStack space="$1" marginBottom="$4">
                   <XStack space="$1" alignItems="center">
-                    <Clock size={16} color={COLORS.textSecondary} />
+                    <Clock size={16} color={textSecondaryColor} />
                     <Text fontSize="$2" color="$textSecondary">
                       最后上传
                     </Text>
@@ -1009,9 +1019,9 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                       selectedDevice.syncType !== 'manual' &&
                       (selectedDevice.status === 'disconnected' || isSyncing)
                         ? '#d0d0d0'
-                        : COLORS.primary
+                        : primaryColor
                     }
-                    paddingVertical="$3"
+                    paddingVertical="$2"
                     borderRadius="$3"
                     alignItems="center"
                   >
@@ -1040,15 +1050,15 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                 <TouchableOpacity onPress={() => handleDeleteDevice(selectedDevice.id)}>
                   <View
                     borderWidth={1}
-                    borderColor={COLORS.error}
-                    paddingHorizontal="$4"
-                    paddingVertical="$3"
+                    borderColor={errorColor}
+                    paddingHorizontal="$2.5"
+                    paddingVertical="$2"
                     borderRadius="$3"
                     alignItems="center"
                   >
                     <XStack space="$2" alignItems="center">
-                      <Trash2 size={16} color={COLORS.error} />
-                      <Text fontSize="$3" color={COLORS.error} fontWeight="600">
+                      <Trash2 size={16} color={errorColor} />
+                      <Text fontSize="$3" color={errorColor} fontWeight="600">
                         删除
                       </Text>
                     </XStack>
@@ -1057,40 +1067,72 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
               </XStack>
             </Card>
 
-            {/* Event Timeline */}
-            <YStack space="$2">
-              <XStack justifyContent="space-between" marginBottom="$2">
-                <Text fontSize="$5" fontWeight="600">
+            {/* Data Records Section */}
+            <Card backgroundColor="$color2" padding="$2" borderRadius="$6" borderWidth={1} borderColor="$color5">
+              <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                <Text fontSize="$5" fontWeight="600" color="$color12">
                   数据记录
                 </Text>
-                <Text fontSize="$3" color="$textSecondary">
-                  {selectedDevice.events.length} 条记录
-                </Text>
+                <View backgroundColor="$color4" paddingHorizontal="$2" paddingVertical="$1" borderRadius="$2">
+                  <Text fontSize="$2" color="$color10">
+                    {selectedDevice.events.length} 条
+                  </Text>
+                </View>
               </XStack>
 
-              {selectedDevice.events.map((event) => (
-                <Card key={event.id} backgroundColor="white" padding="$4">
-                  <XStack space="$3">
-                    <View marginTop="$1">{getEventStatusIcon(event.status)}</View>
-                    <YStack flex={1}>
-                      <XStack justifyContent="space-between" marginBottom="$1">
-                        <YStack>
-                          <Text fontSize="$4" fontWeight="600">
-                            {event.type}
-                          </Text>
-                          <XStack space="$1" alignItems="center">
-                            <Clock size={12} color={COLORS.textSecondary} />
-                            <Text fontSize="$2" color="$textSecondary">
-                              {event.timestamp}
+              {selectedDevice.events.length > 0 ? (
+                <YStack gap="$2">
+                  {selectedDevice.events.map((event) => (
+                    <View
+                      key={event.id}
+                      padding="$2"
+                      borderRadius="$4"
+                      backgroundColor="$color1"
+                      borderLeftWidth={3}
+                      borderLeftColor={
+                        event.status === 'danger'
+                          ? errorColor
+                          : event.status === 'warning'
+                            ? warningColor
+                            : successColor
+                      }
+                    >
+                      <XStack justifyContent="space-between" alignItems="flex-start">
+                        <XStack gap="$2" alignItems="center" flex={1}>
+                          <View
+                            width={36}
+                            height={36}
+                            borderRadius="$10"
+                            backgroundColor={
+                              event.status === 'danger'
+                                ? `${errorColor}15`
+                                : event.status === 'warning'
+                                  ? `${warningColor}15`
+                                  : `${successColor}15`
+                            }
+                            justifyContent="center"
+                            alignItems="center"
+                          >
+                            {getEventStatusIcon(event.status)}
+                          </View>
+                          <YStack flex={1}>
+                            <Text fontSize="$4" fontWeight="600" color="$color12">
+                              {event.type}
                             </Text>
-                          </XStack>
-                        </YStack>
+                            <XStack gap="$1" alignItems="center" marginTop="$0.5">
+                              <Clock size={12} color={textSecondaryColor} />
+                              <Text fontSize="$2" color="$color10">
+                                {event.timestamp}
+                              </Text>
+                            </XStack>
+                          </YStack>
+                        </XStack>
                         <YStack alignItems="flex-end">
-                          <Text fontSize="$7" fontWeight="bold" color={COLORS.primary}>
+                          <Text fontSize="$6" fontWeight="bold" color={primaryColor}>
                             {event.value}
                           </Text>
                           {event.unit && (
-                            <Text fontSize="$2" color="$textSecondary">
+                            <Text fontSize="$2" color="$color10">
                               {event.unit}
                             </Text>
                           )}
@@ -1100,53 +1142,54 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
                         <View
                           marginTop="$2"
                           padding="$2"
-                          borderRadius="$2"
+                          borderRadius="$3"
                           backgroundColor={
                             event.status === 'warning'
-                              ? '#fef3c7'
+                              ? `${warningColor}15`
                               : event.status === 'danger'
-                                ? '#fee2e2'
-                                : '#d1fae5'
+                                ? `${errorColor}15`
+                                : `${successColor}15`
                           }
                         >
                           <Text
-                            fontSize="$3"
+                            fontSize="$2"
                             color={
                               event.status === 'warning'
-                                ? '#92400e'
+                                ? warningColor
                                 : event.status === 'danger'
-                                  ? '#991b1b'
-                                  : '#065f46'
+                                  ? errorColor
+                                  : successColor
                             }
                           >
                             {event.note}
                           </Text>
                         </View>
                       )}
-                    </YStack>
-                  </XStack>
-                </Card>
-              ))}
-
-              {selectedDevice.events.length === 0 && (
-                <YStack alignItems="center" justifyContent="center" paddingVertical="$8">
+                    </View>
+                  ))}
+                </YStack>
+              ) : (
+                <YStack alignItems="center" justifyContent="center" paddingVertical="$2">
                   <View
-                    width={64}
-                    height={64}
-                    borderRadius={32}
-                    backgroundColor="#f0fdf4"
+                    width={56}
+                    height={56}
+                    borderRadius="$10"
+                    backgroundColor={`${primaryColor}15`}
                     justifyContent="center"
                     alignItems="center"
-                    marginBottom="$3"
+                    marginBottom="$2"
                   >
-                    <Activity size={32} color={COLORS.primary} />
+                    <Activity size={28} color={primaryColor} />
                   </View>
-                  <Text fontSize="$3" color="$textSecondary">
+                  <Text fontSize="$3" color="$color10">
                     暂无数据记录
+                  </Text>
+                  <Text fontSize="$2" color="$color9" marginTop="$1">
+                    点击上方按钮开始记录健康数据
                   </Text>
                 </YStack>
               )}
-            </YStack>
+            </Card>
           </YStack>
         </ScrollView>
 
@@ -1168,11 +1211,11 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
             <View
               backgroundColor="white"
               borderRadius="$4"
-              padding="$6"
+              padding="$2"
               alignItems="center"
               minWidth={200}
             >
-              <ActivityIndicator size="large" color={COLORS.primary} />
+              <ActivityIndicator size="large" color={primaryColor} />
               <Text fontSize="$4" fontWeight="600" marginTop="$4" color="$text">
                 正在识别...
               </Text>

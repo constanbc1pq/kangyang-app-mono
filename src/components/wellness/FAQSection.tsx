@@ -4,10 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, YStack } from 'tamagui';
+import { View, Text, YStack, useTheme } from 'tamagui';
 import { Pressable, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { ChevronDown, HelpCircle } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -30,6 +29,9 @@ interface FAQItemProps {
 }
 
 const FAQItemComponent: React.FC<FAQItemProps> = ({ faq, isExpanded, onToggle }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+
   const handleToggle = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     onToggle();
@@ -38,29 +40,29 @@ const FAQItemComponent: React.FC<FAQItemProps> = ({ faq, isExpanded, onToggle })
   return (
     <Pressable onPress={handleToggle}>
       <View
-        backgroundColor="$surface"
-        borderRadius="$3"
+        backgroundColor="$color2"
+        borderRadius="$5"
         borderWidth={1}
-        borderColor={isExpanded ? COLORS.primary : '$borderColor'}
-        padding="$3"
-        marginBottom={12}
+        borderColor={isExpanded ? primaryColor : '$color5'}
+        padding="$2"
+        marginBottom="$2"
       >
-        <YStack space="$2">
+        <YStack gap="$2">
           {/* 问题标题 */}
           <View
             flexDirection="row"
             justifyContent="space-between"
             alignItems="center"
           >
-            <View flexDirection="row" alignItems="center" flex={1} space="$2">
+            <View flexDirection="row" alignItems="center" flex={1} gap="$2">
               <HelpCircle
                 size={18}
-                color={isExpanded ? COLORS.primary : COLORS.textSecondary}
+                color={isExpanded ? primaryColor : theme.color10?.val}
               />
               <Text
                 fontSize="$3"
                 fontWeight="600"
-                color={isExpanded ? COLORS.primary : '$text'}
+                color={isExpanded ? '$color9' : '$color12'}
                 flex={1}
                 lineHeight={22}
               >
@@ -75,7 +77,7 @@ const FAQItemComponent: React.FC<FAQItemProps> = ({ faq, isExpanded, onToggle })
             >
               <ChevronDown
                 size={20}
-                color={isExpanded ? COLORS.primary : COLORS.textSecondary}
+                color={isExpanded ? primaryColor : theme.color10?.val}
               />
             </View>
           </View>
@@ -83,17 +85,17 @@ const FAQItemComponent: React.FC<FAQItemProps> = ({ faq, isExpanded, onToggle })
           {/* 答案内容 */}
           {isExpanded && (
             <View
-              backgroundColor="$background"
+              backgroundColor="$color3"
               padding="$3"
               borderRadius="$2"
               marginTop="$2"
             >
-              <Text fontSize="$3" color="$text" lineHeight={22}>
+              <Text fontSize="$3" color="$color12" lineHeight={22}>
                 {faq.answer}
               </Text>
               {faq.relatedServices && faq.relatedServices.length > 0 && (
                 <View marginTop="$2">
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     相关服务：{faq.relatedServices.join('、')}
                   </Text>
                 </View>
@@ -112,6 +114,9 @@ interface FAQSectionProps {
 }
 
 export const FAQSection: React.FC<FAQSectionProps> = ({ faqs, defaultExpandedId }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+
   const [expandedId, setExpandedId] = useState<string | null>(defaultExpandedId || null);
 
   const handleToggle = (id: string) => {
@@ -136,37 +141,37 @@ export const FAQSection: React.FC<FAQSectionProps> = ({ faqs, defaultExpandedId 
   };
 
   return (
-    <View marginBottom={16}>
-      <YStack space="$3">
+    <View marginBottom="$2">
+      <YStack gap="$3">
         {/* 标题 */}
-        <View paddingHorizontal="$4">
-          <Text fontSize="$5" fontWeight="600" color="$text">
+        <View paddingHorizontal="$2.5">
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             常见问题
           </Text>
-          <Text fontSize="$3" color="$textSecondary" marginTop="$1">
+          <Text fontSize="$3" color="$color10" marginTop="$1">
             解答您的疑问，消除顾虑
           </Text>
         </View>
 
         {/* FAQ列表 */}
-        <View paddingHorizontal="$4">
+        <View paddingHorizontal="$2.5">
           <YStack>
             {categoryOrder.map(
               (category) =>
                 faqsByCategory[category] && (
-                  <YStack key={category} marginBottom={16}>
+                  <YStack key={category} marginBottom="$2">
                     {/* 类别标签 */}
                     <View
-                      backgroundColor={`${COLORS.primary}15`}
-                      paddingHorizontal="$3"
+                      backgroundColor="$color4"
+                      paddingHorizontal="$2.5"
                       paddingVertical="$2"
                       borderRadius="$2"
                       alignSelf="flex-start"
-                      marginBottom={12}
+                      marginBottom="$2"
                     >
                       <Text
                         fontSize="$2"
-                        color={COLORS.primary}
+                        color="$color9"
                         fontWeight="600"
                       >
                         {categoryLabels[category as keyof typeof categoryLabels]}
@@ -204,7 +209,7 @@ export const mockFAQs: FAQItem[] = [
     question: '服务范围覆盖哪些城市？',
     answer:
       '目前我们的服务已覆盖北京、上海、广州、深圳等一线城市，以及杭州、成都、武汉等30+重点城市。部分在线咨询服务（如AI健康规划、专家咨询）面向全国开放。',
-    relatedServices: ['营养配餐', '送餐上门', '养老服务'],
+    relatedServices: ['营养配餐', '闪送到家', '养老服务'],
   },
   {
     id: 'faq_service_002',
@@ -230,7 +235,7 @@ export const mockFAQs: FAQItem[] = [
     question: '营养配餐是否考虑个人口味偏好？',
     answer:
       '是的，我们的营养师会在制定食谱前详细了解您的口味偏好、饮食习惯、过敏食物等信息。在满足营养需求的前提下，尽可能按照您的口味来搭配菜品。',
-    relatedServices: ['营养配餐', '送餐上门'],
+    relatedServices: ['营养配餐', '闪送到家'],
   },
 
   // 费用相关

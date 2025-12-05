@@ -99,12 +99,15 @@ const MEMBERSHIP_QUOTAS: Record<MembershipTier, Omit<ServiceQuota['quotas'], 'ti
 /**
  * 会员套餐价格配置（年费，单位：元）
  */
-const MEMBERSHIP_PRICES: Record<MembershipTier, number> = {
+export const LEGAL_MEMBERSHIP_PRICES: Record<MembershipTier, number> = {
   [MembershipTier.BASIC]: 0,
   [MembershipTier.STANDARD]: 1980,
-  [MembershipTier.PREMIUM]: 3980,
-  [MembershipTier.VIP_FAMILY]: 5980,
+  [MembershipTier.PREMIUM]: 4980,
+  [MembershipTier.VIP_FAMILY]: 9800,
 };
+
+// 保持内部引用兼容
+const MEMBERSHIP_PRICES = LEGAL_MEMBERSHIP_PRICES;
 
 /**
  * 获取我的会员信息

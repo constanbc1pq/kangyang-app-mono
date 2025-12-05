@@ -296,11 +296,244 @@ export const updatePropertyInventory = async (
  * 律师服务
  */
 
-// 初始化律师数据（从localStorage读取，不再自动生成）
+// 默认律师数据
+const DEFAULT_LAWYERS: LawyerProfile[] = [
+  {
+    id: 'lawyer_001',
+    name: '陈华',
+    avatar: 'local:lawyer_001',
+    licenseNumber: '14401201210345678',
+    lawFirm: '广东正大联合律师事务所',
+    specialties: [LawyerSpecialty.INHERITANCE, LawyerSpecialty.ELDER_CARE, LawyerSpecialty.PROPERTY],
+    yearsOfExperience: 18,
+    education: '中国政法大学 法学硕士',
+    caseCount: 560,
+    successRate: 92,
+    rating: 4.9,
+    reviewCount: 328,
+    textConsultationPrice: 200,
+    phoneConsultationPrice: 300,
+    videoConsultationPrice: 500,
+    homeVisitPrice: 1000,
+    isOnline: true,
+    responseRate: 98,
+    averageResponseTime: 15,
+    introduction: '专注遗嘱继承、养老赡养、房产纠纷18年，曾担任多家养老机构法律顾问。擅长处理复杂家庭财产分配案件，帮助众多老年人维护合法权益。',
+  },
+  {
+    id: 'lawyer_002',
+    name: '王丽',
+    avatar: 'local:lawyer_002',
+    licenseNumber: '14401201510567890',
+    lawFirm: '广东华商律师事务所',
+    specialties: [LawyerSpecialty.MARRIAGE, LawyerSpecialty.INHERITANCE, LawyerSpecialty.ELDER_CARE],
+    yearsOfExperience: 15,
+    education: '中山大学 法学硕士',
+    caseCount: 420,
+    successRate: 89,
+    rating: 4.8,
+    reviewCount: 256,
+    textConsultationPrice: 180,
+    phoneConsultationPrice: 280,
+    videoConsultationPrice: 450,
+    homeVisitPrice: 900,
+    isOnline: true,
+    responseRate: 96,
+    averageResponseTime: 20,
+    introduction: '资深婚姻家事律师，专注老年人婚姻纠纷、财产分割、赡养抚养案件。温和细致，善于调解，深受当事人信赖。',
+  },
+  {
+    id: 'lawyer_003',
+    name: '张强',
+    avatar: 'local:lawyer_003',
+    licenseNumber: '14401200810234567',
+    lawFirm: '广东金桥百信律师事务所',
+    specialties: [LawyerSpecialty.PROPERTY, LawyerSpecialty.CONTRACT, LawyerSpecialty.INHERITANCE],
+    yearsOfExperience: 22,
+    education: '武汉大学 法学博士',
+    caseCount: 780,
+    successRate: 94,
+    rating: 4.95,
+    reviewCount: 456,
+    textConsultationPrice: 250,
+    phoneConsultationPrice: 380,
+    videoConsultationPrice: 600,
+    homeVisitPrice: 1200,
+    isOnline: false,
+    responseRate: 92,
+    averageResponseTime: 30,
+    introduction: '房产法律专家，深耕房产买卖、继承过户、产权纠纷22年。处理过大量复杂房产案件，对老年人房产保护有丰富经验。',
+  },
+  {
+    id: 'lawyer_004',
+    name: '刘慧敏',
+    avatar: 'local:lawyer_004',
+    licenseNumber: '14401201710789012',
+    lawFirm: '广东广信君达律师事务所',
+    specialties: [LawyerSpecialty.CONSUMER_RIGHTS, LawyerSpecialty.MEDICAL, LawyerSpecialty.CONTRACT],
+    yearsOfExperience: 12,
+    education: '暨南大学 法学硕士',
+    caseCount: 320,
+    successRate: 88,
+    rating: 4.7,
+    reviewCount: 189,
+    textConsultationPrice: 150,
+    phoneConsultationPrice: 250,
+    videoConsultationPrice: 400,
+    homeVisitPrice: 800,
+    isOnline: true,
+    responseRate: 99,
+    averageResponseTime: 10,
+    introduction: '消费维权、医疗纠纷专家。特别关注老年人消费欺诈、养老诈骗案件，帮助众多老年人追回被骗财产。',
+  },
+  {
+    id: 'lawyer_005',
+    name: '李国栋',
+    avatar: 'local:lawyer_005',
+    licenseNumber: '14401201110456789',
+    lawFirm: '广东法制盛邦律师事务所',
+    specialties: [LawyerSpecialty.INHERITANCE, LawyerSpecialty.PROPERTY, LawyerSpecialty.MARRIAGE],
+    yearsOfExperience: 20,
+    education: '华东政法大学 法学硕士',
+    caseCount: 650,
+    successRate: 91,
+    rating: 4.85,
+    reviewCount: 378,
+    textConsultationPrice: 220,
+    phoneConsultationPrice: 320,
+    videoConsultationPrice: 520,
+    homeVisitPrice: 1000,
+    isOnline: true,
+    responseRate: 95,
+    averageResponseTime: 25,
+    introduction: '遗产继承资深律师，擅长处理遗嘱订立、遗产分配、继承纠纷。为众多家庭提供财产传承规划服务。',
+  },
+  {
+    id: 'lawyer_006',
+    name: '周晓燕',
+    avatar: 'local:lawyer_006',
+    licenseNumber: '14401201610678901',
+    lawFirm: '广东信达律师事务所',
+    specialties: [LawyerSpecialty.ELDER_CARE, LawyerSpecialty.LABOR, LawyerSpecialty.CONTRACT],
+    yearsOfExperience: 14,
+    education: '西南政法大学 法学硕士',
+    caseCount: 380,
+    successRate: 87,
+    rating: 4.75,
+    reviewCount: 212,
+    textConsultationPrice: 160,
+    phoneConsultationPrice: 260,
+    videoConsultationPrice: 420,
+    homeVisitPrice: 850,
+    isOnline: false,
+    responseRate: 94,
+    averageResponseTime: 35,
+    introduction: '专注养老赡养、劳动争议领域。对老年人权益保护有深入研究，帮助多位老人追索赡养费和工伤赔偿。',
+  },
+  {
+    id: 'lawyer_007',
+    name: '黄志远',
+    avatar: 'local:lawyer_007',
+    licenseNumber: '14401200910345678',
+    lawFirm: '广东南国德赛律师事务所',
+    specialties: [LawyerSpecialty.PROPERTY, LawyerSpecialty.INHERITANCE, LawyerSpecialty.CONTRACT],
+    yearsOfExperience: 25,
+    education: '北京大学 法学博士',
+    caseCount: 920,
+    successRate: 95,
+    rating: 4.98,
+    reviewCount: 567,
+    textConsultationPrice: 300,
+    phoneConsultationPrice: 450,
+    videoConsultationPrice: 700,
+    homeVisitPrice: 1500,
+    isOnline: true,
+    responseRate: 97,
+    averageResponseTime: 20,
+    introduction: '资深律师、仲裁员，房产和继承法专家。曾参与多部地方法规起草，在业内享有很高声誉。',
+  },
+  {
+    id: 'lawyer_008',
+    name: '郑美玲',
+    avatar: 'local:lawyer_008',
+    licenseNumber: '14401201810890123',
+    lawFirm: '广东合邦律师事务所',
+    specialties: [LawyerSpecialty.MEDICAL, LawyerSpecialty.CONSUMER_RIGHTS, LawyerSpecialty.ELDER_CARE],
+    yearsOfExperience: 10,
+    education: '中山大学 法学硕士',
+    caseCount: 245,
+    successRate: 86,
+    rating: 4.65,
+    reviewCount: 156,
+    textConsultationPrice: 130,
+    phoneConsultationPrice: 220,
+    videoConsultationPrice: 380,
+    homeVisitPrice: 750,
+    isOnline: true,
+    responseRate: 99,
+    averageResponseTime: 8,
+    introduction: '医疗纠纷专业律师，特别关注老年人医疗事故维权。响应快速，服务热情，深受老年客户好评。',
+  },
+  {
+    id: 'lawyer_009',
+    name: '吴明辉',
+    avatar: 'local:lawyer_009',
+    licenseNumber: '14401201310567890',
+    lawFirm: '广东天穗律师事务所',
+    specialties: [LawyerSpecialty.INHERITANCE, LawyerSpecialty.MARRIAGE, LawyerSpecialty.PROPERTY],
+    yearsOfExperience: 16,
+    education: '华南理工大学 法学硕士',
+    caseCount: 480,
+    successRate: 90,
+    rating: 4.82,
+    reviewCount: 298,
+    textConsultationPrice: 190,
+    phoneConsultationPrice: 290,
+    videoConsultationPrice: 480,
+    homeVisitPrice: 950,
+    isOnline: false,
+    responseRate: 93,
+    averageResponseTime: 28,
+    introduction: '家事律师，专注遗嘱规划、婚姻财产、子女赡养。为客户提供全面的家庭法律服务和财产规划建议。',
+  },
+  {
+    id: 'lawyer_010',
+    name: '林秀珍',
+    avatar: 'local:lawyer_010',
+    licenseNumber: '14401201410678901',
+    lawFirm: '广东粤广律师事务所',
+    specialties: [LawyerSpecialty.ELDER_CARE, LawyerSpecialty.CONSUMER_RIGHTS, LawyerSpecialty.INHERITANCE],
+    yearsOfExperience: 13,
+    education: '深圳大学 法学硕士',
+    caseCount: 350,
+    successRate: 88,
+    rating: 4.78,
+    reviewCount: 234,
+    textConsultationPrice: 170,
+    phoneConsultationPrice: 270,
+    videoConsultationPrice: 440,
+    homeVisitPrice: 880,
+    isOnline: true,
+    responseRate: 96,
+    averageResponseTime: 18,
+    introduction: '老年人权益保护专家，曾在社区法律援助中心工作多年。对老年人面临的各类法律问题有深入了解和丰富实战经验。',
+  },
+];
+
+// 初始化律师数据
 export const initializeLawyers = async (): Promise<void> => {
-  // 律师数据应该由用户或管理后台添加到 @kangyang_lawyers
-  // 不再自动生成模拟数据
-  console.log('Lawyer data should be managed via @kangyang_lawyers localStorage');
+  try {
+    const existing = await AsyncStorage.getItem(LEGAL_SERVICE_STORAGE_KEYS.LAWYERS);
+    if (existing) {
+      console.log('律师数据已存在，跳过初始化');
+      return;
+    }
+
+    await AsyncStorage.setItem(LEGAL_SERVICE_STORAGE_KEYS.LAWYERS, JSON.stringify(DEFAULT_LAWYERS));
+    console.log('成功初始化10位律师数据');
+  } catch (error) {
+    console.error('初始化律师数据失败:', error);
+  }
 };
 
 // 获取所有律师列表
@@ -310,9 +543,10 @@ export const getLawyers = async (): Promise<LawyerProfile[]> => {
     if (data) {
       return JSON.parse(data);
     } else {
-      // 没有数据时返回空数组，需要先添加律师数据到 @kangyang_lawyers
-      console.warn('No lawyers found in @kangyang_lawyers. Please add lawyer data first.');
-      return [];
+      // 没有数据时自动初始化
+      await initializeLawyers();
+      const newData = await AsyncStorage.getItem(LEGAL_SERVICE_STORAGE_KEYS.LAWYERS);
+      return newData ? JSON.parse(newData) : [];
     }
   } catch (error) {
     console.error('Error getting lawyers:', error);

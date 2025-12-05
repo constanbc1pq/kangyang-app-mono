@@ -1,8 +1,13 @@
+/**
+ * CaregiverSelectCard 护理人员选择卡片
+ * 用于AI咨询流程中选择护理人员
+ * 遵循 CLAUDE.md 组件规范
+ */
+
 import React from 'react';
 import { Pressable, Image } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { Star, CheckCircle } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import type { Caregiver } from '@/types/elderly';
 
 interface CaregiverSelectCardProps {
@@ -11,19 +16,24 @@ interface CaregiverSelectCardProps {
   onSelect: (caregiverId: string) => void;
 }
 
+const GOLD_COLOR = '#D4AF37';
+
 export const CaregiverSelectCard: React.FC<CaregiverSelectCardProps> = ({
   caregiver,
   isSelected,
   onSelect,
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+
   return (
     <Pressable onPress={() => onSelect(caregiver.id)}>
       <View
-        backgroundColor="$background"
-        borderRadius="$4"
+        backgroundColor="$color2"
+        borderRadius="$5"
         borderWidth={2}
-        borderColor={isSelected ? COLORS.primary : '$borderColor'}
-        padding="$3"
+        borderColor={isSelected ? '$primary' : '$color5'}
+        padding="$2"
         position="relative"
       >
         {/* 选中标识 */}
@@ -32,31 +42,31 @@ export const CaregiverSelectCard: React.FC<CaregiverSelectCardProps> = ({
             position="absolute"
             top={8}
             right={8}
-            width={24}
-            height={24}
-            borderRadius={12}
-            backgroundColor={COLORS.primary}
+            width={22}
+            height={22}
+            borderRadius={11}
+            backgroundColor="$primary"
             justifyContent="center"
             alignItems="center"
             zIndex={10}
           >
-            <CheckCircle size={16} color="white" fill="white" />
+            <CheckCircle size={14} color="white" fill="white" />
           </View>
         )}
 
-        <XStack gap="$3" alignItems="center">
+        <XStack gap="$2" alignItems="center">
           {/* 头像 */}
           <View position="relative">
             <View
-              width={60}
-              height={60}
-              borderRadius={30}
-              backgroundColor="$surface"
+              width={56}
+              height={56}
+              borderRadius={28}
+              backgroundColor="$color4"
               overflow="hidden"
             >
               <Image
                 source={{ uri: caregiver.avatar }}
-                style={{ width: 60, height: 60 }}
+                style={{ width: 56, height: 56 }}
               />
             </View>
             {caregiver.verified && (
@@ -67,11 +77,11 @@ export const CaregiverSelectCard: React.FC<CaregiverSelectCardProps> = ({
                 width={18}
                 height={18}
                 borderRadius={9}
-                backgroundColor={COLORS.primary}
+                backgroundColor="$primary"
                 justifyContent="center"
                 alignItems="center"
                 borderWidth={2}
-                borderColor="$background"
+                borderColor="$color2"
               >
                 <CheckCircle size={10} color="white" />
               </View>
@@ -81,40 +91,52 @@ export const CaregiverSelectCard: React.FC<CaregiverSelectCardProps> = ({
           {/* 信息 */}
           <YStack flex={1} gap="$1">
             {/* 姓名和资质 */}
-            <XStack alignItems="center" gap="$2">
-              <Text fontSize="$4" fontWeight="bold" color="$text">
+            <XStack alignItems="center" gap="$1.5">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 {caregiver.name}
               </Text>
               <View
-                backgroundColor={COLORS.primaryLight}
-                paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
+                backgroundColor="$primary"
+                paddingHorizontal="$1.5"
+                paddingVertical="$0.5"
+                borderRadius="$10"
               >
-                <Text fontSize="$1" color="white" fontWeight="600">
+                <Text fontSize={10} color="white" fontWeight="500">
                   {caregiver.qualificationBadge}
                 </Text>
               </View>
             </XStack>
 
             {/* 评分和价格 */}
-            <XStack alignItems="center" gap="$3">
-              <XStack alignItems="center" gap="$1">
-                <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-                <Text fontSize="$2" fontWeight="600" color="$text">
+            <XStack alignItems="center" gap="$2">
+              <XStack alignItems="center" gap="$0.5">
+                <Star size={14} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                <Text fontSize="$2" fontWeight="600" color="$color12">
                   {caregiver.rating}
                 </Text>
               </XStack>
-              <Text fontSize="$3" fontWeight="bold" color={COLORS.primary}>
-                ¥{caregiver.hourlyRate}
-                <Text fontSize="$2" color="$textSecondary">/时</Text>
-              </Text>
+              <XStack alignItems="baseline">
+                <Text fontSize="$3" fontWeight="700" color="$primary">
+                  ¥{caregiver.hourlyRate}
+                </Text>
+                <Text fontSize="$2" color="$color10">/时</Text>
+              </XStack>
             </XStack>
 
             {/* 专长 */}
-            <Text fontSize="$2" color="$textSecondary" numberOfLines={1}>
-              {caregiver.specialty}
-            </Text>
+            <View
+              borderWidth={1}
+              borderColor="$primary"
+              paddingHorizontal="$2"
+              paddingVertical="$0.5"
+              borderRadius="$10"
+              alignSelf="flex-start"
+              style={{ backgroundColor: `${primaryColor}10` }}
+            >
+              <Text fontSize="$2" color="$primary" numberOfLines={1}>
+                {caregiver.specialty}
+              </Text>
+            </View>
           </YStack>
         </XStack>
       </View>

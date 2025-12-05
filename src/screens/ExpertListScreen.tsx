@@ -1,91 +1,112 @@
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * ExpertListScreen - 认证达人列表页
+ * 展示所有认证达人，支持分类筛选、搜索、排序
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局配色规范
+ */
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   YStack,
   XStack,
   Text,
   View,
   ScrollView,
+  Card,
+  Input,
+  useTheme,
 } from 'tamagui';
-import { SafeAreaView, RefreshControl, FlatList, TouchableOpacity, Dimensions } from 'react-native';
-import { Filter, Search, ArrowLeft, TrendingUp, Award, Star, ChevronRight } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
-import { Expert, ExpertLevel, ServiceType } from '@/types/community';
+import { Pressable, FlatList, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Search,
+  X,
+  Star,
+  User,
+  Briefcase,
+  TrendingUp,
+  Award,
+  Filter,
+  ChevronDown,
+  MapPin,
+  CheckCircle,
+} from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
+import { BottomSheet, BottomSheetItem } from '@/components/BottomSheet';
+import { Expert, ExpertLevel, ExpertCertStatus, ExpertType } from '@/types/community';
 import { getExperts, initializeCommunityData } from '@/services/communityDataService';
-import { ExpertCard } from '@/components/ExpertCard';
 import { useFocusEffect } from '@react-navigation/native';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ExpertListScreenProps {
   navigation: any;
 }
 
+// 排序方式
+type SortType = 'popularity' | 'orders' | 'rating';
+
+// 达人类型筛选
+type ExpertTypeFilter = 'all' | 'personal' | 'business';
+
 /**
- * 达人列表页（优化版）
- * 参考竞品设计：顶部Banner、服务分类、推荐达人、达人列表
+ * 认证达人列表页
  */
 export const ExpertListScreen: React.FC<ExpertListScreenProps> = ({ navigation }) => {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+
   const [experts, setExperts] = useState<Expert[]>([]);
-  const [hotExperts, setHotExperts] = useState<Expert[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<ServiceType | 'all'>('all');
+  const [searchText, setSearchText] = useState('');
+  const [typeFilter, setTypeFilter] = useState<ExpertTypeFilter>('all');
+  const [sortType, setSortType] = useState<SortType>('popularity');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
-  // 筛选条件
-  const [filters, setFilters] = useState<{
-    level?: ExpertLevel;
-    specialty?: ServiceType;
-  }>({});
-
-  // 服务分类配置 - 展示最热门的达人服务类型
-  const serviceCategories = [
-    { id: 'all', label: '全部', icon: '📋', type: 'all' as const },
-    { id: ServiceType.HOUSEKEEPING, label: '家政', icon: '🧹', type: ServiceType.HOUSEKEEPING },
-    { id: ServiceType.REPAIR, label: '维修', icon: '🔧', type: ServiceType.REPAIR },
-    { id: ServiceType.DELIVERY, label: '跑腿', icon: '🛒', type: ServiceType.DELIVERY },
-    { id: ServiceType.ESCORT, label: '陪诊', icon: '🏥', type: ServiceType.ESCORT },
-    { id: ServiceType.TUTORING, label: '家教', icon: '📚', type: ServiceType.TUTORING },
-    { id: ServiceType.PHOTOGRAPHY, label: '摄影', icon: '📷', type: ServiceType.PHOTOGRAPHY },
-    { id: ServiceType.FITNESS, label: '健身', icon: '💪', type: ServiceType.FITNESS },
+  // 排序选项配置
+  const sortOptions = [
+    { key: 'popularity' as const, label: '按人气', icon: TrendingUp },
+    { key: 'orders' as const, label: '按服务次数', icon: Award },
+    { key: 'rating' as const, label: '按评分', icon: Star },
   ];
 
-  // 初始化时加载数据
+  // 类型筛选配置
+  const typeOptions = [
+    { key: 'all' as const, label: '全部' },
+    { key: 'personal' as const, label: '个人达人' },
+    { key: 'business' as const, label: '商家达人' },
+  ];
+
   useEffect(() => {
     loadInitialData();
   }, []);
 
-  // 页面聚焦时重新加载数据
   useFocusEffect(
     useCallback(() => {
-      loadExperts();
-    }, [filters, activeCategory])
+      loadData();
+    }, [])
   );
 
   const loadInitialData = async () => {
     try {
       await initializeCommunityData();
-      await loadExperts();
-      await loadHotExperts();
+      await loadData();
     } catch (error) {
       console.error('初始化数据失败:', error);
     }
   };
 
-  const loadExperts = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const expertsData = await getExperts(filters);
-
-      // 根据选中的分类筛选
-      let filtered = expertsData;
-      if (activeCategory !== 'all') {
-        filtered = expertsData.filter(expert =>
-          expert.specialties?.includes(activeCategory as ServiceType)
-        );
-      }
-
-      setExperts(filtered);
+      const allExperts = await getExperts({});
+      // 只显示已认证的达人
+      const verifiedExperts = allExperts.filter(
+        e => e.certStatus === ExpertCertStatus.VERIFIED
+      );
+      setExperts(verifiedExperts);
     } catch (error) {
       console.error('加载达人列表失败:', error);
     } finally {
@@ -93,21 +114,9 @@ export const ExpertListScreen: React.FC<ExpertListScreenProps> = ({ navigation }
     }
   };
 
-  const loadHotExperts = async () => {
-    try {
-      const allExperts = await getExperts({});
-      // 取评分最高的前5位达人
-      const sorted = allExperts.sort((a, b) => b.rating - a.rating).slice(0, 5);
-      setHotExperts(sorted);
-    } catch (error) {
-      console.error('加载热门达人失败:', error);
-    }
-  };
-
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadExperts();
-    await loadHotExperts();
+    await loadData();
     setRefreshing(false);
   };
 
@@ -115,26 +124,48 @@ export const ExpertListScreen: React.FC<ExpertListScreenProps> = ({ navigation }
     navigation.navigate('ExpertDetail', { expertId });
   };
 
-  const handleBack = () => {
-    navigation.goBack();
+  const handleClearSearch = () => {
+    setSearchText('');
   };
 
-  const handleSearch = () => {
-    // TODO: 跳转到搜索页面
-    console.log('搜索');
-  };
+  // 过滤和排序达人列表
+  const filteredAndSortedExperts = useMemo(() => {
+    let result = [...experts];
 
-  const handleToggleFilter = () => {
-    setShowFilter(!showFilter);
-  };
+    // 按类型筛选
+    if (typeFilter === 'personal') {
+      result = result.filter(e => e.expertType === ExpertType.PERSONAL);
+    } else if (typeFilter === 'business') {
+      result = result.filter(e => e.expertType === ExpertType.BUSINESS);
+    }
 
-  const handleApplyExpert = () => {
-    navigation.navigate('ExpertCertification');
-  };
+    // 按搜索词筛选
+    if (searchText.trim()) {
+      const keyword = searchText.trim().toLowerCase();
+      result = result.filter(
+        e =>
+          e.name.toLowerCase().includes(keyword) ||
+          e.skillDescription?.toLowerCase().includes(keyword) ||
+          e.serviceArea?.some(area => area.toLowerCase().includes(keyword))
+      );
+    }
 
-  const handleCategoryPress = (category: ServiceType | 'all') => {
-    setActiveCategory(category);
-  };
+    // 排序
+    switch (sortType) {
+      case 'popularity':
+        // 人气 = 订单数 * 评分
+        result.sort((a, b) => (b.completedOrders * b.rating) - (a.completedOrders * a.rating));
+        break;
+      case 'orders':
+        result.sort((a, b) => b.completedOrders - a.completedOrders);
+        break;
+      case 'rating':
+        result.sort((a, b) => b.rating - a.rating);
+        break;
+    }
+
+    return result;
+  }, [experts, typeFilter, searchText, sortType]);
 
   const getLevelLabel = (level: ExpertLevel): string => {
     const labels: { [key in ExpertLevel]: string } = {
@@ -143,215 +174,313 @@ export const ExpertListScreen: React.FC<ExpertListScreenProps> = ({ navigation }
       [ExpertLevel.GOLD]: '金牌达人',
       [ExpertLevel.HALL_OF_FAME]: '殿堂级',
     };
-    return labels[level];
+    return labels[level] || '新手达人';
   };
 
-  const getServiceTypeLabel = (type: ServiceType): string => {
-    const labels: { [key in ServiceType]: string } = {
-      // 生活服务
-      [ServiceType.HOUSEKEEPING]: '家政保洁',
-      [ServiceType.REPAIR]: '维修安装',
-      [ServiceType.MOVING]: '搬家运输',
-      [ServiceType.DELIVERY]: '跑腿代购',
-      [ServiceType.MEAL_PREP]: '做饭配餐',
-      [ServiceType.PET_CARE]: '宠物照顾',
-      [ServiceType.GARDENING]: '园艺绿化',
-      // 陪护照料
-      [ServiceType.ESCORT]: '陪诊陪护',
-      [ServiceType.CHILDCARE]: '儿童看护',
-      [ServiceType.ELDERCARE]: '老人照料',
-      [ServiceType.NURSING]: '专业护理',
-      [ServiceType.COMPANION]: '陪伴聊天',
-      // 技能服务
-      [ServiceType.TUTORING]: '家教辅导',
-      [ServiceType.TRANSLATION]: '翻译服务',
-      [ServiceType.PHOTOGRAPHY]: '摄影拍照',
-      [ServiceType.MAKEUP]: '化妆造型',
-      [ServiceType.DRIVING]: '代驾陪驾',
-      [ServiceType.IT_SUPPORT]: '电脑维护',
-      [ServiceType.PHONE_TEACH]: '手机教学',
-      // 创意设计
-      [ServiceType.GRAPHIC_DESIGN]: '平面设计',
-      [ServiceType.VIDEO_EDITING]: '视频剪辑',
-      [ServiceType.WRITING]: '文案写作',
-      [ServiceType.HANDICRAFT]: '手工制作',
-      // 教学培训
-      [ServiceType.FITNESS]: '健身教练',
-      [ServiceType.YOGA]: '瑜伽教学',
-      [ServiceType.DANCE]: '舞蹈教学',
-      [ServiceType.MUSIC]: '音乐教学',
-      [ServiceType.PAINTING]: '绘画教学',
-      [ServiceType.COOKING]: '烹饪教学',
-      // 其他
-      [ServiceType.MASSAGE]: '按摩理疗',
-      [ServiceType.BEAUTY]: '美容美甲',
-      [ServiceType.OTHER]: '其他服务',
-    };
-    return labels[type] || '未知服务';
+  const getLevelColor = (level: ExpertLevel): string | undefined => {
+    if (level === ExpertLevel.HALL_OF_FAME) return '#FFD700';
+    if (level === ExpertLevel.GOLD) return warningColor;
+    if (level === ExpertLevel.QUALITY) return primaryColor;
+    return color10;
   };
 
-  const renderBanner = () => {
-    return (
-      <TouchableOpacity onPress={handleApplyExpert}>
-        <View
-          marginHorizontal="$4"
-          marginTop="$3"
-          backgroundColor={`${COLORS.primary}15`}
-          borderRadius="$4"
-          padding="$4"
-          borderWidth={1}
-          borderColor={`${COLORS.primary}30`}
-        >
-          <XStack space="$3" alignItems="center">
+  // 渲染搜索栏
+  const renderSearchBar = () => (
+    <View
+      marginHorizontal="$2.5"
+      marginTop="$2"
+      backgroundColor="$color2"
+      borderRadius="$4"
+      borderWidth={1}
+      borderColor="$color5"
+      paddingHorizontal="$2"
+    >
+      <XStack alignItems="center" gap="$2">
+        <Search size={18} color={color10} />
+        <Input
+          flex={1}
+          placeholder="搜索达人名称、技能、服务区域"
+          placeholderTextColor={color10}
+          value={searchText}
+          onChangeText={setSearchText}
+          backgroundColor="transparent"
+          borderWidth={0}
+          fontSize="$3"
+          paddingVertical="$2"
+        />
+        {searchText.length > 0 && (
+          <Pressable onPress={handleClearSearch}>
             <View
-              width={56}
-              height={56}
-              borderRadius={28}
-              backgroundColor={COLORS.primary}
+              width={20}
+              height={20}
+              borderRadius={10}
+              backgroundColor="$color5"
               justifyContent="center"
               alignItems="center"
             >
-              <Award size={32} color="white" />
+              <X size={12} color={color10} />
             </View>
+          </Pressable>
+        )}
+      </XStack>
+    </View>
+  );
 
-            <YStack flex={1} space="$1">
-              <Text fontSize="$5" fontWeight="700" color="$text">
-                成为认证达人
-              </Text>
-              <Text fontSize="$3" color="$textSecondary" numberOfLines={2}>
-                提供专业服务，获取稳定收入，平台流量扶持
-              </Text>
-            </YStack>
-
-            <ChevronRight size={24} color={COLORS.primary} />
-          </XStack>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderServiceCategories = () => {
-    return (
-      <View marginTop="$4" marginBottom="$2">
-        <Text fontSize="$5" fontWeight="600" color="$text" marginHorizontal="$4" marginBottom="$3">
-          服务分类
-        </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-          <XStack space="$3">
-            {serviceCategories.map(category => (
-              <TouchableOpacity key={category.id} onPress={() => handleCategoryPress(category.type)}>
+  // 渲染类型筛选标签
+  const renderTypeFilter = () => (
+    <View
+      marginTop="$2"
+      borderBottomWidth={1}
+      borderBottomColor="$color5"
+    >
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 8 }}
+      >
+        <XStack gap="$2">
+          {typeOptions.map(option => {
+            const isActive = typeFilter === option.key;
+            return (
+              <Pressable
+                key={option.key}
+                onPress={() => setTypeFilter(option.key)}
+              >
                 <View
-                  backgroundColor={activeCategory === category.type ? COLORS.primary : 'white'}
-                  borderRadius="$3"
+                  backgroundColor={isActive ? primaryColor : '$color4'}
                   paddingHorizontal="$3"
-                  paddingVertical="$3"
-                  minWidth={80}
-                  alignItems="center"
+                  paddingVertical="$1.5"
+                  borderRadius="$10"
                   borderWidth={1}
-                  borderColor={activeCategory === category.type ? COLORS.primary : '$borderColor'}
+                  borderColor={isActive ? primaryColor : '$color5'}
                 >
-                  <Text fontSize={28} marginBottom="$1">
-                    {category.icon}
-                  </Text>
-                  <Text
-                    fontSize="$2"
-                    color={activeCategory === category.type ? 'white' : '$text'}
-                    fontWeight={activeCategory === category.type ? '600' : '400'}
-                  >
-                    {category.label}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </XStack>
-        </ScrollView>
-      </View>
-    );
-  };
-
-  const renderHotExperts = () => {
-    if (hotExperts.length === 0) return null;
-
-    return (
-      <View marginTop="$4" marginBottom="$2">
-        <XStack justifyContent="space-between" alignItems="center" marginHorizontal="$4" marginBottom="$3">
-          <XStack space="$2" alignItems="center">
-            <TrendingUp size={20} color={COLORS.error} />
-            <Text fontSize="$5" fontWeight="600" color="$text">
-              热门达人
-            </Text>
-          </XStack>
-          <TouchableOpacity onPress={() => setActiveCategory('all')}>
-            <Text fontSize="$3" color={COLORS.primary}>
-              查看全部 →
-            </Text>
-          </TouchableOpacity>
-        </XStack>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-          <XStack space="$3">
-            {hotExperts.map(expert => (
-              <TouchableOpacity key={expert.id} onPress={() => handleExpertPress(expert.id)}>
-                <View
-                  width={160}
-                  backgroundColor="white"
-                  borderRadius="$4"
-                  padding="$3"
-                  borderWidth={1}
-                  borderColor="$borderColor"
-                >
-                  <View alignItems="center" marginBottom="$2">
-                    <View
-                      width={64}
-                      height={64}
-                      borderRadius={32}
-                      backgroundColor="$background"
-                      justifyContent="center"
-                      alignItems="center"
-                      marginBottom="$2"
+                  <XStack gap="$1.5" alignItems="center">
+                    {option.key === 'personal' && (
+                      <User size={14} color={isActive ? 'white' : color10} />
+                    )}
+                    {option.key === 'business' && (
+                      <Briefcase size={14} color={isActive ? 'white' : color10} />
+                    )}
+                    <Text
+                      fontSize="$3"
+                      color={isActive ? 'white' : '$color12'}
+                      fontWeight={isActive ? '600' : '400'}
                     >
-                      <Text fontSize={36}>{expert.avatar || '👤'}</Text>
-                    </View>
-                    <Text fontSize="$4" fontWeight="600" color="$text" numberOfLines={1}>
-                      {expert.name}
-                    </Text>
-                  </View>
-
-                  <XStack space="$1" alignItems="center" justifyContent="center" marginBottom="$2">
-                    <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-                    <Text fontSize="$3" fontWeight="600" color={COLORS.warning}>
-                      {expert.rating.toFixed(1)}
-                    </Text>
-                    <Text fontSize="$2" color="$textSecondary">
-                      ({expert.completedOrders}单)
+                      {option.label}
                     </Text>
                   </XStack>
-
-                  <View
-                    backgroundColor={`${COLORS.primary}15`}
-                    paddingHorizontal="$2"
-                    paddingVertical="$1"
-                    borderRadius="$2"
-                    alignSelf="center"
-                  >
-                    <Text fontSize="$1" color={COLORS.primary} fontWeight="600">
-                      {expert.badges?.[0] || '优质服务'}
-                    </Text>
-                  </View>
                 </View>
-              </TouchableOpacity>
-            ))}
-          </XStack>
-        </ScrollView>
+              </Pressable>
+            );
+          })}
+        </XStack>
+      </ScrollView>
+    </View>
+  );
+
+  // 渲染排序栏
+  const renderSortBar = () => {
+    const currentSort = sortOptions.find(o => o.key === sortType);
+    const CurrentIcon = currentSort?.icon || TrendingUp;
+
+    return (
+      <View
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        marginBottom="$2"
+      >
+        <XStack justifyContent="space-between" alignItems="center">
+          <Text fontSize="$3" color="$color10">
+            共 {filteredAndSortedExperts.length} 位达人
+          </Text>
+
+          <Pressable onPress={() => setShowSortMenu(true)}>
+            <XStack
+              gap="$1"
+              alignItems="center"
+              backgroundColor="$color2"
+              paddingHorizontal="$2"
+              paddingVertical="$1.5"
+              borderRadius="$4"
+              borderWidth={1}
+              borderColor="$color5"
+            >
+              <CurrentIcon size={14} color={primaryColor} />
+              <Text fontSize="$3" color={primaryColor} fontWeight="500">
+                {currentSort?.label}
+              </Text>
+              <ChevronDown size={14} color={primaryColor} />
+            </XStack>
+          </Pressable>
+        </XStack>
       </View>
     );
   };
 
+  // 渲染排序 BottomSheet
+  const renderSortSheet = () => (
+    <BottomSheet
+      visible={showSortMenu}
+      onClose={() => setShowSortMenu(false)}
+      title="选择排序方式"
+      variant="picker"
+    >
+      <YStack gap="$2">
+        {sortOptions.map(option => {
+          const isActive = sortType === option.key;
+          const OptionIcon = option.icon;
+          return (
+            <BottomSheetItem
+              key={option.key}
+              selected={isActive}
+              onPress={() => {
+                setSortType(option.key);
+                setShowSortMenu(false);
+              }}
+              left={
+                <View
+                  width={32}
+                  height={32}
+                  borderRadius={16}
+                  backgroundColor={isActive ? `${primaryColor}15` : '$color4'}
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <OptionIcon size={16} color={isActive ? primaryColor : color10} />
+                </View>
+              }
+              title={option.label}
+              right={isActive ? <CheckCircle size={18} color={primaryColor} /> : undefined}
+            />
+          );
+        })}
+      </YStack>
+    </BottomSheet>
+  );
+
+  // 渲染达人卡片
+  const renderExpertCard = ({ item }: { item: Expert }) => (
+    <Pressable onPress={() => handleExpertPress(item.id)}>
+      <Card
+        marginHorizontal="$2.5"
+        marginBottom="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <XStack gap="$2">
+          {/* 头像 */}
+          <View
+            width={64}
+            height={64}
+            borderRadius={32}
+            backgroundColor="$color4"
+            justifyContent="center"
+            alignItems="center"
+            borderWidth={2}
+            borderColor={getLevelColor(item.level)}
+          >
+            <Text fontSize={32}>{item.avatar || '👤'}</Text>
+          </View>
+
+          {/* 信息区 */}
+          <YStack flex={1} gap="$1">
+            {/* 名字和标签 */}
+            <XStack gap="$1.5" alignItems="center" flexWrap="wrap">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
+                {item.name}
+              </Text>
+              <View
+                backgroundColor={getLevelColor(item.level)}
+                paddingHorizontal="$1.5"
+                paddingVertical="$0.5"
+                borderRadius="$10"
+              >
+                <Text fontSize={10} color="white" fontWeight="500">
+                  {getLevelLabel(item.level)}
+                </Text>
+              </View>
+              <View
+                backgroundColor={item.expertType === ExpertType.BUSINESS ? `${warningColor}15` : `${primaryColor}15`}
+                paddingHorizontal="$1.5"
+                paddingVertical="$0.5"
+                borderRadius="$10"
+              >
+                <XStack gap="$0.5" alignItems="center">
+                  {item.expertType === ExpertType.BUSINESS ? (
+                    <Briefcase size={10} color={warningColor} />
+                  ) : (
+                    <User size={10} color={primaryColor} />
+                  )}
+                  <Text
+                    fontSize={10}
+                    color={item.expertType === ExpertType.BUSINESS ? warningColor : primaryColor}
+                    fontWeight="500"
+                  >
+                    {item.expertType === ExpertType.BUSINESS ? '商家' : '个人'}
+                  </Text>
+                </XStack>
+              </View>
+            </XStack>
+
+            {/* 技能描述 */}
+            <Text fontSize="$3" color="$color10" numberOfLines={1}>
+              {item.skillDescription}
+            </Text>
+
+            {/* 服务区域 */}
+            <XStack gap="$1" alignItems="center">
+              <MapPin size={12} color={color10} />
+              <Text fontSize="$2" color="$color10" numberOfLines={1}>
+                {item.serviceArea?.join('、') || '全国'}
+              </Text>
+            </XStack>
+
+            {/* 数据统计 */}
+            <XStack gap="$3" marginTop="$0.5">
+              <XStack gap="$1" alignItems="center">
+                <Star size={12} color={warningColor} fill={warningColor} />
+                <Text fontSize="$3" fontWeight="600" color={warningColor}>
+                  {item.rating.toFixed(1)}
+                </Text>
+              </XStack>
+              <XStack gap="$1" alignItems="center">
+                <Award size={12} color={color10} />
+                <Text fontSize="$3" color="$color10">
+                  {item.completedOrders}单
+                </Text>
+              </XStack>
+              <XStack gap="$1" alignItems="center">
+                <TrendingUp size={12} color={successColor} />
+                <Text fontSize="$3" color={successColor}>
+                  {item.goodReviewRate}%好评
+                </Text>
+              </XStack>
+            </XStack>
+          </YStack>
+
+          {/* 在线状态 */}
+          <View>
+            <View
+              width={10}
+              height={10}
+              borderRadius={5}
+              backgroundColor={item.isOnline ? successColor : color10}
+            />
+          </View>
+        </XStack>
+      </Card>
+    </Pressable>
+  );
+
+  // 渲染空状态
   const renderEmpty = () => {
     if (loading) {
       return (
         <View flex={1} justifyContent="center" alignItems="center" paddingVertical="$8">
-          <Text fontSize="$4" color="$textSecondary">
+          <Text fontSize="$4" color="$color10">
             加载中...
           </Text>
         </View>
@@ -360,274 +489,54 @@ export const ExpertListScreen: React.FC<ExpertListScreenProps> = ({ navigation }
 
     return (
       <View flex={1} justifyContent="center" alignItems="center" paddingVertical="$8">
-        <Text fontSize={48} marginBottom="$3">
-          👥
-        </Text>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$2">
+        <Award size={64} color={color10} strokeWidth={1} />
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginTop="$4" marginBottom="$1.5">
           暂无达人
         </Text>
-        <Text fontSize="$3" color="$textSecondary" textAlign="center">
-          {Object.keys(filters).length > 0 || activeCategory !== 'all'
-            ? '没有符合条件的达人，试试调整筛选条件'
-            : '还没有认证达人，欢迎申请加入'}
+        <Text fontSize="$3" color="$color10" textAlign="center">
+          {searchText
+            ? '没有找到匹配的达人，试试其他关键词'
+            : '暂无认证达人，敬请期待'
+          }
         </Text>
-        <TouchableOpacity onPress={handleApplyExpert}>
-          <View
-            marginTop="$4"
-            backgroundColor={COLORS.primary}
-            paddingHorizontal="$4"
-            paddingVertical="$3"
-            borderRadius="$3"
-          >
-            <Text fontSize="$4" color="white" fontWeight="600">
-              申请成为达人
-            </Text>
-          </View>
-        </TouchableOpacity>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* 顶部导航栏 */}
-      <View
-        backgroundColor="white"
-        paddingTop="$3"
-        paddingHorizontal="$4"
-        paddingBottom="$3"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <XStack space="$3" alignItems="center" marginBottom="$3">
-          {/* 返回按钮 */}
-          <TouchableOpacity onPress={handleBack}>
-            <View
-              width={32}
-              height={32}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={COLORS.text} />
-            </View>
-          </TouchableOpacity>
-
-          {/* 标题 */}
-          <YStack flex={1}>
-            <Text fontSize="$6" fontWeight="bold" color="$text">
-              认证达人
-            </Text>
-            <Text fontSize="$3" color="$textSecondary">
-              专业服务，品质保证
-            </Text>
-          </YStack>
-
-          {/* 搜索按钮 */}
-          <TouchableOpacity onPress={handleSearch}>
-            <View
-              width={36}
-              height={36}
-              borderRadius={18}
-              backgroundColor="$background"
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Search size={20} color={COLORS.text} />
-            </View>
-          </TouchableOpacity>
-        </XStack>
+    <View flex={1} backgroundColor="$background">
+      {/* 顶部导航 */}
+      <View paddingTop={insets.top}>
+        <TitleBar title="认证达人" />
       </View>
 
-      {/* 滚动内容 */}
-      <ScrollView
-        flex={1}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-      >
-        {/* 成为达人引导Banner */}
-        {renderBanner()}
+      {/* 搜索栏 */}
+      {renderSearchBar()}
 
-        {/* 服务分类 */}
-        {renderServiceCategories()}
+      {/* 类型筛选 */}
+      {renderTypeFilter()}
 
-        {/* 热门达人横向滚动 */}
-        {renderHotExperts()}
+      {/* 排序栏 */}
+      {renderSortBar()}
 
-        {/* 筛选栏 */}
-        <View marginHorizontal="$4" marginTop="$4" marginBottom="$3">
-          <XStack justifyContent="space-between" alignItems="center">
-            <Text fontSize="$5" fontWeight="600" color="$text">
-              全部达人 ({experts.length})
-            </Text>
-            <TouchableOpacity onPress={handleToggleFilter}>
-              <XStack space="$2" alignItems="center">
-                <Filter size={18} color={COLORS.primary} />
-                <Text fontSize="$3" color={COLORS.primary}>
-                  筛选
-                </Text>
-              </XStack>
-            </TouchableOpacity>
-          </XStack>
+      {/* 达人列表 */}
+      {filteredAndSortedExperts.length === 0 ? (
+        renderEmpty()
+      ) : (
+        <FlatList
+          data={filteredAndSortedExperts}
+          renderItem={renderExpertCard}
+          keyExtractor={item => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+          ListFooterComponent={<View height={insets.bottom + 20} />}
+        />
+      )}
 
-          {/* 筛选标签显示 */}
-          {Object.keys(filters).length > 0 && (
-            <XStack marginTop="$2" flexWrap="wrap" gap="$2">
-              {filters.level && (
-                <View
-                  backgroundColor={`${COLORS.primary}20`}
-                  paddingHorizontal="$2"
-                  paddingVertical="$1"
-                  borderRadius="$2"
-                >
-                  <Text fontSize="$2" color={COLORS.primary}>
-                    {getLevelLabel(filters.level)}达人
-                  </Text>
-                </View>
-              )}
-              {filters.specialty && (
-                <View
-                  backgroundColor={`${COLORS.primary}20`}
-                  paddingHorizontal="$2"
-                  paddingVertical="$1"
-                  borderRadius="$2"
-                >
-                  <Text fontSize="$2" color={COLORS.primary}>
-                    {getServiceTypeLabel(filters.specialty)}
-                  </Text>
-                </View>
-              )}
-              <TouchableOpacity onPress={() => setFilters({})}>
-                <View
-                  backgroundColor="$background"
-                  paddingHorizontal="$2"
-                  paddingVertical="$1"
-                  borderRadius="$2"
-                >
-                  <Text fontSize="$2" color="$textSecondary">
-                    清除
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </XStack>
-          )}
-        </View>
-
-        {/* 筛选面板 */}
-        {showFilter && (
-          <View
-            backgroundColor="white"
-            marginHorizontal="$4"
-            marginBottom="$3"
-            padding="$4"
-            borderRadius="$4"
-            borderWidth={1}
-            borderColor="$borderColor"
-          >
-            <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
-              筛选条件
-            </Text>
-
-            {/* 达人等级筛选 */}
-            <View marginBottom="$3">
-              <Text fontSize="$3" color="$textSecondary" marginBottom="$2">
-                达人等级
-              </Text>
-              <XStack flexWrap="wrap" gap="$2">
-                {[
-                  { label: '初级达人', value: ExpertLevel.JUNIOR },
-                  { label: '中级达人', value: ExpertLevel.INTERMEDIATE },
-                  { label: '高级达人', value: ExpertLevel.SENIOR },
-                  { label: '资深专家', value: ExpertLevel.EXPERT },
-                ].map(level => (
-                  <TouchableOpacity
-                    key={level.value}
-                    onPress={() => {
-                      setFilters({
-                        ...filters,
-                        level: filters.level === level.value ? undefined : level.value,
-                      });
-                    }}
-                  >
-                    <View
-                      backgroundColor={
-                        filters.level === level.value ? COLORS.primary : '$background'
-                      }
-                      paddingHorizontal="$3"
-                      paddingVertical="$2"
-                      borderRadius="$3"
-                      borderWidth={1}
-                      borderColor={filters.level === level.value ? COLORS.primary : '$borderColor'}
-                    >
-                      <Text
-                        fontSize="$3"
-                        color={filters.level === level.value ? 'white' : '$text'}
-                      >
-                        {level.label}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </XStack>
-            </View>
-
-            {/* 操作按钮 */}
-            <XStack space="$2">
-              <TouchableOpacity
-                style={{ flex: 1 }}
-                onPress={() => {
-                  setFilters({});
-                }}
-              >
-                <View
-                  flex={1}
-                  backgroundColor="$background"
-                  borderRadius="$3"
-                  paddingVertical="$2"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Text fontSize="$3" color="$text">
-                    重置
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flex: 1 }}
-                onPress={() => {
-                  setShowFilter(false);
-                  loadExperts();
-                }}
-              >
-                <View
-                  flex={1}
-                  backgroundColor={COLORS.primary}
-                  borderRadius="$3"
-                  paddingVertical="$2"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Text fontSize="$3" color="white" fontWeight="600">
-                    确定
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </XStack>
-          </View>
-        )}
-
-        {/* 达人列表 */}
-        <View paddingHorizontal="$4" marginBottom="$8">
-          {experts.length === 0 ? (
-            renderEmpty()
-          ) : (
-            <YStack space="$3">
-              {experts.map(expert => (
-                <ExpertCard key={expert.id} expert={expert} onPress={handleExpertPress} />
-              ))}
-            </YStack>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      {/* 排序 BottomSheet */}
+      {renderSortSheet()}
+    </View>
   );
 };

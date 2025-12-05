@@ -1,10 +1,15 @@
+/**
+ * CaregiverCard 护理人员卡片组件
+ * 支持大、小、紧凑三种尺寸
+ * 遵循 CLAUDE.md 组件规范
+ */
+
 import React from 'react';
 import { Pressable, Image } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { Star, Clock, CheckCircle } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { COLORS } from '@/constants/app';
 import type { Caregiver } from '@/types/elderly';
 
 interface CaregiverCardProps {
@@ -13,6 +18,8 @@ interface CaregiverCardProps {
   size?: 'large' | 'small' | 'compact';
   hideBookingButton?: boolean;
 }
+
+const GOLD_COLOR = '#D4AF37';
 
 export const CaregiverCard: React.FC<CaregiverCardProps> = ({
   caregiver,
@@ -23,6 +30,10 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
   const isLarge = size === 'large';
   const isCompact = size === 'compact';
   const navigation = useNavigation<StackNavigationProp<any>>();
+  const theme = useTheme();
+
+  const primaryColor = theme.primary?.val;
+  const color10 = theme.color10?.val;
 
   const handleCardPress = () => {
     if (onPress) {
@@ -38,8 +49,12 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
 
   const handleBooking = () => {
     if (caregiver.available) {
-      // TODO: Navigate to booking screen or show booking modal
-      console.log('Navigate to booking for caregiver:', caregiver.id);
+      navigation.navigate('AIConsultation' as never, {
+        source: 'elderly_service',
+        caregiverId: caregiver.id,
+        serviceType: caregiver.serviceType,
+        qualification: caregiver.qualificationBadge,
+      } as never);
     }
   };
 
@@ -48,25 +63,25 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
     return (
       <Pressable onPress={handleCardPress}>
         <View
-          backgroundColor="$background"
-          borderRadius="$4"
+          backgroundColor="$color2"
+          borderRadius="$5"
           borderWidth={1}
-          borderColor="$borderColor"
-          padding="$3"
+          borderColor="$color5"
+          padding="$2"
         >
-          <YStack alignItems="center" gap="$2">
+          <YStack alignItems="center" gap="$1.5">
             {/* 头像 */}
             <View position="relative">
               <View
-                width={80}
-                height={80}
-                borderRadius={40}
-                backgroundColor="$surface"
+                width={72}
+                height={72}
+                borderRadius={36}
+                backgroundColor="$color4"
                 overflow="hidden"
               >
                 <Image
                   source={{ uri: caregiver.avatar }}
-                  style={{ width: 80, height: 80 }}
+                  style={{ width: 72, height: 72 }}
                 />
               </View>
               {caregiver.verified && (
@@ -74,65 +89,66 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
                   position="absolute"
                   bottom={0}
                   right={0}
-                  width={24}
-                  height={24}
-                  borderRadius={12}
-                  backgroundColor={COLORS.primary}
+                  width={22}
+                  height={22}
+                  borderRadius={11}
+                  backgroundColor="$primary"
                   justifyContent="center"
                   alignItems="center"
                   borderWidth={2}
-                  borderColor="$background"
+                  borderColor="$color2"
                 >
-                  <CheckCircle size={14} color="white" />
+                  <CheckCircle size={12} color="white" />
                 </View>
               )}
             </View>
 
             {/* 姓名和资质 */}
-            <XStack alignItems="center" gap="$2">
-              <Text fontSize="$4" fontWeight="bold" color="$text">
+            <XStack alignItems="center" gap="$1.5">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 {caregiver.name}
               </Text>
               <View
-                backgroundColor={COLORS.primaryLight}
-                paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
+                backgroundColor="$primary"
+                paddingHorizontal="$1.5"
+                paddingVertical="$0.5"
+                borderRadius="$10"
               >
-                <Text fontSize="$1" color="white" fontWeight="600">
+                <Text fontSize={10} color="white" fontWeight="500">
                   {caregiver.qualificationBadge}
                 </Text>
               </View>
             </XStack>
 
             {/* 评分 */}
-            <XStack alignItems="center" gap="$1">
-              <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
-              <Text fontSize="$3" fontWeight="600" color="$text">
+            <XStack alignItems="center" gap="$0.5">
+              <Star size={14} color={GOLD_COLOR} fill={GOLD_COLOR} />
+              <Text fontSize="$3" fontWeight="600" color="$color12">
                 {caregiver.rating}
               </Text>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 ({caregiver.reviews})
               </Text>
             </XStack>
 
             {/* 价格 */}
-            <XStack alignItems="baseline" gap="$1">
-              <Text fontSize="$5" fontWeight="bold" color={COLORS.primary}>
+            <XStack alignItems="baseline" gap="$0.5">
+              <Text fontSize="$5" fontWeight="700" color="$primary">
                 ¥{caregiver.hourlyRate}
               </Text>
-              <Text fontSize="$2" color="$textSecondary">/时</Text>
+              <Text fontSize="$2" color="$color10">/时</Text>
             </XStack>
 
             {/* 专长标签 */}
             <View
-              backgroundColor="rgba(99, 102, 241, 0.1)"
-              paddingHorizontal="$3"
-              paddingVertical="$1"
-              borderRadius="$4"
-              marginTop="$1"
+              borderWidth={1}
+              borderColor="$primary"
+              paddingHorizontal="$2"
+              paddingVertical="$0.5"
+              borderRadius="$10"
+              style={{ backgroundColor: `${primaryColor}10` }}
             >
-              <Text fontSize="$2" color={COLORS.primary} fontWeight="500">
+              <Text fontSize="$2" color="$primary" fontWeight="500">
                 {caregiver.specialty}
               </Text>
             </View>
@@ -140,7 +156,7 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
             {/* 查看详情按钮 */}
             {!hideBookingButton && (
               <Pressable
-                style={{ width: '100%', marginTop: 8 }}
+                style={{ width: '100%', marginTop: 6 }}
                 onPress={(e) => {
                   e.stopPropagation();
                   handleViewDetails();
@@ -148,13 +164,13 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
               >
                 <View
                   height={36}
-                  borderRadius="$3"
+                  borderRadius="$10"
                   borderWidth={1}
-                  borderColor={COLORS.primary}
+                  borderColor="$primary"
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <Text fontSize="$3" color={COLORS.primary} fontWeight="600">
+                  <Text fontSize="$3" color="$primary" fontWeight="500">
                     查看详情
                   </Text>
                 </View>
@@ -170,20 +186,20 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
   return (
     <Pressable onPress={handleCardPress}>
       <View
-        backgroundColor="$background"
-        borderRadius="$4"
+        backgroundColor="$color2"
+        borderRadius="$5"
         borderWidth={1}
-        borderColor="$borderColor"
-        padding={isLarge ? '$4' : '$3'}
+        borderColor="$color5"
+        padding="$2"
       >
-        <XStack gap={isLarge ? '$3' : '$2'} alignItems="flex-start">
+        <XStack gap="$2" alignItems="flex-start">
           {/* 头像 */}
           <View position="relative">
             <View
               width={isLarge ? 64 : 56}
               height={isLarge ? 64 : 56}
               borderRadius={isLarge ? 32 : 28}
-              backgroundColor="$surface"
+              backgroundColor="$color4"
               overflow="hidden"
             >
               <Image
@@ -202,13 +218,13 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
                 width={20}
                 height={20}
                 borderRadius={10}
-                backgroundColor={COLORS.primary}
+                backgroundColor="$primary"
                 justifyContent="center"
                 alignItems="center"
                 borderWidth={2}
-                borderColor="$background"
+                borderColor="$color2"
               >
-                <CheckCircle size={12} color="white" />
+                <CheckCircle size={10} color="white" />
               </View>
             )}
           </View>
@@ -216,20 +232,20 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
           {/* 信息 */}
           <YStack flex={1} gap="$1">
             {/* 姓名和年龄 */}
-            <XStack alignItems="center" gap="$2">
-              <Text fontSize={isLarge ? '$4' : '$3'} fontWeight="bold" color="$text">
+            <XStack alignItems="center" gap="$1.5">
+              <Text fontSize={isLarge ? '$4' : '$3'} fontWeight="600" color="$color12">
                 {caregiver.name}
               </Text>
-              <Text fontSize={isLarge ? '$2' : '$1'} color="$textSecondary">
+              <Text fontSize={isLarge ? '$2' : '$1'} color="$color10">
                 {caregiver.age}岁
               </Text>
               <View
-                backgroundColor={COLORS.primaryLight}
-                paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
+                backgroundColor="$primary"
+                paddingHorizontal="$1.5"
+                paddingVertical="$0.5"
+                borderRadius="$10"
               >
-                <Text fontSize="$1" color="white" fontWeight="600">
+                <Text fontSize={10} color="white" fontWeight="500">
                   {caregiver.qualificationBadge}
                 </Text>
               </View>
@@ -237,64 +253,66 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
 
             {/* 价格 */}
             {isLarge ? (
-              <XStack alignItems="baseline" gap="$2">
-                <Text fontSize="$5" fontWeight="bold" color={COLORS.primary}>
+              <XStack alignItems="baseline" gap="$1.5">
+                <Text fontSize="$5" fontWeight="700" color="$primary">
                   ¥{caregiver.hourlyRate}
                 </Text>
-                <Text fontSize="$2" color="$textSecondary">/时</Text>
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">/时</Text>
+                <Text fontSize="$2" color="$color10">
                   ¥{caregiver.dailyRate}/天
                 </Text>
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   ¥{caregiver.monthlyRate}/月
                 </Text>
               </XStack>
             ) : (
-              <XStack alignItems="baseline" gap="$2">
-                <Text fontSize="$4" fontWeight="bold" color={COLORS.primary}>
+              <XStack alignItems="baseline" gap="$1.5">
+                <Text fontSize="$4" fontWeight="700" color="$primary">
                   ¥{caregiver.hourlyRate}
                 </Text>
-                <Text fontSize="$1" color="$textSecondary">/时</Text>
-                <Text fontSize="$1" color="$textSecondary">
+                <Text fontSize="$1" color="$color10">/时</Text>
+                <Text fontSize="$1" color="$color10">
                   ¥{caregiver.dailyRate}/天
                 </Text>
               </XStack>
             )}
 
             {/* 评分和经验 */}
-            <XStack alignItems="center" gap="$3">
-              <XStack alignItems="center" gap="$1">
-                <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-                <Text fontSize={isLarge ? '$3' : '$2'} fontWeight="600" color="$text">
+            <XStack alignItems="center" gap="$2">
+              <XStack alignItems="center" gap="$0.5">
+                <Star size={14} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                <Text fontSize={isLarge ? '$3' : '$2'} fontWeight="600" color="$color12">
                   {caregiver.rating}
                 </Text>
-                <Text fontSize={isLarge ? '$2' : '$1'} color="$textSecondary">
+                <Text fontSize={isLarge ? '$2' : '$1'} color="$color10">
                   ({caregiver.reviews}评价)
                 </Text>
               </XStack>
-              <Text fontSize={isLarge ? '$2' : '$1'} color="$textSecondary">
+              <Text fontSize={isLarge ? '$2' : '$1'} color="$color10">
                 从业{caregiver.experience}
               </Text>
-              <Text fontSize={isLarge ? '$2' : '$1'} color="$textSecondary">
+              <Text fontSize={isLarge ? '$2' : '$1'} color="$color10">
                 {caregiver.completedJobs}单
               </Text>
             </XStack>
 
             {/* 专长和响应时间 */}
-            <XStack alignItems="center" gap="$2" flexWrap="wrap">
+            <XStack alignItems="center" gap="$1.5" flexWrap="wrap">
               <View
-                backgroundColor="rgba(99, 102, 241, 0.1)"
+                borderWidth={1}
+                borderColor="$primary"
                 paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
+                paddingVertical="$0.5"
+                borderRadius="$10"
+                style={{ backgroundColor: `${primaryColor}10` }}
               >
-                <Text fontSize={isLarge ? '$2' : '$1'} color={COLORS.primary} fontWeight="500">
+                <Text fontSize={isLarge ? '$2' : '$1'} color="$primary" fontWeight="500">
                   {caregiver.specialty}
                 </Text>
               </View>
-              <XStack alignItems="center" gap="$1">
-                <Clock size={12} color={COLORS.textSecondary} />
-                <Text fontSize={isLarge ? '$2' : '$1'} color="$textSecondary">
+              <XStack alignItems="center" gap="$0.5">
+                <Clock size={12} color={color10} />
+                <Text fontSize={isLarge ? '$2' : '$1'} color="$color10">
                   {caregiver.responseTime}
                 </Text>
               </XStack>
@@ -306,8 +324,8 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
         {isLarge && (
           <Text
             fontSize="$2"
-            color="$textSecondary"
-            marginTop="$3"
+            color="$color10"
+            marginTop="$2"
             numberOfLines={2}
             lineHeight={18}
           >
@@ -317,22 +335,24 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
 
         {/* 技能标签 */}
         {isLarge && (
-          <XStack gap="$2" marginTop="$3" flexWrap="wrap">
+          <XStack gap="$1.5" marginTop="$2" flexWrap="wrap">
             {caregiver.skills.slice(0, 4).map((skill, index) => (
               <View
                 key={index}
-                backgroundColor="$surface"
+                backgroundColor="$color4"
                 paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
+                paddingVertical="$0.5"
+                borderRadius="$10"
+                borderWidth={1}
+                borderColor="$color5"
               >
-                <Text fontSize="$1" color="$textSecondary">
+                <Text fontSize={10} color="$color10">
                   {skill}
                 </Text>
               </View>
             ))}
             {caregiver.skills.length > 4 && (
-              <Text fontSize="$1" color="$textSecondary">
+              <Text fontSize={10} color="$color10">
                 +{caregiver.skills.length - 4}
               </Text>
             )}
@@ -340,7 +360,7 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
         )}
 
         {/* 操作按钮 */}
-        <XStack gap="$2" marginTop={isLarge ? '$3' : '$2'}>
+        <XStack gap="$1.5" marginTop="$2">
           <Pressable
             style={{ flex: 1 }}
             onPress={(e) => {
@@ -350,13 +370,13 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
           >
             <View
               height={isLarge ? 36 : 32}
-              borderRadius="$3"
+              borderRadius="$10"
               borderWidth={1}
-              borderColor={COLORS.primary}
+              borderColor="$primary"
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize={isLarge ? '$3' : '$2'} color={COLORS.primary} fontWeight="600">
+              <Text fontSize={isLarge ? '$3' : '$2'} color="$primary" fontWeight="500">
                 查看详情
               </Text>
             </View>
@@ -371,12 +391,12 @@ export const CaregiverCard: React.FC<CaregiverCardProps> = ({
             >
               <View
                 height={isLarge ? 36 : 32}
-                borderRadius="$3"
-                backgroundColor={caregiver.available ? COLORS.primary : COLORS.textSecondary}
+                borderRadius="$10"
+                backgroundColor={caregiver.available ? '$primary' : '$color10'}
                 justifyContent="center"
                 alignItems="center"
               >
-                <Text fontSize={isLarge ? '$3' : '$2'} color="white" fontWeight="600">
+                <Text fontSize={isLarge ? '$3' : '$2'} color="white" fontWeight="500">
                   {caregiver.available ? '立即预约' : '暂不可约'}
                 </Text>
               </View>

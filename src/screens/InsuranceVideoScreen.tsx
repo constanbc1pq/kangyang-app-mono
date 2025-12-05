@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, TextInput, RefreshControl, Image } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Search,
@@ -14,7 +15,6 @@ import {
   CheckCircle,
   Star,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 // 视频分类
 type VideoCategory = 'all' | 'basics' | 'product_review' | 'claim_practice';
@@ -36,6 +36,14 @@ interface Video {
 
 const InsuranceVideoScreen: React.FC = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [selectedCategory, setSelectedCategory] = useState<VideoCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [videos, setVideos] = useState<Video[]>([]);
@@ -44,10 +52,10 @@ const InsuranceVideoScreen: React.FC = () => {
 
   // 视频分类配置
   const categories = [
-    { id: 'all', label: '全部', icon: Play, color: COLORS.text },
-    { id: 'basics', label: '保险基础', icon: BookOpen, color: '#3B82F6' },
-    { id: 'product_review', label: '产品测评', icon: TrendingUp, color: '#10B981' },
-    { id: 'claim_practice', label: '理赔实战', icon: Shield, color: '#8B5CF6' },
+    { id: 'all', label: '全部', icon: Play, color: color12 },
+    { id: 'basics', label: '保险基础', icon: BookOpen, color: primaryColor },
+    { id: 'product_review', label: '产品测评', icon: TrendingUp, color: successColor },
+    { id: 'claim_practice', label: '理赔实战', icon: Shield, color: primaryColor },
   ];
 
   useEffect(() => {
@@ -191,25 +199,25 @@ const InsuranceVideoScreen: React.FC = () => {
     return (
       <Pressable key={video.id} onPress={() => handleVideoPress(video)}>
         <View
-          marginBottom="$3"
-          backgroundColor="$surface"
-          borderRadius="$4"
+          marginBottom="$2"
+          backgroundColor="$color2"
+          borderRadius="$5"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
           overflow="hidden"
         >
           {/* 缩略图 */}
           <View position="relative">
-            <View width="100%" height={200} backgroundColor="$borderColor">
+            <View width="100%" height={200} backgroundColor="$color5">
               {/* 这里应该使用Image组件加载thumbnail */}
               <View
                 width="100%"
                 height="100%"
                 justifyContent="center"
                 alignItems="center"
-                backgroundColor="#E5E7EB"
+                backgroundColor="$color4"
               >
-                <Text fontSize="$4" color="$textSecondary">
+                <Text fontSize="$4" color="$color10">
                   视频缩略图
                 </Text>
               </View>
@@ -234,7 +242,7 @@ const InsuranceVideoScreen: React.FC = () => {
                 justifyContent="center"
                 alignItems="center"
               >
-                <Play size={32} color={COLORS.primary} fill={COLORS.primary} />
+                <Play size={32} color={primaryColor} fill={primaryColor} />
               </View>
             </View>
 
@@ -244,9 +252,9 @@ const InsuranceVideoScreen: React.FC = () => {
               bottom={8}
               right={8}
               paddingHorizontal="$2"
-              paddingVertical="$1"
+              paddingVertical="$0.5"
               backgroundColor="rgba(0,0,0,0.7)"
-              borderRadius="$2"
+              borderRadius="$10"
             >
               <Text fontSize="$2" color="white" fontWeight="600">
                 {formatDuration(video.duration)}
@@ -260,9 +268,9 @@ const InsuranceVideoScreen: React.FC = () => {
                 top={8}
                 right={8}
                 paddingHorizontal="$2"
-                paddingVertical="$1"
-                backgroundColor={COLORS.success}
-                borderRadius="$2"
+                paddingVertical="$0.5"
+                backgroundColor={successColor}
+                borderRadius="$10"
               >
                 <XStack alignItems="center" gap="$1">
                   <CheckCircle size={14} color="white" />
@@ -275,55 +283,55 @@ const InsuranceVideoScreen: React.FC = () => {
           </View>
 
           {/* 视频信息 */}
-          <View padding="$4">
+          <View padding="$2">
             {/* 分类标签 */}
             <View
               paddingHorizontal="$2"
-              paddingVertical="$1"
-              backgroundColor={`${categoryConfig?.color || COLORS.text}20`}
-              borderRadius="$2"
+              paddingVertical="$0.5"
+              backgroundColor={`${categoryConfig?.color || color12}15`}
+              borderRadius="$10"
               alignSelf="flex-start"
               marginBottom="$2"
             >
-              <Text fontSize="$1" fontWeight="600" color={categoryConfig?.color || COLORS.text}>
+              <Text fontSize="$1" fontWeight="600" color={categoryConfig?.color || color12}>
                 {categoryConfig?.label}
               </Text>
             </View>
 
             {/* 标题 */}
-            <Text fontSize="$4" fontWeight="700" color="$text" marginBottom="$2" lineHeight={22}>
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2" lineHeight={22}>
               {video.title}
             </Text>
 
             {/* 描述 */}
-            <Text fontSize="$2" color="$textSecondary" lineHeight={20} marginBottom="$3">
+            <Text fontSize="$2" color="$color10" lineHeight={20} marginBottom="$2">
               {video.description}
             </Text>
 
             {/* 讲师和评分 */}
             <XStack alignItems="center" gap="$3" marginBottom="$2">
-              <Text fontSize="$2" color="$text" fontWeight="600">
+              <Text fontSize="$2" color="$color12" fontWeight="600">
                 {video.instructor}
               </Text>
               <XStack alignItems="center" gap="$1">
-                <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-                <Text fontSize="$2" color="$text" fontWeight="600">
+                <Star size={14} color={warningColor} fill={warningColor} />
+                <Text fontSize="$2" color="$color12" fontWeight="600">
                   {video.rating}
                 </Text>
               </XStack>
             </XStack>
 
             {/* 标签 */}
-            <XStack gap="$2" marginBottom="$3" flexWrap="wrap">
+            <XStack gap="$2" marginBottom="$2" flexWrap="wrap">
               {video.tags.map(tag => (
                 <View
                   key={tag}
                   paddingHorizontal="$2"
-                  paddingVertical="$1"
-                  backgroundColor="$borderColor"
-                  borderRadius="$2"
+                  paddingVertical="$0.5"
+                  backgroundColor="$color4"
+                  borderRadius="$10"
                 >
-                  <Text fontSize="$1" color="$textSecondary">
+                  <Text fontSize="$1" color="$color10">
                     #{tag}
                   </Text>
                 </View>
@@ -333,12 +341,12 @@ const InsuranceVideoScreen: React.FC = () => {
             {/* 底部信息 */}
             <XStack justifyContent="space-between" alignItems="center">
               <XStack alignItems="center" gap="$1">
-                <Eye size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+                <Eye size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   {video.views.toLocaleString()} 次观看
                 </Text>
               </XStack>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 {video.publishDate}
               </Text>
             </XStack>
@@ -351,47 +359,53 @@ const InsuranceVideoScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-          视频课堂
-        </Text>
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            视频课堂
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
         {/* 搜索框 */}
-        <View padding="$4" paddingBottom="$2">
+        <View padding="$2.5" paddingBottom="$2">
           <View
-            backgroundColor="$surface"
-            borderRadius="$3"
-            borderWidth={1}
-            borderColor="$borderColor"
+            backgroundColor="$color4"
+            borderRadius="$10"
             paddingHorizontal="$3"
             height={44}
           >
             <XStack alignItems="center" gap="$2" height="100%">
-              <Search size={20} color={COLORS.textSecondary} />
+              <Search size={20} color={color10} />
               <TextInput
                 placeholder="搜索视频标题、讲师或标签"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={color10}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 style={{
                   flex: 1,
                   fontSize: 14,
-                  color: COLORS.text,
+                  color: color12,
                   padding: 0,
                 }}
               />
@@ -401,7 +415,7 @@ const InsuranceVideoScreen: React.FC = () => {
 
         {/* 分类标签 */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-          <XStack paddingHorizontal="$4" gap="$2">
+          <XStack paddingHorizontal="$2.5" gap="$2">
             {categories.map(category => {
               const Icon = category.icon;
               const isSelected = selectedCategory === category.id;
@@ -409,17 +423,15 @@ const InsuranceVideoScreen: React.FC = () => {
                 <Pressable key={category.id} onPress={() => setSelectedCategory(category.id as VideoCategory)}>
                   <View
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$3"
-                    backgroundColor={isSelected ? category.color : '$surface'}
-                    borderWidth={1}
-                    borderColor={isSelected ? category.color : '$borderColor'}
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
+                    backgroundColor={isSelected ? category.color : '$color4'}
                   >
                     <XStack alignItems="center" gap="$2">
                       <Icon size={16} color={isSelected ? 'white' : category.color} />
                       <Text
                         fontSize="$3"
-                        fontWeight="600"
+                        fontWeight={isSelected ? '600' : '400'}
                         color={isSelected ? 'white' : category.color}
                       >
                         {category.label}
@@ -433,20 +445,20 @@ const InsuranceVideoScreen: React.FC = () => {
         </ScrollView>
 
         {/* 视频列表 */}
-        <View paddingHorizontal="$4">
+        <View paddingHorizontal="$2.5">
           {loading && videos.length === 0 ? (
             <View padding="$8" alignItems="center">
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 加载中...
               </Text>
             </View>
           ) : videos.length === 0 ? (
             <View padding="$8" alignItems="center">
-              <Play size={48} color={COLORS.textSecondary} />
-              <Text fontSize="$4" color="$text" marginTop="$4">
+              <Play size={48} color={color10} />
+              <Text fontSize="$4" color="$color12" marginTop="$4">
                 暂无视频
               </Text>
-              <Text fontSize="$3" color="$textSecondary" marginTop="$2">
+              <Text fontSize="$3" color="$color10" marginTop="$2">
                 {searchQuery ? '试试其他搜索词' : '请选择其他分类'}
               </Text>
             </View>

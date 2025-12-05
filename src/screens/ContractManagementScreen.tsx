@@ -14,31 +14,30 @@ import {
   YStack,
   XStack,
   Text,
-  Card,
   View,
-  H4,
-  Theme,
-  ScrollView,
+  useTheme,
 } from 'tamagui';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useToastController } from '@tamagui/toast';
 import {
   Pressable,
   ActivityIndicator,
   Modal,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import {
   ArrowLeft,
   CheckCircle,
   AlertCircle,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import {
   DoctorSubscription,
 } from '@/types/privateDoctor';
 import { privateDoctorService } from '@/services/privateDoctorService';
 import { useFocusEffect } from '@react-navigation/native';
+
+const GOLD_COLOR = '#D4AF37';
 
 interface ContractManagementScreenProps {
   navigation: any;
@@ -53,7 +52,17 @@ export const ContractManagementScreen: React.FC<ContractManagementScreenProps> =
   navigation,
   route,
 }) => {
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const toast = useToastController();
+
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [subscription, setSubscription] = useState<DoctorSubscription | null>(null);
@@ -94,7 +103,7 @@ export const ContractManagementScreen: React.FC<ContractManagementScreenProps> =
       const success = await privateDoctorService.renewSubscription(
         subscription.id,
         {
-          amount: 39800,
+          amount: subscription.package.price || 49800,
           method: 'WeChat',
           transactionId: `renew_${Date.now()}`,
         }
@@ -160,511 +169,501 @@ export const ContractManagementScreen: React.FC<ContractManagementScreenProps> =
 
   if (loading) {
     return (
-      <Theme name="light">
-        <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-          <View flex={1} justifyContent="center" alignItems="center">
-            <ActivityIndicator size="large" color={COLORS.primary} />
-          </View>
-        </SafeAreaView>
-      </Theme>
+      <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
+        <ActivityIndicator size="large" color={primaryColor} />
+      </View>
     );
   }
 
   if (!subscription) {
     return (
-      <Theme name="light">
-        <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-          <XStack
-            height={56}
-            alignItems="center"
-            paddingHorizontal="$4"
-            borderBottomWidth={1}
-            borderBottomColor="$borderColor"
-            backgroundColor="$background"
-          >
+      <View flex={1} backgroundColor="$background">
+        {/* TitleBar */}
+        <View
+          paddingTop={insets.top}
+          backgroundColor="$color2"
+          borderBottomWidth={1}
+          borderBottomColor="$color5"
+        >
+          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
             <Pressable onPress={() => navigation.goBack()}>
-              <ArrowLeft size={24} color={COLORS.text} />
+              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+                <ArrowLeft size={24} color={color12} />
+              </View>
             </Pressable>
-            <Text fontSize="$5" color="$text" fontWeight="600" flex={1} textAlign="center">
-              合约与权益
-            </Text>
-            <View width={24} />
+            <Text fontSize="$5" fontWeight="600" color="$color12">合约与权益</Text>
+            <View width={40} />
           </XStack>
+        </View>
 
-          <View flex={1} justifyContent="center" alignItems="center" padding="$4">
-            <AlertCircle size={48} color={COLORS.textSecondary} />
-            <Text fontSize="$4" color="$textSecondary" marginTop="$3">
-              未找到签约信息
-            </Text>
-          </View>
-        </SafeAreaView>
-      </Theme>
+        <View flex={1} justifyContent="center" alignItems="center" padding="$2.5">
+          <AlertCircle size={48} color={color10} />
+          <Text fontSize="$4" color="$color10" marginTop="$2">
+            未找到签约信息
+          </Text>
+        </View>
+      </View>
     );
   }
 
   return (
-    <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        {/* Header */}
-        <XStack
-          height={56}
-          alignItems="center"
-          paddingHorizontal="$4"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="$background"
-        >
+    <View flex={1} backgroundColor="$background">
+      {/* TitleBar */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
+        borderBottomWidth={1}
+        borderBottomColor="$color5"
+      >
+        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
           <Pressable onPress={() => navigation.goBack()}>
-            <ArrowLeft size={24} color={COLORS.text} />
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
           </Pressable>
-          <Text fontSize="$5" color="$text" fontWeight="600" flex={1} textAlign="center">
-            合约与权益
-          </Text>
-          <View width={24} />
+          <Text fontSize="$5" fontWeight="600" color="$color12">合约与权益</Text>
+          <View width={40} />
         </XStack>
+      </View>
 
-        <ScrollView
-          flex={1}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }
-        >
-          <YStack padding="$4" space="$4">
-            {/* 服务权益概览 */}
-            <Card
-              backgroundColor="$cardBg"
-              padding="$4"
-              borderRadius="$4"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.08}
-              shadowRadius={4}
-              elevation={3}
-            >
-              <YStack space="$3">
-                <H4 fontSize="$5" fontWeight="700" color="$text">
-                  我的权益
-                </H4>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
+        <YStack padding="$2.5" gap="$3">
+          {/* 服务权益概览 */}
+          <View
+            backgroundColor="$color2"
+            padding="$2"
+            borderRadius="$5"
+            borderWidth={1}
+            borderColor="$color5"
+          >
+            <YStack gap="$2">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
+                我的权益
+              </Text>
 
-                <View
-                  backgroundColor="$surface"
-                  padding="$3"
-                  borderRadius="$3"
-                >
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                    <Text fontSize="$3" color="$textSecondary">
-                      在线咨询
-                    </Text>
-                    <Text fontSize="$4" fontWeight="700" color={COLORS.primary}>
-                      {formatServiceCount(
-                        subscription.remainingServices.onlineConsultations,
-                        -1
-                      )}
-                    </Text>
-                  </XStack>
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                    <Text fontSize="$3" color="$textSecondary">
-                      视频咨询
-                    </Text>
-                    <Text fontSize="$4" fontWeight="700" color={COLORS.success}>
-                      {formatServiceCount(
-                        subscription.remainingServices.videoConsults,
-                        -1
-                      )}
-                    </Text>
-                  </XStack>
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                    <Text fontSize="$3" color="$textSecondary">
-                      电话咨询
-                    </Text>
-                    <Text fontSize="$4" fontWeight="700" color={COLORS.warning}>
-                      {formatServiceCount(
-                        subscription.remainingServices.phoneConsults,
-                        -1
-                      )}
-                    </Text>
-                  </XStack>
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                    <Text fontSize="$3" color="$textSecondary">
-                      线下面诊
-                    </Text>
-                    <Text fontSize="$4" fontWeight="700" color={COLORS.warning}>
-                      {formatServiceCount(
-                        subscription.remainingServices.inPersonVisits,
-                        -1
-                      )}
-                    </Text>
-                  </XStack>
-                  <View height={1} backgroundColor="$borderColor" marginVertical="$2" />
-                  <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="$3" color="$textSecondary">
-                      有效期至
-                    </Text>
-                    <Text fontSize="$3" fontWeight="600" color="$text">
-                      {new Date(subscription.endDate).toLocaleDateString('zh-CN')}
-                    </Text>
-                  </XStack>
-                </View>
-              </YStack>
-            </Card>
+              <View
+                backgroundColor="$color4"
+                padding="$2"
+                borderRadius="$4"
+              >
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                  <Text fontSize="$3" color="$color10">
+                    在线咨询
+                  </Text>
+                  <Text fontSize="$4" fontWeight="700" color="$primary">
+                    {formatServiceCount(
+                      subscription.remainingServices.onlineConsultations,
+                      -1
+                    )}
+                  </Text>
+                </XStack>
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                  <Text fontSize="$3" color="$color10">
+                    视频咨询
+                  </Text>
+                  <Text fontSize="$4" fontWeight="700" color="$success">
+                    {formatServiceCount(
+                      subscription.remainingServices.videoConsults,
+                      -1
+                    )}
+                  </Text>
+                </XStack>
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                  <Text fontSize="$3" color="$color10">
+                    电话咨询
+                  </Text>
+                  <Text fontSize="$4" fontWeight="700" color="$warning">
+                    {formatServiceCount(
+                      subscription.remainingServices.phoneConsults,
+                      -1
+                    )}
+                  </Text>
+                </XStack>
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                  <Text fontSize="$3" color="$color10">
+                    线下面诊
+                  </Text>
+                  <Text fontSize="$4" fontWeight="700" color="$warning">
+                    {formatServiceCount(
+                      subscription.remainingServices.inPersonVisits,
+                      -1
+                    )}
+                  </Text>
+                </XStack>
+                <View height={1} backgroundColor="$color5" marginVertical="$1.5" />
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="$3" color="$color10">
+                    有效期至
+                  </Text>
+                  <Text fontSize="$3" fontWeight="600" color="$color12">
+                    {new Date(subscription.endDate).toLocaleDateString('zh-CN')}
+                  </Text>
+                </XStack>
+              </View>
+            </YStack>
+          </View>
 
-            {/* 合约管理 */}
-            <Card
-              backgroundColor="$cardBg"
-              padding="$4"
-              borderRadius="$4"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.08}
-              shadowRadius={4}
-              elevation={3}
-            >
-              <YStack space="$3">
-                <H4 fontSize="$5" fontWeight="700" color="$text">
-                  合约管理
-                </H4>
+          {/* 合约管理 */}
+          <View
+            backgroundColor="$color2"
+            padding="$2"
+            borderRadius="$5"
+            borderWidth={1}
+            borderColor="$color5"
+          >
+            <YStack gap="$2">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
+                合约管理
+              </Text>
 
-                {/* 合约状态概览 */}
-                <View
-                  backgroundColor="$surface"
-                  padding="$3"
-                  borderRadius="$3"
-                >
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                    <Text fontSize="$3" color="$textSecondary">
-                      合约状态
-                    </Text>
-                    <View
-                      backgroundColor={
+              {/* 合约状态概览 */}
+              <View
+                backgroundColor="$color4"
+                padding="$2"
+                borderRadius="$4"
+              >
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$1.5">
+                  <Text fontSize="$3" color="$color10">
+                    合约状态
+                  </Text>
+                  <View
+                    paddingHorizontal="$2"
+                    paddingVertical="$0.5"
+                    borderRadius="$2"
+                    style={{
+                      backgroundColor:
                         subscription.status === 'active'
-                          ? `${COLORS.success}15`
-                          : `${COLORS.error}15`
+                          ? `${successColor}15`
+                          : `${errorColor}15`,
+                    }}
+                  >
+                    <Text
+                      fontSize={11}
+                      color={
+                        subscription.status === 'active'
+                          ? '$success'
+                          : '$error'
                       }
-                      paddingHorizontal="$2"
-                      paddingVertical="$1"
-                      borderRadius="$2"
+                      fontWeight="600"
                     >
-                      <Text
-                        fontSize={11}
-                        color={
-                          subscription.status === 'active'
-                            ? COLORS.success
-                            : COLORS.error
-                        }
-                        fontWeight="600"
-                      >
-                        {subscription.status === 'active' ? '生效中' : '已取消'}
+                      {subscription.status === 'active' ? '生效中' : '已取消'}
+                    </Text>
+                  </View>
+                </XStack>
+
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$1.5">
+                  <Text fontSize="$3" color="$color10">
+                    签约日期
+                  </Text>
+                  <Text fontSize="$3" fontWeight="600" color="$color12">
+                    {new Date(subscription.startDate).toLocaleDateString('zh-CN')}
+                  </Text>
+                </XStack>
+
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$1.5">
+                  <Text fontSize="$3" color="$color10">
+                    到期日期
+                  </Text>
+                  <Text fontSize="$3" fontWeight="600" color="$color12">
+                    {new Date(subscription.endDate).toLocaleDateString('zh-CN')}
+                  </Text>
+                </XStack>
+
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="$3" color="$color10">
+                    剩余天数
+                  </Text>
+                  <Text
+                    fontSize="$4"
+                    fontWeight="700"
+                    color={
+                      getRemainingDays() < 30
+                        ? '$error'
+                        : getRemainingDays() < 90
+                        ? '$warning'
+                        : '$success'
+                    }
+                  >
+                    {getRemainingDays()} 天
+                  </Text>
+                </XStack>
+              </View>
+
+              {/* 续订提醒 */}
+              {getRemainingDays() < 90 && subscription.status === 'active' && (
+                <View
+                  padding="$2"
+                  borderRadius="$4"
+                  borderLeftWidth={3}
+                  borderLeftColor="$warning"
+                  style={{ backgroundColor: `${warningColor}10` }}
+                >
+                  <Text fontSize="$3" fontWeight="600" color="$warning" marginBottom="$1">
+                    ⏰ 续订提醒
+                  </Text>
+                  <Text fontSize="$2" color="$color12">
+                    您的服务将在 {getRemainingDays()} 天后到期，建议提前续订以确保服务不中断
+                  </Text>
+                </View>
+              )}
+
+              {/* 操作按钮 */}
+              {subscription.status === 'active' && (
+                <XStack gap="$2">
+                  <Pressable
+                    onPress={() => setShowRenewDialog(true)}
+                    style={{ flex: 1 }}
+                  >
+                    <View
+                      height={44}
+                      borderRadius="$10"
+                      backgroundColor="$primary"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Text fontSize="$4" color="white" fontWeight="600">
+                        立即续订
                       </Text>
                     </View>
-                  </XStack>
+                  </Pressable>
 
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                    <Text fontSize="$3" color="$textSecondary">
-                      签约日期
-                    </Text>
-                    <Text fontSize="$3" fontWeight="600" color="$text">
-                      {new Date(subscription.startDate).toLocaleDateString('zh-CN')}
-                    </Text>
-                  </XStack>
-
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                    <Text fontSize="$3" color="$textSecondary">
-                      到期日期
-                    </Text>
-                    <Text fontSize="$3" fontWeight="600" color="$text">
-                      {new Date(subscription.endDate).toLocaleDateString('zh-CN')}
-                    </Text>
-                  </XStack>
-
-                  <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="$3" color="$textSecondary">
-                      剩余天数
-                    </Text>
-                    <Text
-                      fontSize="$4"
-                      fontWeight="700"
-                      color={
-                        getRemainingDays() < 30
-                          ? COLORS.error
-                          : getRemainingDays() < 90
-                          ? COLORS.warning
-                          : COLORS.success
-                      }
+                  <Pressable
+                    onPress={() => setShowCancelDialog(true)}
+                    style={{ flex: 1 }}
+                  >
+                    <View
+                      height={44}
+                      borderRadius="$10"
+                      borderWidth={1}
+                      borderColor="$error"
+                      justifyContent="center"
+                      alignItems="center"
                     >
-                      {getRemainingDays()} 天
-                    </Text>
-                  </XStack>
+                      <Text fontSize="$4" color="$error" fontWeight="600">
+                        取消签约
+                      </Text>
+                    </View>
+                  </Pressable>
+                </XStack>
+              )}
+            </YStack>
+          </View>
+
+          {/* 底部占位 */}
+          <View height={40} />
+        </YStack>
+      </ScrollView>
+
+      {/* 续订确认对话框 */}
+      <Modal
+        visible={showRenewDialog}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRenewDialog(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={() => setShowRenewDialog(false)}
+        >
+          <Pressable
+            style={{ width: '80%', maxWidth: 400 }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View
+              backgroundColor="$color2"
+              borderRadius="$5"
+              padding="$2.5"
+            >
+              <YStack gap="$2">
+                <Text fontSize="$5" fontWeight="700" color="$color12" textAlign="center">
+                  确认续订
+                </Text>
+
+                <View backgroundColor="$color4" padding="$2" borderRadius="$4">
+                  <YStack gap="$1.5">
+                    <XStack justifyContent="space-between">
+                      <Text fontSize="$3" color="$color10">
+                        续订时长
+                      </Text>
+                      <Text fontSize="$3" fontWeight="600" color="$color12">
+                        1年
+                      </Text>
+                    </XStack>
+                    <XStack justifyContent="space-between">
+                      <Text fontSize="$3" color="$color10">
+                        新到期日
+                      </Text>
+                      <Text fontSize="$3" fontWeight="600" color="$color12">
+                        {new Date(
+                          new Date(subscription.endDate).setFullYear(
+                            new Date(subscription.endDate).getFullYear() + 1
+                          )
+                        ).toLocaleDateString('zh-CN')}
+                      </Text>
+                    </XStack>
+                    <View height={1} backgroundColor="$color5" marginVertical="$1" />
+                    <XStack justifyContent="space-between">
+                      <Text fontSize="$4" fontWeight="600" color="$color12">
+                        续订价格
+                      </Text>
+                      <Text fontSize="$5" fontWeight="700" color={GOLD_COLOR}>
+                        ¥398.00
+                      </Text>
+                    </XStack>
+                  </YStack>
                 </View>
 
-                {/* 续订提醒 */}
-                {getRemainingDays() < 90 && subscription.status === 'active' && (
-                  <View
-                    backgroundColor={`${COLORS.warning}10`}
-                    padding="$3"
-                    borderRadius="$3"
-                    borderLeftWidth={3}
-                    borderLeftColor={COLORS.warning}
+                <Text fontSize="$2" color="$color10" textAlign="center">
+                  续订后服务将自动延长一年，所有权益将保持不变
+                </Text>
+
+                <XStack gap="$2">
+                  <Pressable
+                    onPress={() => setShowRenewDialog(false)}
+                    style={{ flex: 1 }}
                   >
-                    <Text fontSize="$3" fontWeight="600" color={COLORS.warning} marginBottom="$1">
-                      ⏰ 续订提醒
-                    </Text>
-                    <Text fontSize="$2" color="$text">
-                      您的服务将在 {getRemainingDays()} 天后到期，建议提前续订以确保服务不中断
-                    </Text>
-                  </View>
-                )}
-
-                {/* 操作按钮 */}
-                {subscription.status === 'active' && (
-                  <XStack space="$3">
-                    <Pressable
-                      onPress={() => setShowRenewDialog(true)}
-                      style={{ flex: 1 }}
+                    <View
+                      height={44}
+                      borderRadius="$10"
+                      borderWidth={1}
+                      borderColor="$color5"
+                      justifyContent="center"
+                      alignItems="center"
                     >
-                      <View
-                        height={48}
-                        borderRadius="$3"
-                        backgroundColor={COLORS.primary}
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <Text fontSize="$4" color="white" fontWeight="600">
-                          立即续订
-                        </Text>
-                      </View>
-                    </Pressable>
+                      <Text fontSize="$4" color="$color12" fontWeight="600">
+                        取消
+                      </Text>
+                    </View>
+                  </Pressable>
 
-                    <Pressable
-                      onPress={() => setShowCancelDialog(true)}
-                      style={{ flex: 1 }}
+                  <Pressable
+                    onPress={handleRenewSubscription}
+                    style={{ flex: 1 }}
+                  >
+                    <View
+                      height={44}
+                      borderRadius="$10"
+                      backgroundColor="$primary"
+                      justifyContent="center"
+                      alignItems="center"
                     >
-                      <View
-                        height={48}
-                        borderRadius="$3"
-                        borderWidth={1}
-                        borderColor={COLORS.error}
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <Text fontSize="$4" color={COLORS.error} fontWeight="600">
-                          取消签约
-                        </Text>
-                      </View>
-                    </Pressable>
-                  </XStack>
-                )}
+                      <Text fontSize="$4" color="white" fontWeight="600">
+                        确认续订
+                      </Text>
+                    </View>
+                  </Pressable>
+                </XStack>
               </YStack>
-            </Card>
-          </YStack>
-        </ScrollView>
-
-        {/* 续订确认对话框 */}
-        <Modal
-          visible={showRenewDialog}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowRenewDialog(false)}
-        >
-          <Pressable
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-            onPress={() => setShowRenewDialog(false)}
-          >
-            <Pressable
-              style={{ width: '80%', maxWidth: 400 }}
-              onPress={(e) => e.stopPropagation()}
-            >
-              <View
-                backgroundColor="$background"
-                borderRadius="$4"
-                padding="$4"
-              >
-                <YStack space="$3">
-                  <Text fontSize="$6" fontWeight="700" color="$text" textAlign="center">
-                    确认续订
-                  </Text>
-
-                  <View backgroundColor="$surface" padding="$3" borderRadius="$3">
-                    <YStack space="$2">
-                      <XStack justifyContent="space-between">
-                        <Text fontSize="$3" color="$textSecondary">
-                          续订时长
-                        </Text>
-                        <Text fontSize="$3" fontWeight="600" color="$text">
-                          1年
-                        </Text>
-                      </XStack>
-                      <XStack justifyContent="space-between">
-                        <Text fontSize="$3" color="$textSecondary">
-                          新到期日
-                        </Text>
-                        <Text fontSize="$3" fontWeight="600" color="$text">
-                          {new Date(
-                            new Date(subscription.endDate).setFullYear(
-                              new Date(subscription.endDate).getFullYear() + 1
-                            )
-                          ).toLocaleDateString('zh-CN')}
-                        </Text>
-                      </XStack>
-                      <View height={1} backgroundColor="$borderColor" marginVertical="$1" />
-                      <XStack justifyContent="space-between">
-                        <Text fontSize="$4" fontWeight="600" color="$text">
-                          续订价格
-                        </Text>
-                        <Text fontSize="$5" fontWeight="700" color={COLORS.primary}>
-                          ¥398.00
-                        </Text>
-                      </XStack>
-                    </YStack>
-                  </View>
-
-                  <Text fontSize="$2" color="$textSecondary" textAlign="center">
-                    续订后服务将自动延长一年，所有权益将保持不变
-                  </Text>
-
-                  <XStack space="$3">
-                    <Pressable
-                      onPress={() => setShowRenewDialog(false)}
-                      style={{ flex: 1 }}
-                    >
-                      <View
-                        height={48}
-                        borderRadius="$3"
-                        borderWidth={1}
-                        borderColor="$borderColor"
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <Text fontSize="$4" color="$text" fontWeight="600">
-                          取消
-                        </Text>
-                      </View>
-                    </Pressable>
-
-                    <Pressable
-                      onPress={handleRenewSubscription}
-                      style={{ flex: 1 }}
-                    >
-                      <View
-                        height={48}
-                        borderRadius="$3"
-                        backgroundColor={COLORS.primary}
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <Text fontSize="$4" color="white" fontWeight="600">
-                          确认续订
-                        </Text>
-                      </View>
-                    </Pressable>
-                  </XStack>
-                </YStack>
-              </View>
-            </Pressable>
+            </View>
           </Pressable>
-        </Modal>
+        </Pressable>
+      </Modal>
 
-        {/* 取消签约确认对话框 */}
-        <Modal
-          visible={showCancelDialog}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowCancelDialog(false)}
+      {/* 取消签约确认对话框 */}
+      <Modal
+        visible={showCancelDialog}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCancelDialog(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={() => setShowCancelDialog(false)}
         >
           <Pressable
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-            onPress={() => setShowCancelDialog(false)}
+            style={{ width: '80%', maxWidth: 400 }}
+            onPress={(e) => e.stopPropagation()}
           >
-            <Pressable
-              style={{ width: '80%', maxWidth: 400 }}
-              onPress={(e) => e.stopPropagation()}
+            <View
+              backgroundColor="$color2"
+              borderRadius="$5"
+              padding="$2.5"
             >
-              <View
-                backgroundColor="$background"
-                borderRadius="$4"
-                padding="$4"
-              >
-                <YStack space="$3">
-                  <Text fontSize="$6" fontWeight="700" color={COLORS.error} textAlign="center">
-                    取消签约
-                  </Text>
+              <YStack gap="$2">
+                <Text fontSize="$5" fontWeight="700" color="$error" textAlign="center">
+                  取消签约
+                </Text>
 
-                  <View
-                    backgroundColor={`${COLORS.error}10`}
-                    padding="$3"
-                    borderRadius="$3"
-                    borderLeftWidth={3}
-                    borderLeftColor={COLORS.error}
+                <View
+                  padding="$2"
+                  borderRadius="$4"
+                  borderLeftWidth={3}
+                  borderLeftColor="$error"
+                  style={{ backgroundColor: `${errorColor}10` }}
+                >
+                  <Text fontSize="$3" fontWeight="600" color="$error" marginBottom="$1.5">
+                    ⚠️ 重要提示
+                  </Text>
+                  <Text fontSize="$2" color="$color12" lineHeight={20}>
+                    取消签约后：
+                    {'\n'}• 将无法继续享受专属医生服务
+                    {'\n'}• 所有剩余服务次数将失效
+                    {'\n'}• 健康档案将保留但无法更新
+                    {'\n'}• 此操作不可撤销
+                  </Text>
+                </View>
+
+                <Text fontSize="$3" color="$color10" textAlign="center">
+                  您确定要取消签约吗？
+                </Text>
+
+                <XStack gap="$2">
+                  <Pressable
+                    onPress={() => setShowCancelDialog(false)}
+                    style={{ flex: 1 }}
                   >
-                    <Text fontSize="$3" fontWeight="600" color={COLORS.error} marginBottom="$2">
-                      ⚠️ 重要提示
-                    </Text>
-                    <Text fontSize="$2" color="$text" lineHeight={20}>
-                      取消签约后：
-                      {'\n'}• 将无法继续享受专属医生服务
-                      {'\n'}• 所有剩余服务次数将失效
-                      {'\n'}• 健康档案将保留但无法更新
-                      {'\n'}• 此操作不可撤销
-                    </Text>
-                  </View>
-
-                  <Text fontSize="$3" color="$textSecondary" textAlign="center">
-                    您确定要取消签约吗？
-                  </Text>
-
-                  <XStack space="$3">
-                    <Pressable
-                      onPress={() => setShowCancelDialog(false)}
-                      style={{ flex: 1 }}
+                    <View
+                      height={44}
+                      borderRadius="$10"
+                      backgroundColor="$primary"
+                      justifyContent="center"
+                      alignItems="center"
                     >
-                      <View
-                        height={48}
-                        borderRadius="$3"
-                        backgroundColor={COLORS.primary}
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <Text fontSize="$4" color="white" fontWeight="600">
-                          继续使用
-                        </Text>
-                      </View>
-                    </Pressable>
+                      <Text fontSize="$4" color="white" fontWeight="600">
+                        继续使用
+                      </Text>
+                    </View>
+                  </Pressable>
 
-                    <Pressable
-                      onPress={handleCancelSubscription}
-                      style={{ flex: 1 }}
+                  <Pressable
+                    onPress={handleCancelSubscription}
+                    style={{ flex: 1 }}
+                  >
+                    <View
+                      height={44}
+                      borderRadius="$10"
+                      borderWidth={1}
+                      borderColor="$error"
+                      justifyContent="center"
+                      alignItems="center"
                     >
-                      <View
-                        height={48}
-                        borderRadius="$3"
-                        borderWidth={1}
-                        borderColor={COLORS.error}
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <Text fontSize="$4" color={COLORS.error} fontWeight="600">
-                          确认取消
-                        </Text>
-                      </View>
-                    </Pressable>
-                  </XStack>
-                </YStack>
-              </View>
-            </Pressable>
+                      <Text fontSize="$4" color="$error" fontWeight="600">
+                        确认取消
+                      </Text>
+                    </View>
+                  </Pressable>
+                </XStack>
+              </YStack>
+            </View>
           </Pressable>
-        </Modal>
-      </SafeAreaView>
-    </Theme>
+        </Pressable>
+      </Modal>
+    </View>
   );
 };
 

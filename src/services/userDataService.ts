@@ -4,7 +4,20 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserData, HealthDevice, DeviceEvent, HealthTask, TaskCompletionRecord, TaskAchievement, FamilyMember, MemberHealthProfile } from '@/types/userData';
+import { UserData, HealthDevice, HealthTask, TaskCompletionRecord, TaskAchievement, FamilyMember, MemberHealthProfile } from '@/types/userData';
+import {
+  UserMembership,
+  PointsInfo,
+  PointsRecord,
+  PointsSource,
+  ServiceSubscriptions,
+  MembershipLevel,
+  DEFAULT_MEMBERSHIP,
+  DEFAULT_POINTS,
+  DEFAULT_SUBSCRIPTIONS,
+  POINTS_MULTIPLIER,
+} from '@/types/membership';
+import { privateDoctorService } from './privateDoctorService';
 
 const USER_DATA_KEY = '@kangyang_user_data';
 
@@ -658,7 +671,11 @@ const initializeDefaultUserData = (): UserData => {
         lastBackup: now,
       },
     },
-    version: '1.0.0',
+    // 会员体系 (v1.1.0+)
+    membership: DEFAULT_MEMBERSHIP,
+    points: DEFAULT_POINTS,
+    subscriptions: DEFAULT_SUBSCRIPTIONS,
+    version: '1.1.0',
     lastModified: now,
   };
 };
@@ -685,15 +702,47 @@ export const getUserData = async (): Promise<UserData> => {
     const jsonValue = await AsyncStorage.getItem(USER_DATA_KEY);
 
     if (jsonValue !== null) {
-      // 已有数据，检查是否包含 familyMembers
+      // 已有数据，检查是否需要迁移
       const userData = JSON.parse(jsonValue);
+      let needsSave = false;
 
       // 如果旧数据中没有 familyMembers，添加默认值
       if (!userData.familyMembers || userData.familyMembers.length === 0) {
         console.log('⚠️ 检测到旧数据格式，正在添加家庭成员数据...');
         userData.familyMembers = initializeDefaultFamilyMembers();
-        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+        needsSave = true;
         console.log('✅ 家庭成员数据已添加');
+      }
+
+      // 迁移会员体系数据 (v1.1.0+)
+      if (!userData.membership) {
+        console.log('⚠️ 检测到旧数据格式，正在添加会员体系数据...');
+        userData.membership = DEFAULT_MEMBERSHIP;
+        needsSave = true;
+        console.log('✅ 会员信息已添加');
+      }
+
+      if (!userData.points) {
+        userData.points = DEFAULT_POINTS;
+        needsSave = true;
+        console.log('✅ 积分信息已添加');
+      }
+
+      if (!userData.subscriptions) {
+        userData.subscriptions = DEFAULT_SUBSCRIPTIONS;
+        needsSave = true;
+        console.log('✅ 订阅信息已添加');
+      }
+
+      // 更新版本号
+      if (userData.version !== '1.1.0') {
+        userData.version = '1.1.0';
+        needsSave = true;
+      }
+
+      if (needsSave) {
+        await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+        console.log('✅ 用户数据迁移完成');
       }
 
       return userData;
@@ -1126,7 +1175,7 @@ export const addDeviceToMember = async (
   const member = userData.familyMembers[memberIndex];
   const maxId = member.healthProfile.devices.length > 0
     ? Math.max(...member.healthProfile.devices.map(d => d.id))
-    : (memberId === 'self' ? 0 : parseInt(memberId.charCodeAt(0)) * 10);
+    : (memberId === 'self' ? 0 : memberId.charCodeAt(0) * 10);
 
   const now = new Date().toISOString();
   const newDevice: HealthDevice = {
@@ -1193,4 +1242,319 @@ export const updateMemberAIAnalysis = async (
   member.updatedAt = new Date().toISOString();
 
   return await saveUserData(userData);
+};
+
+// ==================== 会员管理相关方法 ====================
+
+/**
+ * 获取会员信息
+ */
+export const getMembership = async (): Promise<UserMembership> => {
+  const userData = await getUserData();
+  return userData.membership;
+};
+
+/**
+ * 更新会员信息
+ */
+export const updateMembership = async (
+  updates: Partial<UserMembership>
+): Promise<boolean> => {
+  const userData = await getUserData();
+  userData.membership = {
+    ...userData.membership,
+    ...updates,
+  };
+  return await saveUserData(userData);
+};
+
+/**
+ * 检查会员是否过期
+ */
+export const checkMembershipExpiry = async (): Promise<{
+  isExpired: boolean;
+  daysRemaining: number | null;
+}> => {
+  const membership = await getMembership();
+
+  if (membership.level === MembershipLevel.FREE || !membership.endDate) {
+    return { isExpired: false, daysRemaining: null };
+  }
+
+  const endDate = new Date(membership.endDate);
+  const now = new Date();
+  const diffTime = endDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return {
+    isExpired: diffDays <= 0,
+    daysRemaining: diffDays > 0 ? diffDays : 0,
+  };
+};
+
+// ==================== 积分管理相关方法 ====================
+
+/**
+ * 获取积分信息
+ */
+export const getPoints = async (): Promise<PointsInfo> => {
+  const userData = await getUserData();
+  return userData.points;
+};
+
+/**
+ * 更新积分信息
+ */
+export const updatePoints = async (
+  updates: Partial<PointsInfo>
+): Promise<boolean> => {
+  const userData = await getUserData();
+  userData.points = {
+    ...userData.points,
+    ...updates,
+  };
+  return await saveUserData(userData);
+};
+
+/**
+ * 获取当前积分倍率
+ */
+export const getPointsMultiplier = async (): Promise<number> => {
+  const membership = await getMembership();
+  return POINTS_MULTIPLIER[membership.level];
+};
+
+/**
+ * 获得积分
+ */
+export const earnPoints = async (
+  amount: number,
+  source: PointsSource,
+  description: string,
+  relatedOrderId?: string
+): Promise<boolean> => {
+  const userData = await getUserData();
+  const multiplier = POINTS_MULTIPLIER[userData.membership.level];
+  const actualAmount = Math.floor(amount * multiplier);
+
+  const record: PointsRecord = {
+    id: `points_${Date.now()}`,
+    date: new Date().toISOString(),
+    type: 'earn',
+    amount: actualAmount,
+    multiplier,
+    source,
+    description,
+    relatedOrderId,
+  };
+
+  userData.points.balance += actualAmount;
+  userData.points.totalEarned += actualAmount;
+  userData.points.history.unshift(record);
+
+  return await saveUserData(userData);
+};
+
+/**
+ * 消费积分
+ */
+export const spendPoints = async (
+  amount: number,
+  source: PointsSource,
+  description: string,
+  relatedOrderId?: string
+): Promise<boolean> => {
+  const userData = await getUserData();
+
+  if (userData.points.balance < amount) {
+    console.warn('积分余额不足');
+    return false;
+  }
+
+  const record: PointsRecord = {
+    id: `points_${Date.now()}`,
+    date: new Date().toISOString(),
+    type: 'spend',
+    amount,
+    source,
+    description,
+    relatedOrderId,
+  };
+
+  userData.points.balance -= amount;
+  userData.points.totalSpent += amount;
+  userData.points.history.unshift(record);
+
+  return await saveUserData(userData);
+};
+
+/**
+ * 获取积分历史
+ */
+export const getPointsHistory = async (
+  limit?: number
+): Promise<PointsRecord[]> => {
+  const points = await getPoints();
+  if (limit) {
+    return points.history.slice(0, limit);
+  }
+  return points.history;
+};
+
+// ==================== 独立服务订阅管理 ====================
+
+/**
+ * 获取订阅信息
+ */
+export const getSubscriptions = async (): Promise<ServiceSubscriptions> => {
+  const userData = await getUserData();
+  return userData.subscriptions;
+};
+
+/**
+ * 更新订阅信息
+ */
+export const updateSubscriptions = async (
+  updates: Partial<ServiceSubscriptions>
+): Promise<boolean> => {
+  const userData = await getUserData();
+  userData.subscriptions = {
+    ...userData.subscriptions,
+    ...updates,
+  };
+  return await saveUserData(userData);
+};
+
+// ==================== VIP服务台相关方法 ====================
+
+/**
+ * 活跃订阅服务信息
+ */
+export interface ActiveSubscription {
+  type: 'privateDoctor' | 'legalService' | 'expertCert';
+  name: string;
+  doctorName?: string;
+  doctorId?: string;
+  doctorAvatar?: string;
+  doctorTitle?: string;
+  subscriptionId?: string;
+  lawyerName?: string;
+  packageLevel?: string;
+  endDate: string;
+  daysRemaining: number;
+  isOnline?: boolean;
+}
+
+/**
+ * 检查是否有任何活跃订阅
+ */
+export const hasActiveSubscription = async (): Promise<boolean> => {
+  const subscriptions = await getSubscriptions();
+  const now = new Date();
+
+  // 检查私人医生订阅
+  if (subscriptions.privateDoctor) {
+    const endDate = new Date(subscriptions.privateDoctor.endDate);
+    if (endDate > now) return true;
+  }
+
+  // 检查法律服务订阅
+  if (subscriptions.legalService) {
+    const endDate = new Date(subscriptions.legalService.endDate);
+    if (endDate > now) return true;
+  }
+
+  // 检查达人认证
+  if (subscriptions.expertCert) {
+    const endDate = new Date(subscriptions.expertCert.endDate);
+    if (endDate > now) return true;
+  }
+
+  return false;
+};
+
+/**
+ * 获取所有活跃订阅列表
+ */
+export const getActiveSubscriptions = async (): Promise<ActiveSubscription[]> => {
+  const subscriptions = await getSubscriptions();
+  const now = new Date();
+  const activeList: ActiveSubscription[] = [];
+
+  // 从privateDoctorService获取真实的私人医生签约数据
+  const userId = 'user_001'; // TODO: 从auth context获取
+  const doctorSubscriptions = await privateDoctorService.getAllMySubscriptions(userId);
+
+  // 添加所有私人医生签约
+  for (const sub of doctorSubscriptions) {
+    const endDate = new Date(sub.endDate);
+    if (endDate > now && sub.status === 'active') {
+      const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      // 获取医生信息
+      const doctor = await privateDoctorService.getDoctorById(sub.doctorId);
+      activeList.push({
+        type: 'privateDoctor',
+        name: '私人医生',
+        packageLevel: sub.package.level,
+        doctorId: sub.doctorId,
+        doctorName: doctor?.name || '专属医生',
+        doctorAvatar: doctor?.avatar,
+        doctorTitle: doctor?.title,
+        subscriptionId: sub.id,
+        endDate: sub.endDate,
+        daysRemaining,
+        isOnline: doctor?.isOnline || false,
+      });
+    }
+  }
+
+  // 如果没有从订单获取到私人医生订阅，尝试从旧的subscriptions获取
+  if (activeList.filter(s => s.type === 'privateDoctor').length === 0 && subscriptions.privateDoctor) {
+    const endDate = new Date(subscriptions.privateDoctor.endDate);
+    if (endDate > now) {
+      const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      activeList.push({
+        type: 'privateDoctor',
+        name: '私人医生',
+        packageLevel: subscriptions.privateDoctor.packageLevel,
+        doctorName: '专属医生',
+        endDate: subscriptions.privateDoctor.endDate,
+        daysRemaining,
+        isOnline: true,
+      });
+    }
+  }
+
+  // 检查法律服务订阅
+  if (subscriptions.legalService) {
+    const endDate = new Date(subscriptions.legalService.endDate);
+    if (endDate > now) {
+      const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      activeList.push({
+        type: 'legalService',
+        name: '法律服务',
+        packageLevel: subscriptions.legalService.tier,
+        lawyerName: '刘律师', // Mock，实际应关联律师数据
+        endDate: subscriptions.legalService.endDate,
+        daysRemaining,
+        isOnline: true, // Mock
+      });
+    }
+  }
+
+  // 检查达人认证
+  if (subscriptions.expertCert) {
+    const endDate = new Date(subscriptions.expertCert.endDate);
+    if (endDate > now) {
+      const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      activeList.push({
+        type: 'expertCert',
+        name: subscriptions.expertCert.expertType === 'personal' ? '个人达人' : '商家达人',
+        endDate: subscriptions.expertCert.endDate,
+        daysRemaining,
+      });
+    }
+  }
+
+  return activeList;
 };

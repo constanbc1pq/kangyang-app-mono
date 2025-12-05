@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
-import { View, Text, XStack, YStack, Card } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   MessageCircle,
@@ -12,17 +13,23 @@ import {
   CheckCircle,
   AlertCircle,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import {
   CONSULTATION_TYPE_LABELS,
   CONSULTATION_STATUS_LABELS,
-  CONSULTATION_STATUS_COLORS,
 } from '@/constants/insurance';
 import { getMyConsultations } from '@/services/insuranceAdvisorService';
 import { InsuranceConsultation } from '@/types/insurance';
 
 const InsuranceConsultationHistoryScreen: React.FC = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,6 +88,21 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'replied':
+        return primaryColor;
+      case 'completed':
+        return successColor;
+      case 'pending':
+        return warningColor;
+      case 'cancelled':
+        return errorColor;
+      default:
+        return color10;
+    }
+  };
+
   const filteredConsultations = consultations.filter(consultation => {
     if (selectedStatus === 'all') return true;
     return consultation.status === selectedStatus;
@@ -89,9 +111,7 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
   const renderConsultationCard = (consultation: InsuranceConsultation) => {
     const Icon = getConsultationIcon(consultation.type);
     const StatusIcon = getStatusIcon(consultation.status);
-    const statusColor =
-      CONSULTATION_STATUS_COLORS[consultation.status as keyof typeof CONSULTATION_STATUS_COLORS] ||
-      COLORS.textSecondary;
+    const statusColor = getStatusColor(consultation.status);
 
     return (
       <Pressable
@@ -101,14 +121,15 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
           console.log('查看咨询详情:', consultation.id);
         }}
       >
-        <Card
-          bordered
-          padding="$4"
-          backgroundColor="$surface"
-          marginBottom="$3"
-          pressStyle={{ scale: 0.98 }}
+        <View
+          padding="$2"
+          backgroundColor="$color2"
+          marginBottom="$2"
+          borderRadius="$5"
+          borderWidth={1}
+          borderColor="$color5"
         >
-          <YStack gap="$3">
+          <YStack gap="$2">
             {/* 顾问信息和类型 */}
             <XStack justifyContent="space-between" alignItems="flex-start">
               <XStack gap="$2" alignItems="center" flex={1}>
@@ -116,7 +137,7 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
                   width={40}
                   height={40}
                   borderRadius={20}
-                  backgroundColor={COLORS.primary}
+                  backgroundColor={primaryColor}
                   justifyContent="center"
                   alignItems="center"
                 >
@@ -125,12 +146,12 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
                   </Text>
                 </View>
                 <YStack flex={1}>
-                  <Text fontSize="$4" fontWeight="600" color="$text">
+                  <Text fontSize="$4" fontWeight="600" color="$color12">
                     {consultation.advisorName}
                   </Text>
                   <XStack alignItems="center" gap="$1">
-                    <Icon size={12} color={COLORS.textSecondary} />
-                    <Text fontSize="$2" color="$textSecondary">
+                    <Icon size={12} color={color10} />
+                    <Text fontSize="$2" color="$color10">
                       {CONSULTATION_TYPE_LABELS[consultation.type as keyof typeof CONSULTATION_TYPE_LABELS]}
                     </Text>
                   </XStack>
@@ -139,9 +160,9 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
 
               <View
                 paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
-                backgroundColor={`${statusColor}20`}
+                paddingVertical="$0.5"
+                borderRadius="$10"
+                backgroundColor={`${statusColor}15`}
               >
                 <XStack alignItems="center" gap="$1">
                   <StatusIcon size={12} color={statusColor} />
@@ -153,7 +174,7 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
             </XStack>
 
             {/* 问题内容 */}
-            <Text fontSize="$3" color="$text" numberOfLines={2} lineHeight={20}>
+            <Text fontSize="$3" color="$color12" numberOfLines={2} lineHeight={20}>
               {consultation.question}
             </Text>
 
@@ -163,12 +184,12 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
                 {consultation.tags.map((tag, idx) => (
                   <View
                     key={idx}
-                    backgroundColor="$borderColor"
+                    backgroundColor="$color4"
                     paddingHorizontal="$2"
-                    paddingVertical="$1"
-                    borderRadius="$2"
+                    paddingVertical="$0.5"
+                    borderRadius="$10"
                   >
-                    <Text fontSize="$1" color="$text">
+                    <Text fontSize="$1" color="$color12">
                       {tag}
                     </Text>
                   </View>
@@ -179,16 +200,16 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
             {/* 回复预览 */}
             {consultation.reply && (
               <View
-                backgroundColor="$borderColor"
+                backgroundColor="$color4"
                 padding="$2"
-                borderRadius="$2"
+                borderRadius="$4"
                 borderLeftWidth={3}
-                borderLeftColor={COLORS.primary}
+                borderLeftColor={primaryColor}
               >
-                <Text fontSize="$2" color="$textSecondary" marginBottom="$1">
+                <Text fontSize="$2" color="$color10" marginBottom="$1">
                   顾问回复：
                 </Text>
-                <Text fontSize="$3" color="$text" numberOfLines={2} lineHeight={18}>
+                <Text fontSize="$3" color="$color12" numberOfLines={2} lineHeight={18}>
                   {consultation.reply}
                 </Text>
               </View>
@@ -196,7 +217,7 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
 
             {/* 底部信息 */}
             <XStack justifyContent="space-between" alignItems="center">
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 {new Date(consultation.createdAt).toLocaleString('zh-CN', {
                   year: 'numeric',
                   month: '2-digit',
@@ -207,13 +228,13 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
               </Text>
 
               {consultation.status === 'replied' && (
-                <Text fontSize="$2" color={COLORS.primary}>
+                <Text fontSize="$2" color="$primary">
                   可追问 →
                 </Text>
               )}
             </XStack>
           </YStack>
-        </Card>
+        </View>
       </Pressable>
     );
   };
@@ -221,29 +242,37 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-          咨询记录
-        </Text>
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            咨询记录
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
       {/* 状态筛选 */}
       <XStack
-        padding="$3"
+        padding="$2.5"
         gap="$2"
-        backgroundColor="$surface"
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
         {[
           { id: 'all', label: '全部' },
@@ -254,13 +283,13 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
           <Pressable key={status.id} onPress={() => setSelectedStatus(status.id)}>
             <View
               paddingHorizontal="$3"
-              paddingVertical="$2"
-              borderRadius="$2"
-              backgroundColor={selectedStatus === status.id ? COLORS.primary : '$borderColor'}
+              paddingVertical="$1.5"
+              borderRadius="$10"
+              backgroundColor={selectedStatus === status.id ? '$primary' : '$color4'}
             >
               <Text
                 fontSize="$3"
-                color={selectedStatus === status.id ? 'white' : '$text'}
+                color={selectedStatus === status.id ? 'white' : '$color12'}
                 fontWeight={selectedStatus === status.id ? '600' : '400'}
               >
                 {status.label}
@@ -273,15 +302,15 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
       {/* 咨询列表 */}
       {loading ? (
         <View flex={1} justifyContent="center" alignItems="center">
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text marginTop="$3" color="$textSecondary">
+          <ActivityIndicator size="large" color={primaryColor} />
+          <Text marginTop="$3" color="$color10">
             加载中...
           </Text>
         </View>
       ) : filteredConsultations.length === 0 ? (
-        <View flex={1} justifyContent="center" alignItems="center" padding="$4">
-          <MessageCircle size={48} color={COLORS.textSecondary} />
-          <Text fontSize="$4" color="$textSecondary" textAlign="center" marginTop="$3">
+        <View flex={1} justifyContent="center" alignItems="center" padding="$2.5">
+          <MessageCircle size={48} color={color10} />
+          <Text fontSize="$4" color="$color10" textAlign="center" marginTop="$3">
             {selectedStatus === 'all' ? '暂无咨询记录' : '暂无该状态的咨询'}
           </Text>
           <Pressable
@@ -291,8 +320,8 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
             <View
               paddingHorizontal="$4"
               paddingVertical="$2"
-              borderRadius="$2"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              backgroundColor="$primary"
             >
               <Text color="white" fontWeight="600">
                 咨询顾问
@@ -307,8 +336,8 @@ const InsuranceConsultationHistoryScreen: React.FC = () => {
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
           }
         >
-          <YStack padding="$4">
-            <Text fontSize="$3" color="$textSecondary" marginBottom="$3">
+          <YStack padding="$2.5">
+            <Text fontSize="$3" color="$color10" marginBottom="$2">
               共 {filteredConsultations.length} 条记录
             </Text>
             {filteredConsultations.map(renderConsultationCard)}

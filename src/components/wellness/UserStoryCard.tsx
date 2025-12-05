@@ -4,9 +4,8 @@
  */
 
 import React from 'react';
-import { View, Text, YStack, Card } from 'tamagui';
+import { View, Text, YStack, useTheme } from 'tamagui';
 import { ScrollView, Pressable } from 'react-native';
-import { COLORS } from '@/constants/app';
 
 export interface UserStory {
   id: string;
@@ -26,92 +25,92 @@ interface UserStoryCardProps {
 }
 
 const UserStoryCardItem: React.FC<UserStoryCardProps> = ({ story, onPress }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+
   return (
     <Pressable onPress={() => onPress(story.targetScreen, { storyId: story.id })}>
-      <Card
+      <View
         width={280}
-        padding="$4"
-        backgroundColor="$surface"
-        bordered
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.08}
-        shadowRadius={4}
-        elevation={2}
+        backgroundColor="$color2"
+        borderRadius="$5"
+        padding="$2"
+        borderWidth={1}
+        borderColor="$color5"
         marginRight={12}
       >
-        <YStack space="$3">
+        <YStack gap="$3">
           {/* 用户信息 */}
           <View
             flexDirection="row"
             alignItems="center"
             justifyContent="space-between"
           >
-            <View flexDirection="row" alignItems="center" space="$2">
+            <View flexDirection="row" alignItems="center" gap="$2">
               <View
                 width={48}
                 height={48}
                 borderRadius={24}
-                backgroundColor="$background"
+                backgroundColor="$color3"
                 justifyContent="center"
                 alignItems="center"
               >
                 <Text fontSize={24}>{story.avatar}</Text>
               </View>
               <YStack>
-                <Text fontSize="$4" fontWeight="600" color="$text">
+                <Text fontSize="$4" fontWeight="600" color="$color12">
                   {story.name}
                 </Text>
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   {story.age}岁 · {story.role}
                 </Text>
               </YStack>
             </View>
             <View
-              backgroundColor={`${COLORS.primary}15`}
-              paddingHorizontal="$2"
-              paddingVertical="$1"
+              backgroundColor={`${primaryColor}15`}
+              paddingHorizontal="$1.5"
+              paddingVertical="$0.75"
               borderRadius="$2"
             >
-              <Text fontSize="$2" color={COLORS.primary} fontWeight="600">
+              <Text fontSize="$2" color="$primary" fontWeight="600">
                 {story.serviceCategory}
               </Text>
             </View>
           </View>
 
           {/* 痛点描述 */}
-          <YStack space="$2">
-            <Text fontSize="$2" color="$textSecondary">
+          <YStack gap="$2">
+            <Text fontSize="$2" color="$color10">
               遇到的问题：
             </Text>
-            <Text fontSize="$3" color="$text" lineHeight={20}>
+            <Text fontSize="$3" color="$color12" lineHeight={20}>
               "{story.problem}"
             </Text>
           </YStack>
 
           {/* 解决方案 */}
-          <YStack space="$2">
-            <Text fontSize="$2" color={COLORS.success}>
+          <YStack gap="$1.5">
+            <Text fontSize="$2" color="$success">
               现在的改变：
             </Text>
-            <Text fontSize="$3" color="$text" lineHeight={20}>
+            <Text fontSize="$3" color="$color12">
               "{story.solution}"
             </Text>
           </YStack>
 
           {/* 查看详情 */}
           <View
-            paddingVertical="$2"
+            paddingVertical="$1.5"
             borderTopWidth={1}
-            borderTopColor="$borderColor"
+            borderTopColor="$color5"
             alignItems="center"
           >
-            <Text fontSize="$3" color={COLORS.primary} fontWeight="600">
+            <Text fontSize="$3" color="$primary" fontWeight="600">
               查看完整故事 →
             </Text>
           </View>
         </YStack>
-      </Card>
+      </View>
     </Pressable>
   );
 };
@@ -126,14 +125,14 @@ export const UserStoryList: React.FC<UserStoryListProps> = ({
   onStoryPress,
 }) => {
   return (
-    <View marginBottom={16}>
-      <YStack space="$3">
+    <View marginBottom="$2">
+      <YStack gap="$3">
         {/* 标题 */}
-        <View paddingHorizontal="$4">
-          <Text fontSize="$5" fontWeight="600" color="$text">
+        <View paddingHorizontal="$2.5">
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             和您一样的选择
           </Text>
-          <Text fontSize="$3" color="$textSecondary" marginTop="$1">
+          <Text fontSize="$3" color="$color10" marginTop="$1">
             看看他们如何改善生活品质
           </Text>
         </View>
@@ -165,7 +164,7 @@ export const mockUserStories: UserStory[] = [
     role: '退休教师',
     problem: '儿女在外地工作，一个人做饭很麻烦，经常随便吃点，营养跟不上',
     solution: '现在每天都有营养师定制的三餐送到家，方便又健康，体重和血压都稳定了',
-    serviceCategory: '送餐上门',
+    serviceCategory: '闪送到家',
     targetScreen: 'DeliveryService',
   },
   {

@@ -2,8 +2,8 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SCREEN_NAMES, COLORS } from '@/constants/app';
-import { View } from 'tamagui';
+import { SCREEN_NAMES } from '@/constants/app';
+import { View, useTheme } from 'tamagui';
 import { Heart, Activity, Users, User } from 'lucide-react-native';
 import { HealthScreen } from '@/screens/HealthScreen';
 import { WellnessScreen } from '@/screens/WellnessScreen';
@@ -19,6 +19,9 @@ import { TaskDetailScreen } from '@/screens/TaskDetailScreen';
 import { TaskFormScreen } from '@/screens/TaskFormScreen';
 import NutritionServiceScreen from '@/screens/NutritionServiceScreen';
 import NutritionistDetailScreen from '@/screens/NutritionistDetailScreen';
+import WellnessGuideScreen from '@/screens/WellnessGuideScreen';
+import VIPServiceDeskScreen from '@/screens/VIPServiceDeskScreen';
+import VIPServiceIntroScreen from '@/screens/VIPServiceIntroScreen';
 import CheckoutScreen from '@/screens/CheckoutScreen';
 import PaymentScreen from '@/screens/PaymentScreen';
 import OrderListScreen from '@/screens/OrderListScreen';
@@ -38,21 +41,26 @@ import { TopicDetailScreen } from '@/screens/TopicDetailScreen';
 import { JobListScreen } from '@/screens/JobListScreen';
 import { JobDetailScreen } from '@/screens/JobDetailScreen';
 import { JobPublishScreen } from '@/screens/JobPublishScreen';
+import { MyJobsScreen } from '@/screens/MyJobsScreen';
 import { SecondHandDetailScreen } from '@/screens/SecondHandDetailScreen';
 import { SecondHandListScreen } from '@/screens/SecondHandListScreen';
 import { SecondHandPublishScreen } from '@/screens/SecondHandPublishScreen';
+import { MySecondHandScreen } from '@/screens/MySecondHandScreen';
 import { ExpertDetailScreen } from '@/screens/ExpertDetailScreen';
 import { ExpertListScreen } from '@/screens/ExpertListScreen';
 import { ExpertDashboardScreen } from '@/screens/ExpertDashboardScreen';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { PostPublishScreen } from '@/screens/PostPublishScreen';
-import { SearchScreen } from '@/screens/SearchScreen';
 import { ChatScreen } from '@/screens/ChatScreen';
 import { ChatListScreen } from '@/screens/ChatListScreen';
 import { ServiceOrderDetailScreen } from '@/screens/ServiceOrderDetailScreen';
 import { ServiceReviewScreen } from '@/screens/ServiceReviewScreen';
 import { MyOrdersScreen } from '@/screens/MyOrdersScreen';
 import { ExpertCertificationScreen } from '@/screens/ExpertCertificationScreen';
+import { ExpertTermsScreen } from '@/screens/ExpertTermsScreen';
+import { ExpertTerminateScreen } from '@/screens/ExpertTerminateScreen';
+import { ExpertOrdersScreen } from '@/screens/ExpertOrdersScreen';
+import { ServiceBookingScreen } from '@/screens/ServiceBookingScreen';
 import { PrivateDoctorListScreen } from '@/screens/PrivateDoctorListScreen';
 import { PrivateDoctorDetailScreen } from '@/screens/PrivateDoctorDetailScreen';
 import { PrivateDoctorSubscribeScreen } from '@/screens/PrivateDoctorSubscribeScreen';
@@ -118,6 +126,13 @@ import ClaimCaseLibraryScreen from '@/screens/ClaimCaseLibraryScreen';
 import InsuranceCalculatorScreen from '@/screens/InsuranceCalculatorScreen';
 import InsuranceQAScreen from '@/screens/InsuranceQAScreen';
 import InsuranceSpecialTopicScreen from '@/screens/InsuranceSpecialTopicScreen';
+import MembershipCenterScreen from '@/screens/MembershipCenterScreen';
+import CustomerServiceChatScreen from '@/screens/CustomerServiceChatScreen';
+import AddFamilyMemberScreen from '@/screens/AddFamilyMemberScreen';
+import { ColumnListScreen } from '@/screens/ColumnListScreen';
+import { ContentDetailScreen } from '@/screens/ContentDetailScreen';
+import RankingDetailScreen from '@/screens/RankingDetailScreen';
+import { ExpertChatScreen } from '@/screens/ExpertChatScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -125,6 +140,12 @@ const Stack = createNativeStackNavigator();
 // Tab导航器组件 - 包含4个主页面
 const TabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+
+  // 主题色值
+  const primaryColor = theme.primary?.val || '#6366F1';
+  const textSecondaryColor = theme.color10?.val || '#6B7280';
+  const backgroundColor = theme.color2?.val || '#FAFCFF';
 
   return (
     <Tab.Navigator
@@ -147,20 +168,20 @@ const TabNavigator: React.FC = () => {
             <View>
               <IconComponent
                 size={size}
-                color={focused ? COLORS.primary : COLORS.textSecondary}
+                color={focused ? primaryColor : textSecondaryColor}
               />
             </View>
           );
         },
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarActiveTintColor: primaryColor,
+        tabBarInactiveTintColor: textSecondaryColor,
         tabBarStyle: {
-          backgroundColor: COLORS.surface,
-          borderTopColor: COLORS.background,
+          backgroundColor: backgroundColor,
+          borderTopColor: theme.color5?.val || '#E2E6EC',
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom + 8,
           paddingTop: 8,
-          shadowColor: COLORS.primary,
+          shadowColor: primaryColor,
           shadowOffset: {
             width: 0,
             height: -2,
@@ -246,6 +267,18 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="NutritionService"
         component={NutritionServiceScreen}
+      />
+      <Stack.Screen
+        name="WellnessGuide"
+        component={WellnessGuideScreen}
+      />
+      <Stack.Screen
+        name="VIPServiceDesk"
+        component={VIPServiceDeskScreen}
+      />
+      <Stack.Screen
+        name="VIPServiceIntro"
+        component={VIPServiceIntroScreen}
       />
       <Stack.Screen
         name="NutritionistDetail"
@@ -340,6 +373,10 @@ export const MainNavigator: React.FC = () => {
         component={JobPublishScreen}
       />
       <Stack.Screen
+        name="MyJobs"
+        component={MyJobsScreen}
+      />
+      <Stack.Screen
         name="SecondHandDetail"
         component={SecondHandDetailScreen}
       />
@@ -350,6 +387,10 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="SecondHandPublish"
         component={SecondHandPublishScreen}
+      />
+      <Stack.Screen
+        name="MySecondHand"
+        component={MySecondHandScreen}
       />
       <Stack.Screen
         name="ExpertDetail"
@@ -368,16 +409,32 @@ export const MainNavigator: React.FC = () => {
         component={ExpertCertificationScreen}
       />
       <Stack.Screen
+        name="ExpertTerms"
+        component={ExpertTermsScreen}
+      />
+      <Stack.Screen
+        name="ExpertTerminate"
+        component={ExpertTerminateScreen}
+      />
+      <Stack.Screen
+        name="ExpertOrders"
+        component={ExpertOrdersScreen}
+      />
+      <Stack.Screen
+        name="ServiceBooking"
+        component={ServiceBookingScreen}
+      />
+      <Stack.Screen
+        name="ExpertChat"
+        component={ExpertChatScreen}
+      />
+      <Stack.Screen
         name="PostDetail"
         component={PostDetailScreen}
       />
       <Stack.Screen
         name="PostPublish"
         component={PostPublishScreen}
-      />
-      <Stack.Screen
-        name="Search"
-        component={SearchScreen}
       />
       <Stack.Screen
         name="Chat"
@@ -652,6 +709,40 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="InsuranceSpecialTopic"
         component={InsuranceSpecialTopicScreen}
+      />
+
+      {/* 会员中心 - Membership Center */}
+      <Stack.Screen
+        name="MembershipCenter"
+        component={MembershipCenterScreen}
+      />
+
+      {/* 客服聊天 - Customer Service Chat */}
+      <Stack.Screen
+        name="CustomerServiceChat"
+        component={CustomerServiceChatScreen}
+      />
+
+      {/* 添加家庭成员 - Add Family Member */}
+      <Stack.Screen
+        name="AddFamilyMember"
+        component={AddFamilyMemberScreen}
+      />
+
+      {/* 栏目系统 - Column System */}
+      <Stack.Screen
+        name="ColumnList"
+        component={ColumnListScreen}
+      />
+      <Stack.Screen
+        name="ContentDetail"
+        component={ContentDetailScreen}
+      />
+
+      {/* 榜单详情 - Ranking Detail */}
+      <Stack.Screen
+        name="RankingDetail"
+        component={RankingDetailScreen}
       />
     </Stack.Navigator>
   );

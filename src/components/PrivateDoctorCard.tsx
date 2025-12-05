@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { YStack, XStack, Text, Card, View } from 'tamagui';
+import { YStack, XStack, Text, View, useTheme } from 'tamagui';
 import { Pressable, Image } from 'react-native';
 import {
   Star,
@@ -20,12 +20,13 @@ import {
   Award,
   Video,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
+import { getAvatarSource } from '@/constants/avatars';
 import {
   PrivateDoctor,
   DoctorDepartment,
-  DoctorTitle,
 } from '@/types/privateDoctor';
+
+const GOLD_COLOR = '#D4AF37';
 
 interface PrivateDoctorCardProps {
   doctor: PrivateDoctor;
@@ -42,6 +43,11 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
   showPrice = true,
   compact = false,
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const color10 = theme.color10?.val;
+
   const getDepartmentLabel = (dept: DoctorDepartment): string => {
     const labels: Record<DoctorDepartment, string> = {
       [DoctorDepartment.CARDIOLOGY]: '心血管内科',
@@ -60,7 +66,10 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
     const labels: Record<string, string> = {
       chief_physician: '主任医师',
       associate_chief_physician: '副主任医师',
+      associate_chief: '副主任医师',
       attending_physician: '主治医师',
+      attending: '主治医师',
+      resident: '住院医师',
     };
     return labels[title] || title;
   };
@@ -80,46 +89,29 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
       height={size}
       borderRadius="$3"
       overflow="hidden"
-      backgroundColor="$surface"
+      backgroundColor="$color4"
     >
-      {doctor.avatar ? (
-        <Image
-          source={{ uri: doctor.avatar }}
-          style={{ width: '100%', height: '100%' }}
-          resizeMode="cover"
-        />
-      ) : (
-        <View
-          flex={1}
-          justifyContent="center"
-          alignItems="center"
-          backgroundColor={COLORS.primary}
-        >
-          <Text
-            fontSize={size / 2.5}
-            fontWeight="600"
-            color="white"
-          >
-            {doctor.name[0]}
-          </Text>
-        </View>
-      )}
+      <Image
+        source={getAvatarSource(doctor.avatar, doctor.name)}
+        style={{ width: '100%', height: '100%' }}
+        resizeMode="cover"
+      />
     </View>
   );
 
   const renderBadges = () => (
-    <XStack space="$2" flexWrap="wrap">
+    <XStack gap="$1.5" flexWrap="wrap">
       {doctor.isOnline && (
         <XStack
           alignItems="center"
-          space="$1"
+          gap="$0.5"
           paddingHorizontal="$1"
           paddingVertical="$0.5"
-          backgroundColor={`${COLORS.success}15`}
           borderRadius="$1"
+          style={{ backgroundColor: `${successColor}15` }}
         >
-          <Video size={10} color={COLORS.success} />
-          <Text fontSize={10} color={COLORS.success} fontWeight="500">
+          <Video size={10} color={successColor} />
+          <Text fontSize={10} color="$success" fontWeight="500">
             在线
           </Text>
         </XStack>
@@ -127,14 +119,14 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
       {doctor.overseasTraining.length > 0 && (
         <XStack
           alignItems="center"
-          space="$1"
+          gap="$0.5"
           paddingHorizontal="$1"
           paddingVertical="$0.5"
-          backgroundColor={COLORS.primaryLight}
           borderRadius="$1"
+          style={{ backgroundColor: `${primaryColor}15` }}
         >
-          <Award size={10} color={COLORS.primary} />
-          <Text fontSize={10} color={COLORS.primary} fontWeight="500">
+          <Award size={10} color={primaryColor} />
+          <Text fontSize={10} color="$primary" fontWeight="500">
             海外
           </Text>
         </XStack>
@@ -149,59 +141,56 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
         onPress={() => onPress?.(doctor.id)}
         style={{ width: '100%' }}
       >
-        <Card
-          borderRadius="$4"
-          backgroundColor="$cardBg"
-          padding="$3"
-          shadowColor="$shadow"
-          shadowOffset={{ width: 0, height: 2 }}
-          shadowOpacity={0.08}
-          shadowRadius={4}
-          elevation={3}
+        <View
+          borderRadius="$5"
+          backgroundColor="$color2"
+          padding="$2"
+          borderWidth={1}
+          borderColor="$color5"
         >
-          <YStack space="$2" alignItems="center">
+          <YStack gap="$1.5" alignItems="center">
             {renderAvatar(compact ? 56 : 72)}
 
-            <YStack space="$1" alignItems="center" width="100%">
-              <XStack alignItems="center" space="$1">
+            <YStack gap="$1" alignItems="center" width="100%">
+              <XStack alignItems="center" gap="$1">
                 <Text
                   fontSize={compact ? '$4' : '$5'}
                   fontWeight="700"
-                  color="$text"
+                  color="$color12"
                   numberOfLines={1}
                 >
                   {doctor.name}
                 </Text>
                 {doctor.verified && (
-                  <CheckCircle size={12} color={COLORS.primary} />
+                  <CheckCircle size={12} color={GOLD_COLOR} />
                 )}
               </XStack>
 
               <View
-                backgroundColor={COLORS.primaryLight}
                 paddingHorizontal="$2"
                 paddingVertical="$0.5"
                 borderRadius="$1"
+                style={{ backgroundColor: `${primaryColor}15` }}
               >
-                <Text fontSize={11} color={COLORS.primary} fontWeight="600">
+                <Text fontSize={11} color="$primary" fontWeight="600">
                   {getTitleLabel(doctor.title)}
                 </Text>
               </View>
 
               <Text
                 fontSize={11}
-                color="$textSecondary"
+                color="$color10"
                 numberOfLines={1}
                 textAlign="center"
               >
                 {getDepartmentLabel(doctor.department)}
               </Text>
 
-              <XStack alignItems="center" space="$1">
-                <MapPin size={10} color={COLORS.textSecondary} />
+              <XStack alignItems="center" gap="$0.5">
+                <MapPin size={10} color={color10} />
                 <Text
                   fontSize={10}
-                  color="$textSecondary"
+                  color="$color10"
                   numberOfLines={1}
                   flex={1}
                   textAlign="center"
@@ -210,16 +199,16 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
                 </Text>
               </XStack>
 
-              <XStack alignItems="center" space="$2" marginTop="$1">
-                <XStack alignItems="center" space="$0.5">
-                  <Star size={11} color={COLORS.warning} fill={COLORS.warning} />
-                  <Text fontSize={11} fontWeight="600" color="$text">
+              <XStack alignItems="center" gap="$2" marginTop="$0.5">
+                <XStack alignItems="center" gap="$0.5">
+                  <Star size={11} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                  <Text fontSize={11} fontWeight="600" color="$color12">
                     {doctor.rating.toFixed(1)}
                   </Text>
                 </XStack>
-                <XStack alignItems="center" space="$0.5">
-                  <Users size={11} color={COLORS.textSecondary} />
-                  <Text fontSize={11} color="$textSecondary">
+                <XStack alignItems="center" gap="$0.5">
+                  <Users size={11} color={color10} />
+                  <Text fontSize={11} color="$color10">
                     {doctor.memberCount}
                   </Text>
                 </XStack>
@@ -228,21 +217,21 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
               {!compact && renderBadges()}
 
               {showPrice && (
-                <XStack alignItems="baseline" space="$0.5" marginTop="$1">
-                  <Text fontSize={10} color={COLORS.primary}>
+                <XStack alignItems="baseline" gap="$0.5" marginTop="$0.5">
+                  <Text fontSize={10} color={GOLD_COLOR}>
                     ¥
                   </Text>
-                  <Text fontSize="$5" fontWeight="700" color={COLORS.primary}>
+                  <Text fontSize="$5" fontWeight="700" color={GOLD_COLOR}>
                     {formatPrice(lowestPrice)}
                   </Text>
-                  <Text fontSize={10} color="$textSecondary">
+                  <Text fontSize={10} color="$color10">
                     /年起
                   </Text>
                 </XStack>
               )}
             </YStack>
           </YStack>
-        </Card>
+        </View>
       </Pressable>
     );
   }
@@ -253,65 +242,62 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
       onPress={() => onPress?.(doctor.id)}
       style={{ width: '100%' }}
     >
-      <Card
-        borderRadius="$4"
-        backgroundColor="$cardBg"
-        padding={compact ? '$3' : '$4'}
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.08}
-        shadowRadius={4}
-        elevation={3}
+      <View
+        borderRadius="$5"
+        backgroundColor="$color2"
+        padding="$2"
+        borderWidth={1}
+        borderColor="$color5"
       >
-        <XStack space={compact ? '$2' : '$3'}>
+        <XStack gap={compact ? '$1.5' : '$2'}>
           {renderAvatar(compact ? 56 : 72)}
 
-          <YStack flex={1} space={compact ? '$1' : '$2'}>
+          <YStack flex={1} gap={compact ? '$1' : '$1.5'}>
             {/* 姓名和职称 */}
-            <XStack alignItems="center" space="$2" justifyContent="space-between">
-              <XStack alignItems="center" space="$1" flex={1}>
+            <XStack alignItems="center" gap="$2" justifyContent="space-between">
+              <XStack alignItems="center" gap="$1" flex={1}>
                 <Text
                   fontSize={compact ? '$4' : '$5'}
                   fontWeight="700"
-                  color="$text"
+                  color="$color12"
                   numberOfLines={1}
                 >
                   {doctor.name}
                 </Text>
                 {doctor.verified && (
-                  <CheckCircle size={14} color={COLORS.primary} />
+                  <CheckCircle size={14} color={GOLD_COLOR} />
                 )}
               </XStack>
               {!compact && renderBadges()}
             </XStack>
 
             {/* 职称和科室 */}
-            <XStack alignItems="center" space="$2" flexWrap="wrap">
+            <XStack alignItems="center" gap="$1.5" flexWrap="wrap">
               <View
-                backgroundColor={COLORS.primaryLight}
                 paddingHorizontal="$2"
                 paddingVertical="$0.5"
                 borderRadius="$1"
+                style={{ backgroundColor: `${primaryColor}15` }}
               >
                 <Text
                   fontSize={compact ? 10 : 11}
-                  color={COLORS.primary}
+                  color="$primary"
                   fontWeight="600"
                 >
                   {getTitleLabel(doctor.title)}
                 </Text>
               </View>
-              <Text fontSize={compact ? 11 : 12} color="$textSecondary">
+              <Text fontSize={compact ? 11 : 12} color="$color10">
                 {getDepartmentLabel(doctor.department)}
               </Text>
             </XStack>
 
             {/* 医院 */}
-            <XStack alignItems="center" space="$1">
-              <MapPin size={12} color={COLORS.textSecondary} />
+            <XStack alignItems="center" gap="$0.5">
+              <MapPin size={12} color={color10} />
               <Text
                 fontSize={compact ? 11 : 12}
-                color="$textSecondary"
+                color="$color10"
                 numberOfLines={1}
                 flex={1}
               >
@@ -325,34 +311,34 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
               alignItems="center"
               marginTop={compact ? '$0.5' : '$1'}
             >
-              <XStack alignItems="center" space="$2">
-                <XStack alignItems="center" space="$0.5">
-                  <Star size={12} color={COLORS.warning} fill={COLORS.warning} />
-                  <Text fontSize={12} fontWeight="600" color="$text">
+              <XStack alignItems="center" gap="$2">
+                <XStack alignItems="center" gap="$0.5">
+                  <Star size={12} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                  <Text fontSize={12} fontWeight="600" color="$color12">
                     {doctor.rating.toFixed(1)}
                   </Text>
                 </XStack>
-                <XStack alignItems="center" space="$0.5">
-                  <Users size={12} color={COLORS.textSecondary} />
-                  <Text fontSize={12} color="$textSecondary">
+                <XStack alignItems="center" gap="$0.5">
+                  <Users size={12} color={color10} />
+                  <Text fontSize={12} color="$color10">
                     {doctor.memberCount}
                   </Text>
                 </XStack>
               </XStack>
 
               {showPrice && (
-                <XStack alignItems="baseline" space="$0.5">
-                  <Text fontSize={10} color={COLORS.primary}>
+                <XStack alignItems="baseline" gap="$0.5">
+                  <Text fontSize={10} color={GOLD_COLOR}>
                     ¥
                   </Text>
                   <Text
                     fontSize={compact ? '$4' : '$5'}
                     fontWeight="700"
-                    color={COLORS.primary}
+                    color={GOLD_COLOR}
                   >
                     {formatPrice(lowestPrice)}
                   </Text>
-                  <Text fontSize={10} color="$textSecondary">
+                  <Text fontSize={10} color="$color10">
                     /年起
                   </Text>
                 </XStack>
@@ -361,17 +347,17 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
 
             {/* 专长标签（非紧凑模式） */}
             {!compact && (
-              <XStack space="$1" flexWrap="wrap" marginTop="$1">
+              <XStack gap="$1" flexWrap="wrap" marginTop="$1">
                 {doctor.specialties.slice(0, 3).map((specialty, index) => (
                   <View
                     key={index}
-                    backgroundColor="$surface"
+                    backgroundColor="$color4"
                     paddingHorizontal="$2"
                     paddingVertical="$0.5"
                     borderRadius="$1"
-                    marginBottom="$1"
+                    marginBottom="$0.5"
                   >
-                    <Text fontSize={10} color="$textSecondary">
+                    <Text fontSize={10} color="$color10">
                       {specialty}
                     </Text>
                   </View>
@@ -380,7 +366,7 @@ export const PrivateDoctorCard: React.FC<PrivateDoctorCardProps> = ({
             )}
           </YStack>
         </XStack>
-      </Card>
+      </View>
     </Pressable>
   );
 };

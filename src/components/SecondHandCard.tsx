@@ -1,14 +1,19 @@
-import React from 'react';
+/**
+ * SecondHandCard 二手商品卡片组件
+ * 瀑布流风格，类似闲鱼商品卡片
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
+ */
+import React, { useState } from 'react';
 import {
   YStack,
   XStack,
   Text,
-  Card,
   View,
+  Image,
+  useTheme,
 } from 'tamagui';
-import { TouchableOpacity } from 'react-native';
-import { MapPin } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
+import { Pressable } from 'react-native';
+import { MapPin, Package } from 'lucide-react-native';
 import { SecondHandItem, ItemCondition } from '@/types/community';
 
 interface SecondHandCardProps {
@@ -17,74 +22,88 @@ interface SecondHandCardProps {
 }
 
 /**
- * 二手商品卡片组件（瀑布流风格）
- * 类似闲鱼的商品卡片
+ * 二手商品卡片组件
  */
 export const SecondHandCard: React.FC<SecondHandCardProps> = ({ item, onPress }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const [imageError, setImageError] = useState(false);
+
+  // 获取商品图片
+  const imageUrl = item.images && item.images.length > 0 ? item.images[0] : null;
+
   // 获取成色标签
   const getConditionLabel = (condition: ItemCondition): string => {
     const labels: { [key in ItemCondition]: string } = {
       [ItemCondition.NEW]: '全新',
-      [ItemCondition.LIKE_NEW]: '99成新',
-      [ItemCondition.EXCELLENT]: '95成新',
+      [ItemCondition.LIKE_NEW]: '99新',
+      [ItemCondition.EXCELLENT]: '95新',
       [ItemCondition.GOOD]: '9成新',
       [ItemCondition.FAIR]: '8成新',
-      [ItemCondition.USED]: '使用痕迹',
+      [ItemCondition.USED]: '有痕迹',
     };
-    return labels[condition];
+    return labels[condition] || '未知';
   };
 
   // 获取成色颜色
-  const getConditionColor = (condition: ItemCondition): string => {
+  const getConditionColor = (condition: ItemCondition): string | undefined => {
     if (condition === ItemCondition.NEW || condition === ItemCondition.LIKE_NEW) {
-      return COLORS.success;
+      return successColor;
     } else if (condition === ItemCondition.EXCELLENT || condition === ItemCondition.GOOD) {
-      return COLORS.primary;
+      return primaryColor;
     } else {
-      return COLORS.textSecondary;
+      return color10;
     }
   };
 
   return (
-    <TouchableOpacity onPress={() => onPress(item.id)} activeOpacity={0.7}>
-      <Card
-        padding="$0"
-        borderRadius="$4"
-        backgroundColor="$surface"
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.1}
-        shadowRadius={8}
-        elevation={4}
-        marginBottom="$3"
+    <Pressable onPress={() => onPress(item.id)}>
+      <View
+        borderRadius="$5"
+        backgroundColor="$color2"
+        shadowOffset={{ width: 0, height: 4 }}
+        shadowOpacity={0.08}
+        elevation={2}
         overflow="hidden"
+        borderWidth={1}
+        borderColor="$color5"
       >
-        {/* 封面图占位（1:1比例） */}
+        {/* 封面图（1:1比例） */}
         <View
           width="100%"
           aspectRatio={1}
-          backgroundColor="$background"
+          backgroundColor="$color4"
           justifyContent="center"
           alignItems="center"
-          position="relative"
         >
-          {/* 图片占位 */}
-          <Text fontSize={48} opacity={0.3}>
-            📦
-          </Text>
+          {/* 商品图片 */}
+          {imageUrl && !imageError ? (
+            <Image
+              source={{ uri: imageUrl }}
+              width="100%"
+              height="100%"
+              resizeMode="cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <Package size={40} color={color10} />
+          )}
 
           {/* 免费赠送角标 */}
           {item.isFree && (
             <View
               position="absolute"
-              top={8}
-              left={8}
-              backgroundColor={COLORS.success}
-              paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
+              top="$1.5"
+              left="$1.5"
+              backgroundColor={successColor}
+              paddingHorizontal="$1.5"
+              paddingVertical="$0.5"
+              borderRadius="$10"
             >
-              <Text fontSize="$2" color="white" fontWeight="600">
+              <Text fontSize={10} color="white" fontWeight="600">
                 免费
               </Text>
             </View>
@@ -93,36 +112,36 @@ export const SecondHandCard: React.FC<SecondHandCardProps> = ({ item, onPress })
           {/* 成色标签 */}
           <View
             position="absolute"
-            bottom={8}
-            right={8}
+            bottom="$1.5"
+            right="$1.5"
             backgroundColor="rgba(0,0,0,0.6)"
-            paddingHorizontal="$2"
-            paddingVertical="$1"
-            borderRadius="$2"
+            paddingHorizontal="$1.5"
+            paddingVertical="$0.5"
+            borderRadius="$10"
           >
-            <Text fontSize="$2" color="white">
+            <Text fontSize={10} color="white">
               {getConditionLabel(item.condition)}
             </Text>
           </View>
         </View>
 
         {/* 商品信息 */}
-        <YStack padding="$3">
+        <YStack padding="$2">
           {/* 价格 */}
-          <XStack space="$2" alignItems="baseline" marginBottom="$2">
+          <XStack gap="$1.5" alignItems="baseline" marginBottom="$1.5">
             {item.isFree ? (
-              <Text fontSize="$6" fontWeight="bold" color={COLORS.success}>
+              <Text fontSize="$4" fontWeight="700" color={successColor}>
                 免费赠送
               </Text>
             ) : (
               <>
-                <Text fontSize="$6" fontWeight="bold" color={COLORS.error}>
+                <Text fontSize="$4" fontWeight="700" color={errorColor}>
                   ¥{item.currentPrice}
                 </Text>
                 {item.originalPrice && (
                   <Text
-                    fontSize="$3"
-                    color="$textSecondary"
+                    fontSize="$2"
+                    color="$color10"
                     textDecorationLine="line-through"
                   >
                     ¥{item.originalPrice}
@@ -134,34 +153,32 @@ export const SecondHandCard: React.FC<SecondHandCardProps> = ({ item, onPress })
 
           {/* 标题 */}
           <Text
-            fontSize="$4"
-            color="$text"
+            fontSize="$3"
+            color="$color12"
             numberOfLines={2}
-            marginBottom="$2"
-            lineHeight="$1"
+            marginBottom="$1.5"
+            lineHeight={18}
           >
             {item.title}
           </Text>
 
-          {/* 位置和距离 */}
-          <XStack space="$1" alignItems="center">
-            <MapPin size={12} color={COLORS.textSecondary} />
-            <Text fontSize="$2" color="$textSecondary">
+          {/* 位置和标签 */}
+          <XStack gap="$1" alignItems="center" flexWrap="wrap">
+            <MapPin size={12} color={color10} />
+            <Text fontSize="$2" color="$color10">
               {item.location.district}
             </Text>
             {item.isNegotiable && (
               <>
-                <Text fontSize="$2" color="$textSecondary">
-                  ·
-                </Text>
-                <Text fontSize="$2" color={COLORS.primary}>
+                <Text fontSize="$2" color="$color10">·</Text>
+                <Text fontSize="$2" color={primaryColor} fontWeight="500">
                   可议价
                 </Text>
               </>
             )}
           </XStack>
         </YStack>
-      </Card>
-    </TouchableOpacity>
+      </View>
+    </Pressable>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   YStack,
   XStack,
@@ -6,13 +6,11 @@ import {
   Button,
   Card,
   View,
-  H3,
-  Theme,
-  ScrollView,
-  Progress,
+  H4,
+  useTheme,
+  Paragraph,
 } from 'tamagui';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 interface HealthTrendsProps {
   period: string;
@@ -27,7 +25,12 @@ interface ChartData {
   change: string;
 }
 
+/**
+ * 健康趋势组件
+ * 使用 Tamagui 主题色系统
+ */
 export const HealthTrends: React.FC<HealthTrendsProps> = ({ period, onPeriodChange }) => {
+  const theme = useTheme();
   // Mock data - in real app this would come from API
   const getHealthData = (): { [key: string]: ChartData } => {
     const data = {
@@ -127,16 +130,17 @@ export const HealthTrends: React.FC<HealthTrendsProps> = ({ period, onPeriodChan
 
   const healthData = getHealthData();
 
+  // 趋势图标 - 使用主题色
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'up':
-        return <TrendingUp size={16} color={COLORS.success} />;
+        return <TrendingUp size={16} color={theme.success?.val} />;
       case 'down':
-        return <TrendingDown size={16} color={COLORS.success} />;
+        return <TrendingDown size={16} color={theme.success?.val} />;
       case 'stable':
-        return <Minus size={16} color={COLORS.textSecondary} />;
+        return <Minus size={16} color={theme.color9?.val} />;
       default:
-        return <Minus size={16} color={COLORS.textSecondary} />;
+        return <Minus size={16} color={theme.color9?.val} />;
     }
   };
 
@@ -151,38 +155,38 @@ export const HealthTrends: React.FC<HealthTrendsProps> = ({ period, onPeriodChan
 
     return (
       <Card
-        padding="$4"
-        borderRadius="$3"
-        backgroundColor="$surface"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
         borderWidth={1}
-        borderColor="$borderColor"
-        marginBottom="$3"
+        borderColor="$color5"
+        marginBottom="$2"
       >
-        <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-          <H3 fontSize="$5" fontWeight="600" color="$text">
+        <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             {title}
-          </H3>
-          <XStack space="$2" alignItems="center">
+          </Text>
+          <XStack gap="$2" alignItems="center">
             {getTrendIcon(data.trend)}
-            <Text fontSize="$3" color="$textSecondary" fontWeight="600">
+            <Text fontSize="$3" color="$color10" fontWeight="600">
               {data.change}
             </Text>
           </XStack>
         </XStack>
 
-        <YStack space="$3">
+        <YStack gap="$2">
           {/* Current Value */}
           <XStack justifyContent="space-between" alignItems="baseline">
-            <Text fontSize="$3" color="$textSecondary">当前值</Text>
-            <Text fontSize="$6" fontWeight="bold" color="$text">
+            <Paragraph size="$3" color="$color10">当前值</Paragraph>
+            <Text fontSize="$6" fontWeight="700" color="$color12">
               {data.values[data.values.length - 1]} {data.unit}
             </Text>
           </XStack>
 
           {/* Mini Bar Chart */}
-          <YStack space="$2">
-            <Text fontSize="$3" color="$textSecondary">{period === 'week' ? '本周趋势' : period === 'month' ? '本月趋势' : '今年趋势'}</Text>
-            <XStack space="$1" alignItems="end" height={60}>
+          <YStack gap="$2">
+            <Paragraph size="$3" color="$color10">{period === 'week' ? '本周趋势' : period === 'month' ? '本月趋势' : '今年趋势'}</Paragraph>
+            <XStack gap="$1" alignItems="flex-end" height={60}>
               {data.values.map((value, index) => {
                 const height = ((value - minValue) / range) * 50 + 10;
                 return (
@@ -190,11 +194,11 @@ export const HealthTrends: React.FC<HealthTrendsProps> = ({ period, onPeriodChan
                     <View
                       height={height}
                       backgroundColor={color}
-                      borderRadius="$1"
+                      borderRadius="$2"
                       width="80%"
                       marginBottom="$1"
                     />
-                    <Text fontSize="$1" color="$textSecondary">
+                    <Text fontSize="$1" color="$color9">
                       {data.labels[index]}
                     </Text>
                   </YStack>
@@ -208,90 +212,90 @@ export const HealthTrends: React.FC<HealthTrendsProps> = ({ period, onPeriodChan
   };
 
   return (
-    <Theme name="light">
-      <Card
-        padding="$4"
-        borderRadius="$4"
-        backgroundColor="$cardBg"
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.1}
-        shadowRadius={8}
-        elevation={4}
-      >
-        <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-          <H3 fontSize="$6" color="$text" fontWeight="600">
-            健康趋势
-          </H3>
-          <XStack space="$1" backgroundColor="$surface" borderRadius="$3" padding="$1">
-            <Button
-              size="$2"
-              backgroundColor={period === 'week' ? '$primary' : 'transparent'}
-              onPress={() => onPeriodChange('week')}
-              paddingHorizontal="$3"
+    <Card
+      padding="$2"
+      borderRadius="$6"
+     
+      borderWidth={1}
+      borderColor="$color5"
+      shadowColor="$shadowColor"
+      shadowOffset={{ width: 0, height: 8 }}
+      shadowOpacity={0.12}
+      shadowRadius={16}
+      elevation={4}
+    >
+      <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+        <H4 color="$color12">
+          健康趋势
+        </H4>
+        <XStack gap="$1" backgroundColor="$color2" borderRadius="$10" padding="$1">
+          <Button
+            size="$2"
+            backgroundColor={period === 'week' ? '$primary' : 'transparent'}
+            onPress={() => onPeriodChange('week')}
+            paddingHorizontal="$3"
+          >
+            <Text
+              fontSize="$2"
+              color={period === 'week' ? 'white' : '$color10'}
+              fontWeight={period === 'week' ? '600' : '400'}
             >
-              <Text
-                fontSize="$2"
-                color={period === 'week' ? 'white' : '$textSecondary'}
-                fontWeight={period === 'week' ? '600' : '400'}
-              >
-                周
-              </Text>
-            </Button>
-            <Button
-              size="$2"
-              backgroundColor={period === 'month' ? '$primary' : 'transparent'}
-              onPress={() => onPeriodChange('month')}
-              paddingHorizontal="$3"
+              周
+            </Text>
+          </Button>
+          <Button
+            size="$2"
+            backgroundColor={period === 'month' ? '$primary' : 'transparent'}
+            onPress={() => onPeriodChange('month')}
+            paddingHorizontal="$3"
+          >
+            <Text
+              fontSize="$2"
+              color={period === 'month' ? 'white' : '$color10'}
+              fontWeight={period === 'month' ? '600' : '400'}
             >
-              <Text
-                fontSize="$2"
-                color={period === 'month' ? 'white' : '$textSecondary'}
-                fontWeight={period === 'month' ? '600' : '400'}
-              >
-                月
-              </Text>
-            </Button>
-            <Button
-              size="$2"
-              backgroundColor={period === 'year' ? '$primary' : 'transparent'}
-              onPress={() => onPeriodChange('year')}
-              paddingHorizontal="$3"
+              月
+            </Text>
+          </Button>
+          <Button
+            size="$2"
+            backgroundColor={period === 'year' ? '$primary' : 'transparent'}
+            onPress={() => onPeriodChange('year')}
+            paddingHorizontal="$3"
+          >
+            <Text
+              fontSize="$2"
+              color={period === 'year' ? 'white' : '$color10'}
+              fontWeight={period === 'year' ? '600' : '400'}
             >
-              <Text
-                fontSize="$2"
-                color={period === 'year' ? 'white' : '$textSecondary'}
-                fontWeight={period === 'year' ? '600' : '400'}
-              >
-                年
-              </Text>
-            </Button>
-          </XStack>
+              年
+            </Text>
+          </Button>
         </XStack>
+      </XStack>
 
-        <YStack space="$3">
-          <SimpleBarChart
-            data={healthData.weight}
-            color={COLORS.primary}
-            title="体重趋势"
-          />
-          <SimpleBarChart
-            data={healthData.bloodPressure}
-            color={COLORS.secondary}
-            title="血压趋势"
-          />
-          <SimpleBarChart
-            data={healthData.heartRate}
-            color={COLORS.error}
-            title="心率趋势"
-          />
-          <SimpleBarChart
-            data={healthData.sleep}
-            color={COLORS.accent}
-            title="睡眠趋势"
-          />
-        </YStack>
-      </Card>
-    </Theme>
+      <YStack gap="$2">
+        <SimpleBarChart
+          data={healthData.weight}
+          color={theme.primary?.val || '#6366F1'}
+          title="体重趋势"
+        />
+        <SimpleBarChart
+          data={healthData.bloodPressure}
+          color={theme.secondary?.val || '#22D3EE'}
+          title="血压趋势"
+        />
+        <SimpleBarChart
+          data={healthData.heartRate}
+          color={theme.error?.val || '#EF4444'}
+          title="心率趋势"
+        />
+        <SimpleBarChart
+          data={healthData.sleep}
+          color={theme.accent?.val || '#A78BFA'}
+          title="睡眠趋势"
+        />
+      </YStack>
+    </Card>
   );
 };

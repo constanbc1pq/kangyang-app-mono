@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, RefreshControl, Image } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   BookOpen,
@@ -15,7 +16,6 @@ import {
   Clock,
   Eye,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 // 专题类型
 interface SpecialTopic {
@@ -58,6 +58,14 @@ interface TopicProduct {
 
 const InsuranceSpecialTopicScreen: React.FC = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [topics, setTopics] = useState<SpecialTopic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<SpecialTopic | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,11 +73,11 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
 
   // 分类配置
   const categories = [
-    { id: 'all', label: '全部', icon: BookOpen, color: COLORS.text },
-    { id: 'elderly', label: '养老规划', icon: Heart, color: '#F59E0B' },
-    { id: 'family', label: '家庭保障', icon: Users, color: '#10B981' },
-    { id: 'health', label: '健康管理', icon: Shield, color: '#3B82F6' },
-    { id: 'wealth', label: '财富传承', icon: TrendingUp, color: '#8B5CF6' },
+    { id: 'all', label: '全部', icon: BookOpen, color: color12 },
+    { id: 'elderly', label: '养老规划', icon: Heart, color: warningColor },
+    { id: 'family', label: '家庭保障', icon: Users, color: successColor },
+    { id: 'health', label: '健康管理', icon: Shield, color: primaryColor },
+    { id: 'wealth', label: '财富传承', icon: TrendingUp, color: primaryColor },
   ];
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -386,15 +394,15 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
       <Pressable key={topic.id} onPress={() => handleTopicPress(topic)}>
         <View
           marginBottom="$4"
-          backgroundColor="$surface"
+          backgroundColor="$color2"
           borderRadius="$4"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
           overflow="hidden"
         >
           {/* 封面图 */}
           <View position="relative">
-            <View width="100%" height={180} backgroundColor="$borderColor">
+            <View width="100%" height={180} backgroundColor="$color5">
               <View
                 width="100%"
                 height="100%"
@@ -402,7 +410,7 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
                 alignItems="center"
                 backgroundColor="#E5E7EB"
               >
-                <Text fontSize="$4" color="$textSecondary">
+                <Text fontSize="$4" color="$color10">
                   专题封面
                 </Text>
               </View>
@@ -432,7 +440,7 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
               left={12}
               paddingHorizontal="$2"
               paddingVertical="$1"
-              backgroundColor={`${categoryConfig?.color || COLORS.text}DD`}
+              backgroundColor={`${categoryConfig?.color || color12}DD`}
               borderRadius="$2"
             >
               <Text fontSize="$2" fontWeight="600" color="white">
@@ -443,34 +451,34 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
 
           {/* 专题信息 */}
           <View padding="$4">
-            <Text fontSize="$5" fontWeight="700" color="$text" marginBottom="$1">
+            <Text fontSize="$5" fontWeight="700" color="$color12" marginBottom="$1">
               {topic.title}
             </Text>
-            <Text fontSize="$3" color="$textSecondary" marginBottom="$3">
+            <Text fontSize="$3" color="$color10" marginBottom="$3">
               {topic.subtitle}
             </Text>
-            <Text fontSize="$2" color="$textSecondary" lineHeight={20} marginBottom="$3">
+            <Text fontSize="$2" color="$color10" lineHeight={20} marginBottom="$3">
               {topic.description}
             </Text>
 
             {/* 内容统计 */}
-            <XStack gap="$4" marginBottom="$3">
+            <XStack gap="$3" marginBottom="$3">
               <XStack alignItems="center" gap="$1">
-                <BookOpen size={16} color={COLORS.primary} />
-                <Text fontSize="$2" color="$text">
+                <BookOpen size={16} color={primaryColor} />
+                <Text fontSize="$2" color="$color12">
                   {topic.articleCount}篇文章
                 </Text>
               </XStack>
               <XStack alignItems="center" gap="$1">
-                <Play size={16} color={COLORS.primary} />
-                <Text fontSize="$2" color="$text">
+                <Play size={16} color={primaryColor} />
+                <Text fontSize="$2" color="$color12">
                   {topic.videoCount}个视频
                 </Text>
               </XStack>
               {topic.productCount > 0 && (
                 <XStack alignItems="center" gap="$1">
-                  <Package size={16} color={COLORS.primary} />
-                  <Text fontSize="$2" color="$text">
+                  <Package size={16} color={primaryColor} />
+                  <Text fontSize="$2" color="$color12">
                     {topic.productCount}款产品
                   </Text>
                 </XStack>
@@ -484,10 +492,10 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
                   key={tag}
                   paddingHorizontal="$2"
                   paddingVertical="$1"
-                  backgroundColor="$borderColor"
+                  backgroundColor="$color5"
                   borderRadius="$2"
                 >
-                  <Text fontSize="$1" color="$textSecondary">
+                  <Text fontSize="$1" color="$color10">
                     #{tag}
                   </Text>
                 </View>
@@ -497,14 +505,14 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
             {/* 底部信息 */}
             <XStack justifyContent="space-between" alignItems="center">
               <XStack alignItems="center" gap="$1">
-                <Eye size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+                <Eye size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   {topic.viewCount.toLocaleString()} 次浏览
                 </Text>
               </XStack>
               <XStack alignItems="center" gap="$1">
-                <Clock size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+                <Clock size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   {topic.publishDate}
                 </Text>
               </XStack>
@@ -525,36 +533,36 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
         {/* 专题头部 */}
-        <View padding="$4" backgroundColor="$surface" borderBottomWidth={1} borderBottomColor="$borderColor">
+        <View padding="$4" backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
           <View
             paddingHorizontal="$2"
             paddingVertical="$1"
-            backgroundColor={`${categoryConfig?.color || COLORS.text}20`}
+            backgroundColor={`${categoryConfig?.color || color12}20`}
             borderRadius="$2"
             alignSelf="flex-start"
             marginBottom="$2"
           >
-            <Text fontSize="$2" fontWeight="600" color={categoryConfig?.color || COLORS.text}>
+            <Text fontSize="$2" fontWeight="600" color={categoryConfig?.color || color12}>
               {categoryConfig?.label}
             </Text>
           </View>
-          <Text fontSize="$6" fontWeight="700" color="$text" marginBottom="$2">
+          <Text fontSize="$6" fontWeight="700" color="$color12" marginBottom="$2">
             {topic.title}
           </Text>
-          <Text fontSize="$3" color="$textSecondary" marginBottom="$3">
+          <Text fontSize="$3" color="$color10" marginBottom="$3">
             {topic.subtitle}
           </Text>
-          <Text fontSize="$2" color="$textSecondary" lineHeight={20}>
+          <Text fontSize="$2" color="$color10" lineHeight={20}>
             {topic.description}
           </Text>
         </View>
 
         {/* 文章列表 */}
         {topic.articles.length > 0 && (
-          <View padding="$4" backgroundColor="$surface" marginTop="$3" borderTopWidth={1} borderTopColor="$borderColor">
+          <View padding="$4" backgroundColor="$color2" marginTop="$3" borderTopWidth={1} borderTopColor="$color5">
             <XStack alignItems="center" gap="$2" marginBottom="$3">
-              <BookOpen size={20} color={COLORS.primary} />
-              <Text fontSize="$4" fontWeight="700" color="$text">
+              <BookOpen size={20} color={primaryColor} />
+              <Text fontSize="$4" fontWeight="700" color="$color12">
                 精选文章 ({topic.articles.length})
               </Text>
             </XStack>
@@ -563,19 +571,19 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
                 <XStack
                   paddingVertical="$3"
                   borderBottomWidth={index < topic.articles.length - 1 ? 1 : 0}
-                  borderBottomColor="$borderColor"
+                  borderBottomColor="$color5"
                   alignItems="center"
                   justifyContent="space-between"
                 >
                   <YStack flex={1}>
-                    <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$1">
+                    <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
                       {article.title}
                     </Text>
-                    <Text fontSize="$2" color="$textSecondary">
+                    <Text fontSize="$2" color="$color10">
                       阅读时间 {article.readTime} 分钟
                     </Text>
                   </YStack>
-                  <ChevronRight size={20} color={COLORS.textSecondary} />
+                  <ChevronRight size={20} color={color10} />
                 </XStack>
               </Pressable>
             ))}
@@ -584,10 +592,10 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
 
         {/* 视频列表 */}
         {topic.videos.length > 0 && (
-          <View padding="$4" backgroundColor="$surface" marginTop="$3" borderTopWidth={1} borderTopColor="$borderColor">
+          <View padding="$4" backgroundColor="$color2" marginTop="$3" borderTopWidth={1} borderTopColor="$color5">
             <XStack alignItems="center" gap="$2" marginBottom="$3">
-              <Play size={20} color={COLORS.primary} />
-              <Text fontSize="$4" fontWeight="700" color="$text">
+              <Play size={20} color={primaryColor} />
+              <Text fontSize="$4" fontWeight="700" color="$color12">
                 视频课程 ({topic.videos.length})
               </Text>
             </XStack>
@@ -596,15 +604,15 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
                 <XStack
                   paddingVertical="$3"
                   borderBottomWidth={index < topic.videos.length - 1 ? 1 : 0}
-                  borderBottomColor="$borderColor"
+                  borderBottomColor="$color5"
                   alignItems="center"
                   justifyContent="space-between"
                 >
                   <YStack flex={1}>
-                    <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$1">
+                    <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
                       {video.title}
                     </Text>
-                    <Text fontSize="$2" color="$textSecondary">
+                    <Text fontSize="$2" color="$color10">
                       时长 {formatDuration(video.duration)}
                     </Text>
                   </YStack>
@@ -612,11 +620,11 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
                     width={40}
                     height={40}
                     borderRadius={20}
-                    backgroundColor={`${COLORS.primary}20`}
+                    backgroundColor={`${primaryColor}20`}
                     justifyContent="center"
                     alignItems="center"
                   >
-                    <Play size={20} color={COLORS.primary} fill={COLORS.primary} />
+                    <Play size={20} color={primaryColor} fill={primaryColor} />
                   </View>
                 </XStack>
               </Pressable>
@@ -626,10 +634,10 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
 
         {/* 推荐产品 */}
         {topic.products.length > 0 && (
-          <View padding="$4" backgroundColor="$surface" marginTop="$3" borderTopWidth={1} borderTopColor="$borderColor">
+          <View padding="$4" backgroundColor="$color2" marginTop="$3" borderTopWidth={1} borderTopColor="$color5">
             <XStack alignItems="center" gap="$2" marginBottom="$3">
-              <Package size={20} color={COLORS.primary} />
-              <Text fontSize="$4" fontWeight="700" color="$text">
+              <Package size={20} color={primaryColor} />
+              <Text fontSize="$4" fontWeight="700" color="$color12">
                 推荐产品 ({topic.products.length})
               </Text>
             </XStack>
@@ -638,28 +646,28 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
                 <View
                   paddingVertical="$3"
                   borderBottomWidth={index < topic.products.length - 1 ? 1 : 0}
-                  borderBottomColor="$borderColor"
+                  borderBottomColor="$color5"
                 >
                   <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$2">
                     <YStack flex={1}>
-                      <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
+                      <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1">
                         {product.name}
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary" marginBottom="$2">
+                      <Text fontSize="$2" color="$color10" marginBottom="$2">
                         {product.company}
                       </Text>
                     </YStack>
-                    <ChevronRight size={20} color={COLORS.textSecondary} />
+                    <ChevronRight size={20} color={color10} />
                   </XStack>
                   <View
                     paddingHorizontal="$3"
                     paddingVertical="$2"
-                    backgroundColor={`${COLORS.success}10`}
+                    backgroundColor={`${successColor}10`}
                     borderRadius="$2"
                     borderLeftWidth={3}
-                    borderLeftColor={COLORS.success}
+                    borderLeftColor={successColor}
                   >
-                    <Text fontSize="$2" color={COLORS.success} fontWeight="600">
+                    <Text fontSize="$2" color={successColor} fontWeight="600">
                       {product.highlight}
                     </Text>
                   </View>
@@ -673,7 +681,7 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
         <View padding="$4">
           <Pressable onPress={handleConsultation}>
             <View
-              backgroundColor={COLORS.primary}
+              backgroundColor={primaryColor}
               paddingVertical="$4"
               borderRadius="$3"
               alignItems="center"
@@ -695,21 +703,29 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
     return (
       <View flex={1} backgroundColor="$background">
         {/* Header */}
-        <XStack
-          height={56}
-          alignItems="center"
-          paddingHorizontal="$4"
-          backgroundColor="$surface"
+        <View
+          paddingTop={insets.top}
+          backgroundColor="$color2"
           borderBottomWidth={1}
-          borderBottomColor="$borderColor"
+          borderBottomColor="$color5"
         >
-          <Pressable onPress={handleBackToList}>
-            <ArrowLeft size={24} color={COLORS.text} />
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-            专题详情
-          </Text>
-        </XStack>
+          <XStack
+            height={56}
+            paddingHorizontal="$2.5"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Pressable onPress={handleBackToList}>
+              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+                <ArrowLeft size={24} color={color12} />
+              </View>
+            </Pressable>
+            <Text fontSize="$5" fontWeight="600" color="$color12">
+              专题详情
+            </Text>
+            <View width={40} />
+          </XStack>
+        </View>
 
         {renderTopicDetail(selectedTopic)}
       </View>
@@ -720,21 +736,29 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-          专题策划
-        </Text>
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            专题策划
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -755,9 +779,9 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
                     paddingHorizontal="$3"
                     paddingVertical="$2"
                     borderRadius="$3"
-                    backgroundColor={isSelected ? category.color : '$surface'}
+                    backgroundColor={isSelected ? category.color : '$color2'}
                     borderWidth={1}
-                    borderColor={isSelected ? category.color : '$borderColor'}
+                    borderColor={isSelected ? category.color : '$color5'}
                   >
                     <XStack alignItems="center" gap="$2">
                       <Icon size={16} color={isSelected ? 'white' : category.color} />
@@ -780,17 +804,17 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
         <View paddingHorizontal="$4">
           {loading && topics.length === 0 ? (
             <View padding="$8" alignItems="center">
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 加载中...
               </Text>
             </View>
           ) : topics.length === 0 ? (
             <View padding="$8" alignItems="center">
-              <BookOpen size={48} color={COLORS.textSecondary} />
-              <Text fontSize="$4" color="$text" marginTop="$4">
+              <BookOpen size={48} color={color10} />
+              <Text fontSize="$4" color="$color12" marginTop="$4">
                 暂无专题
               </Text>
-              <Text fontSize="$3" color="$textSecondary" marginTop="$2">
+              <Text fontSize="$3" color="$color10" marginTop="$2">
                 请选择其他分类
               </Text>
             </View>

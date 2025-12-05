@@ -11,11 +11,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { YStack, XStack, Text, View, Button, Separator, H4 } from 'tamagui';
-import { Modal, Pressable, ScrollView } from 'react-native';
-import { X, Check } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
+import { YStack, XStack, Text, View, Button, Separator, useTheme } from 'tamagui';
+import { Pressable } from 'react-native';
+import { Check } from 'lucide-react-native';
 import { HospitalLevel } from '@/types/privateDoctor';
+import { BottomSheet } from './BottomSheet';
 
 interface FilterOptions {
   departments?: string[];
@@ -41,6 +41,9 @@ export const DoctorFilterPanel: React.FC<DoctorFilterPanelProps> = ({
   onApply,
   initialFilters = {},
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+
   const [filters, setFilters] = useState<FilterOptions>(initialFilters);
 
   useEffect(() => {
@@ -96,7 +99,6 @@ export const DoctorFilterPanel: React.FC<DoctorFilterPanelProps> = ({
 
   const handlePriceRangeSelect = (minPrice?: number, maxPrice?: number) => {
     setFilters((prev) => {
-      // 如果点击的是当前选中的价格区间，则取消选择
       if (prev.minPrice === minPrice && prev.maxPrice === maxPrice) {
         const { minPrice: _, maxPrice: __, ...rest } = prev;
         return rest;
@@ -173,415 +175,215 @@ export const DoctorFilterPanel: React.FC<DoctorFilterPanelProps> = ({
     return count;
   };
 
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+  // 渲染筛选标签
+  const renderFilterChip = (
+    label: string,
+    isSelected: boolean,
+    onPress: () => void
+  ) => (
+    <Pressable onPress={onPress}>
       <View
-        flex={1}
-        backgroundColor="rgba(0,0,0,0.5)"
-        justifyContent="flex-end"
+        backgroundColor={isSelected ? primaryColor : '$color1'}
+        paddingHorizontal="$2"
+        paddingVertical="$1.5"
+        borderRadius="$3"
+        borderWidth={1}
+        borderColor={isSelected ? primaryColor : '$color5'}
+        marginBottom="$2"
+        marginRight="$2"
       >
-        <Pressable
-          style={{ flex: 1 }}
-          onPress={onClose}
-        />
-
-        <View
-          backgroundColor="$background"
-          borderTopLeftRadius="$5"
-          borderTopRightRadius="$5"
-          maxHeight="80%"
-        >
-          {/* Header */}
-          <XStack
-            justifyContent="space-between"
-            alignItems="center"
-            padding="$4"
-            borderBottomWidth={1}
-            borderBottomColor="$borderColor"
+        <XStack gap="$1" alignItems="center">
+          {isSelected && <Check size={14} color="white" />}
+          <Text
+            fontSize="$3"
+            color={isSelected ? 'white' : '$color12'}
+            fontWeight={isSelected ? '600' : '400'}
           >
-            <H4 fontSize="$5" fontWeight="700" color="$text">
-              筛选条件
-            </H4>
-            <Pressable onPress={onClose}>
-              <X size={24} color={COLORS.text} />
-            </Pressable>
-          </XStack>
-
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <YStack padding="$4" space="$4">
-              {/* 科室分类 */}
-              <YStack space="$2">
-                <Text fontSize="$4" fontWeight="600" color="$text">
-                  科室分类
-                </Text>
-                <XStack space="$2" flexWrap="wrap">
-                  {departments.map((dept) => {
-                    const isSelected = filters.departments?.includes(dept.value);
-                    return (
-                      <Pressable
-                        key={dept.value}
-                        onPress={() => handleDepartmentToggle(dept.value)}
-                      >
-                        <View
-                          backgroundColor={
-                            isSelected ? COLORS.primary : '$surface'
-                          }
-                          paddingHorizontal="$3"
-                          paddingVertical="$2"
-                          borderRadius="$3"
-                          borderWidth={1}
-                          borderColor={
-                            isSelected ? COLORS.primary : '$borderColor'
-                          }
-                          marginBottom="$2"
-                        >
-                          <XStack space="$1" alignItems="center">
-                            {isSelected && (
-                              <Check size={14} color="white" />
-                            )}
-                            <Text
-                              fontSize="$3"
-                              color={isSelected ? 'white' : '$text'}
-                              fontWeight={isSelected ? '600' : '400'}
-                            >
-                              {dept.label}
-                            </Text>
-                          </XStack>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </XStack>
-              </YStack>
-
-              <Separator borderColor="$borderColor" />
-
-              {/* 医院等级 */}
-              <YStack space="$2">
-                <Text fontSize="$4" fontWeight="600" color="$text">
-                  医院等级
-                </Text>
-                <XStack space="$2" flexWrap="wrap">
-                  {hospitalLevels.map((level) => {
-                    const isSelected = filters.hospitalLevel === level.value;
-                    return (
-                      <Pressable
-                        key={level.value}
-                        onPress={() => handleHospitalLevelSelect(level.value)}
-                      >
-                        <View
-                          backgroundColor={
-                            isSelected ? COLORS.primary : '$surface'
-                          }
-                          paddingHorizontal="$3"
-                          paddingVertical="$2"
-                          borderRadius="$3"
-                          borderWidth={1}
-                          borderColor={
-                            isSelected ? COLORS.primary : '$borderColor'
-                          }
-                          marginBottom="$2"
-                        >
-                          <XStack space="$1" alignItems="center">
-                            {isSelected && (
-                              <Check size={14} color="white" />
-                            )}
-                            <Text
-                              fontSize="$3"
-                              color={isSelected ? 'white' : '$text'}
-                              fontWeight={isSelected ? '600' : '400'}
-                            >
-                              {level.label}
-                            </Text>
-                          </XStack>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </XStack>
-              </YStack>
-
-              <Separator borderColor="$borderColor" />
-
-              {/* 价格区间 */}
-              <YStack space="$2">
-                <Text fontSize="$4" fontWeight="600" color="$text">
-                  年费区间
-                </Text>
-                <XStack space="$2" flexWrap="wrap">
-                  {priceRanges.map((range, index) => {
-                    const isSelected =
-                      filters.minPrice === range.minPrice &&
-                      filters.maxPrice === range.maxPrice;
-                    return (
-                      <Pressable
-                        key={index}
-                        onPress={() =>
-                          handlePriceRangeSelect(range.minPrice, range.maxPrice)
-                        }
-                      >
-                        <View
-                          backgroundColor={
-                            isSelected ? COLORS.primary : '$surface'
-                          }
-                          paddingHorizontal="$3"
-                          paddingVertical="$2"
-                          borderRadius="$3"
-                          borderWidth={1}
-                          borderColor={
-                            isSelected ? COLORS.primary : '$borderColor'
-                          }
-                          marginBottom="$2"
-                        >
-                          <XStack space="$1" alignItems="center">
-                            {isSelected && (
-                              <Check size={14} color="white" />
-                            )}
-                            <Text
-                              fontSize="$3"
-                              color={isSelected ? 'white' : '$text'}
-                              fontWeight={isSelected ? '600' : '400'}
-                            >
-                              {range.label}
-                            </Text>
-                          </XStack>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </XStack>
-              </YStack>
-
-              <Separator borderColor="$borderColor" />
-
-              {/* 服务特色 */}
-              <YStack space="$2">
-                <Text fontSize="$4" fontWeight="600" color="$text">
-                  服务特色
-                </Text>
-
-                {/* 在线咨询 */}
-                <Pressable onPress={handleOnlineToggle}>
-                  <XStack
-                    justifyContent="space-between"
-                    alignItems="center"
-                    padding="$3"
-                    backgroundColor="$surface"
-                    borderRadius="$3"
-                    borderWidth={1}
-                    borderColor={
-                      filters.isOnline ? COLORS.primary : '$borderColor'
-                    }
-                  >
-                    <XStack space="$2" alignItems="center">
-                      <View
-                        width={20}
-                        height={20}
-                        borderRadius={10}
-                        borderWidth={2}
-                        borderColor={
-                          filters.isOnline ? COLORS.primary : '$borderColor'
-                        }
-                        backgroundColor={
-                          filters.isOnline ? COLORS.primary : 'transparent'
-                        }
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        {filters.isOnline && (
-                          <Check size={12} color="white" />
-                        )}
-                      </View>
-                      <Text fontSize="$3" color="$text">
-                        支持在线咨询
-                      </Text>
-                    </XStack>
-                  </XStack>
-                </Pressable>
-
-                {/* 海外进修 */}
-                <Pressable onPress={handleOverseasToggle}>
-                  <XStack
-                    justifyContent="space-between"
-                    alignItems="center"
-                    padding="$3"
-                    backgroundColor="$surface"
-                    borderRadius="$3"
-                    borderWidth={1}
-                    borderColor={
-                      filters.hasOverseasTraining
-                        ? COLORS.primary
-                        : '$borderColor'
-                    }
-                  >
-                    <XStack space="$2" alignItems="center">
-                      <View
-                        width={20}
-                        height={20}
-                        borderRadius={10}
-                        borderWidth={2}
-                        borderColor={
-                          filters.hasOverseasTraining
-                            ? COLORS.primary
-                            : '$borderColor'
-                        }
-                        backgroundColor={
-                          filters.hasOverseasTraining
-                            ? COLORS.primary
-                            : 'transparent'
-                        }
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        {filters.hasOverseasTraining && (
-                          <Check size={12} color="white" />
-                        )}
-                      </View>
-                      <Text fontSize="$3" color="$text">
-                        有海外进修经历
-                      </Text>
-                    </XStack>
-                  </XStack>
-                </Pressable>
-              </YStack>
-
-              <Separator borderColor="$borderColor" />
-
-              {/* 特殊标签筛选 */}
-              <YStack space="$2">
-                <Text fontSize="$4" fontWeight="600" color="$text">
-                  特色服务标签
-                </Text>
-                <XStack space="$2" flexWrap="wrap">
-                  {specialTags.map((tag) => {
-                    const isSelected = filters.specialTags?.includes(tag.value);
-                    return (
-                      <Pressable
-                        key={tag.value}
-                        onPress={() => handleSpecialTagToggle(tag.value)}
-                      >
-                        <View
-                          backgroundColor={
-                            isSelected ? COLORS.primary : '$surface'
-                          }
-                          paddingHorizontal="$3"
-                          paddingVertical="$2"
-                          borderRadius="$3"
-                          borderWidth={1}
-                          borderColor={
-                            isSelected ? COLORS.primary : '$borderColor'
-                          }
-                          marginBottom="$2"
-                        >
-                          <XStack space="$1" alignItems="center">
-                            {isSelected && (
-                              <Check size={14} color="white" />
-                            )}
-                            <Text
-                              fontSize="$3"
-                              color={isSelected ? 'white' : '$text'}
-                              fontWeight={isSelected ? '600' : '400'}
-                            >
-                              {tag.label}
-                            </Text>
-                          </XStack>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </XStack>
-              </YStack>
-
-              <Separator borderColor="$borderColor" />
-
-              {/* 排序方式 */}
-              <YStack space="$2">
-                <Text fontSize="$4" fontWeight="600" color="$text">
-                  排序方式
-                </Text>
-                <XStack space="$2" flexWrap="wrap">
-                  {sortOptions.map((option) => {
-                    const isSelected = filters.sortBy === option.value;
-                    return (
-                      <Pressable
-                        key={option.value}
-                        onPress={() => handleSortBySelect(option.value as FilterOptions['sortBy'])}
-                      >
-                        <View
-                          backgroundColor={
-                            isSelected ? COLORS.primary : '$surface'
-                          }
-                          paddingHorizontal="$3"
-                          paddingVertical="$2"
-                          borderRadius="$3"
-                          borderWidth={1}
-                          borderColor={
-                            isSelected ? COLORS.primary : '$borderColor'
-                          }
-                          marginBottom="$2"
-                        >
-                          <XStack space="$1" alignItems="center">
-                            {isSelected && (
-                              <Check size={14} color="white" />
-                            )}
-                            <Text
-                              fontSize="$3"
-                              color={isSelected ? 'white' : '$text'}
-                              fontWeight={isSelected ? '600' : '400'}
-                            >
-                              {option.label}
-                            </Text>
-                          </XStack>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </XStack>
-              </YStack>
-            </YStack>
-          </ScrollView>
-
-          {/* Footer Buttons */}
-          <View
-            padding="$4"
-            borderTopWidth={1}
-            borderTopColor="$borderColor"
-            backgroundColor="$background"
-          >
-            <XStack space="$3">
-              <Button
-                flex={1}
-                size="$4"
-                backgroundColor="$surface"
-                color="$text"
-                borderRadius="$3"
-                borderWidth={1}
-                borderColor="$borderColor"
-                onPress={handleReset}
-              >
-                重置
-              </Button>
-              <Button
-                flex={2}
-                size="$4"
-                backgroundColor={COLORS.primary}
-                color="white"
-                borderRadius="$3"
-                fontWeight="600"
-                onPress={handleApply}
-              >
-                应用筛选
-                {getActiveFilterCount() > 0 && ` (${getActiveFilterCount()})`}
-              </Button>
-            </XStack>
-          </View>
-        </View>
+            {label}
+          </Text>
+        </XStack>
       </View>
-    </Modal>
+    </Pressable>
+  );
+
+  // 渲染复选框选项
+  const renderCheckbox = (
+    label: string,
+    isChecked: boolean,
+    onPress: () => void
+  ) => (
+    <Pressable onPress={onPress}>
+      <XStack
+        justifyContent="space-between"
+        alignItems="center"
+        padding="$2"
+        backgroundColor="$color1"
+        borderRadius="$3"
+        borderWidth={1}
+        borderColor={isChecked ? primaryColor : '$color5'}
+      >
+        <XStack gap="$2" alignItems="center">
+          <View
+            width={20}
+            height={20}
+            borderRadius="$10"
+            borderWidth={2}
+            borderColor={isChecked ? primaryColor : '$color6'}
+            backgroundColor={isChecked ? primaryColor : 'transparent'}
+            justifyContent="center"
+            alignItems="center"
+          >
+            {isChecked && <Check size={12} color="white" />}
+          </View>
+          <Text fontSize="$3" color="$color12">
+            {label}
+          </Text>
+        </XStack>
+      </XStack>
+    </Pressable>
+  );
+
+  return (
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      title="筛选条件"
+      variant="filter"
+      headerRight={
+        <Pressable onPress={handleReset}>
+          <Text fontSize="$3" color="$color10">
+            重置
+          </Text>
+        </Pressable>
+      }
+      footer={
+        <XStack gap="$2">
+          <Button
+            flex={1}
+            size="$4"
+            backgroundColor="$color4"
+            color="$color12"
+            borderRadius="$3"
+            onPress={handleReset}
+          >
+            重置
+          </Button>
+          <Button
+            flex={2}
+            size="$4"
+            backgroundColor="$primary"
+            color="white"
+            borderRadius="$3"
+            fontWeight="600"
+            onPress={handleApply}
+          >
+            应用筛选{getActiveFilterCount() > 0 && ` (${getActiveFilterCount()})`}
+          </Button>
+        </XStack>
+      }
+    >
+      <YStack gap="$4">
+        {/* 科室分类 */}
+        <YStack gap="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12">
+            科室分类
+          </Text>
+          <XStack flexWrap="wrap">
+            {departments.map((dept) =>
+              renderFilterChip(
+                dept.label,
+                filters.departments?.includes(dept.value) || false,
+                () => handleDepartmentToggle(dept.value)
+              )
+            )}
+          </XStack>
+        </YStack>
+
+        <Separator borderColor="$color5" />
+
+        {/* 医院等级 */}
+        <YStack gap="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12">
+            医院等级
+          </Text>
+          <XStack flexWrap="wrap">
+            {hospitalLevels.map((level) =>
+              renderFilterChip(
+                level.label,
+                filters.hospitalLevel === level.value,
+                () => handleHospitalLevelSelect(level.value)
+              )
+            )}
+          </XStack>
+        </YStack>
+
+        <Separator borderColor="$color5" />
+
+        {/* 价格区间 */}
+        <YStack gap="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12">
+            年费区间
+          </Text>
+          <XStack flexWrap="wrap">
+            {priceRanges.map((range, index) =>
+              renderFilterChip(
+                range.label,
+                filters.minPrice === range.minPrice && filters.maxPrice === range.maxPrice,
+                () => handlePriceRangeSelect(range.minPrice, range.maxPrice)
+              )
+            )}
+          </XStack>
+        </YStack>
+
+        <Separator borderColor="$color5" />
+
+        {/* 服务特色 */}
+        <YStack gap="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12">
+            服务特色
+          </Text>
+          <YStack gap="$2">
+            {renderCheckbox('支持在线咨询', filters.isOnline || false, handleOnlineToggle)}
+            {renderCheckbox('有海外进修经历', filters.hasOverseasTraining || false, handleOverseasToggle)}
+          </YStack>
+        </YStack>
+
+        <Separator borderColor="$color5" />
+
+        {/* 特殊标签筛选 */}
+        <YStack gap="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12">
+            特色服务标签
+          </Text>
+          <XStack flexWrap="wrap">
+            {specialTags.map((tag) =>
+              renderFilterChip(
+                tag.label,
+                filters.specialTags?.includes(tag.value) || false,
+                () => handleSpecialTagToggle(tag.value)
+              )
+            )}
+          </XStack>
+        </YStack>
+
+        <Separator borderColor="$color5" />
+
+        {/* 排序方式 */}
+        <YStack gap="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12">
+            排序方式
+          </Text>
+          <XStack flexWrap="wrap">
+            {sortOptions.map((option) =>
+              renderFilterChip(
+                option.label,
+                filters.sortBy === option.value,
+                () => handleSortBySelect(option.value as FilterOptions['sortBy'])
+              )
+            )}
+          </XStack>
+        </YStack>
+      </YStack>
+    </BottomSheet>
   );
 };

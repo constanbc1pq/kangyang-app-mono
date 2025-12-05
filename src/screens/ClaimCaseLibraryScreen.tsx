@@ -239,7 +239,7 @@ const ClaimCaseLibraryScreen: React.FC = () => {
             </Text>
 
             {/* 关键数据 */}
-            <XStack gap="$4" marginBottom="$3">
+            <XStack gap="$3" marginBottom="$3">
               <XStack alignItems="center" gap="$1">
                 <DollarSign size={16} color={caseItem.isSuccessful ? COLORS.success : COLORS.textSecondary} />
                 <Text fontSize="$2" color="$textSecondary">

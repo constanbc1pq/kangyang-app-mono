@@ -10,7 +10,7 @@
  * - Knowledge base tabs (articles, videos, cases)
  * - Membership center entry
  *
- * Design: Following PrivateDoctor and ElderlyService patterns
+ * Design: Following CLAUDE.md specs
  */
 
 import React, { useState } from 'react';
@@ -18,20 +18,14 @@ import {
   YStack,
   XStack,
   Text,
-  Card,
   View,
-  H3,
-  H4,
-  Theme,
   ScrollView,
-  Button,
-  Separator,
+  useTheme,
 } from 'tamagui';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Pressable, Dimensions, FlatList, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, Dimensions, FlatList, Image as RNImage } from 'react-native';
 import {
   ArrowLeft,
-  Scale,
   FileText,
   MessageCircle,
   ClipboardCheck,
@@ -45,19 +39,34 @@ import {
   Video,
   FileStack,
   Star,
-  Award,
   CheckCircle,
-  PlayCircle,
   ChevronRight,
   Crown,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLawyers } from '@/services/legalService';
+import { getAvatarSource } from '@/constants/avatars';
+import { LawyerSpecialty } from '@/types/legalService';
 
 const { width } = Dimensions.get('window');
+const GOLD_COLOR = '#D4AF37';
+
+// 律师专业领域中文映射
+const SPECIALTY_LABELS: Record<string, string> = {
+  [LawyerSpecialty.INHERITANCE]: '遗嘱继承',
+  [LawyerSpecialty.ELDER_CARE]: '养老赡养',
+  [LawyerSpecialty.PROPERTY]: '房产纠纷',
+  [LawyerSpecialty.MARRIAGE]: '婚姻家庭',
+  [LawyerSpecialty.CONTRACT]: '合同纠纷',
+  [LawyerSpecialty.CONSUMER_RIGHTS]: '消费维权',
+  [LawyerSpecialty.MEDICAL]: '医疗纠纷',
+  [LawyerSpecialty.LABOR]: '劳动争议',
+};
+
+const getSpecialtyLabel = (specialty: string): string => {
+  return SPECIALTY_LABELS[specialty] || specialty;
+};
 
 // ==================== Type Definitions ====================
 
@@ -68,7 +77,7 @@ interface QuickAccessItem {
   title: string;
   subtitle: string;
   icon: any;
-  color: string;
+  colorKey: 'primary' | 'success' | 'warning' | 'color10';
   screen: string;
 }
 
@@ -77,20 +86,9 @@ interface ServiceCategory {
   name: string;
   description: string;
   icon: any;
-  color: string;
+  colorKey: 'primary' | 'success' | 'warning' | 'error' | 'color10';
   screen: string;
   badge?: string;
-}
-
-interface RecommendedLawyer {
-  id: string;
-  name: string;
-  title: string;
-  specialty: string;
-  experience: number;
-  rating: number;
-  cases: number;
-  verified: boolean;
 }
 
 interface KnowledgeItem {
@@ -106,16 +104,37 @@ interface LegalServiceHomeScreenProps {
 }
 
 const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const errorColor = theme.error?.val;
+  const warningColor = theme.warning?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [selectedTab, setSelectedTab] = useState<KnowledgeTab>('articles');
   const [lawyers, setLawyers] = useState<any[]>([]);
   const [loadingLawyers, setLoadingLawyers] = useState(true);
+
+  // Helper to get color by key
+  const getColor = (key: string) => {
+    switch (key) {
+      case 'primary': return primaryColor;
+      case 'success': return successColor;
+      case 'warning': return warningColor;
+      case 'error': return errorColor;
+      case 'color10': return color10;
+      default: return primaryColor;
+    }
+  };
 
   // 加载律师数据
   const loadLawyersData = async () => {
     try {
       setLoadingLawyers(true);
       const lawyersData = await getLawyers();
-      setLawyers(lawyersData.slice(0, 4)); // 只显示前4个律师
+      setLawyers(lawyersData.slice(0, 4));
     } catch (error) {
       console.error('Failed to load lawyers:', error);
       setLawyers([]);
@@ -124,11 +143,8 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
     }
   };
 
-  // 刷新数据
   useFocusEffect(
     React.useCallback(() => {
-      // 页面获得焦点时刷新数据
-      console.log('LegalServiceHome focused - refreshing data');
       loadLawyersData();
     }, [])
   );
@@ -141,7 +157,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       title: '立即制作遗嘱',
       subtitle: '简单3步完成',
       icon: FileText,
-      color: COLORS.primary,
+      colorKey: 'primary',
       screen: 'WillCreator',
     },
     {
@@ -149,7 +165,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       title: '咨询律师',
       subtitle: '专业解答',
       icon: MessageCircle,
-      color: COLORS.success,
+      colorKey: 'success',
       screen: 'LawyerList',
     },
     {
@@ -157,7 +173,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       title: '法律体检',
       subtitle: '风险评估',
       icon: ClipboardCheck,
-      color: COLORS.warning,
+      colorKey: 'warning',
       screen: 'LegalCheckup',
     },
     {
@@ -165,7 +181,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       title: '我的遗嘱',
       subtitle: '查看管理',
       icon: Shield,
-      color: COLORS.secondary,
+      colorKey: 'color10',
       screen: 'MyWills',
     },
   ];
@@ -176,7 +192,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       name: '遗嘱服务',
       description: '遗嘱制作、公证、保管',
       icon: FileText,
-      color: COLORS.primary,
+      colorKey: 'primary',
       screen: 'WillCreator',
       badge: '热门',
     },
@@ -185,7 +201,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       name: '意定监护',
       description: '监护人指定、协议签署',
       icon: Users,
-      color: COLORS.secondary,
+      colorKey: 'color10',
       screen: 'GuardianshipCreator',
     },
     {
@@ -193,7 +209,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       name: '财产规划',
       description: '资产盘点、继承规划',
       icon: Home,
-      color: COLORS.success,
+      colorKey: 'success',
       screen: 'PropertyInventory',
     },
     {
@@ -201,7 +217,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       name: '养老赡养',
       description: '赡养协议、权益保障',
       icon: Heart,
-      color: COLORS.error,
+      colorKey: 'error',
       screen: 'DocumentTemplate',
     },
     {
@@ -209,7 +225,7 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       name: '消费维权',
       description: '合同审查、纠纷调解',
       icon: ShoppingCart,
-      color: COLORS.warning,
+      colorKey: 'warning',
       screen: 'ContractReview',
     },
     {
@@ -217,13 +233,10 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
       name: '案件委托',
       description: '诉讼代理、法律援助',
       icon: Briefcase,
-      color: COLORS.accent,
+      colorKey: 'primary',
       screen: 'CaseDelegation',
     },
   ];
-
-  // Lawyers data now loaded from @kangyang_lawyers storage
-  // const RECOMMENDED_LAWYERS: RecommendedLawyer[] = [];
 
   const KNOWLEDGE_ARTICLES: KnowledgeItem[] = [
     {
@@ -324,234 +337,217 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
   // ==================== Render ====================
 
   return (
-    <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-          <YStack space="$4" paddingBottom="$6">
-            {/* Header */}
-            <XStack
-              height={56}
-              alignItems="center"
-              paddingHorizontal="$4"
-              backgroundColor="$background"
-            >
-              <Pressable onPress={() => navigation.goBack()}>
-                <ArrowLeft size={24} color={COLORS.text} />
-              </Pressable>
-              <Text fontSize="$6" fontWeight="600" color="$text" marginLeft="$3">
-                遗嘱及法律服务
-              </Text>
-            </XStack>
-
-            {/* Video Banner */}
-            <View paddingHorizontal="$4">
-              <View borderRadius="$4" overflow="hidden">
-                <LinearGradient
-                  colors={['#8b5cf6', '#6366f1']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ height: 180 }}
-                >
-                  <View flex={1} justifyContent="center" alignItems="center">
-                    <View
-                      width={64}
-                      height={64}
-                      borderRadius={32}
-                      backgroundColor="rgba(255,255,255,0.3)"
-                      justifyContent="center"
-                      alignItems="center"
-                      marginBottom="$3"
-                    >
-                      <PlayCircle size={32} color="white" />
-                    </View>
-                    <Text fontSize="$6" fontWeight="700" color="white" marginBottom="$2">
-                      法律知识科普
-                    </Text>
-                    <Text fontSize="$3" color="rgba(255,255,255,0.9)">
-                      了解遗嘱与法律的基本知识
-                    </Text>
-                  </View>
-                </LinearGradient>
-              </View>
+    <View flex={1} backgroundColor="$background">
+      {/* TitleBar */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
+        borderBottomWidth={1}
+        borderBottomColor="$color5"
+      >
+        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
             </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            遗嘱及法律服务
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
-            {/* Membership Promotion Banner */}
-            <View paddingHorizontal="$4" marginBottom="$1">
-              <Card
-                padding="$0"
-                borderRadius="$4"
-                backgroundColor="$cardBg"
-                overflow="hidden"
-                pressStyle={{ scale: 0.98 }}
-                shadowColor="$shadow"
-                shadowOffset={{ width: 0, height: 2 }}
-                shadowOpacity={0.1}
-                shadowRadius={8}
-                elevation={4}
-                onPress={handleMembershipCenter}
+      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+        <YStack gap="$3" paddingBottom="$6">
+          {/* Partnership Banner */}
+          <View paddingHorizontal="$2.5" paddingTop="$2">
+            <View borderRadius="$5" overflow="hidden">
+              <LinearGradient
+                colors={[primaryColor || '#6366f1', successColor || '#10b981']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ padding: 18 }}
               >
+                <YStack>
+                  <Text fontSize="$5" fontWeight="700" color="white" marginBottom="$1.5">
+                    专业法律服务平台
+                  </Text>
+                  <Text fontSize="$3" color="rgba(255,255,255,0.95)" lineHeight={20} marginBottom="$2">
+                    与北京大学法学院、中国政法大学、华东政法大学等顶级法学院校深度合作，联合金杜、中伦、君合等知名律所资源
+                  </Text>
+                  <XStack gap="$4" marginTop="$1">
+                    <YStack alignItems="center">
+                      <Text fontSize="$6" fontWeight="700" color="white">20+</Text>
+                      <Text fontSize="$2" color="rgba(255,255,255,0.85)">合作院校</Text>
+                    </YStack>
+                    <YStack alignItems="center">
+                      <Text fontSize="$6" fontWeight="700" color="white">50+</Text>
+                      <Text fontSize="$2" color="rgba(255,255,255,0.85)">认证律所</Text>
+                    </YStack>
+                    <YStack alignItems="center">
+                      <Text fontSize="$6" fontWeight="700" color="white">200+</Text>
+                      <Text fontSize="$2" color="rgba(255,255,255,0.85)">认证律师</Text>
+                    </YStack>
+                  </XStack>
+                </YStack>
+              </LinearGradient>
+            </View>
+          </View>
+
+          {/* Membership Promotion Banner */}
+          <View paddingHorizontal="$2.5">
+            <Pressable onPress={handleMembershipCenter}>
+              <View borderRadius="$5" overflow="hidden">
                 <LinearGradient
                   colors={['#fef3c7', '#fde68a']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={{ padding: 16 }}
+                  style={{ padding: 14 }}
                 >
-                  <XStack alignItems="center" space="$3">
+                  <XStack alignItems="center" gap="$2.5">
                     <View
-                      width={56}
-                      height={56}
-                      borderRadius={28}
+                      width={48}
+                      height={48}
+                      borderRadius={24}
                       backgroundColor="rgba(251, 191, 36, 0.3)"
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Crown size={28} color="#f59e0b" />
+                      <Crown size={24} color={GOLD_COLOR} />
                     </View>
                     <YStack flex={1}>
-                      <Text fontSize="$5" fontWeight="700" color="#92400e" marginBottom="$1">
+                      <Text fontSize="$4" fontWeight="700" color="#92400e" marginBottom="$0.5">
                         开通尊享计划
                       </Text>
-                      <Text fontSize="$3" color="#78350f">
+                      <Text fontSize="$2" color="#78350f">
                         专属服务 · 优先咨询 · 无限次使用
                       </Text>
                     </YStack>
-                    <ChevronRight size={24} color="#92400e" />
+                    <ChevronRight size={20} color="#92400e" />
                   </XStack>
                 </LinearGradient>
-              </Card>
-            </View>
+              </View>
+            </Pressable>
+          </View>
 
-            {/* Quick Access Grid */}
-            <YStack space="$3" paddingHorizontal="$4">
-              <H3 fontSize="$6" fontWeight="600" color="$text">
-                快速入口
-              </H3>
-              <XStack space="$3">
-                <XStack flex={1} space="$3">
-                  {QUICK_ACCESS.slice(0, 2).map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <Card
-                        key={item.id}
-                        flex={1}
-                        padding="$4"
-                        borderRadius="$4"
-                        backgroundColor="$cardBg"
-                        pressStyle={{ scale: 0.98 }}
-                        shadowColor="$shadow"
-                        shadowOffset={{ width: 0, height: 2 }}
-                        shadowOpacity={0.1}
-                        shadowRadius={8}
-                        elevation={4}
-                        onPress={() => handleQuickAccess(item.screen)}
-                      >
-                        <View
-                          width={48}
-                          height={48}
-                          borderRadius={24}
-                          backgroundColor={`${item.color}15`}
-                          justifyContent="center"
-                          alignItems="center"
-                          marginBottom="$3"
-                        >
-                          <IconComponent size={24} color={item.color} />
-                        </View>
-                        <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
-                          {item.title}
-                        </Text>
-                        <Text fontSize="$2" color="$textSecondary">
-                          {item.subtitle}
-                        </Text>
-                      </Card>
-                    );
-                  })}
-                </XStack>
-              </XStack>
-              <XStack space="$3">
-                <XStack flex={1} space="$3">
-                  {QUICK_ACCESS.slice(2, 4).map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <Card
-                        key={item.id}
-                        flex={1}
-                        padding="$4"
-                        borderRadius="$4"
-                        backgroundColor="$cardBg"
-                        pressStyle={{ scale: 0.98 }}
-                        shadowColor="$shadow"
-                        shadowOffset={{ width: 0, height: 2 }}
-                        shadowOpacity={0.1}
-                        shadowRadius={8}
-                        elevation={4}
-                        onPress={() => handleQuickAccess(item.screen)}
-                      >
-                        <View
-                          width={48}
-                          height={48}
-                          borderRadius={24}
-                          backgroundColor={`${item.color}15`}
-                          justifyContent="center"
-                          alignItems="center"
-                          marginBottom="$3"
-                        >
-                          <IconComponent size={24} color={item.color} />
-                        </View>
-                        <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
-                          {item.title}
-                        </Text>
-                        <Text fontSize="$2" color="$textSecondary">
-                          {item.subtitle}
-                        </Text>
-                      </Card>
-                    );
-                  })}
-                </XStack>
-              </XStack>
-            </YStack>
-
-            {/* Service Categories */}
-            <YStack space="$3" paddingHorizontal="$4">
-              <H3 fontSize="$6" fontWeight="600" color="$text">
-                服务分类
-              </H3>
-              <YStack space="$3">
-                {SERVICE_CATEGORIES.map((service) => {
-                  const IconComponent = service.icon;
-                  return (
-                    <Card
-                      key={service.id}
-                      padding="$4"
-                      borderRadius="$4"
-                      backgroundColor="$cardBg"
-                      pressStyle={{ scale: 0.98 }}
-                      shadowColor="$shadow"
-                      shadowOffset={{ width: 0, height: 2 }}
-                      shadowOpacity={0.1}
-                      shadowRadius={8}
-                      elevation={4}
-                      onPress={() => handleServiceCategory(service.screen)}
+          {/* Quick Access Grid */}
+          <YStack gap="$2" paddingHorizontal="$2.5">
+            <Text fontSize="$4" fontWeight="600" color="$color12">
+              快速入口
+            </Text>
+            <XStack gap="$2">
+              {QUICK_ACCESS.slice(0, 2).map((item) => {
+                const IconComponent = item.icon;
+                const itemColor = getColor(item.colorKey);
+                return (
+                  <Pressable key={item.id} style={{ flex: 1 }} onPress={() => handleQuickAccess(item.screen)}>
+                    <View
+                      flex={1}
+                      padding="$2"
+                      borderRadius="$5"
+                      backgroundColor="$color2"
+                      borderWidth={1}
+                      borderColor="$color5"
                     >
-                      <XStack alignItems="center" space="$3">
+                      <View
+                        width={44}
+                        height={44}
+                        borderRadius={22}
+                        justifyContent="center"
+                        alignItems="center"
+                        marginBottom="$2"
+                        style={{ backgroundColor: `${itemColor}15` }}
+                      >
+                        <IconComponent size={22} color={itemColor} />
+                      </View>
+                      <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$0.5">
+                        {item.title}
+                      </Text>
+                      <Text fontSize="$2" color="$color10">
+                        {item.subtitle}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </XStack>
+            <XStack gap="$2">
+              {QUICK_ACCESS.slice(2, 4).map((item) => {
+                const IconComponent = item.icon;
+                const itemColor = getColor(item.colorKey);
+                return (
+                  <Pressable key={item.id} style={{ flex: 1 }} onPress={() => handleQuickAccess(item.screen)}>
+                    <View
+                      flex={1}
+                      padding="$2"
+                      borderRadius="$5"
+                      backgroundColor="$color2"
+                      borderWidth={1}
+                      borderColor="$color5"
+                    >
+                      <View
+                        width={44}
+                        height={44}
+                        borderRadius={22}
+                        justifyContent="center"
+                        alignItems="center"
+                        marginBottom="$2"
+                        style={{ backgroundColor: `${itemColor}15` }}
+                      >
+                        <IconComponent size={22} color={itemColor} />
+                      </View>
+                      <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$0.5">
+                        {item.title}
+                      </Text>
+                      <Text fontSize="$2" color="$color10">
+                        {item.subtitle}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </XStack>
+          </YStack>
+
+          {/* Service Categories */}
+          <YStack gap="$2" paddingHorizontal="$2.5">
+            <Text fontSize="$4" fontWeight="600" color="$color12">
+              服务分类
+            </Text>
+            <YStack gap="$2">
+              {SERVICE_CATEGORIES.map((service) => {
+                const IconComponent = service.icon;
+                const serviceColor = getColor(service.colorKey);
+                return (
+                  <Pressable key={service.id} onPress={() => handleServiceCategory(service.screen)}>
+                    <View
+                      padding="$2"
+                      borderRadius="$5"
+                      backgroundColor="$color2"
+                      borderWidth={1}
+                      borderColor="$color5"
+                    >
+                      <XStack alignItems="center" gap="$2.5">
                         <View
-                          width={56}
-                          height={56}
-                          borderRadius={28}
-                          backgroundColor={`${service.color}15`}
+                          width={48}
+                          height={48}
+                          borderRadius={24}
                           justifyContent="center"
                           alignItems="center"
+                          style={{ backgroundColor: `${serviceColor}15` }}
                         >
-                          <IconComponent size={28} color={service.color} />
+                          <IconComponent size={24} color={serviceColor} />
                         </View>
                         <YStack flex={1}>
-                          <XStack alignItems="center" space="$2" marginBottom="$1">
-                            <Text fontSize="$5" fontWeight="600" color="$text">
+                          <XStack alignItems="center" gap="$1.5" marginBottom="$0.5">
+                            <Text fontSize="$4" fontWeight="600" color="$color12">
                               {service.name}
                             </Text>
                             {service.badge && (
                               <View
-                                backgroundColor={COLORS.error}
-                                paddingHorizontal="$2"
+                                backgroundColor="$error"
+                                paddingHorizontal="$1.5"
                                 paddingVertical="$0.5"
                                 borderRadius="$2"
                               >
@@ -561,73 +557,70 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
                               </View>
                             )}
                           </XStack>
-                          <Text fontSize="$3" color="$textSecondary">
+                          <Text fontSize="$2" color="$color10">
                             {service.description}
                           </Text>
                         </YStack>
-                        <ChevronRight size={20} color={COLORS.textSecondary} />
+                        <ChevronRight size={18} color={color10} />
                       </XStack>
-                    </Card>
-                  );
-                })}
-              </YStack>
+                    </View>
+                  </Pressable>
+                );
+              })}
             </YStack>
+          </YStack>
 
-            {/* Recommended Lawyers */}
-            <YStack space="$3">
-              <XStack
-                justifyContent="space-between"
-                alignItems="center"
-                paddingHorizontal="$4"
-              >
-                <H3 fontSize="$6" fontWeight="600" color="$text">
-                  推荐律师
-                </H3>
-                <Pressable onPress={handleViewAllLawyers}>
-                  <XStack alignItems="center" space="$1">
-                    <Text fontSize="$3" color={COLORS.primary}>
-                      查看全部
-                    </Text>
-                    <ChevronRight size={16} color={COLORS.primary} />
-                  </XStack>
-                </Pressable>
-              </XStack>
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={lawyers}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
-                renderItem={({ item }) => (
-                  <Card
-                    width={200}
-                    padding="$4"
-                    borderRadius="$4"
-                    backgroundColor="$cardBg"
-                    marginRight="$3"
-                    pressStyle={{ scale: 0.98 }}
-                    shadowColor="$shadow"
-                    shadowOffset={{ width: 0, height: 2 }}
-                    shadowOpacity={0.1}
-                    shadowRadius={8}
-                    elevation={4}
-                    onPress={() => handleLawyerPress(item.id)}
+          {/* Recommended Lawyers */}
+          <YStack gap="$2">
+            <XStack
+              justifyContent="space-between"
+              alignItems="center"
+              paddingHorizontal="$2.5"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$color12">
+                推荐律师
+              </Text>
+              <Pressable onPress={handleViewAllLawyers}>
+                <XStack alignItems="center" gap="$0.5">
+                  <Text fontSize="$3" color="$primary" fontWeight="500">
+                    查看全部
+                  </Text>
+                  <ChevronRight size={14} color={primaryColor} />
+                </XStack>
+              </Pressable>
+            </XStack>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={lawyers}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ paddingHorizontal: 18 }}
+              ItemSeparatorComponent={() => <View width={12} />}
+              renderItem={({ item }) => (
+                <Pressable onPress={() => handleLawyerPress(item.id)}>
+                  <View
+                    width={180}
+                    padding="$2"
+                    borderRadius="$5"
+                    backgroundColor="$color2"
+                    borderWidth={1}
+                    borderColor="$color5"
                   >
-                    <YStack space="$2">
-                      <XStack alignItems="center" space="$2.5" marginBottom="$2">
+                    <YStack gap="$1.5">
+                      <XStack alignItems="center" gap="$2">
                         <View
-                          width={56}
-                          height={56}
-                          borderRadius={28}
-                          backgroundColor={COLORS.primaryLight}
-                          justifyContent="center"
-                          alignItems="center"
+                          width={48}
+                          height={48}
+                          borderRadius={24}
+                          overflow="hidden"
                           position="relative"
                         >
-                          <Text fontSize="$6" fontWeight="700" color="white">
-                            {item.name.charAt(0)}
-                          </Text>
-                          {item.verified && (
+                          <RNImage
+                            source={getAvatarSource(item.avatar, item.name)}
+                            style={{ width: 48, height: 48 }}
+                            resizeMode="cover"
+                          />
+                          {item.isOnline && (
                             <View
                               position="absolute"
                               bottom={-2}
@@ -636,156 +629,167 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
                               borderRadius={10}
                               padding="$0.5"
                             >
-                              <CheckCircle size={14} color={COLORS.success} />
+                              <CheckCircle size={12} color={successColor} />
                             </View>
                           )}
                         </View>
                         <YStack flex={1}>
-                          <Text fontSize="$4" fontWeight="600" color="$text" numberOfLines={1}>
+                          <Text fontSize="$3" fontWeight="600" color="$color12" numberOfLines={1}>
                             {item.name}
                           </Text>
-                          <Text fontSize="$2" color="$textSecondary" numberOfLines={1}>
-                            {item.title}
+                          <Text fontSize="$2" color="$color10" numberOfLines={1}>
+                            {item.lawFirm}
                           </Text>
                         </YStack>
                       </XStack>
 
-                      <View
-                        height={1}
-                        backgroundColor={COLORS.border}
-                        marginVertical="$1"
-                      />
+                      <View height={1} backgroundColor="$color5" />
 
-                      <YStack space="$1.5">
-                        <Text fontSize="$3" color={COLORS.primary} numberOfLines={1}>
-                          {item.specialty}
-                        </Text>
-                        <Text fontSize="$2" color="$textSecondary" numberOfLines={1}>
-                          {item.lawFirm || '专业律师事务所'}
+                      <YStack gap="$1">
+                        <Text fontSize="$2" color="$primary" numberOfLines={1}>
+                          {item.specialties?.[0] ? getSpecialtyLabel(item.specialties[0]) : '法律咨询'}
                         </Text>
                         <XStack alignItems="center" justifyContent="space-between">
-                          <Text fontSize="$2" color="$textSecondary">
-                            {item.experience}年经验
+                          <Text fontSize="$2" color="$color10">
+                            {item.yearsOfExperience}年经验
                           </Text>
-                          <XStack alignItems="center" space="$1">
-                            <Star size={12} color={COLORS.warning} fill={COLORS.warning} />
-                            <Text fontSize="$2" color="$text" fontWeight="600">
+                          <XStack alignItems="center" gap="$0.5">
+                            <Star size={12} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                            <Text fontSize="$2" color="$color12" fontWeight="600">
                               {item.rating}
                             </Text>
                           </XStack>
                         </XStack>
                       </YStack>
 
-                      <View
-                        height={1}
-                        backgroundColor={COLORS.border}
-                        marginVertical="$1"
-                      />
+                      <View height={1} backgroundColor="$color5" />
 
                       <XStack alignItems="center" justifyContent="space-between">
-                        <Text fontSize="$2" color="$textSecondary">
-                          已办理 {item.cases}+ 案件
+                        <Text fontSize="$2" color="$color10">
+                          成功率: {item.successRate}%
                         </Text>
-                        <Text fontSize="$3" fontWeight="600" color={COLORS.primary}>
-                          ¥{item.consultationFee || 200}/次
+                        <Text fontSize="$3" fontWeight="600" color="$primary">
+                          ¥{item.textConsultationPrice || 200}/次
                         </Text>
                       </XStack>
                     </YStack>
-                  </Card>
-                )}
-              />
-            </YStack>
+                  </View>
+                </Pressable>
+              )}
+            />
+          </YStack>
 
-            {/* Knowledge Base */}
-            <YStack space="$3" paddingHorizontal="$4">
-              <H3 fontSize="$6" fontWeight="600" color="$text">
-                知识库
-              </H3>
+          {/* Knowledge Base */}
+          <YStack gap="$2" paddingHorizontal="$2.5">
+            <Text fontSize="$4" fontWeight="600" color="$color12">
+              知识库
+            </Text>
 
-              {/* Tabs */}
-              <XStack space="$2">
-                <Button
-                  size="$3"
-                  backgroundColor={selectedTab === 'articles' ? COLORS.primary : '$surface'}
-                  color={selectedTab === 'articles' ? 'white' : '$text'}
-                  borderRadius="$3"
-                  onPress={() => setSelectedTab('articles')}
-                  pressStyle={{ scale: 0.98 }}
+            {/* Tabs */}
+            <XStack gap="$2">
+              <Pressable onPress={() => setSelectedTab('articles')}>
+                <View
+                  backgroundColor={selectedTab === 'articles' ? '$primary' : '$color4'}
+                  paddingVertical="$2"
+                  paddingHorizontal="$3"
+                  borderRadius="$10"
                 >
-                  法律文章
-                </Button>
-                <Button
-                  size="$3"
-                  backgroundColor={selectedTab === 'videos' ? COLORS.primary : '$surface'}
-                  color={selectedTab === 'videos' ? 'white' : '$text'}
-                  borderRadius="$3"
-                  onPress={() => setSelectedTab('videos')}
-                  pressStyle={{ scale: 0.98 }}
-                >
-                  视频课堂
-                </Button>
-                <Button
-                  size="$3"
-                  backgroundColor={selectedTab === 'cases' ? COLORS.primary : '$surface'}
-                  color={selectedTab === 'cases' ? 'white' : '$text'}
-                  borderRadius="$3"
-                  onPress={() => setSelectedTab('cases')}
-                  pressStyle={{ scale: 0.98 }}
-                >
-                  案例分析
-                </Button>
-              </XStack>
-
-              {/* Knowledge List */}
-              <YStack space="$2">
-                {getKnowledgeData().map((item) => (
-                  <Card
-                    key={item.id}
-                    padding="$3"
-                    borderRadius="$3"
-                    backgroundColor="$cardBg"
-                    pressStyle={{ scale: 0.98 }}
-                    onPress={() => handleKnowledgeItem(item.id, selectedTab)}
+                  <Text
+                    color={selectedTab === 'articles' ? 'white' : '$color12'}
+                    fontSize="$3"
+                    fontWeight="500"
                   >
-                    <XStack alignItems="center" space="$3">
+                    法律文章
+                  </Text>
+                </View>
+              </Pressable>
+              <Pressable onPress={() => setSelectedTab('videos')}>
+                <View
+                  backgroundColor={selectedTab === 'videos' ? '$primary' : '$color4'}
+                  paddingVertical="$2"
+                  paddingHorizontal="$3"
+                  borderRadius="$10"
+                >
+                  <Text
+                    color={selectedTab === 'videos' ? 'white' : '$color12'}
+                    fontSize="$3"
+                    fontWeight="500"
+                  >
+                    视频课堂
+                  </Text>
+                </View>
+              </Pressable>
+              <Pressable onPress={() => setSelectedTab('cases')}>
+                <View
+                  backgroundColor={selectedTab === 'cases' ? '$primary' : '$color4'}
+                  paddingVertical="$2"
+                  paddingHorizontal="$3"
+                  borderRadius="$10"
+                >
+                  <Text
+                    color={selectedTab === 'cases' ? 'white' : '$color12'}
+                    fontSize="$3"
+                    fontWeight="500"
+                  >
+                    案例分析
+                  </Text>
+                </View>
+              </Pressable>
+            </XStack>
+
+            {/* Knowledge List */}
+            <YStack gap="$2">
+              {getKnowledgeData().map((item) => (
+                <Pressable
+                  key={item.id}
+                  onPress={() => handleKnowledgeItem(item.id, selectedTab)}
+                >
+                  <View
+                    padding="$2"
+                    borderRadius="$5"
+                    backgroundColor="$color2"
+                    borderWidth={1}
+                    borderColor="$color5"
+                  >
+                    <XStack alignItems="center" gap="$2.5">
                       <View
                         width={40}
                         height={40}
                         borderRadius={20}
-                        backgroundColor={`${COLORS.primary}15`}
                         justifyContent="center"
                         alignItems="center"
+                        style={{ backgroundColor: `${primaryColor}15` }}
                       >
-                        {selectedTab === 'articles' && <BookOpen size={20} color={COLORS.primary} />}
-                        {selectedTab === 'videos' && <Video size={20} color={COLORS.primary} />}
-                        {selectedTab === 'cases' && <FileStack size={20} color={COLORS.primary} />}
+                        {selectedTab === 'articles' && <BookOpen size={20} color={primaryColor} />}
+                        {selectedTab === 'videos' && <Video size={20} color={primaryColor} />}
+                        {selectedTab === 'cases' && <FileStack size={20} color={primaryColor} />}
                       </View>
                       <YStack flex={1}>
-                        <Text fontSize="$4" fontWeight="500" color="$text" marginBottom="$1">
+                        <Text fontSize="$3" fontWeight="500" color="$color12" marginBottom="$0.5">
                           {item.title}
                         </Text>
-                        <XStack alignItems="center" space="$2">
-                          <Text fontSize="$2" color="$textSecondary">
+                        <XStack alignItems="center" gap="$1.5">
+                          <Text fontSize="$2" color="$color10">
                             {item.category}
                           </Text>
-                          <Text fontSize="$2" color="$textSecondary">
+                          <Text fontSize="$2" color="$color10">
                             •
                           </Text>
-                          <Text fontSize="$2" color="$textSecondary">
+                          <Text fontSize="$2" color="$color10">
                             {item.views} 浏览
                           </Text>
                         </XStack>
                       </YStack>
+                      <ChevronRight size={16} color={color10} />
                     </XStack>
-                  </Card>
-                ))}
-              </YStack>
+                  </View>
+                </Pressable>
+              ))}
             </YStack>
-
           </YStack>
-        </ScrollView>
-      </SafeAreaView>
-    </Theme>
+        </YStack>
+      </ScrollView>
+    </View>
   );
 };
 

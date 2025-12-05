@@ -1,14 +1,25 @@
+/**
+ * ExpertDetailScreen 达人详情页
+ * 展示达人完整资料、认证信息、服务详情、评价等
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局配色规范
+ */
 import React, { useState, useEffect } from 'react';
-import { YStack, XStack, Text, View, ScrollView } from 'tamagui';
 import {
-  SafeAreaView,
-  TouchableOpacity,
+  YStack,
+  XStack,
+  Text,
+  View,
+  ScrollView,
   Image,
-  StyleSheet,
+  Card,
+  useTheme,
+} from 'tamagui';
+import {
+  Pressable,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Share2,
   MapPin,
   Star,
@@ -16,10 +27,10 @@ import {
   MessageCircle,
   Shield,
   CheckCircle,
-  Clock,
   TrendingUp,
+  Briefcase,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 import { Expert, ExpertLevel, ServiceType } from '@/types/community';
 import { getExpertById, createConversation } from '@/services/communityDataService';
 
@@ -36,16 +47,24 @@ interface ExpertDetailScreenProps {
 
 /**
  * 达人详情页
- * 展示达人完整资料、认证信息、服务详情、评价等
  */
 export const ExpertDetailScreen: React.FC<ExpertDetailScreenProps> = ({
   navigation,
   route,
 }) => {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const { expertId } = route.params;
   const [expert, setExpert] = useState<Expert | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     loadExpertDetail();
@@ -65,22 +84,35 @@ export const ExpertDetailScreen: React.FC<ExpertDetailScreenProps> = ({
     }
   };
 
-  const handleBack = () => {
-    navigation.goBack();
+  const handleContactExpert = async () => {
+    if (!expert) return;
+    const conversation = await createConversation(expert.userId, 'expert', expertId);
+    // 导航到达人聊天页面，使用通用 ChatPage 组件
+    navigation.navigate('ExpertChat', {
+      expertId: expert.id,
+      expertName: expert.name,
+      conversationId: conversation.id,
+    });
+  };
+
+  const handleBookService = () => {
+    if (!expert) return;
+    // 导航到预约服务页面
+    navigation.navigate('ServiceBooking', {
+      expertId: expert.id,
+      expertName: expert.name,
+      expertAvatar: expert.avatar,
+      serviceTypes: expert.serviceTypes,
+      pricing: expert.pricing,
+    });
   };
 
   const handleShare = () => {
     console.log('分享达人:', expertId);
   };
 
-  const handleContactExpert = async () => {
-    if (!expert) return;
-    const conversation = await createConversation(expert.userId, 'expert', expertId);
-    navigation.navigate('Chat', { conversationId: conversation.id });
-  };
-
-  const handleBookService = () => {
-    console.log('预约服务:', expertId);
+  const handleImageError = (key: string) => {
+    setImageErrors(prev => ({ ...prev, [key]: true }));
   };
 
   const getLevelLabel = (level: ExpertLevel): string => {
@@ -93,14 +125,19 @@ export const ExpertDetailScreen: React.FC<ExpertDetailScreenProps> = ({
     return labels[level];
   };
 
-  const getLevelColor = (level: ExpertLevel): string => {
-    const colors: { [key in ExpertLevel]: string } = {
-      [ExpertLevel.ROOKIE]: COLORS.textSecondary,
-      [ExpertLevel.QUALITY]: COLORS.primary,
-      [ExpertLevel.GOLD]: COLORS.warning,
-      [ExpertLevel.HALL_OF_FAME]: COLORS.error,
-    };
-    return colors[level];
+  const getLevelColor = (level: ExpertLevel): string | undefined => {
+    switch (level) {
+      case ExpertLevel.ROOKIE:
+        return color10;
+      case ExpertLevel.QUALITY:
+        return primaryColor;
+      case ExpertLevel.GOLD:
+        return warningColor;
+      case ExpertLevel.HALL_OF_FAME:
+        return errorColor;
+      default:
+        return color10;
+    }
   };
 
   const getServiceTypeLabel = (type: ServiceType): string => {
@@ -125,525 +162,651 @@ export const ExpertDetailScreen: React.FC<ExpertDetailScreenProps> = ({
     return labels[type] || type;
   };
 
-  if (loading || !expert) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-        <View flex={1} justifyContent="center" alignItems="center">
-          <Text fontSize="$4" color="$textSecondary">
-            加载中...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* 顶部导航栏（透明覆盖在Banner上） */}
+  // 渲染分享按钮（用于TitleBar右侧）
+  const renderShareButton = () => (
+    <Pressable onPress={handleShare}>
       <View
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        zIndex={10}
-        paddingTop="$3"
-        paddingHorizontal="$4"
-        paddingBottom="$3"
+        width={36}
+        height={36}
+        borderRadius={18}
+        backgroundColor="$color4"
+        justifyContent="center"
+        alignItems="center"
       >
-        <XStack justifyContent="space-between" alignItems="center">
-          <TouchableOpacity onPress={handleBack}>
-            <View
-              width={36}
-              height={36}
-              borderRadius={18}
-              backgroundColor="rgba(0, 0, 0, 0.4)"
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={20} color="white" />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleShare}>
-            <View
-              width={36}
-              height={36}
-              borderRadius={18}
-              backgroundColor="rgba(0, 0, 0, 0.4)"
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Share2 size={18} color="white" />
-            </View>
-          </TouchableOpacity>
-        </XStack>
+        <Share2 size={18} color={color10} />
       </View>
+    </Pressable>
+  );
 
-      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-        {/* 顶部Banner区域 */}
-        <View style={{ width: SCREEN_WIDTH, height: 200, position: 'relative' }}>
-          {/* 背景图（使用第一张服务展示图或默认渐变） */}
-          {expert.showcaseImages && expert.showcaseImages.length > 0 ? (
-            <Image
-              source={{ uri: expert.showcaseImages[0] }}
-              style={styles.bannerImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={[styles.bannerImage, { backgroundColor: COLORS.primary }]} />
-          )}
+  // 渲染头部信息卡片
+  const renderProfileCard = () => {
+    if (!expert) return null;
 
-          {/* 渐变遮罩 */}
-          <View style={styles.bannerOverlay} />
-
-          {/* 头像和基本信息 */}
-          <View style={styles.profileContainer}>
-            <View style={styles.avatarContainer}>
-              <Text fontSize={64}>{expert.avatar || '👤'}</Text>
-
-              {/* 等级徽章 */}
-              <View style={[styles.levelBadge, { backgroundColor: getLevelColor(expert.level) }]}>
-                <Award size={14} color="white" />
-              </View>
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <XStack gap="$2" alignItems="center">
+          {/* 头像 */}
+          <View position="relative">
+            <View
+              width={72}
+              height={72}
+              borderRadius={36}
+              backgroundColor={`${primaryColor}15`}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize={36}>{expert.avatar || '👤'}</Text>
             </View>
 
-            <YStack alignItems="center" marginTop="$3">
-              <XStack space="$2" alignItems="center" marginBottom="$1">
-                <Text fontSize="$7" fontWeight="700" color="white">
-                  {expert.name}
-                </Text>
-                {expert.realNameVerified && (
-                  <View
-                    width={20}
-                    height={20}
-                    borderRadius={10}
-                    backgroundColor={COLORS.primary}
-                    justifyContent="center"
-                    alignItems="center"
-                  >
-                    <CheckCircle size={12} color="white" />
-                  </View>
-                )}
-              </XStack>
+            {/* 等级徽章 */}
+            <View
+              position="absolute"
+              bottom={-2}
+              right={-2}
+              width={24}
+              height={24}
+              borderRadius={12}
+              backgroundColor={getLevelColor(expert.level)}
+              justifyContent="center"
+              alignItems="center"
+              borderWidth={2}
+              borderColor="$color2"
+            >
+              <Award size={12} color="white" />
+            </View>
+          </View>
 
+          {/* 基本信息 */}
+          <YStack flex={1} gap="$1">
+            <XStack gap="$1.5" alignItems="center">
+              <Text fontSize="$5" fontWeight="700" color="$color12">
+                {expert.name}
+              </Text>
+              {expert.realNameVerified && (
+                <View
+                  width={18}
+                  height={18}
+                  borderRadius={9}
+                  backgroundColor={successColor}
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <CheckCircle size={10} color="white" />
+                </View>
+              )}
+            </XStack>
+
+            {/* 等级标签 */}
+            <View alignSelf="flex-start">
               <View
-                backgroundColor={`${getLevelColor(expert.level)}CC`}
-                paddingHorizontal="$3"
-                paddingVertical="$1"
-                borderRadius="$3"
-                marginBottom="$2"
+                backgroundColor={`${getLevelColor(expert.level)}15`}
+                paddingHorizontal="$2"
+                paddingVertical="$0.5"
+                borderRadius="$10"
               >
-                <Text fontSize="$3" color="white" fontWeight="600">
+                <Text fontSize="$2" color={getLevelColor(expert.level)} fontWeight="600">
                   {getLevelLabel(expert.level)}
                 </Text>
               </View>
+            </View>
 
-              <XStack space="$1" alignItems="center">
-                <MapPin size={14} color="white" />
-                <Text fontSize="$3" color="white">
-                  服务区域: {expert.serviceArea.join('、')}
-                </Text>
-              </XStack>
-            </YStack>
-          </View>
-        </View>
+            {/* 服务区域 */}
+            <XStack gap="$1" alignItems="center">
+              <MapPin size={12} color={color10} />
+              <Text fontSize="$2" color="$color10" numberOfLines={1} flex={1}>
+                {expert.serviceArea.join('、')}
+              </Text>
+            </XStack>
 
-        {/* 认证信息卡片 */}
-        <View backgroundColor="white" padding="$4" marginBottom="$2">
-          <XStack space="$2" alignItems="center" marginBottom="$3">
-            <Shield size={20} color={COLORS.primary} />
-            <Text fontSize="$5" fontWeight="600" color="$text">
-              认证信息
+            {/* 在线状态 */}
+            <XStack gap="$1" alignItems="center">
+              <View
+                width={8}
+                height={8}
+                borderRadius={4}
+                backgroundColor={expert.isOnline ? successColor : color10}
+              />
+              <Text fontSize="$2" color={expert.isOnline ? successColor : '$color10'}>
+                {expert.isOnline ? '在线接单中' : '当前离线'}
+              </Text>
+            </XStack>
+          </YStack>
+        </XStack>
+      </Card>
+    );
+  };
+
+  // 渲染认证信息卡片
+  const renderCertification = () => {
+    if (!expert) return null;
+
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <XStack gap="$1.5" alignItems="center" marginBottom="$2">
+          <Shield size={18} color={primaryColor} />
+          <Text fontSize="$4" fontWeight="600" color="$color12">
+            认证信息
+          </Text>
+        </XStack>
+
+        <XStack gap="$4">
+          <XStack gap="$1.5" alignItems="center">
+            <Text fontSize={16}>
+              {expert.realNameVerified ? '🏅' : '⚪'}
+            </Text>
+            <Text
+              fontSize="$3"
+              color={expert.realNameVerified ? '$color12' : '$color10'}
+            >
+              实名认证
             </Text>
           </XStack>
 
-          <XStack space="$4">
-            <XStack space="$2" alignItems="center">
-              <Text fontSize="$5">
-                {expert.realNameVerified ? '🏅' : '⚪'}
-              </Text>
-              <Text
-                fontSize="$3"
-                color={expert.realNameVerified ? '$text' : '$textSecondary'}
-              >
-                实名认证
+          <XStack gap="$1.5" alignItems="center">
+            <CheckCircle
+              size={16}
+              color={expert.skillVerified ? successColor : color10}
+            />
+            <Text
+              fontSize="$3"
+              color={expert.skillVerified ? successColor : '$color10'}
+            >
+              技能认证
+            </Text>
+          </XStack>
+        </XStack>
+      </Card>
+    );
+  };
+
+  // 渲染服务数据统计
+  const renderStats = () => {
+    if (!expert) return null;
+
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <XStack justifyContent="space-around">
+          <YStack alignItems="center">
+            <XStack gap="$1" alignItems="center" marginBottom="$0.5">
+              <Star size={14} color={warningColor} fill={warningColor} />
+              <Text fontSize="$5" fontWeight="700" color="$color12">
+                {expert.rating.toFixed(1)}
               </Text>
             </XStack>
+            <Text fontSize="$2" color="$color10">
+              评分
+            </Text>
+          </YStack>
 
-            <XStack space="$2" alignItems="center">
-              <CheckCircle
-                size={18}
-                color={expert.skillVerified ? COLORS.success : COLORS.textSecondary}
-              />
-              <Text
-                fontSize="$3"
-                color={expert.skillVerified ? COLORS.success : '$textSecondary'}
+          <View width={1} backgroundColor="$color5" />
+
+          <YStack alignItems="center">
+            <Text fontSize="$5" fontWeight="700" color="$color12" marginBottom="$0.5">
+              {expert.completedOrders}
+            </Text>
+            <Text fontSize="$2" color="$color10">
+              完成订单
+            </Text>
+          </YStack>
+
+          <View width={1} backgroundColor="$color5" />
+
+          <YStack alignItems="center">
+            <Text fontSize="$5" fontWeight="700" color={successColor} marginBottom="$0.5">
+              {expert.goodReviewRate}%
+            </Text>
+            <Text fontSize="$2" color="$color10">
+              好评率
+            </Text>
+          </YStack>
+
+          <View width={1} backgroundColor="$color5" />
+
+          <YStack alignItems="center">
+            <Text fontSize="$5" fontWeight="700" color="$color12" marginBottom="$0.5">
+              {expert.responseTime}
+            </Text>
+            <Text fontSize="$2" color="$color10">
+              响应时间
+            </Text>
+          </YStack>
+        </XStack>
+      </Card>
+    );
+  };
+
+  // 渲染个人介绍
+  const renderIntroduction = () => {
+    if (!expert) return null;
+
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+          个人介绍
+        </Text>
+        <Text fontSize="$3" color="$color12" lineHeight={22}>
+          {expert.introduction}
+        </Text>
+      </Card>
+    );
+  };
+
+  // 渲染专业技能
+  const renderSkills = () => {
+    if (!expert) return null;
+
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+          专业技能
+        </Text>
+        <Text fontSize="$3" color="$color12" lineHeight={22}>
+          {expert.skillDescription}
+        </Text>
+      </Card>
+    );
+  };
+
+  // 渲染服务项目及价格
+  const renderServices = () => {
+    if (!expert) return null;
+
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+          服务项目及价格
+        </Text>
+
+        <YStack gap="$2">
+          {expert.serviceTypes.map((serviceType, index) => {
+            const price = expert.pricing[serviceType];
+            return (
+              <View
+                key={index}
+                padding="$2"
+                backgroundColor="$color4"
+                borderRadius="$4"
               >
-                技能认证
-              </Text>
-            </XStack>
-          </XStack>
-        </View>
-
-        {/* 服务数据统计 */}
-        <View backgroundColor="white" padding="$4" marginBottom="$2">
-          <XStack justifyContent="space-around">
-            <YStack alignItems="center">
-              <XStack space="$1" alignItems="center" marginBottom="$1">
-                <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
-                <Text fontSize="$5" fontWeight="700" color="$text">
-                  {expert.rating.toFixed(1)}
-                </Text>
-              </XStack>
-              <Text fontSize="$2" color="$textSecondary">
-                评分
-              </Text>
-            </YStack>
-
-            <View width={1} backgroundColor="$borderColor" />
-
-            <YStack alignItems="center">
-              <Text fontSize="$5" fontWeight="700" color="$text" marginBottom="$1">
-                {expert.completedOrders}
-              </Text>
-              <Text fontSize="$2" color="$textSecondary">
-                完成订单
-              </Text>
-            </YStack>
-
-            <View width={1} backgroundColor="$borderColor" />
-
-            <YStack alignItems="center">
-              <Text fontSize="$5" fontWeight="700" color={COLORS.success} marginBottom="$1">
-                {expert.goodReviewRate}%
-              </Text>
-              <Text fontSize="$2" color="$textSecondary">
-                好评率
-              </Text>
-            </YStack>
-
-            <View width={1} backgroundColor="$borderColor" />
-
-            <YStack alignItems="center">
-              <Text fontSize="$5" fontWeight="700" color="$text" marginBottom="$1">
-                {expert.responseTime}
-              </Text>
-              <Text fontSize="$2" color="$textSecondary">
-                响应时间
-              </Text>
-            </YStack>
-          </XStack>
-        </View>
-
-        {/* 个人介绍 */}
-        <View backgroundColor="white" padding="$4" marginBottom="$2">
-          <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
-            个人介绍
-          </Text>
-          <Text fontSize="$3" color="$text" lineHeight={22}>
-            {expert.introduction}
-          </Text>
-        </View>
-
-        {/* 技能描述 */}
-        <View backgroundColor="white" padding="$4" marginBottom="$2">
-          <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
-            专业技能
-          </Text>
-          <Text fontSize="$3" color="$text" lineHeight={22}>
-            {expert.skillDescription}
-          </Text>
-        </View>
-
-        {/* 服务类型和价格 */}
-        <View backgroundColor="white" padding="$4" marginBottom="$2">
-          <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
-            服务项目及价格
-          </Text>
-
-          <YStack space="$3">
-            {expert.serviceTypes.map((serviceType, index) => {
-              const price = expert.pricing[serviceType];
-              return (
-                <XStack
-                  key={index}
-                  justifyContent="space-between"
-                  alignItems="center"
-                  padding="$3"
-                  backgroundColor="$background"
-                  borderRadius="$3"
-                >
-                  <Text fontSize="$4" color="$text" fontWeight="500">
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="$3" color="$color12" fontWeight="500">
                     {getServiceTypeLabel(serviceType)}
                   </Text>
                   {price && (
-                    <XStack space="$1" alignItems="baseline">
-                      <Text fontSize="$5" fontWeight="700" color={COLORS.error}>
+                    <XStack gap="$0.5" alignItems="baseline">
+                      <Text fontSize="$4" fontWeight="700" color={errorColor}>
                         ¥{price.basePrice}
                       </Text>
-                      <Text fontSize="$3" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         /{price.unit}
                       </Text>
                     </XStack>
                   )}
                 </XStack>
-              );
-            })}
-          </YStack>
-        </View>
+              </View>
+            );
+          })}
+        </YStack>
+      </Card>
+    );
+  };
 
-        {/* 服务展示 */}
-        {expert.showcaseImages && expert.showcaseImages.length > 0 && (
-          <View backgroundColor="white" padding="$4" marginBottom="$2">
-            <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
-              服务展示
-            </Text>
+  // 渲染服务展示
+  const renderShowcase = () => {
+    if (!expert || !expert.showcaseImages || expert.showcaseImages.length === 0) return null;
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 12 }}
-            >
-              {expert.showcaseImages.map((image, index) => (
-                <TouchableOpacity key={index} onPress={() => setSelectedImageIndex(index)}>
-                  <View
-                    width={160}
-                    height={120}
-                    borderRadius="$3"
-                    overflow="hidden"
-                    backgroundColor="$background"
-                  >
-                    <Image
-                      source={{ uri: image }}
-                      style={{ width: '100%', height: '100%' }}
-                      resizeMode="cover"
-                    />
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+          服务展示
+        </Text>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          <XStack gap="$2">
+            {expert.showcaseImages.map((image, index) => (
+              <View
+                key={index}
+                width={140}
+                height={100}
+                borderRadius="$4"
+                overflow="hidden"
+                backgroundColor="$color4"
+              >
+                {!imageErrors[`showcase_${index}`] ? (
+                  <Image
+                    source={{ uri: image }}
+                    width={140}
+                    height={100}
+                    resizeMode="cover"
+                    onError={() => handleImageError(`showcase_${index}`)}
+                  />
+                ) : (
+                  <View flex={1} justifyContent="center" alignItems="center">
+                    <Briefcase size={24} color={color10} />
                   </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+                )}
+              </View>
+            ))}
+          </XStack>
+        </ScrollView>
+      </Card>
+    );
+  };
 
-        {/* 资质证书 */}
-        {expert.certificates && expert.certificates.length > 0 && (
-          <View backgroundColor="white" padding="$4" marginBottom="$2">
-            <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
-              资质证书
-            </Text>
+  // 渲染资质证书
+  const renderCertificates = () => {
+    if (!expert || !expert.certificates || expert.certificates.length === 0) return null;
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 12 }}
-            >
-              {expert.certificates.map((cert, index) => (
-                <View
-                  key={index}
-                  width={140}
-                  height={100}
-                  borderRadius="$3"
-                  overflow="hidden"
-                  backgroundColor="$background"
-                >
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+          资质证书
+        </Text>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          <XStack gap="$2">
+            {expert.certificates.map((cert, index) => (
+              <View
+                key={index}
+                width={120}
+                height={90}
+                borderRadius="$4"
+                overflow="hidden"
+                backgroundColor="$color4"
+              >
+                {!imageErrors[`cert_${index}`] ? (
                   <Image
                     source={{ uri: cert }}
-                    style={{ width: '100%', height: '100%' }}
+                    width={120}
+                    height={90}
                     resizeMode="cover"
+                    onError={() => handleImageError(`cert_${index}`)}
                   />
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {/* 徽章展示 */}
-        {expert.badges && expert.badges.length > 0 && (
-          <View backgroundColor="white" padding="$4" marginBottom="$2">
-            <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
-              荣誉徽章
-            </Text>
-
-            <XStack flexWrap="wrap" gap="$2">
-              {expert.badges.map((badge, index) => (
-                <View
-                  key={index}
-                  backgroundColor={`${COLORS.warning}20`}
-                  paddingHorizontal="$3"
-                  paddingVertical="$2"
-                  borderRadius="$3"
-                  borderWidth={1}
-                  borderColor={`${COLORS.warning}40`}
-                >
-                  <XStack space="$1" alignItems="center">
-                    <Award size={14} color={COLORS.warning} />
-                    <Text fontSize="$3" color={COLORS.warning} fontWeight="600">
-                      {badge}
-                    </Text>
-                  </XStack>
-                </View>
-              ))}
-            </XStack>
-          </View>
-        )}
-
-        {/* 服务保障 */}
-        <View backgroundColor="white" padding="$4" marginBottom="$2">
-          <XStack space="$2" alignItems="center" marginBottom="$3">
-            <TrendingUp size={20} color={COLORS.primary} />
-            <Text fontSize="$5" fontWeight="600" color="$text">
-              服务保障
-            </Text>
+                ) : (
+                  <View flex={1} justifyContent="center" alignItems="center">
+                    <Award size={24} color={color10} />
+                  </View>
+                )}
+              </View>
+            ))}
           </XStack>
+        </ScrollView>
+      </Card>
+    );
+  };
 
-          <YStack space="$2">
-            <XStack space="$2" alignItems="center">
-              <Text fontSize="$3" color={COLORS.success}>✓</Text>
-              <Text fontSize="$3" color="$text">
-                平台认证达人，资质齐全可查
-              </Text>
-            </XStack>
-            <XStack space="$2" alignItems="center">
-              <Text fontSize="$3" color={COLORS.success}>✓</Text>
-              <Text fontSize="$3" color="$text">
-                {expert.completedOrders}+ 服务经验，客户好评率 {expert.goodReviewRate}%
-              </Text>
-            </XStack>
-            <XStack space="$2" alignItems="center">
-              <Text fontSize="$3" color={COLORS.success}>✓</Text>
-              <Text fontSize="$3" color="$text">
-                平均 {expert.responseTime} 响应，服务及时高效
-              </Text>
-            </XStack>
-            <XStack space="$2" alignItems="center">
-              <Text fontSize="$3" color={COLORS.success}>✓</Text>
-              <Text fontSize="$3" color="$text">
-                平台担保交易，服务质量有保障
-              </Text>
-            </XStack>
-          </YStack>
-        </View>
+  // 渲染荣誉徽章
+  const renderBadges = () => {
+    if (!expert || !expert.badges || expert.badges.length === 0) return null;
 
-        {/* 在线状态 */}
-        <View backgroundColor="white" padding="$4" marginBottom="$2">
-          <XStack space="$2" alignItems="center">
-            <View
-              width={8}
-              height={8}
-              borderRadius={4}
-              backgroundColor={expert.isOnline ? COLORS.success : COLORS.textSecondary}
-            />
-            <Text fontSize="$3" color="$textSecondary">
-              {expert.isOnline ? '在线接单中' : '当前离线'}
-            </Text>
-          </XStack>
-        </View>
-
-        {/* 底部安全区域 */}
-        <View height={100} />
-      </ScrollView>
-
-      {/* 底部操作栏 */}
-      <View
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        backgroundColor="white"
-        borderTopWidth={1}
-        borderTopColor="$borderColor"
-        paddingHorizontal="$4"
-        paddingVertical="$3"
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: -2 }}
-        shadowOpacity={0.1}
-        shadowRadius={8}
-        elevation={8}
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
       >
-        <XStack space="$3" alignItems="center">
-          {/* 联系达人 */}
-          <TouchableOpacity style={{ flex: 1 }} onPress={handleContactExpert}>
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+          荣誉徽章
+        </Text>
+
+        <XStack flexWrap="wrap" gap="$1.5">
+          {expert.badges.map((badge, index) => (
             <View
-              flex={1}
-              backgroundColor="$background"
-              borderRadius="$3"
-              paddingVertical="$3"
-              justifyContent="center"
-              alignItems="center"
+              key={index}
+              backgroundColor={`${warningColor}15`}
+              paddingHorizontal="$2"
+              paddingVertical="$1"
+              borderRadius="$4"
               borderWidth={1}
-              borderColor="$borderColor"
+              borderColor={`${warningColor}30`}
             >
-              <XStack space="$2" alignItems="center">
-                <MessageCircle size={18} color={COLORS.text} />
-                <Text fontSize="$4" color="$text" fontWeight="600">
-                  咨询
+              <XStack gap="$1" alignItems="center">
+                <Award size={12} color={warningColor} />
+                <Text fontSize="$2" color={warningColor} fontWeight="600">
+                  {badge}
                 </Text>
               </XStack>
             </View>
-          </TouchableOpacity>
-
-          {/* 预约服务 */}
-          <TouchableOpacity style={{ flex: 1 }} onPress={handleBookService}>
-            <View
-              flex={1}
-              backgroundColor={COLORS.primary}
-              borderRadius="$3"
-              paddingVertical="$3"
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Text fontSize="$4" color="white" fontWeight="600">
-                预约服务
-              </Text>
-            </View>
-          </TouchableOpacity>
+          ))}
         </XStack>
+      </Card>
+    );
+  };
+
+  // 渲染服务保障
+  const renderGuarantee = () => {
+    if (!expert) return null;
+
+    const guarantees = [
+      '平台认证达人，资质齐全可查',
+      `${expert.completedOrders}+ 服务经验，客户好评率 ${expert.goodReviewRate}%`,
+      `平均 ${expert.responseTime} 响应，服务及时高效`,
+      '平台担保交易，服务质量有保障',
+    ];
+
+    return (
+      <Card
+        marginHorizontal="$2.5"
+        marginTop="$2"
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <XStack gap="$1.5" alignItems="center" marginBottom="$2">
+          <TrendingUp size={18} color={primaryColor} />
+          <Text fontSize="$4" fontWeight="600" color="$color12">
+            服务保障
+          </Text>
+        </XStack>
+
+        <YStack gap="$1.5">
+          {guarantees.map((text, index) => (
+            <XStack key={index} gap="$1.5" alignItems="flex-start">
+              <CheckCircle size={14} color={successColor} style={{ marginTop: 2 }} />
+              <Text fontSize="$3" color="$color12" flex={1}>
+                {text}
+              </Text>
+            </XStack>
+          ))}
+        </YStack>
+      </Card>
+    );
+  };
+
+  // 渲染底部操作栏
+  const renderBottomBar = () => (
+    <View
+      position="absolute"
+      bottom={0}
+      left={0}
+      right={0}
+      backgroundColor="$color2"
+      borderTopWidth={1}
+      borderTopColor="$color5"
+      paddingHorizontal="$2.5"
+      paddingTop="$2"
+      paddingBottom={insets.bottom > 0 ? insets.bottom : 14}
+      shadowOffset={{ width: 0, height: -2 }}
+      shadowOpacity={0.08}
+      elevation={8}
+    >
+      <XStack gap="$2" alignItems="center">
+        {/* 联系达人 */}
+        <Pressable style={{ flex: 1 }} onPress={handleContactExpert}>
+          <View
+            flex={1}
+            backgroundColor="$color4"
+            borderRadius="$10"
+            paddingVertical="$2"
+            justifyContent="center"
+            alignItems="center"
+            borderWidth={1}
+            borderColor="$color5"
+          >
+            <XStack gap="$1" alignItems="center">
+              <MessageCircle size={16} color={color10} />
+              <Text fontSize="$3" color="$color12" fontWeight="500">
+                咨询
+              </Text>
+            </XStack>
+          </View>
+        </Pressable>
+
+        {/* 预约服务 */}
+        <Pressable style={{ flex: 1 }} onPress={handleBookService}>
+          <View
+            flex={1}
+            backgroundColor={primaryColor}
+            borderRadius="$10"
+            paddingVertical="$2"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Text fontSize="$3" color="white" fontWeight="500">
+              预约服务
+            </Text>
+          </View>
+        </Pressable>
+      </XStack>
+    </View>
+  );
+
+  if (loading || !expert) {
+    return (
+      <View flex={1} backgroundColor="$background">
+        <View flex={1} justifyContent="center" alignItems="center">
+          <Text fontSize="$4" color="$color10">
+            加载中...
+          </Text>
+        </View>
       </View>
-    </SafeAreaView>
+    );
+  }
+
+  return (
+    <View flex={1} backgroundColor="$background">
+      {/* 顶部导航 */}
+      <View paddingTop={insets.top}>
+        <TitleBar
+          title="达人详情"
+          subtitle={expert.name}
+          renderRight={renderShareButton}
+        />
+      </View>
+
+      {/* 滚动内容 */}
+      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+        {/* 头部信息卡片 */}
+        {renderProfileCard()}
+
+        {/* 认证信息 */}
+        {renderCertification()}
+
+        {/* 服务数据统计 */}
+        {renderStats()}
+
+        {/* 个人介绍 */}
+        {renderIntroduction()}
+
+        {/* 专业技能 */}
+        {renderSkills()}
+
+        {/* 服务项目及价格 */}
+        {renderServices()}
+
+        {/* 服务展示 */}
+        {renderShowcase()}
+
+        {/* 资质证书 */}
+        {renderCertificates()}
+
+        {/* 荣誉徽章 */}
+        {renderBadges()}
+
+        {/* 服务保障 */}
+        {renderGuarantee()}
+
+        {/* 底部安全区域 */}
+        <View height={80 + insets.bottom} />
+      </ScrollView>
+
+      {/* 底部操作栏 */}
+      {renderBottomBar()}
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  bannerImage: {
-    width: '100%',
-    height: '100%',
-  },
-  bannerOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  profileContainer: {
-    position: 'absolute',
-    bottom: 16,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 4,
-    borderColor: 'white',
-    position: 'relative',
-  },
-  levelBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-});

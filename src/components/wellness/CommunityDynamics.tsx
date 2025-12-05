@@ -4,10 +4,9 @@
  */
 
 import React from 'react';
-import { View, Text, YStack, XStack, Card } from 'tamagui';
-import { Pressable, ScrollView, Image } from 'react-native';
+import { View, Text, YStack, XStack, useTheme } from 'tamagui';
+import { Pressable, ScrollView } from 'react-native';
 import { Heart, MessageCircle, Share2 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 export interface CommunityPost {
   id: string;
@@ -44,51 +43,53 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
   onShare,
   onPress,
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+
   return (
     <Pressable
       onPress={() => onPress(post.targetScreen, post.targetParams)}
-      style={{ width: 300, marginRight: 12 }}
+      style={{ width: 280, marginRight: 12 }}
     >
-      <Card
-        bordered
-        padding="$3"
-        backgroundColor="$surface"
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.08}
-        shadowRadius={4}
-        elevation={2}
+      <View
+        padding="$2"
+        backgroundColor="$color2"
+        borderRadius="$5"
+        borderWidth={1}
+        borderColor="$color5"
       >
-        <YStack space="$3">
+        <YStack gap="$2">
           {/* 用户信息头部 */}
-          <XStack alignItems="center" space="$2">
+          <XStack alignItems="center" gap="$2">
             {/* 头像 */}
             <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              backgroundColor="$background"
+              width="$3.5"
+              height="$3.5"
+              borderRadius="$12"
+              backgroundColor="$color3"
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize={24}>{post.userAvatar}</Text>
+              <Text fontSize="$6">{post.userAvatar}</Text>
             </View>
 
             {/* 用户名和时间 */}
             <YStack flex={1}>
-              <Text fontSize="$3" fontWeight="600" color="$text">
+              <Text fontSize="$3" fontWeight="600" color="$color12">
                 {post.userName}
               </Text>
-              <XStack alignItems="center" space="$1">
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack alignItems="center" gap="$1">
+                <Text fontSize="$2" color="$color10">
                   {post.timestamp}
                 </Text>
                 {post.userRole && (
                   <>
-                    <Text fontSize="$2" color="$textSecondary">
+                    <Text fontSize="$2" color="$color10">
                       ·
                     </Text>
-                    <Text fontSize="$2" color="$textSecondary">
+                    <Text fontSize="$2" color="$color10">
                       {post.userRole}
                     </Text>
                   </>
@@ -98,40 +99,39 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
 
             {/* 内容类型标签 */}
             <View
-              backgroundColor={`${COLORS.primary}15`}
-              paddingHorizontal="$2"
-              paddingVertical={2}
+              backgroundColor={`${primaryColor}15`}
+              paddingHorizontal="$1.5"
+              paddingVertical="$0.5"
               borderRadius="$2"
             >
-              <Text fontSize="$1" color={COLORS.primary} fontWeight="600">
+              <Text fontSize="$1" color="$primary" fontWeight="600">
                 {post.postTypeLabel}
               </Text>
             </View>
           </XStack>
 
           {/* 内容 */}
-          <Text fontSize="$3" color="$text" lineHeight={22} numberOfLines={4}>
+          <Text fontSize="$3" color="$color12" numberOfLines={4}>
             {post.content}
           </Text>
 
           {/* 图片（如果有） */}
           {post.images && post.images.length > 0 && (
-            <XStack space="$2" flexWrap="wrap">
+            <XStack gap="$1.5" flexWrap="wrap">
               {post.images.slice(0, 3).map((image, index) => (
                 <View
                   key={index}
-                  width={post.images!.length === 1 ? '100%' : 90}
-                  height={90}
-                  borderRadius="$2"
-                  backgroundColor="$background"
+                  width={post.images!.length === 1 ? '100%' : 80}
+                  height={80}
+                  borderRadius="$3"
+                  backgroundColor="$color3"
                   overflow="hidden"
                 >
-                  {/* 实际项目中这里应该使用Image组件加载图片 */}
                   <View
                     flex={1}
                     justifyContent="center"
                     alignItems="center"
-                    backgroundColor={`${COLORS.primary}10`}
+                    backgroundColor={`${primaryColor}10`}
                   >
                     <Text fontSize="$6">{image}</Text>
                   </View>
@@ -143,13 +143,13 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
           {/* 服务标签 */}
           {post.serviceTag && (
             <View
-              backgroundColor="$background"
-              paddingHorizontal="$2"
-              paddingVertical="$1"
+              backgroundColor="$color3"
+              paddingHorizontal="$1.5"
+              paddingVertical="$0.75"
               borderRadius="$2"
               alignSelf="flex-start"
             >
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 #{post.serviceTag}
               </Text>
             </View>
@@ -158,21 +158,21 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
           {/* 互动按钮 */}
           <XStack
             justifyContent="space-around"
-            paddingTop="$2"
+            paddingTop="$1.5"
             borderTopWidth={1}
-            borderTopColor="$borderColor"
+            borderTopColor="$color5"
           >
             {/* 点赞 */}
             <Pressable onPress={() => onLike(post.id)}>
-              <XStack alignItems="center" space="$1">
+              <XStack alignItems="center" gap="$1">
                 <Heart
                   size={18}
-                  color={post.isLiked ? COLORS.error : COLORS.textSecondary}
-                  fill={post.isLiked ? COLORS.error : 'none'}
+                  color={post.isLiked ? errorColor : color10}
+                  fill={post.isLiked ? errorColor : 'none'}
                 />
                 <Text
                   fontSize="$2"
-                  color={post.isLiked ? COLORS.error : '$textSecondary'}
+                  color={post.isLiked ? '$error' : '$color10'}
                 >
                   {post.likes}
                 </Text>
@@ -181,9 +181,9 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
 
             {/* 评论 */}
             <Pressable onPress={() => onComment(post.id)}>
-              <XStack alignItems="center" space="$1">
-                <MessageCircle size={18} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack alignItems="center" gap="$1">
+                <MessageCircle size={18} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   {post.comments}
                 </Text>
               </XStack>
@@ -191,16 +191,16 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
 
             {/* 分享 */}
             <Pressable onPress={() => onShare(post.id)}>
-              <XStack alignItems="center" space="$1">
-                <Share2 size={18} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack alignItems="center" gap="$1">
+                <Share2 size={18} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   {post.shares}
                 </Text>
               </XStack>
             </Pressable>
           </XStack>
         </YStack>
-      </Card>
+      </View>
     </Pressable>
   );
 };
@@ -223,21 +223,21 @@ export const CommunityDynamics: React.FC<CommunityDynamicsProps> = ({
   onViewAllPress,
 }) => {
   return (
-    <View marginBottom={16}>
-      <YStack space="$3">
+    <View marginBottom="$2">
+      <YStack gap="$2">
         {/* 标题 */}
-        <View paddingHorizontal="$4">
+        <View paddingHorizontal="$2.5">
           <XStack justifyContent="space-between" alignItems="center">
             <YStack>
-              <Text fontSize="$5" fontWeight="600" color="$text">
+              <Text fontSize="$5" fontWeight="600" color="$color12">
                 社区动态
               </Text>
-              <Text fontSize="$3" color="$textSecondary" marginTop="$1">
+              <Text fontSize="$3" color="$color10" marginTop="$0.5">
                 看看大家都在分享什么
               </Text>
             </YStack>
             <Pressable onPress={onViewAllPress}>
-              <Text fontSize="$3" color={COLORS.primary} fontWeight="600">
+              <Text fontSize="$3" color="$primary" fontWeight="600">
                 查看全部 →
               </Text>
             </Pressable>

@@ -1,22 +1,25 @@
+/**
+ * SecondHandDetailScreen 二手商品详情页
+ * 类似闲鱼的商品详情页设计
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
+ */
 import React, { useState, useEffect } from 'react';
 import {
   YStack,
   XStack,
   Text,
   View,
-  Button,
   ScrollView,
-  H2,
-  H3,
   Separator,
-  Card,
+  Image,
+  useTheme,
 } from 'tamagui';
 import {
-  SafeAreaView,
-  TouchableOpacity,
+  Pressable,
   Dimensions,
   FlatList,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Share2,
@@ -29,8 +32,8 @@ import {
   Calendar,
   Package,
   Shield,
+  ChevronRight,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { SecondHandItem, ItemCondition, TradeMethod } from '@/types/community';
 import {
   getSecondHandItemById,
@@ -53,18 +56,26 @@ const IMAGE_HEIGHT = SCREEN_WIDTH; // 1:1 aspect ratio
 
 /**
  * 二手商品详情页
- * 类似闲鱼的商品详情页设计
  */
 export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
   navigation,
   route,
 }) => {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const { itemId } = route.params;
   const [item, setItem] = useState<SecondHandItem | null>(null);
   const [similarItems, setSimilarItems] = useState<SecondHandItem[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [imageErrors, setImageErrors] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
     loadItemDetail();
@@ -113,7 +124,12 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
       item.sellerName,
       item.sellerAvatar
     );
-    navigation.navigate('Chat', { conversationId: conversation.id });
+    navigation.navigate('Chat', {
+      conversationId: conversation.id,
+      expertName: item.sellerName,
+      expertAvatar: item.sellerAvatar,
+      expertId: item.sellerId,
+    });
   };
 
   const handleWantItem = () => {
@@ -135,74 +151,122 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
   const getConditionLabel = (condition: ItemCondition): string => {
     const labels: { [key in ItemCondition]: string } = {
       [ItemCondition.NEW]: '全新',
-      [ItemCondition.LIKE_NEW]: '99成新',
-      [ItemCondition.EXCELLENT]: '95成新',
+      [ItemCondition.LIKE_NEW]: '99新',
+      [ItemCondition.EXCELLENT]: '95新',
       [ItemCondition.GOOD]: '9成新',
       [ItemCondition.FAIR]: '8成新',
-      [ItemCondition.USED]: '使用痕迹',
+      [ItemCondition.USED]: '有痕迹',
     };
     return labels[condition];
   };
 
-  const getConditionColor = (condition: ItemCondition): string => {
+  const getConditionColor = (condition: ItemCondition): string | undefined => {
     if (condition === ItemCondition.NEW || condition === ItemCondition.LIKE_NEW) {
-      return COLORS.success;
+      return successColor;
     } else if (condition === ItemCondition.EXCELLENT || condition === ItemCondition.GOOD) {
-      return COLORS.primary;
+      return primaryColor;
     } else {
-      return COLORS.textSecondary;
+      return color10;
     }
   };
 
+  // 处理图片加载错误
+  const handleImageError = (index: number) => {
+    setImageErrors(prev => ({ ...prev, [index]: true }));
+  };
+
+  // 处理图片滚动
+  const handleImageScroll = (event: any) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / SCREEN_WIDTH);
+    setCurrentImageIndex(index);
+  };
+
+  // 渲染图片轮播区域
   const renderImageCarousel = () => {
     if (!item) return null;
 
-    // 图片占位（实际应该是可滑动的轮播图）
+    const images = item.images && item.images.length > 0 ? item.images : [];
+    const hasImages = images.length > 0;
+
     return (
       <View width={SCREEN_WIDTH} height={IMAGE_HEIGHT} overflow="hidden">
-        <View
-          width={SCREEN_WIDTH}
-          height={IMAGE_HEIGHT}
-          backgroundColor="$background"
-          justifyContent="center"
-          alignItems="center"
-        >
-          <Text fontSize={120} opacity={0.3}>
-            📦
-          </Text>
+        {hasImages ? (
+          <FlatList
+            data={images}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleImageScroll}
+            scrollEventThrottle={16}
+            keyExtractor={(_, index) => `image-${index}`}
+            renderItem={({ item: imageUrl, index }) => (
+              <View
+                width={SCREEN_WIDTH}
+                height={IMAGE_HEIGHT}
+                backgroundColor="$color4"
+                justifyContent="center"
+                alignItems="center"
+              >
+                {!imageErrors[index] ? (
+                  <Image
+                    source={{ uri: imageUrl }}
+                    width={SCREEN_WIDTH}
+                    height={IMAGE_HEIGHT}
+                    resizeMode="cover"
+                    onError={() => handleImageError(index)}
+                  />
+                ) : (
+                  <Package size={80} color={color10} />
+                )}
+              </View>
+            )}
+          />
+        ) : (
+          <View
+            width={SCREEN_WIDTH}
+            height={IMAGE_HEIGHT}
+            backgroundColor="$color4"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Package size={80} color={color10} />
+          </View>
+        )}
 
-          {/* 免费赠送角标 */}
-          {item.isFree && (
-            <View
-              position="absolute"
-              top={16}
-              left={16}
-              backgroundColor={COLORS.success}
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-              borderRadius="$3"
-            >
-              <Text fontSize="$4" color="white" fontWeight="600">
-                免费赠送
-              </Text>
-            </View>
-          )}
+        {/* 免费赠送角标 */}
+        {item.isFree && (
+          <View
+            position="absolute"
+            top={insets.top + 60}
+            left={16}
+            backgroundColor={successColor}
+            paddingHorizontal="$2"
+            paddingVertical="$1"
+            borderRadius="$10"
+          >
+            <Text fontSize="$3" color="white" fontWeight="600">
+              免费赠送
+            </Text>
+          </View>
+        )}
 
-          {/* 图片指示器 */}
+        {/* 图片指示器 */}
+        {images.length > 1 && (
           <View
             position="absolute"
             bottom={16}
             right={16}
             backgroundColor="rgba(0,0,0,0.6)"
-            paddingHorizontal="$3"
-            paddingVertical="$1"
-            borderRadius="$3"
+            paddingHorizontal="$2"
+            paddingVertical="$0.5"
+            borderRadius="$10"
           >
-            <Text fontSize="$3" color="white">
-              1/3
+            <Text fontSize="$2" color="white">
+              {currentImageIndex + 1}/{images.length}
             </Text>
           </View>
-        </View>
+        )}
 
         {/* 顶部导航栏 */}
         <View
@@ -210,11 +274,11 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
           top={0}
           left={0}
           right={0}
-          paddingTop={50}
-          paddingHorizontal="$4"
+          paddingTop={insets.top}
+          paddingHorizontal="$2.5"
         >
-          <XStack justifyContent="space-between" alignItems="center">
-            <TouchableOpacity onPress={handleBack}>
+          <XStack justifyContent="space-between" alignItems="center" height={56}>
+            <Pressable onPress={handleBack}>
               <View
                 width={40}
                 height={40}
@@ -225,9 +289,9 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
               >
                 <ArrowLeft size={24} color="white" />
               </View>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity onPress={handleShare}>
+            <Pressable onPress={handleShare}>
               <View
                 width={40}
                 height={40}
@@ -238,7 +302,7 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
               >
                 <Share2 size={20} color="white" />
               </View>
-            </TouchableOpacity>
+            </Pressable>
           </XStack>
         </View>
       </View>
@@ -247,44 +311,64 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
 
   if (loading || !item) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <View flex={1} backgroundColor="$background">
+        <View
+          paddingTop={insets.top}
+          backgroundColor="$color2"
+          borderBottomWidth={1}
+          borderBottomColor="$color5"
+        >
+          <XStack
+            height={56}
+            paddingHorizontal="$2.5"
+            alignItems="center"
+          >
+            <Pressable onPress={handleBack}>
+              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+                <ArrowLeft size={24} color={color12} />
+              </View>
+            </Pressable>
+            <Text fontSize="$5" fontWeight="600" color="$color12" marginLeft="$2">
+              商品详情
+            </Text>
+          </XStack>
+        </View>
         <View flex={1} justifyContent="center" alignItems="center">
-          <Text fontSize="$4" color="$textSecondary">
+          <Text fontSize="$4" color="$color10">
             加载中...
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+    <View flex={1} backgroundColor="$background">
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         {/* 图片轮播 */}
         {renderImageCarousel()}
 
         {/* 商品信息卡片 */}
-        <Card
-          padding="$4"
-          borderRadius="$0"
-          backgroundColor="white"
-          marginBottom="$2"
+        <View
+          padding="$2"
+          backgroundColor="$color2"
+          marginBottom="$1.5"
         >
           {/* 价格区域 */}
-          <XStack space="$3" alignItems="baseline" marginBottom="$3">
+          <XStack gap="$2" alignItems="baseline" marginBottom="$2">
             {item.isFree ? (
-              <Text fontSize="$8" fontWeight="bold" color={COLORS.success}>
+              <Text fontSize="$6" fontWeight="700" color={successColor}>
                 免费赠送
               </Text>
             ) : (
               <>
-                <Text fontSize="$8" fontWeight="bold" color={COLORS.error}>
+                <Text fontSize="$6" fontWeight="700" color={errorColor}>
                   ¥{item.currentPrice}
                 </Text>
                 {item.originalPrice && (
                   <Text
-                    fontSize="$4"
-                    color="$textSecondary"
+                    fontSize="$3"
+                    color="$color10"
                     textDecorationLine="line-through"
                   >
                     ¥{item.originalPrice}
@@ -293,44 +377,44 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
               </>
             )}
             <View
-              backgroundColor={`${getConditionColor(item.condition)}20`}
-              paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
+              backgroundColor="$color4"
+              paddingHorizontal="$1.5"
+              paddingVertical="$0.5"
+              borderRadius="$10"
             >
-              <Text fontSize="$3" color={getConditionColor(item.condition)} fontWeight="600">
+              <Text fontSize={10} color={getConditionColor(item.condition)} fontWeight="500">
                 {getConditionLabel(item.condition)}
               </Text>
             </View>
           </XStack>
 
           {/* 标题 */}
-          <Text fontSize="$6" fontWeight="600" color="$text" marginBottom="$3">
+          <Text fontSize="$5" fontWeight="600" color="$color12" marginBottom="$2">
             {item.title}
           </Text>
 
           {/* 标签 */}
-          <XStack space="$2" flexWrap="wrap" marginBottom="$3">
+          <XStack gap="$1.5" flexWrap="wrap" marginBottom="$2">
             {item.isNegotiable && (
               <View
-                backgroundColor="$background"
-                paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
+                backgroundColor="$color4"
+                paddingHorizontal="$1.5"
+                paddingVertical="$0.5"
+                borderRadius="$10"
               >
-                <Text fontSize="$2" color={COLORS.primary}>
+                <Text fontSize={10} color={primaryColor} fontWeight="500">
                   可议价
                 </Text>
               </View>
             )}
             {item.category && (
               <View
-                backgroundColor="$background"
-                paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
+                backgroundColor="$color4"
+                paddingHorizontal="$1.5"
+                paddingVertical="$0.5"
+                borderRadius="$10"
               >
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize={10} color="$color10">
                   {item.category}
                 </Text>
               </View>
@@ -338,29 +422,28 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
           </XStack>
 
           {/* 位置 */}
-          <XStack space="$2" alignItems="center">
-            <MapPin size={16} color={COLORS.textSecondary} />
-            <Text fontSize="$3" color="$textSecondary">
+          <XStack gap="$1" alignItems="center">
+            <MapPin size={14} color={color10} />
+            <Text fontSize="$2" color="$color10">
               {item.location.city} {item.location.district}
             </Text>
           </XStack>
-        </Card>
+        </View>
 
         {/* 卖家信息卡片 */}
-        <Card
-          padding="$4"
-          borderRadius="$0"
-          backgroundColor="white"
-          marginBottom="$2"
-        >
-          <TouchableOpacity onPress={handleSellerProfilePress}>
-            <XStack space="$3" alignItems="center">
+        <Pressable onPress={handleSellerProfilePress}>
+          <View
+            padding="$2"
+            backgroundColor="$color2"
+            marginBottom="$1.5"
+          >
+            <XStack gap="$2" alignItems="center">
               {/* 卖家头像占位 */}
               <View
                 width={48}
                 height={48}
                 borderRadius={24}
-                backgroundColor="$background"
+                backgroundColor="$color4"
                 justifyContent="center"
                 alignItems="center"
               >
@@ -368,149 +451,140 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
               </View>
 
               <YStack flex={1}>
-                <XStack space="$2" alignItems="center" marginBottom="$1">
-                  <Text fontSize="$4" fontWeight="600" color="$text">
-                    卖家昵称
+                <XStack gap="$1.5" alignItems="center" marginBottom="$0.5">
+                  <Text fontSize="$4" fontWeight="600" color="$color12">
+                    {item.sellerName || '卖家昵称'}
                   </Text>
                   {item.sellerVerified && (
                     <View
-                      backgroundColor={COLORS.primary}
-                      paddingHorizontal="$2"
+                      backgroundColor={primaryColor}
+                      paddingHorizontal="$1.5"
                       paddingVertical="$0.5"
-                      borderRadius="$1"
+                      borderRadius="$10"
                     >
-                      <Text fontSize="$1" color="white">
+                      <Text fontSize={10} color="white" fontWeight="500">
                         认证
                       </Text>
                     </View>
                   )}
                 </XStack>
-                <XStack space="$2" alignItems="center">
-                  <Shield size={12} color={COLORS.textSecondary} />
-                  <Text fontSize="$2" color="$textSecondary">
+                <XStack gap="$1" alignItems="center">
+                  <Shield size={12} color={color10} />
+                  <Text fontSize="$2" color="$color10">
                     信用良好
                   </Text>
                 </XStack>
               </YStack>
 
-              <View
-                backgroundColor="$background"
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                borderRadius="$2"
-              >
-                <XStack space="$1" alignItems="center">
-                  <Store size={14} color={COLORS.textSecondary} />
-                  <Text fontSize="$3" color="$textSecondary">
-                    进入主页
-                  </Text>
-                </XStack>
-              </View>
+              <XStack gap="$0.5" alignItems="center">
+                <Store size={14} color={color10} />
+                <Text fontSize="$3" color="$color10">
+                  主页
+                </Text>
+                <ChevronRight size={14} color={color10} />
+              </XStack>
             </XStack>
-          </TouchableOpacity>
-        </Card>
+          </View>
+        </Pressable>
 
         {/* 商品详情卡片 */}
-        <Card
-          padding="$4"
-          borderRadius="$0"
-          backgroundColor="white"
-          marginBottom="$2"
+        <View
+          padding="$2"
+          backgroundColor="$color2"
+          marginBottom="$1.5"
         >
-          <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             商品详情
           </Text>
 
           {/* 详情项 */}
-          <YStack space="$3">
-            <XStack space="$2" alignItems="flex-start">
-              <Package size={18} color={COLORS.textSecondary} />
+          <YStack gap="$2">
+            <XStack gap="$1.5" alignItems="flex-start">
+              <Package size={16} color={color10} />
               <YStack flex={1}>
-                <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
+                <Text fontSize="$2" color="$color10" marginBottom="$0.5">
                   成色描述
                 </Text>
-                <Text fontSize="$4" color="$text">
+                <Text fontSize="$3" color="$color12" lineHeight={20}>
                   {item.description}
                 </Text>
               </YStack>
             </XStack>
 
             {item.purchaseTime && (
-              <XStack space="$2" alignItems="center">
-                <Calendar size={18} color={COLORS.textSecondary} />
+              <XStack gap="$1.5" alignItems="flex-start">
+                <Calendar size={16} color={color10} />
                 <YStack>
-                  <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
+                  <Text fontSize="$2" color="$color10" marginBottom="$0.5">
                     购买时间
                   </Text>
-                  <Text fontSize="$4" color="$text">
+                  <Text fontSize="$3" color="$color12">
                     {item.purchaseTime}
                   </Text>
                 </YStack>
               </XStack>
             )}
           </YStack>
-        </Card>
+        </View>
 
         {/* 交易方式卡片 */}
-        <Card
-          padding="$4"
-          borderRadius="$0"
-          backgroundColor="white"
-          marginBottom="$2"
+        <View
+          padding="$2"
+          backgroundColor="$color2"
+          marginBottom="$1.5"
         >
-          <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             交易方式
           </Text>
 
-          <XStack space="$4">
+          <XStack gap="$4" marginBottom="$2">
             {item.tradeMethods.includes(TradeMethod.PICKUP) && (
-              <XStack space="$2" alignItems="center">
-                <Hand size={18} color={COLORS.primary} />
-                <Text fontSize="$4" color="$text">
+              <XStack gap="$1" alignItems="center">
+                <Hand size={16} color={primaryColor} />
+                <Text fontSize="$3" color="$color12">
                   同城自取
                 </Text>
               </XStack>
             )}
             {item.tradeMethods.includes(TradeMethod.DELIVERY) && (
-              <XStack space="$2" alignItems="center">
-                <Truck size={18} color={COLORS.primary} />
-                <Text fontSize="$4" color="$text">
+              <XStack gap="$1" alignItems="center">
+                <Truck size={16} color={primaryColor} />
+                <Text fontSize="$3" color="$color12">
                   快递邮寄
                 </Text>
               </XStack>
             )}
           </XStack>
 
-          <Separator marginVertical="$3" />
+          <Separator marginVertical="$2" backgroundColor="$color5" />
 
           {/* 位置信息 */}
-          <XStack space="$2" alignItems="flex-start">
-            <MapPin size={18} color={COLORS.textSecondary} />
+          <XStack gap="$1.5" alignItems="flex-start">
+            <MapPin size={16} color={color10} />
             <YStack flex={1}>
-              <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
+              <Text fontSize="$2" color="$color10" marginBottom="$0.5">
                 交易地点
               </Text>
-              <Text fontSize="$4" color="$text">
+              <Text fontSize="$3" color="$color12">
                 {item.location.city} {item.location.district}
               </Text>
               {item.location.address && (
-                <Text fontSize="$3" color="$textSecondary" marginTop="$1">
+                <Text fontSize="$2" color="$color10" marginTop="$0.5">
                   详细地址需联系卖家获取
                 </Text>
               )}
             </YStack>
           </XStack>
-        </Card>
+        </View>
 
         {/* 相似推荐 */}
         {similarItems.length > 0 && (
-          <Card
-            padding="$4"
-            borderRadius="$0"
-            backgroundColor="white"
-            marginBottom="$2"
+          <View
+            padding="$2"
+            backgroundColor="$color2"
+            marginBottom="$1.5"
           >
-            <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$3">
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               相似推荐
             </Text>
 
@@ -520,7 +594,7 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
               showsHorizontalScrollIndicator={false}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <View width={160} marginRight="$3">
+                <View width={160} marginRight={10}>
                   <SecondHandCard
                     item={item}
                     onPress={(id) => {
@@ -530,11 +604,11 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
                 </View>
               )}
             />
-          </Card>
+          </View>
         )}
 
         {/* 底部安全区域 */}
-        <View height={100} />
+        <View height={80 + insets.bottom} />
       </ScrollView>
 
       {/* 底部操作栏 */}
@@ -543,20 +617,19 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
         bottom={0}
         left={0}
         right={0}
-        backgroundColor="white"
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
-        paddingHorizontal="$4"
-        paddingVertical="$3"
-        shadowColor="$shadow"
+        borderTopColor="$color5"
+        paddingHorizontal="$2.5"
+        paddingTop="$2"
+        paddingBottom={insets.bottom > 0 ? insets.bottom : 14}
         shadowOffset={{ width: 0, height: -2 }}
-        shadowOpacity={0.1}
-        shadowRadius={8}
+        shadowOpacity={0.08}
         elevation={8}
       >
-        <XStack space="$3" alignItems="center">
+        <XStack gap="$2" alignItems="center">
           {/* 收藏按钮 */}
-          <TouchableOpacity onPress={handleToggleFavorite}>
+          <Pressable onPress={handleToggleFavorite}>
             <View
               width={48}
               height={48}
@@ -565,50 +638,50 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
             >
               <Heart
                 size={24}
-                color={isFavorite ? COLORS.error : COLORS.textSecondary}
-                fill={isFavorite ? COLORS.error : 'none'}
+                color={isFavorite ? errorColor : color10}
+                fill={isFavorite ? errorColor : 'none'}
               />
             </View>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* 联系卖家 */}
-          <TouchableOpacity style={{ flex: 1 }} onPress={handleContactSeller}>
+          <Pressable style={{ flex: 1 }} onPress={handleContactSeller}>
             <View
               flex={1}
-              backgroundColor="$background"
-              borderRadius="$3"
-              paddingVertical="$3"
+              backgroundColor="$color4"
+              borderRadius="$10"
+              paddingVertical="$2"
               justifyContent="center"
               alignItems="center"
               borderWidth={1}
-              borderColor="$borderColor"
+              borderColor="$color5"
             >
-              <XStack space="$2" alignItems="center">
-                <MessageCircle size={18} color={COLORS.textSecondary} />
-                <Text fontSize="$4" color="$text" fontWeight="600">
+              <XStack gap="$1" alignItems="center">
+                <MessageCircle size={16} color={color10} />
+                <Text fontSize="$3" color="$color12" fontWeight="500">
                   联系卖家
                 </Text>
               </XStack>
             </View>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* 我想要 */}
-          <TouchableOpacity style={{ flex: 1 }} onPress={handleWantItem}>
+          <Pressable style={{ flex: 1 }} onPress={handleWantItem}>
             <View
               flex={1}
-              backgroundColor={COLORS.primary}
-              borderRadius="$3"
-              paddingVertical="$3"
+              backgroundColor={primaryColor}
+              borderRadius="$10"
+              paddingVertical="$2"
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$4" color="white" fontWeight="600">
+              <Text fontSize="$3" color="white" fontWeight="500">
                 {item.isFree ? '我想要' : '立即购买'}
               </Text>
             </View>
-          </TouchableOpacity>
+          </Pressable>
         </XStack>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };

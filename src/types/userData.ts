@@ -3,6 +3,12 @@
  * 本地存储方案，无需后端支持
  */
 
+import {
+  UserMembership,
+  PointsInfo,
+  ServiceSubscriptions,
+} from './membership';
+
 // ==================== 基础类型定义 ====================
 
 /**
@@ -372,6 +378,11 @@ export interface UserData {
   communityActivities: CommunityActivity[]; // 社区活动
   familyMembers: FamilyMember[]; // 家庭成员
   settings: AppSettings; // APP设置
+
+  // 会员体系 (v1.1.0+)
+  membership: UserMembership; // 统一会员信息
+  points: PointsInfo; // 积分信息
+  subscriptions: ServiceSubscriptions; // 独立付费服务订阅
 
   // 元数据
   version: string; // 数据结构版本号（用于未来迁移）

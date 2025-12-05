@@ -283,6 +283,12 @@ export enum ExpertCertStatus {
   REJECTED = 'rejected', // 已拒绝
 }
 
+// 达人类型
+export enum ExpertType {
+  PERSONAL = 'personal', // 个人达人 (¥500/年)
+  BUSINESS = 'business', // 商家达人 (¥2000/年)
+}
+
 // 达人
 export interface Expert {
   id: string;
@@ -292,6 +298,10 @@ export interface Expert {
 
   // 认证信息
   certStatus: ExpertCertStatus;
+  expertType?: ExpertType; // 达人类型 (个人/商家)
+  certificationFee?: number; // 认证费用
+  certExpireDate?: string; // 认证到期日期
+  certPurchaseDate?: string; // 认证购买日期
   realNameVerified: boolean; // 实名认证
   skillVerified: boolean; // 技能认证
   level: ExpertLevel;
@@ -505,21 +515,13 @@ export interface ChatConversation {
   updatedAt: string;
 }
 
-// 二手商品分类
+// 二手商品分类（康养社区特色分类）
 export enum ItemCategory {
-  ELECTRONICS = 'electronics', // 数码电子
-  HOME_APPLIANCES = 'home_appliances', // 家用电器
-  FURNITURE = 'furniture', // 家具家居
-  CLOTHING = 'clothing', // 服装配饰
-  BOOKS = 'books', // 图书文化
-  SPORTS = 'sports', // 运动户外
-  TOYS = 'toys', // 玩具母婴
-  BEAUTY = 'beauty', // 美妆个护
-  KITCHEN = 'kitchen', // 厨房用品
-  TOOLS = 'tools', // 工具设备
-  PLANTS = 'plants', // 花卉绿植
-  PETS = 'pets', // 宠物用品
-  HEALTH = 'health', // 健康器械
+  HEALTH_DEVICE = 'health_device', // 健康设备（血压计、血糖仪、体温计等）
+  FITNESS = 'fitness', // 健身器材（跑步机、哑铃、瑜伽垫等）
+  ASSISTIVE = 'assistive', // 辅助用品（轮椅、拐杖、护理床等）
+  DAILY = 'daily', // 日常用品（老花镜、放大镜、药盒等）
+  FURNITURE = 'furniture', // 家具（适老家具、电动床等）
   OTHER = 'other', // 其他物品
 }
 

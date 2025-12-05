@@ -4,10 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, YStack, XStack, Card } from 'tamagui';
+import { View, Text, YStack, XStack, useTheme } from 'tamagui';
 import { Pressable, ScrollView } from 'react-native';
 import { CheckCircle } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 export type ServiceCategory = 'all' | 'daily_life' | 'health_management' | 'wealth_planning';
 
@@ -15,7 +14,7 @@ interface ServiceDetail {
   id: string;
   category: ServiceCategory;
   scenarioTitle: string; // "子女不在身边？我们来照顾您"
-  serviceName: string; // "营养配餐 + 送餐上门"
+  serviceName: string; // "营养配餐 + 闪送到家"
   valuePoints: string[]; // 核心价值点
   suitableFor: string; // 适用人群
   price: string;
@@ -39,42 +38,43 @@ const ServiceCardItem: React.FC<{
   onServicePress: (screen: string) => void;
   onConsultPress?: (screen: string) => void;
 }> = ({ service, onServicePress, onConsultPress }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+
   return (
-    <Card
-      bordered
-      padding="$4"
-      backgroundColor="$surface"
-      shadowColor="$shadow"
-      shadowOffset={{ width: 0, height: 2 }}
-      shadowOpacity={0.08}
-      shadowRadius={4}
-      elevation={2}
-      marginBottom={16}
+    <View
+      backgroundColor="$color2"
+      borderRadius="$5"
+      padding="$2"
+      borderWidth={1}
+      borderColor="$color5"
+      marginBottom="$2"
     >
-      <YStack space="$3">
+      <YStack gap="$3">
         {/* 场景化标题 */}
-        <XStack alignItems="center" space="$3">
+        <XStack alignItems="center" gap="$3">
           <Text fontSize={32}>{service.icon}</Text>
           <YStack flex={1}>
-            <Text fontSize="$5" fontWeight="700" color="$text" lineHeight={24}>
+            <Text fontSize="$5" fontWeight="700" color="$color12" lineHeight={24}>
               {service.scenarioTitle}
             </Text>
-            <Text fontSize="$3" color={COLORS.primary} fontWeight="600" marginTop="$1">
+            <Text fontSize="$3" color="$color9" fontWeight="600" marginTop="$1">
               {service.serviceName}
             </Text>
           </YStack>
         </XStack>
 
         {/* 核心价值点 */}
-        <YStack space="$2">
+        <YStack gap="$2">
           {service.valuePoints.map((point, index) => (
-            <XStack key={index} alignItems="flex-start" space="$2">
+            <XStack key={index} alignItems="flex-start" gap="$2">
               <CheckCircle
                 size={16}
-                color={COLORS.success}
+                color={successColor}
                 style={{ marginTop: 2 }}
               />
-              <Text flex={1} fontSize="$3" color="$text" lineHeight={20}>
+              <Text flex={1} fontSize="$3" color="$color12" lineHeight={20}>
                 {point}
               </Text>
             </XStack>
@@ -83,13 +83,13 @@ const ServiceCardItem: React.FC<{
 
         {/* 适用人群 */}
         <View
-          backgroundColor="$background"
+          backgroundColor="$color3"
           padding="$2"
           borderRadius="$2"
           borderLeftWidth={3}
-          borderLeftColor={COLORS.primary}
+          borderLeftColor={primaryColor}
         >
-          <Text fontSize="$2" color="$textSecondary">
+          <Text fontSize="$2" color="$color10">
             适合：{service.suitableFor}
           </Text>
         </View>
@@ -97,33 +97,33 @@ const ServiceCardItem: React.FC<{
         {/* 价格和社交证明 */}
         <XStack justifyContent="space-between" alignItems="center">
           <YStack>
-            <XStack alignItems="baseline" space="$1">
-              <Text fontSize="$2" color={COLORS.primary}>
+            <XStack alignItems="baseline" gap="$1">
+              <Text fontSize="$2" color="$color9">
                 ¥
               </Text>
-              <Text fontSize="$7" fontWeight="700" color={COLORS.primary}>
+              <Text fontSize="$7" fontWeight="700" color="$color9">
                 {service.price}
               </Text>
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 {service.priceUnit}起
               </Text>
             </XStack>
-            <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+            <Text fontSize="$2" color="$color10" marginTop="$1">
               {service.socialProof}
             </Text>
           </YStack>
 
-          <XStack space="$2">
+          <XStack gap="$2">
             {service.consultScreen && onConsultPress && (
               <Pressable onPress={() => onConsultPress(service.consultScreen!)}>
                 <View
-                  paddingHorizontal="$3"
+                  paddingHorizontal="$2.5"
                   paddingVertical="$2"
-                  borderRadius="$3"
+                  borderRadius="$10"
                   borderWidth={1}
-                  borderColor={COLORS.primary}
+                  borderColor={primaryColor}
                 >
-                  <Text color={COLORS.primary} fontSize="$2" fontWeight="600">
+                  <Text color="$color9" fontSize="$2" fontWeight="600">
                     {service.secondaryCTA}
                   </Text>
                 </View>
@@ -132,10 +132,10 @@ const ServiceCardItem: React.FC<{
 
             <Pressable onPress={() => onServicePress(service.targetScreen)}>
               <View
-                paddingHorizontal="$3"
+                paddingHorizontal="$2.5"
                 paddingVertical="$2"
-                borderRadius="$3"
-                backgroundColor={COLORS.primary}
+                borderRadius="$10"
+                backgroundColor={primaryColor}
               >
                 <Text color="white" fontSize="$2" fontWeight="600">
                   {service.primaryCTA}
@@ -145,7 +145,7 @@ const ServiceCardItem: React.FC<{
           </XStack>
         </XStack>
       </YStack>
-    </Card>
+    </View>
   );
 };
 
@@ -154,6 +154,9 @@ export const ScenarioServiceSection: React.FC<ScenarioServiceCardProps> = ({
   onServicePress,
   onConsultPress,
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory>('all');
 
   const categories = [
@@ -169,14 +172,14 @@ export const ScenarioServiceSection: React.FC<ScenarioServiceCardProps> = ({
       : services.filter((s) => s.category === selectedCategory);
 
   return (
-    <View marginBottom={16}>
-      <YStack space="$3">
+    <View marginBottom="$2">
+      <YStack gap="$3">
         {/* 标题 */}
-        <View paddingHorizontal="$4">
-          <Text fontSize="$5" fontWeight="600" color="$text">
+        <View paddingHorizontal="$2.5">
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             按需选择
           </Text>
-          <Text fontSize="$3" color="$textSecondary" marginTop="$1">
+          <Text fontSize="$3" color="$color10" marginTop="$1">
             找到适合您的服务方案
           </Text>
         </View>
@@ -187,28 +190,28 @@ export const ScenarioServiceSection: React.FC<ScenarioServiceCardProps> = ({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16 }}
         >
-          <XStack space="$2">
+          <XStack gap="$2">
             {categories.map((cat) => (
               <Pressable
                 key={cat.id}
                 onPress={() => setSelectedCategory(cat.id as ServiceCategory)}
               >
                 <View
-                  paddingHorizontal="$4"
+                  paddingHorizontal="$2.5"
                   paddingVertical="$2"
                   borderRadius="$6"
                   backgroundColor={
-                    selectedCategory === cat.id ? COLORS.primary : '$background'
+                    selectedCategory === cat.id ? primaryColor : '$color3'
                   }
                   borderWidth={1}
                   borderColor={
-                    selectedCategory === cat.id ? COLORS.primary : '$borderColor'
+                    selectedCategory === cat.id ? primaryColor : '$color5'
                   }
                 >
                   <Text
                     fontSize="$3"
                     fontWeight="600"
-                    color={selectedCategory === cat.id ? 'white' : '$text'}
+                    color={selectedCategory === cat.id ? 'white' : '$color12'}
                   >
                     {cat.label}
                   </Text>
@@ -219,7 +222,7 @@ export const ScenarioServiceSection: React.FC<ScenarioServiceCardProps> = ({
         </ScrollView>
 
         {/* 服务卡片列表 */}
-        <View paddingHorizontal="$4">
+        <View paddingHorizontal="$2.5">
           <YStack>
             {filteredServices.map((service) => (
               <ServiceCardItem
@@ -245,7 +248,7 @@ export const mockScenarioServices: ServiceDetail[] = [
     id: 'nutrition_meal',
     category: 'daily_life',
     scenarioTitle: '子女不在身边？我们来照顾您',
-    serviceName: '营养配餐 + 送餐上门',
+    serviceName: '营养配餐 + 闪送到家',
     valuePoints: [
       '营养师定制食谱，三高糖尿病专属方案',
       '每日新鲜食材配送，准时送达到家',

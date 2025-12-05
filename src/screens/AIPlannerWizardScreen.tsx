@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ScrollView, Pressable, TextInput, Alert } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,7 +14,6 @@ import {
   TrendingUp,
   Cpu,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 interface PlannerData {
   // Step 1: 基本信息
@@ -38,6 +38,15 @@ interface PlannerData {
 
 const AIPlannerWizardScreen: React.FC = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<PlannerData>({
     age: '',
@@ -129,58 +138,58 @@ const AIPlannerWizardScreen: React.FC = () => {
   };
 
   const renderProgressBar = () => (
-    <XStack padding="$4" gap="$2" alignItems="center">
+    <XStack paddingHorizontal="$2.5" paddingVertical="$2" gap="$1.5" alignItems="center">
       {Array.from({ length: totalSteps }).map((_, index) => (
         <View
           key={index}
           flex={1}
           height={4}
           borderRadius={2}
-          backgroundColor={index < currentStep ? COLORS.primary : '$borderColor'}
+          backgroundColor={index < currentStep ? primaryColor : '$color4'}
         />
       ))}
     </XStack>
   );
 
   const renderStep1 = () => (
-    <YStack gap="$4">
+    <YStack gap="$3">
       <XStack alignItems="center" gap="$2" marginBottom="$2">
         <View
-          width={48}
-          height={48}
-          borderRadius={24}
-          backgroundColor={`${COLORS.primary}20`}
+          width={40}
+          height={40}
+          borderRadius={20}
+          backgroundColor={`${primaryColor}15`}
           justifyContent="center"
           alignItems="center"
         >
-          <User size={24} color={COLORS.primary} />
+          <User size={20} color={primaryColor} />
         </View>
         <YStack flex={1}>
-          <Text fontSize="$5" fontWeight="700" color="$text">
+          <Text fontSize="$5" fontWeight="700" color="$color12">
             基本信息
           </Text>
-          <Text fontSize="$3" color="$textSecondary">
+          <Text fontSize="$3" color="$color10">
             了解您的基本情况
           </Text>
         </YStack>
       </XStack>
 
       <YStack gap="$2">
-        <Text fontSize="$3" fontWeight="600" color="$text">
+        <Text fontSize="$3" fontWeight="600" color="$color12">
           年龄 *
         </Text>
         <View
-          backgroundColor="$surface"
-          borderRadius="$3"
+          backgroundColor="$color2"
+          borderRadius="$10"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
           paddingHorizontal="$3"
         >
           <TextInput
             placeholder="请输入您的年龄"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             keyboardType="number-pad"
-            style={{ fontSize: 14, color: COLORS.text, height: 48 }}
+            style={{ fontSize: 14, color: color12, height: 48 }}
             value={data.age}
             onChangeText={text => setData({ ...data, age: text })}
             maxLength={3}
@@ -189,7 +198,7 @@ const AIPlannerWizardScreen: React.FC = () => {
       </YStack>
 
       <YStack gap="$2">
-        <Text fontSize="$3" fontWeight="600" color="$text">
+        <Text fontSize="$3" fontWeight="600" color="$color12">
           性别 *
         </Text>
         <XStack gap="$3">
@@ -199,16 +208,16 @@ const AIPlannerWizardScreen: React.FC = () => {
           >
             <View
               height={48}
-              borderRadius="$3"
+              borderRadius="$10"
               borderWidth={1}
-              borderColor={data.gender === 'male' ? COLORS.primary : '$borderColor'}
-              backgroundColor={data.gender === 'male' ? `${COLORS.primary}20` : '$surface'}
+              borderColor={data.gender === 'male' ? primaryColor : '$color5'}
+              backgroundColor={data.gender === 'male' ? `${primaryColor}20` : '$color2'}
               justifyContent="center"
               alignItems="center"
             >
               <Text
                 fontSize="$4"
-                color={data.gender === 'male' ? COLORS.primary : '$text'}
+                color={data.gender === 'male' ? primaryColor : '$color12'}
                 fontWeight={data.gender === 'male' ? '600' : '400'}
               >
                 男
@@ -221,16 +230,16 @@ const AIPlannerWizardScreen: React.FC = () => {
           >
             <View
               height={48}
-              borderRadius="$3"
+              borderRadius="$10"
               borderWidth={1}
-              borderColor={data.gender === 'female' ? COLORS.primary : '$borderColor'}
-              backgroundColor={data.gender === 'female' ? `${COLORS.primary}20` : '$surface'}
+              borderColor={data.gender === 'female' ? primaryColor : '$color5'}
+              backgroundColor={data.gender === 'female' ? `${primaryColor}20` : '$color2'}
               justifyContent="center"
               alignItems="center"
             >
               <Text
                 fontSize="$4"
-                color={data.gender === 'female' ? COLORS.primary : '$text'}
+                color={data.gender === 'female' ? primaryColor : '$color12'}
                 fontWeight={data.gender === 'female' ? '600' : '400'}
               >
                 女
@@ -241,20 +250,20 @@ const AIPlannerWizardScreen: React.FC = () => {
       </YStack>
 
       <YStack gap="$2">
-        <Text fontSize="$3" fontWeight="600" color="$text">
+        <Text fontSize="$3" fontWeight="600" color="$color12">
           职业 *
         </Text>
         <View
-          backgroundColor="$surface"
-          borderRadius="$3"
+          backgroundColor="$color2"
+          borderRadius="$10"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
           paddingHorizontal="$3"
         >
           <TextInput
             placeholder="请输入您的职业"
-            placeholderTextColor={COLORS.textSecondary}
-            style={{ fontSize: 14, color: COLORS.text, height: 48 }}
+            placeholderTextColor={color10}
+            style={{ fontSize: 14, color: color12, height: 48 }}
             value={data.occupation}
             onChangeText={text => setData({ ...data, occupation: text })}
           />
@@ -262,21 +271,21 @@ const AIPlannerWizardScreen: React.FC = () => {
       </YStack>
 
       <YStack gap="$2">
-        <Text fontSize="$3" fontWeight="600" color="$text">
+        <Text fontSize="$3" fontWeight="600" color="$color12">
           年收入（选填）
         </Text>
         <View
-          backgroundColor="$surface"
-          borderRadius="$3"
+          backgroundColor="$color2"
+          borderRadius="$10"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
           paddingHorizontal="$3"
         >
           <TextInput
             placeholder="请输入年收入（万元）"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             keyboardType="number-pad"
-            style={{ fontSize: 14, color: COLORS.text, height: 48 }}
+            style={{ fontSize: 14, color: color12, height: 48 }}
             value={data.annualIncome}
             onChangeText={text => setData({ ...data, annualIncome: text })}
           />
@@ -284,7 +293,7 @@ const AIPlannerWizardScreen: React.FC = () => {
       </YStack>
 
       <YStack gap="$2">
-        <Text fontSize="$3" fontWeight="600" color="$text">
+        <Text fontSize="$3" fontWeight="600" color="$color12">
           家庭成员数量
         </Text>
         <XStack gap="$2">
@@ -296,18 +305,18 @@ const AIPlannerWizardScreen: React.FC = () => {
               <View
                 width={48}
                 height={48}
-                borderRadius="$3"
+                borderRadius="$10"
                 borderWidth={1}
-                borderColor={data.familyMembers === num ? COLORS.primary : '$borderColor'}
+                borderColor={data.familyMembers === num ? primaryColor : '$color5'}
                 backgroundColor={
-                  data.familyMembers === num ? `${COLORS.primary}20` : '$surface'
+                  data.familyMembers === num ? `${primaryColor}20` : '$color2'
                 }
                 justifyContent="center"
                 alignItems="center"
               >
                 <Text
                   fontSize="$4"
-                  color={data.familyMembers === num ? COLORS.primary : '$text'}
+                  color={data.familyMembers === num ? primaryColor : '$color12'}
                   fontWeight={data.familyMembers === num ? '600' : '400'}
                 >
                   {num}
@@ -333,30 +342,30 @@ const AIPlannerWizardScreen: React.FC = () => {
     ];
 
     return (
-      <YStack gap="$4">
+      <YStack gap="$3">
         <XStack alignItems="center" gap="$2" marginBottom="$2">
           <View
-            width={48}
-            height={48}
-            borderRadius={24}
-            backgroundColor={`${COLORS.error}20`}
+            width={40}
+            height={40}
+            borderRadius={20}
+            backgroundColor={`${errorColor}15`}
             justifyContent="center"
             alignItems="center"
           >
-            <Heart size={24} color={COLORS.error} />
+            <Heart size={20} color={errorColor} />
           </View>
           <YStack flex={1}>
-            <Text fontSize="$5" fontWeight="700" color="$text">
+            <Text fontSize="$5" fontWeight="700" color="$color12">
               健康状况
             </Text>
-            <Text fontSize="$3" color="$textSecondary">
+            <Text fontSize="$3" color="$color10">
               如实告知很重要
             </Text>
           </YStack>
         </XStack>
 
         <YStack gap="$2">
-          <Text fontSize="$3" fontWeight="600" color="$text">
+          <Text fontSize="$3" fontWeight="600" color="$color12">
             整体健康状况 *
           </Text>
           <YStack gap="$2">
@@ -370,24 +379,24 @@ const AIPlannerWizardScreen: React.FC = () => {
                 onPress={() => setData({ ...data, healthStatus: option.value as any })}
               >
                 <View
-                  padding="$3"
-                  borderRadius="$3"
+                  padding="$2"
+                  borderRadius="$5"
                   borderWidth={1}
                   borderColor={
-                    data.healthStatus === option.value ? COLORS.primary : '$borderColor'
+                    data.healthStatus === option.value ? primaryColor : '$color5'
                   }
                   backgroundColor={
-                    data.healthStatus === option.value ? `${COLORS.primary}15` : '$surface'
+                    data.healthStatus === option.value ? `${primaryColor}15` : '$color2'
                   }
                 >
                   <Text
                     fontSize="$4"
                     fontWeight="600"
-                    color={data.healthStatus === option.value ? COLORS.primary : '$text'}
+                    color={data.healthStatus === option.value ? primaryColor : '$color12'}
                   >
                     {option.label}
                   </Text>
-                  <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+                  <Text fontSize="$2" color="$color10" marginTop="$1">
                     {option.desc}
                   </Text>
                 </View>
@@ -397,7 +406,7 @@ const AIPlannerWizardScreen: React.FC = () => {
         </YStack>
 
         <YStack gap="$2">
-          <Text fontSize="$3" fontWeight="600" color="$text">
+          <Text fontSize="$3" fontWeight="600" color="$color12">
             是否有以下疾病？（多选）
           </Text>
           <XStack gap="$2" flexWrap="wrap">
@@ -421,17 +430,17 @@ const AIPlannerWizardScreen: React.FC = () => {
                 <View
                   paddingHorizontal="$3"
                   paddingVertical="$2"
-                  borderRadius="$2"
+                  borderRadius="$10"
                   backgroundColor={
                     data.existingConditions.includes(condition)
-                      ? COLORS.error
-                      : '$borderColor'
+                      ? errorColor
+                      : '$color4'
                   }
                 >
                   <Text
                     fontSize="$3"
                     color={
-                      data.existingConditions.includes(condition) ? 'white' : '$text'
+                      data.existingConditions.includes(condition) ? 'white' : '$color12'
                     }
                   >
                     {condition}
@@ -443,24 +452,24 @@ const AIPlannerWizardScreen: React.FC = () => {
         </YStack>
 
         <YStack gap="$2">
-          <Text fontSize="$3" fontWeight="600" color="$text">
+          <Text fontSize="$3" fontWeight="600" color="$color12">
             是否长期用药？（选填）
           </Text>
           <View
-            backgroundColor="$surface"
-            borderRadius="$3"
+            backgroundColor="$color2"
+            borderRadius="$5"
             borderWidth={1}
-            borderColor="$borderColor"
-            padding="$3"
+            borderColor="$color5"
+            padding="$2"
           >
             <TextInput
               placeholder="请填写用药情况，如：降压药、降糖药等"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={color10}
               multiline
               numberOfLines={3}
               style={{
                 fontSize: 14,
-                color: COLORS.text,
+                color: color12,
                 textAlignVertical: 'top',
                 minHeight: 60,
               }}
@@ -483,30 +492,30 @@ const AIPlannerWizardScreen: React.FC = () => {
     ];
 
     return (
-      <YStack gap="$4">
+      <YStack gap="$3">
         <XStack alignItems="center" gap="$2" marginBottom="$2">
           <View
-            width={48}
-            height={48}
-            borderRadius={24}
-            backgroundColor={`${COLORS.success}20`}
+            width={40}
+            height={40}
+            borderRadius={20}
+            backgroundColor={`${successColor}15`}
             justifyContent="center"
             alignItems="center"
           >
-            <Target size={24} color={COLORS.success} />
+            <Target size={20} color={successColor} />
           </View>
           <YStack flex={1}>
-            <Text fontSize="$5" fontWeight="700" color="$text">
+            <Text fontSize="$5" fontWeight="700" color="$color12">
               保障需求
             </Text>
-            <Text fontSize="$3" color="$textSecondary">
+            <Text fontSize="$3" color="$color10">
               选择您关注的保障方向
             </Text>
           </YStack>
         </XStack>
 
         <YStack gap="$2">
-          <Text fontSize="$3" fontWeight="600" color="$text">
+          <Text fontSize="$3" fontWeight="600" color="$color12">
             您需要哪些保障？* （多选）
           </Text>
           <YStack gap="$2">
@@ -528,16 +537,16 @@ const AIPlannerWizardScreen: React.FC = () => {
                 }}
               >
                 <View
-                  padding="$3"
-                  borderRadius="$3"
+                  padding="$2"
+                  borderRadius="$5"
                   borderWidth={1}
                   borderColor={
-                    data.coverageNeeds.includes(need.id) ? COLORS.success : '$borderColor'
+                    data.coverageNeeds.includes(need.id) ? successColor : '$color5'
                   }
                   backgroundColor={
                     data.coverageNeeds.includes(need.id)
-                      ? `${COLORS.success}15`
-                      : '$surface'
+                      ? `${successColor}15`
+                      : '$color2'
                   }
                 >
                   <XStack justifyContent="space-between" alignItems="center">
@@ -546,12 +555,12 @@ const AIPlannerWizardScreen: React.FC = () => {
                         fontSize="$4"
                         fontWeight="600"
                         color={
-                          data.coverageNeeds.includes(need.id) ? COLORS.success : '$text'
+                          data.coverageNeeds.includes(need.id) ? successColor : '$color12'
                         }
                       >
                         {need.label}
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+                      <Text fontSize="$2" color="$color10" marginTop="$1">
                         {need.desc}
                       </Text>
                     </YStack>
@@ -560,7 +569,7 @@ const AIPlannerWizardScreen: React.FC = () => {
                         width={24}
                         height={24}
                         borderRadius={12}
-                        backgroundColor={COLORS.success}
+                        backgroundColor={successColor}
                         justifyContent="center"
                         alignItems="center"
                       >
@@ -580,64 +589,64 @@ const AIPlannerWizardScreen: React.FC = () => {
   };
 
   const renderStep4 = () => (
-    <YStack gap="$4">
+    <YStack gap="$3">
       <XStack alignItems="center" gap="$2" marginBottom="$2">
         <View
-          width={48}
-          height={48}
-          borderRadius={24}
-          backgroundColor={`${COLORS.warning}20`}
+          width={40}
+          height={40}
+          borderRadius={20}
+          backgroundColor={`${warningColor}15`}
           justifyContent="center"
           alignItems="center"
         >
-          <DollarSign size={24} color={COLORS.warning} />
+          <DollarSign size={20} color={warningColor} />
         </View>
         <YStack flex={1}>
-          <Text fontSize="$5" fontWeight="700" color="$text">
+          <Text fontSize="$5" fontWeight="700" color="$color12">
             预算设定
           </Text>
-          <Text fontSize="$3" color="$textSecondary">
+          <Text fontSize="$3" color="$color10">
             您的年保费预算范围
           </Text>
         </YStack>
       </XStack>
 
       <YStack gap="$2">
-        <Text fontSize="$3" fontWeight="600" color="$text">
+        <Text fontSize="$3" fontWeight="600" color="$color12">
           年保费预算 * （万元）
         </Text>
         <View
-          backgroundColor="$surface"
-          borderRadius="$3"
+          backgroundColor="$color2"
+          borderRadius="$10"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
           paddingHorizontal="$3"
         >
           <TextInput
             placeholder="请输入年保费预算"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             keyboardType="decimal-pad"
-            style={{ fontSize: 14, color: COLORS.text, height: 48 }}
+            style={{ fontSize: 14, color: color12, height: 48 }}
             value={data.annualBudget}
             onChangeText={text => setData({ ...data, annualBudget: text })}
           />
         </View>
-        <Text fontSize="$2" color="$textSecondary">
+        <Text fontSize="$2" color="$color10">
           建议年保费为家庭年收入的10%-15%
         </Text>
       </YStack>
 
       <View
-        padding="$3"
-        backgroundColor="#E0F2FE"
-        borderRadius="$3"
+        padding="$2"
+        backgroundColor={`${primaryColor}10`}
+        borderRadius="$4"
         borderLeftWidth={3}
-        borderLeftColor={COLORS.primary}
+        borderLeftColor={primaryColor}
       >
-        <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$1">
+        <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
           预算参考
         </Text>
-        <Text fontSize="$2" color="$text" lineHeight={20}>
+        <Text fontSize="$2" color="$color12" lineHeight={20}>
           • 1-3万：基础保障方案{'\n'}
           • 3-5万：全面保障方案{'\n'}
           • 5-10万：尊享保障方案{'\n'}
@@ -648,47 +657,47 @@ const AIPlannerWizardScreen: React.FC = () => {
   );
 
   const renderStep5 = () => (
-    <YStack gap="$4">
+    <YStack gap="$3">
       <XStack alignItems="center" gap="$2" marginBottom="$2">
         <View
-          width={48}
-          height={48}
-          borderRadius={24}
-          backgroundColor={`${COLORS.primary}20`}
+          width={40}
+          height={40}
+          borderRadius={20}
+          backgroundColor={`${primaryColor}15`}
           justifyContent="center"
           alignItems="center"
         >
-          <FileText size={24} color={COLORS.primary} />
+          <FileText size={20} color={primaryColor} />
         </View>
         <YStack flex={1}>
-          <Text fontSize="$5" fontWeight="700" color="$text">
+          <Text fontSize="$5" fontWeight="700" color="$color12">
             已有保单
           </Text>
-          <Text fontSize="$3" color="$textSecondary">
+          <Text fontSize="$3" color="$color10">
             避免重复配置
           </Text>
         </YStack>
       </XStack>
 
       <YStack gap="$2">
-        <Text fontSize="$3" fontWeight="600" color="$text">
+        <Text fontSize="$3" fontWeight="600" color="$color12">
           现有保险情况（选填）
         </Text>
         <View
-          backgroundColor="$surface"
-          borderRadius="$3"
+          backgroundColor="$color2"
+          borderRadius="$5"
           borderWidth={1}
-          borderColor="$borderColor"
-          padding="$3"
+          borderColor="$color5"
+          padding="$2"
         >
           <TextInput
             placeholder="请简要列出您已有的保险，如：&#10;• 百万医疗险&#10;• 重疾险50万&#10;• 意外险100万"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={color10}
             multiline
             numberOfLines={5}
             style={{
               fontSize: 14,
-              color: COLORS.text,
+              color: color12,
               textAlignVertical: 'top',
               minHeight: 100,
             }}
@@ -696,7 +705,7 @@ const AIPlannerWizardScreen: React.FC = () => {
             onChangeText={text => setData({ ...data, existingPolicies: text })}
           />
         </View>
-        <Text fontSize="$2" color="$textSecondary">
+        <Text fontSize="$2" color="$color10">
           如果没有保险，可以跳过此步骤
         </Text>
       </YStack>
@@ -704,30 +713,30 @@ const AIPlannerWizardScreen: React.FC = () => {
   );
 
   const renderStep6 = () => (
-    <YStack gap="$4">
+    <YStack gap="$3">
       <XStack alignItems="center" gap="$2" marginBottom="$2">
         <View
-          width={48}
-          height={48}
-          borderRadius={24}
-          backgroundColor={`#8B5CF615`}
+          width={40}
+          height={40}
+          borderRadius={20}
+          backgroundColor={`${primaryColor}15`}
           justifyContent="center"
           alignItems="center"
         >
-          <TrendingUp size={24} color="#8B5CF6" />
+          <TrendingUp size={20} color={primaryColor} />
         </View>
         <YStack flex={1}>
-          <Text fontSize="$5" fontWeight="700" color="$text">
+          <Text fontSize="$4" fontWeight="600" color="$color12">
             风险偏好
           </Text>
-          <Text fontSize="$3" color="$textSecondary">
+          <Text fontSize="$2" color="$color10">
             最后一步了
           </Text>
         </YStack>
       </XStack>
 
       <YStack gap="$2">
-        <Text fontSize="$3" fontWeight="600" color="$text">
+        <Text fontSize="$3" fontWeight="600" color="$color12">
           投资风险偏好 *
         </Text>
         <YStack gap="$2">
@@ -753,24 +762,24 @@ const AIPlannerWizardScreen: React.FC = () => {
               onPress={() => setData({ ...data, riskPreference: option.value as any })}
             >
               <View
-                padding="$3"
-                borderRadius="$3"
+                padding="$2"
+                borderRadius="$5"
                 borderWidth={1}
                 borderColor={
-                  data.riskPreference === option.value ? '#8B5CF6' : '$borderColor'
+                  data.riskPreference === option.value ? primaryColor : '$color5'
                 }
                 backgroundColor={
-                  data.riskPreference === option.value ? '#8B5CF615' : '$surface'
+                  data.riskPreference === option.value ? `${primaryColor}15` : '$color2'
                 }
               >
                 <Text
                   fontSize="$4"
                   fontWeight="600"
-                  color={data.riskPreference === option.value ? '#8B5CF6' : '$text'}
+                  color={data.riskPreference === option.value ? primaryColor : '$color12'}
                 >
                   {option.label}
                 </Text>
-                <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+                <Text fontSize="$2" color="$color10" marginTop="$1">
                   {option.desc}
                 </Text>
               </View>
@@ -780,16 +789,16 @@ const AIPlannerWizardScreen: React.FC = () => {
       </YStack>
 
       <View
-        padding="$3"
-        backgroundColor="#FFF7ED"
-        borderRadius="$3"
+        padding="$2"
+        backgroundColor={`${warningColor}10`}
+        borderRadius="$4"
         borderLeftWidth={3}
-        borderLeftColor={COLORS.warning}
+        borderLeftColor={warningColor}
       >
-        <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$1">
+        <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
           温馨提示
         </Text>
-        <Text fontSize="$2" color="$text" lineHeight={20}>
+        <Text fontSize="$2" color="$color12" lineHeight={20}>
           AI将根据您的情况生成个性化保险规划方案，包括产品推荐和保额建议。方案仅供参考，建议咨询专业顾问进行调整。
         </Text>
       </View>
@@ -818,35 +827,42 @@ const AIPlannerWizardScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={handlePrevious}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <YStack flex={1} alignItems="center">
-          <Text fontSize="$5" fontWeight="600" color="$text">
-            AI保险规划
-          </Text>
-          <Text fontSize="$2" color="$textSecondary">
-            第{currentStep}/{totalSteps}步
-          </Text>
-        </YStack>
-        <View width={24} />
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={handlePrevious}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <YStack alignItems="center">
+            <Text fontSize="$5" fontWeight="600" color="$color12">
+              AI保险规划
+            </Text>
+            <Text fontSize="$2" color="$color10">
+              第{currentStep}/{totalSteps}步
+            </Text>
+          </YStack>
+          <View width={40} />
+        </XStack>
+      </View>
 
       {/* Progress Bar */}
       {renderProgressBar()}
 
       {/* Content */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View padding="$4">{renderCurrentStep()}</View>
-        <View height={100} />
+        <View padding="$2.5">{renderCurrentStep()}</View>
+        <View height={120} />
       </ScrollView>
 
       {/* Bottom Navigation */}
@@ -855,23 +871,25 @@ const AIPlannerWizardScreen: React.FC = () => {
         bottom={0}
         left={0}
         right={0}
-        padding="$4"
-        backgroundColor="$surface"
+        paddingHorizontal="$2.5"
+        paddingTop="$2"
+        paddingBottom={insets.bottom > 0 ? insets.bottom : 16}
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
-        gap="$3"
+        borderTopColor="$color5"
+        gap="$2"
       >
         {currentStep > 1 && (
           <Pressable onPress={handlePrevious} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$3"
+              borderRadius="$10"
               borderWidth={1}
-              borderColor={COLORS.primary}
+              borderColor={primaryColor}
               justifyContent="center"
               alignItems="center"
             >
-              <Text color={COLORS.primary} fontWeight="600">
+              <Text color={primaryColor} fontWeight="600">
                 上一步
               </Text>
             </View>
@@ -883,8 +901,8 @@ const AIPlannerWizardScreen: React.FC = () => {
         >
           <View
             height={48}
-            borderRadius="$3"
-            backgroundColor={COLORS.primary}
+            borderRadius="$10"
+            backgroundColor={primaryColor}
             justifyContent="center"
             alignItems="center"
           >

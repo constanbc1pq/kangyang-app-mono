@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
-import { View, Text, XStack, YStack, Card } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -10,13 +10,9 @@ import {
   Phone,
   Video,
   Home,
-  Star,
-  Users,
-  Clock,
   CheckCircle,
   MapPin,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { getAdvisorById } from '@/services/insuranceAdvisorService';
 import { InsuranceAdvisor } from '@/types/insurance';
 
@@ -31,6 +27,12 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
   const route = useRoute<RouteProp<RouteParams, 'InsuranceAdvisorDetail'>>();
   const { advisorId } = route.params;
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const [loading, setLoading] = useState(true);
   const [advisor, setAdvisor] = useState<InsuranceAdvisor | null>(null);
@@ -54,13 +56,13 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
   const getOnlineStatusColor = (status: string) => {
     switch (status) {
       case 'online':
-        return COLORS.success;
+        return successColor;
       case 'busy':
-        return COLORS.warning;
+        return warningColor;
       case 'offline':
-        return COLORS.textSecondary;
+        return color10;
       default:
-        return COLORS.textSecondary;
+        return color10;
     }
   };
 
@@ -137,8 +139,8 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
   if (loading) {
     return (
       <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text marginTop="$3" color="$textSecondary">
+        <ActivityIndicator size="large" color={primaryColor} />
+        <Text marginTop="$3" color="$color10">
           加载中...
         </Text>
       </View>
@@ -148,11 +150,11 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
   if (!advisor) {
     return (
       <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
-        <Text fontSize="$4" color="$textSecondary">
+        <Text fontSize="$4" color="$color10">
           顾问不存在
         </Text>
         <Pressable onPress={() => navigation.goBack()}>
-          <Text fontSize="$3" color={COLORS.primary} marginTop="$3">
+          <Text fontSize="$3" color="$primary" marginTop="$3">
             返回列表
           </Text>
         </Pressable>
@@ -162,26 +164,34 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      {/* Header - 标准居中TitleBar */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-          顾问详情
-        </Text>
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            顾问详情
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 顾问基本信息 */}
-        <YStack padding="$4" backgroundColor="$surface" borderBottomWidth={1} borderBottomColor="$borderColor">
+        <YStack padding="$2.5" backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
           <XStack gap="$3" marginBottom="$3">
             {/* 头像 */}
             <View
@@ -189,12 +199,12 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
               height={80}
               borderRadius={40}
               overflow="hidden"
-              backgroundColor="$borderColor"
+              backgroundColor="$color5"
             >
               <View
                 width={80}
                 height={80}
-                backgroundColor={COLORS.primary}
+                backgroundColor="$primary"
                 justifyContent="center"
                 alignItems="center"
               >
@@ -207,7 +217,7 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
             {/* 基本信息 */}
             <YStack flex={1} gap="$2">
               <XStack alignItems="center" gap="$2">
-                <Text fontSize="$6" fontWeight="700" color="$text">
+                <Text fontSize="$6" fontWeight="700" color="$color12">
                   {advisor.name}
                 </Text>
                 <View
@@ -218,11 +228,11 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
                 />
               </XStack>
 
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 {advisor.organization}
               </Text>
 
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 工号：{advisor.employeeId}
               </Text>
 
@@ -230,7 +240,7 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
                 <Text fontSize="$3" color={getOnlineStatusColor(advisor.onlineStatus)}>
                   {getOnlineStatusLabel(advisor.onlineStatus)}
                 </Text>
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   · 平均{advisor.avgResponseTime}响应
                 </Text>
               </XStack>
@@ -239,21 +249,21 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
 
           {/* 专业资质 */}
           <YStack gap="$2" marginBottom="$3">
-            <Text fontSize="$4" fontWeight="600" color="$text">
+            <Text fontSize="$4" fontWeight="600" color="$color12">
               专业资质
             </Text>
             <XStack gap="$2" flexWrap="wrap">
               {advisor.certifications.map((cert, idx) => (
                 <View
                   key={idx}
-                  backgroundColor={`${COLORS.success}20`}
-                  paddingHorizontal="$3"
-                  paddingVertical="$2"
-                  borderRadius="$2"
+                  backgroundColor={`${successColor}20`}
+                  paddingHorizontal="$2"
+                  paddingVertical="$1"
+                  borderRadius="$10"
                 >
                   <XStack alignItems="center" gap="$1">
-                    <Award size={14} color={COLORS.success} />
-                    <Text fontSize="$3" color={COLORS.success} fontWeight="600">
+                    <Award size={14} color={successColor} />
+                    <Text fontSize="$3" color="$success" fontWeight="600">
                       {cert}
                     </Text>
                   </XStack>
@@ -263,28 +273,28 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
           </YStack>
 
           {/* 服务数据 */}
-          <XStack justifyContent="space-around" paddingVertical="$3">
+          <XStack justifyContent="space-around" paddingVertical="$2">
             <YStack alignItems="center">
-              <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+              <Text fontSize="$6" fontWeight="700" color="$primary">
                 {advisor.yearsOfExperience}年
               </Text>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 从业经验
               </Text>
             </YStack>
             <YStack alignItems="center">
-              <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+              <Text fontSize="$6" fontWeight="700" color="$primary">
                 {advisor.clientsServed}
               </Text>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 服务客户
               </Text>
             </YStack>
             <YStack alignItems="center">
-              <Text fontSize="$6" fontWeight="700" color={COLORS.warning}>
+              <Text fontSize="$6" fontWeight="700" color="$warning">
                 {advisor.satisfactionRate}%
               </Text>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 满意度
               </Text>
             </YStack>
@@ -292,20 +302,20 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
         </YStack>
 
         {/* 擅长领域 */}
-        <YStack padding="$4" backgroundColor="$surface" marginTop="$2">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+        <YStack padding="$2.5" backgroundColor="$color2" marginTop="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             擅长领域
           </Text>
           <XStack gap="$2" flexWrap="wrap">
             {advisor.specialties.map((specialty, idx) => (
               <View
                 key={idx}
-                backgroundColor="$borderColor"
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                borderRadius="$2"
+                backgroundColor="$color4"
+                paddingHorizontal="$2"
+                paddingVertical="$1"
+                borderRadius="$10"
               >
-                <Text fontSize="$3" color="$text">
+                <Text fontSize="$3" color="$color12">
                   {specialty}
                 </Text>
               </View>
@@ -314,22 +324,22 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
         </YStack>
 
         {/* 服务区域 */}
-        <YStack padding="$4" backgroundColor="$surface" marginTop="$2">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+        <YStack padding="$2.5" backgroundColor="$color2" marginTop="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             服务区域
           </Text>
           <XStack gap="$2" flexWrap="wrap">
             {advisor.serviceCities.map((city, idx) => (
               <View
                 key={idx}
-                backgroundColor={`${COLORS.primary}15`}
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                borderRadius="$2"
+                backgroundColor={`${primaryColor}15`}
+                paddingHorizontal="$2"
+                paddingVertical="$1"
+                borderRadius="$10"
               >
                 <XStack alignItems="center" gap="$1">
-                  <MapPin size={14} color={COLORS.primary} />
-                  <Text fontSize="$3" color={COLORS.primary}>
+                  <MapPin size={14} color={primaryColor} />
+                  <Text fontSize="$3" color="$primary">
                     {city}
                   </Text>
                 </XStack>
@@ -339,25 +349,25 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
         </YStack>
 
         {/* 顾问介绍 */}
-        <YStack padding="$4" backgroundColor="$surface" marginTop="$2">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+        <YStack padding="$2.5" backgroundColor="$color2" marginTop="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             顾问介绍
           </Text>
-          <Text fontSize="$3" color="$text" lineHeight={24}>
+          <Text fontSize="$3" color="$color12" lineHeight={24}>
             {advisor.introduction}
           </Text>
         </YStack>
 
         {/* 成功案例 */}
-        <YStack padding="$4" backgroundColor="$surface" marginTop="$2">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+        <YStack padding="$2.5" backgroundColor="$color2" marginTop="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             成功案例
           </Text>
           <YStack gap="$2">
             {advisor.successCases.map((caseItem, idx) => (
               <XStack key={idx} gap="$2" alignItems="flex-start">
-                <CheckCircle size={16} color={COLORS.success} style={{ marginTop: 2 }} />
-                <Text flex={1} fontSize="$3" color="$text" lineHeight={22}>
+                <CheckCircle size={16} color={successColor} style={{ marginTop: 2 }} />
+                <Text flex={1} fontSize="$3" color="$color12" lineHeight={22}>
                   {caseItem}
                 </Text>
               </XStack>
@@ -366,161 +376,161 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
         </YStack>
 
         {/* 咨询方式 */}
-        <YStack padding="$4" backgroundColor="$surface" marginTop="$2" marginBottom="$6">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+        <YStack padding="$2.5" backgroundColor="$color2" marginTop="$2" marginBottom="$6">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             咨询方式（完全免费）
           </Text>
-          <YStack gap="$3">
+          <YStack gap="$2">
             {/* 图文咨询 */}
             <Pressable onPress={() => handleConsultation('text')}>
-              <Card bordered padding="$3" backgroundColor="$background" pressStyle={{ scale: 0.98 }}>
+              <View borderWidth={1} borderColor="$color5" borderRadius="$5" padding="$2" backgroundColor="$background">
                 <XStack justifyContent="space-between" alignItems="center">
                   <XStack gap="$3" alignItems="center">
                     <View
                       width={48}
                       height={48}
                       borderRadius={24}
-                      backgroundColor={`${COLORS.primary}15`}
+                      backgroundColor={`${primaryColor}15`}
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <MessageCircle size={24} color={COLORS.primary} />
+                      <MessageCircle size={24} color={primaryColor} />
                     </View>
                     <YStack>
-                      <Text fontSize="$4" fontWeight="600" color="$text">
+                      <Text fontSize="$4" fontWeight="600" color="$color12">
                         图文咨询
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         发送文字和图片，顾问在线解答
                       </Text>
                     </YStack>
                   </XStack>
                   <View
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$2"
-                    backgroundColor={COLORS.primary}
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
+                    backgroundColor="$primary"
                   >
-                    <Text fontSize="$3" color="white" fontWeight="600">
+                    <Text fontSize="$3" color="white" fontWeight="500">
                       免费
                     </Text>
                   </View>
                 </XStack>
-              </Card>
+              </View>
             </Pressable>
 
             {/* 电话咨询 */}
             <Pressable onPress={() => handleConsultation('phone')}>
-              <Card bordered padding="$3" backgroundColor="$background" pressStyle={{ scale: 0.98 }}>
+              <View borderWidth={1} borderColor="$color5" borderRadius="$5" padding="$2" backgroundColor="$background">
                 <XStack justifyContent="space-between" alignItems="center">
                   <XStack gap="$3" alignItems="center">
                     <View
                       width={48}
                       height={48}
                       borderRadius={24}
-                      backgroundColor={`${COLORS.success}15`}
+                      backgroundColor={`${successColor}15`}
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Phone size={24} color={COLORS.success} />
+                      <Phone size={24} color={successColor} />
                     </View>
                     <YStack>
-                      <Text fontSize="$4" fontWeight="600" color="$text">
+                      <Text fontSize="$4" fontWeight="600" color="$color12">
                         电话咨询
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         预约电话，一对一深度沟通
                       </Text>
                     </YStack>
                   </XStack>
                   <View
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$2"
-                    backgroundColor={COLORS.success}
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
+                    backgroundColor="$success"
                   >
-                    <Text fontSize="$3" color="white" fontWeight="600">
+                    <Text fontSize="$3" color="white" fontWeight="500">
                       免费
                     </Text>
                   </View>
                 </XStack>
-              </Card>
+              </View>
             </Pressable>
 
             {/* 视频咨询 */}
             <Pressable onPress={() => handleConsultation('video')}>
-              <Card bordered padding="$3" backgroundColor="$background" pressStyle={{ scale: 0.98 }}>
+              <View borderWidth={1} borderColor="$color5" borderRadius="$5" padding="$2" backgroundColor="$background">
                 <XStack justifyContent="space-between" alignItems="center">
                   <XStack gap="$3" alignItems="center">
                     <View
                       width={48}
                       height={48}
                       borderRadius={24}
-                      backgroundColor={`${COLORS.warning}15`}
+                      backgroundColor={`${warningColor}15`}
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Video size={24} color={COLORS.warning} />
+                      <Video size={24} color={warningColor} />
                     </View>
                     <YStack>
-                      <Text fontSize="$4" fontWeight="600" color="$text">
+                      <Text fontSize="$4" fontWeight="600" color="$color12">
                         视频咨询
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         视频通话，面对面交流更清晰
                       </Text>
                     </YStack>
                   </XStack>
                   <View
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$2"
-                    backgroundColor={COLORS.warning}
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
+                    backgroundColor="$warning"
                   >
-                    <Text fontSize="$3" color="white" fontWeight="600">
+                    <Text fontSize="$3" color="white" fontWeight="500">
                       免费
                     </Text>
                   </View>
                 </XStack>
-              </Card>
+              </View>
             </Pressable>
 
             {/* 上门服务 */}
             <Pressable onPress={() => handleConsultation('home_visit')}>
-              <Card bordered padding="$3" backgroundColor="$background" pressStyle={{ scale: 0.98 }}>
+              <View borderWidth={1} borderColor="$color5" borderRadius="$5" padding="$2" backgroundColor="$background">
                 <XStack justifyContent="space-between" alignItems="center">
                   <XStack gap="$3" alignItems="center">
                     <View
                       width={48}
                       height={48}
                       borderRadius={24}
-                      backgroundColor={`#8B5CF615`}
+                      backgroundColor={`${primaryColor}15`}
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Home size={24} color="#8B5CF6" />
+                      <Home size={24} color={primaryColor} />
                     </View>
                     <YStack>
-                      <Text fontSize="$4" fontWeight="600" color="$text">
+                      <Text fontSize="$4" fontWeight="600" color="$color12">
                         上门服务
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         预约顾问上门，提供便捷服务
                       </Text>
                     </YStack>
                   </XStack>
                   <View
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$2"
-                    backgroundColor="#8B5CF6"
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
+                    backgroundColor="$primary"
                   >
-                    <Text fontSize="$3" color="white" fontWeight="600">
+                    <Text fontSize="$3" color="white" fontWeight="500">
                       免费
                     </Text>
                   </View>
                 </XStack>
-              </Card>
+              </View>
             </Pressable>
           </YStack>
         </YStack>
@@ -535,18 +545,18 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
         bottom={0}
         left={0}
         right={0}
-        backgroundColor="$surface"
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
+        borderTopColor="$color5"
         elevation={10}
         zIndex={999}
         shadowColor="#000"
         shadowOffset={{ width: 0, height: -2 }}
-        shadowOpacity={0.1}
+        shadowOpacity={0.08}
         shadowRadius={4}
         paddingBottom={insets.bottom}
       >
-        <XStack padding="$4">
+        <XStack padding="$2.5">
           <Pressable
             onPress={() => {
               console.log('🟢 Button pressed!');
@@ -556,14 +566,14 @@ const InsuranceAdvisorDetailScreen: React.FC = () => {
           >
             <View
               height={48}
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              backgroundColor="$primary"
               justifyContent="center"
               alignItems="center"
             >
               <XStack alignItems="center" gap="$2">
                 <MessageCircle size={20} color="white" />
-                <Text color="white" fontSize="$4" fontWeight="600">
+                <Text color="white" fontSize="$4" fontWeight="500">
                   立即咨询（免费）
                 </Text>
               </XStack>

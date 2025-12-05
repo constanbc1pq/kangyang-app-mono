@@ -4,10 +4,9 @@
  */
 
 import React from 'react';
-import { View, Text, YStack, XStack, Card } from 'tamagui';
+import { View, Text, YStack, XStack, useTheme } from 'tamagui';
 import { Pressable } from 'react-native';
 import { Star, Users, TrendingUp } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 export interface TodayRecommendation {
   id: string;
@@ -39,30 +38,34 @@ export const TodayRecommendationCard: React.FC<TodayRecommendationCardProps> = (
   onPurchase,
   onConsult,
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const errorColor = theme.error?.val;
+  const warningColor = theme.warning?.val;
+  const successColor = theme.success?.val;
+  const color10 = theme.color10?.val;
+
   return (
-    <View marginBottom={16}>
-      <Card
-        bordered
-        padding="$4"
-        backgroundColor="$surface"
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 4 }}
-        shadowOpacity={0.1}
-        shadowRadius={8}
-        elevation={4}
+    <View marginBottom="$2">
+      <View
+        backgroundColor="$color2"
+        borderRadius="$5"
+        padding="$2"
+        borderWidth={1}
+        borderColor="$color5"
       >
-        <YStack space="$3">
+        <YStack gap="$3">
           {/* 顶部标签 */}
           <XStack justifyContent="space-between" alignItems="center">
-            <XStack alignItems="center" space="$2">
+            <XStack alignItems="center" gap="$2">
               <Text fontSize={24}>{recommendation.icon}</Text>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 今日推荐
               </Text>
             </XStack>
             {recommendation.badge && (
               <View
-                backgroundColor={COLORS.error}
+                backgroundColor={errorColor}
                 paddingHorizontal="$2"
                 paddingVertical="$1"
                 borderRadius="$2"
@@ -75,42 +78,42 @@ export const TodayRecommendationCard: React.FC<TodayRecommendationCardProps> = (
           </XStack>
 
           {/* 标题和副标题 */}
-          <YStack space="$1">
-            <Text fontSize="$6" fontWeight="700" color="$text">
+          <YStack gap="$1">
+            <Text fontSize="$6" fontWeight="700" color="$color12">
               {recommendation.title}
             </Text>
-            <Text fontSize="$3" color="$textSecondary" lineHeight={20}>
+            <Text fontSize="$3" color="$color10" lineHeight={20}>
               {recommendation.subtitle}
             </Text>
           </YStack>
 
           {/* 描述 */}
-          <Text fontSize="$3" color="$text" lineHeight={22}>
+          <Text fontSize="$3" color="$color12" lineHeight={22}>
             {recommendation.description}
           </Text>
 
           {/* 社交证明 */}
-          <XStack space="$4" flexWrap="wrap">
+          <XStack gap="$2" flexWrap="wrap">
             {recommendation.stats.userCount && (
-              <XStack alignItems="center" space="$1">
-                <Users size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack alignItems="center" gap="$0.5">
+                <Users size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   已服务 {recommendation.stats.userCount.toLocaleString()} 人
                 </Text>
               </XStack>
             )}
             {recommendation.stats.rating && (
-              <XStack alignItems="center" space="$1">
-                <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack alignItems="center" gap="$0.5">
+                <Star size={14} color={warningColor} fill={warningColor} />
+                <Text fontSize="$2" color="$color10">
                   好评率 {recommendation.stats.rating}%
                 </Text>
               </XStack>
             )}
             {recommendation.stats.salesCount && (
-              <XStack alignItems="center" space="$1">
-                <TrendingUp size={14} color={COLORS.success} />
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack alignItems="center" gap="$0.5">
+                <TrendingUp size={14} color={successColor} />
+                <Text fontSize="$2" color="$color10">
                   本月售出 {recommendation.stats.salesCount} 份
                 </Text>
               </XStack>
@@ -118,42 +121,42 @@ export const TodayRecommendationCard: React.FC<TodayRecommendationCardProps> = (
           </XStack>
 
           {/* 价格和按钮 */}
-          <XStack justifyContent="space-between" alignItems="center" marginTop="$2">
+          <XStack justifyContent="space-between" alignItems="center" marginTop="$1.5">
             <YStack>
-              <XStack alignItems="baseline" space="$1">
-                <Text fontSize="$2" color={COLORS.error}>
+              <XStack alignItems="baseline" gap="$0.5">
+                <Text fontSize="$2" color="$error">
                   ¥
                 </Text>
-                <Text fontSize="$7" fontWeight="700" color={COLORS.error}>
+                <Text fontSize="$7" fontWeight="700" color="$error">
                   {recommendation.price}
                 </Text>
                 {recommendation.originalPrice && (
                   <Text
                     fontSize="$3"
-                    color="$textSecondary"
+                    color="$color10"
                     textDecorationLine="line-through"
                   >
                     ¥{recommendation.originalPrice}
                   </Text>
                 )}
               </XStack>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 起/周
               </Text>
             </YStack>
 
-            <XStack space="$2">
+            <XStack gap="$1.5">
               <Pressable
                 onPress={() => onConsult(recommendation.targetScreen, recommendation.targetParams)}
               >
                 <View
-                  paddingHorizontal="$4"
-                  paddingVertical="$2"
-                  borderRadius="$3"
+                  paddingHorizontal="$2"
+                  paddingVertical="$1.5"
+                  borderRadius="$10"
                   borderWidth={1}
-                  borderColor={COLORS.primary}
+                  borderColor="$primary"
                 >
-                  <Text color={COLORS.primary} fontSize="$3" fontWeight="600">
+                  <Text color="$primary" fontSize="$3" fontWeight="600">
                     专家咨询
                   </Text>
                 </View>
@@ -163,10 +166,10 @@ export const TodayRecommendationCard: React.FC<TodayRecommendationCardProps> = (
                 onPress={() => onPurchase(recommendation.targetScreen, recommendation.targetParams)}
               >
                 <View
-                  paddingHorizontal="$4"
-                  paddingVertical="$2"
-                  borderRadius="$3"
-                  backgroundColor={COLORS.primary}
+                  paddingHorizontal="$2"
+                  paddingVertical="$1.5"
+                  borderRadius="$10"
+                  backgroundColor="$primary"
                 >
                   <Text color="white" fontSize="$3" fontWeight="600">
                     立即订购
@@ -176,7 +179,7 @@ export const TodayRecommendationCard: React.FC<TodayRecommendationCardProps> = (
             </XStack>
           </XStack>
         </YStack>
-      </Card>
+      </View>
     </View>
   );
 };
@@ -206,11 +209,11 @@ export const generateTodayRecommendation = (date: Date = new Date()): TodayRecom
       icon: '🍱',
       targetScreen: 'NutritionService',
     },
-    // 周一：送餐上门
+    // 周一：闪送到家
     {
       id: 'meal_monday',
       category: 'meal_delivery',
-      title: '送餐上门·每日三餐',
+      title: '闪送到家·每日三餐',
       subtitle: '独居老人的贴心选择',
       description: '营养均衡三餐，准时送达，热乎新鲜，解决做饭难题',
       price: '258',

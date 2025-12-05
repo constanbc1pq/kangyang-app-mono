@@ -1,51 +1,43 @@
 /**
  * 遗嘱制作向导页面
  * 6步智能问答式遗嘱创建流程
+ * Design: Following CLAUDE.md specs
  */
 
 import React, { useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, TextInput as RNTextInput } from 'react-native';
+import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+  X,
+  ChevronLeft,
+  ChevronRight,
+  PlusCircle,
+  Trash2,
+  FileText,
+  Users,
+  Shield,
+  Video,
+  Info,
+  AlertTriangle,
+} from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import {
   WillType,
   WillStatus,
   Estate,
   Beneficiary,
-  Witness,
 } from '../types/legalService';
 import { createWill } from '../services/legalService';
-import { COLORS } from '@/constants/app';
 
 interface WillFormData {
-  // Step 1: 遗嘱类型
   willType: WillType | null;
-
-  // Step 2: 财产清单
   estates: Estate[];
-
-  // Step 3: 受益人
   beneficiaries: Beneficiary[];
-
-  // Step 4: 特殊条款
   specialClauses: string[];
-
-  // Step 5: 遗嘱执行人
   executor: string;
   executorIdNumber: string;
   executorPhone: string;
-
-  // Step 6: 基本信息
   title: string;
   testatorName: string;
   testatorIdNumber: string;
@@ -54,6 +46,15 @@ interface WillFormData {
 
 const WillCreatorScreen: React.FC = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<WillFormData>({
     willType: null,
@@ -69,7 +70,6 @@ const WillCreatorScreen: React.FC = () => {
     testatorAge: 0,
   });
 
-  // 临时输入状态
   const [estateInput, setEstateInput] = useState({
     type: 'real_estate' as Estate['type'],
     description: '',
@@ -87,29 +87,17 @@ const WillCreatorScreen: React.FC = () => {
   const [clauseInput, setClauseInput] = useState('');
 
   const totalSteps = 6;
+  const stepTitles = ['选择遗嘱类型', '财产清单', '受益人指定', '特殊条款', '遗嘱执行人', '确认信息'];
 
-  // 步骤标题
-  const stepTitles = [
-    '选择遗嘱类型',
-    '财产清单',
-    '受益人指定',
-    '特殊条款',
-    '遗嘱执行人',
-    '确认信息',
-  ];
-
-  // 更新表单数据
   const updateFormData = (updates: Partial<WillFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }));
   };
 
-  // 添加财产项
   const addEstate = () => {
     if (!estateInput.description || !estateInput.estimatedValue) {
       Alert.alert('提示', '请填写完整的财产信息');
       return;
     }
-
     const newEstate: Estate = {
       type: estateInput.type,
       description: estateInput.description,
@@ -117,31 +105,19 @@ const WillCreatorScreen: React.FC = () => {
       estimatedValue: parseFloat(estateInput.estimatedValue),
       documentNumber: '',
     };
-
     updateFormData({ estates: [...formData.estates, newEstate] });
-
-    // 重置输入
-    setEstateInput({
-      type: 'real_estate',
-      description: '',
-      location: '',
-      estimatedValue: '',
-    });
+    setEstateInput({ type: 'real_estate', description: '', location: '', estimatedValue: '' });
   };
 
-  // 删除财产项
   const removeEstate = (index: number) => {
-    const newEstates = formData.estates.filter((_, i) => i !== index);
-    updateFormData({ estates: newEstates });
+    updateFormData({ estates: formData.estates.filter((_, i) => i !== index) });
   };
 
-  // 添加受益人
   const addBeneficiary = () => {
     if (!beneficiaryInput.name || !beneficiaryInput.relationship || !beneficiaryInput.share) {
       Alert.alert('提示', '请填写完整的受益人信息');
       return;
     }
-
     const newBeneficiary: Beneficiary = {
       name: beneficiaryInput.name,
       relationship: beneficiaryInput.relationship,
@@ -150,84 +126,40 @@ const WillCreatorScreen: React.FC = () => {
       phone: '',
       address: '',
     };
-
     updateFormData({ beneficiaries: [...formData.beneficiaries, newBeneficiary] });
-
-    // 重置输入
-    setBeneficiaryInput({
-      name: '',
-      relationship: '',
-      idNumber: '',
-      share: '',
-    });
+    setBeneficiaryInput({ name: '', relationship: '', idNumber: '', share: '' });
   };
 
-  // 删除受益人
   const removeBeneficiary = (index: number) => {
-    const newBeneficiaries = formData.beneficiaries.filter((_, i) => i !== index);
-    updateFormData({ beneficiaries: newBeneficiaries });
+    updateFormData({ beneficiaries: formData.beneficiaries.filter((_, i) => i !== index) });
   };
 
-  // 添加特殊条款
   const addSpecialClause = () => {
     if (!clauseInput.trim()) {
       Alert.alert('提示', '请输入条款内容');
       return;
     }
-
     updateFormData({ specialClauses: [...formData.specialClauses, clauseInput.trim()] });
     setClauseInput('');
   };
 
-  // 删除特殊条款
   const removeClause = (index: number) => {
-    const newClauses = formData.specialClauses.filter((_, i) => i !== index);
-    updateFormData({ specialClauses: newClauses });
+    updateFormData({ specialClauses: formData.specialClauses.filter((_, i) => i !== index) });
   };
 
-  // 验证当前步骤
   const validateCurrentStep = (): boolean => {
     switch (currentStep) {
-      case 1:
-        if (!formData.willType) {
-          Alert.alert('提示', '请选择遗嘱类型');
-          return false;
-        }
-        break;
-      case 2:
-        if (formData.estates.length === 0) {
-          Alert.alert('提示', '请至少添加一项财产');
-          return false;
-        }
-        break;
-      case 3:
-        if (formData.beneficiaries.length === 0) {
-          Alert.alert('提示', '请至少指定一位受益人');
-          return false;
-        }
-        break;
-      case 5:
-        if (!formData.executor) {
-          Alert.alert('提示', '请指定遗嘱执行人');
-          return false;
-        }
-        break;
-      case 6:
-        if (!formData.testatorName || !formData.testatorIdNumber) {
-          Alert.alert('提示', '请填写立遗嘱人信息');
-          return false;
-        }
-        break;
+      case 1: if (!formData.willType) { Alert.alert('提示', '请选择遗嘱类型'); return false; } break;
+      case 2: if (formData.estates.length === 0) { Alert.alert('提示', '请至少添加一项财产'); return false; } break;
+      case 3: if (formData.beneficiaries.length === 0) { Alert.alert('提示', '请至少指定一位受益人'); return false; } break;
+      case 5: if (!formData.executor) { Alert.alert('提示', '请指定遗嘱执行人'); return false; } break;
+      case 6: if (!formData.testatorName || !formData.testatorIdNumber) { Alert.alert('提示', '请填写立遗嘱人信息'); return false; } break;
     }
     return true;
   };
 
-  // 下一步
   const handleNext = () => {
-    if (!validateCurrentStep()) {
-      return;
-    }
-
+    if (!validateCurrentStep()) return;
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -235,18 +167,14 @@ const WillCreatorScreen: React.FC = () => {
     }
   };
 
-  // 上一步
   const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  // 提交遗嘱
   const handleSubmit = async () => {
     try {
-      const willData = {
-        userId: 'current_user_id', // TODO: 从用户状态获取
+      await createWill({
+        userId: 'current_user_id',
         type: formData.willType!,
         status: WillStatus.DRAFT,
         title: formData.title || '我的遗嘱',
@@ -258,899 +186,314 @@ const WillCreatorScreen: React.FC = () => {
         executor: formData.executor,
         specialClauses: formData.specialClauses.length > 0 ? formData.specialClauses : undefined,
         version: 1,
-      };
-
-      await createWill(willData);
-
-      Alert.alert(
-        '创建成功',
-        '遗嘱草稿已保存，建议您咨询律师进行审核。',
-        [
-          {
-            text: '查看遗嘱',
-            onPress: () => navigation.navigate('MyWills' as never),
-          },
-          {
-            text: '返回首页',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      });
+      Alert.alert('创建成功', '遗嘱草稿已保存，建议您咨询律师进行审核。', [
+        { text: '查看遗嘱', onPress: () => navigation.navigate('MyWills' as never) },
+        { text: '返回首页', onPress: () => navigation.goBack() },
+      ]);
     } catch (error) {
       Alert.alert('错误', '创建遗嘱失败，请重试');
-      console.error('Error creating will:', error);
     }
   };
 
-  // 渲染步骤1：选择遗嘱类型
+  const willTypeOptions = [
+    { type: WillType.SELF_WRITTEN, icon: FileText, title: '自书遗嘱', desc: '由立遗嘱人亲笔书写、签名并注明日期。成本低，但需注意书写规范。' },
+    { type: WillType.WITNESSED, icon: Users, title: '代书遗嘱', desc: '由他人代写，需要两名以上见证人在场见证。适合不便书写的情况。' },
+    { type: WillType.NOTARIZED, icon: Shield, title: '公证遗嘱', desc: '经公证机关公证的遗嘱，法律效力最高，但需支付公证费用。' },
+    { type: WillType.AUDIO_VIDEO, icon: Video, title: '录音录像遗嘱', desc: '以录音或录像方式订立，需有两名以上见证人在场。' },
+  ];
+
+  const estateTypes = [
+    { value: 'real_estate', label: '房产' },
+    { value: 'bank_deposit', label: '存款' },
+    { value: 'securities', label: '股票' },
+    { value: 'vehicle', label: '车辆' },
+    { value: 'other', label: '其他' },
+  ];
+
+  const getEstateTypeLabel = (type: string) => estateTypes.find(e => e.value === type)?.label || type;
+
+  const inputStyle = {
+    borderWidth: 1,
+    borderColor: '#d9d9d9',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    backgroundColor: 'white',
+  };
+
   const renderStep1 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>请选择遗嘱类型</Text>
-      <Text style={styles.stepDescription}>
-        不同类型的遗嘱有不同的法律要求和效力
-      </Text>
-
-      <TouchableOpacity
-        style={[
-          styles.optionCard,
-          formData.willType === WillType.SELF_WRITTEN && styles.optionCardSelected,
-        ]}
-        onPress={() => updateFormData({ willType: WillType.SELF_WRITTEN })}
-      >
-        <View style={styles.optionHeader}>
-          <Ionicons
-            name="create-outline"
-            size={24}
-            color={formData.willType === WillType.SELF_WRITTEN ? COLORS.primary : '#666'}
-          />
-          <Text style={styles.optionTitle}>自书遗嘱</Text>
-          {formData.willType === WillType.SELF_WRITTEN && (
-            <Ionicons name="checkmark-circle" size={24} color="COLORS.primary" />
-          )}
-        </View>
-        <Text style={styles.optionDescription}>
-          由立遗嘱人亲笔书写、签名并注明日期。成本低，但需注意书写规范。
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.optionCard,
-          formData.willType === WillType.WITNESSED && styles.optionCardSelected,
-        ]}
-        onPress={() => updateFormData({ willType: WillType.WITNESSED })}
-      >
-        <View style={styles.optionHeader}>
-          <Ionicons
-            name="people-outline"
-            size={24}
-            color={formData.willType === WillType.WITNESSED ? COLORS.primary : '#666'}
-          />
-          <Text style={styles.optionTitle}>代书遗嘱</Text>
-          {formData.willType === WillType.WITNESSED && (
-            <Ionicons name="checkmark-circle" size={24} color="COLORS.primary" />
-          )}
-        </View>
-        <Text style={styles.optionDescription}>
-          由他人代写，需要两名以上见证人在场见证。适合不便书写的情况。
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.optionCard,
-          formData.willType === WillType.NOTARIZED && styles.optionCardSelected,
-        ]}
-        onPress={() => updateFormData({ willType: WillType.NOTARIZED })}
-      >
-        <View style={styles.optionHeader}>
-          <Ionicons
-            name="shield-checkmark-outline"
-            size={24}
-            color={formData.willType === WillType.NOTARIZED ? COLORS.primary : '#666'}
-          />
-          <Text style={styles.optionTitle}>公证遗嘱</Text>
-          {formData.willType === WillType.NOTARIZED && (
-            <Ionicons name="checkmark-circle" size={24} color="COLORS.primary" />
-          )}
-        </View>
-        <Text style={styles.optionDescription}>
-          经公证机关公证的遗嘱，法律效力最高，但需支付公证费用。
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.optionCard,
-          formData.willType === WillType.AUDIO_VIDEO && styles.optionCardSelected,
-        ]}
-        onPress={() => updateFormData({ willType: WillType.AUDIO_VIDEO })}
-      >
-        <View style={styles.optionHeader}>
-          <Ionicons
-            name="videocam-outline"
-            size={24}
-            color={formData.willType === WillType.AUDIO_VIDEO ? COLORS.primary : '#666'}
-          />
-          <Text style={styles.optionTitle}>录音录像遗嘱</Text>
-          {formData.willType === WillType.AUDIO_VIDEO && (
-            <Ionicons name="checkmark-circle" size={24} color="COLORS.primary" />
-          )}
-        </View>
-        <Text style={styles.optionDescription}>
-          以录音或录像方式订立，需有两名以上见证人在场，并记录日期和见证人信息。
-        </Text>
-      </TouchableOpacity>
-    </View>
+    <YStack gap="$2">
+      <Text fontSize="$5" fontWeight="600" color="$color12">请选择遗嘱类型</Text>
+      <Text fontSize="$2" color="$color10" marginBottom="$2">不同类型的遗嘱有不同的法律要求和效力</Text>
+      {willTypeOptions.map(opt => {
+        const IconComp = opt.icon;
+        const isSelected = formData.willType === opt.type;
+        return (
+          <Pressable key={opt.type} onPress={() => updateFormData({ willType: opt.type })}>
+            <View
+              padding="$2"
+              borderRadius="$5"
+              borderWidth={2}
+              borderColor={isSelected ? '$primary' : '$color5'}
+              backgroundColor={isSelected ? `${primaryColor}10` : '$color2'}
+            >
+              <XStack alignItems="center" gap="$2" marginBottom="$1">
+                <IconComp size={20} color={isSelected ? primaryColor : color10} />
+                <Text fontSize="$4" fontWeight="600" color="$color12" flex={1}>{opt.title}</Text>
+                {isSelected && <View width={20} height={20} borderRadius={10} backgroundColor="$primary" />}
+              </XStack>
+              <Text fontSize="$2" color="$color10" marginLeft="$6">{opt.desc}</Text>
+            </View>
+          </Pressable>
+        );
+      })}
+    </YStack>
   );
 
-  // 渲染步骤2：财产清单
   const renderStep2 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>财产清单</Text>
-      <Text style={styles.stepDescription}>
-        请详细列出您的财产，包括房产、存款、股票等
-      </Text>
-
-      {/* 已添加的财产列表 */}
-      {formData.estates.map((estate, index) => (
-        <View key={index} style={styles.listItem}>
-          <View style={styles.listItemContent}>
-            <Text style={styles.listItemTitle}>
-              {estate.type === 'real_estate' && '房产'}
-              {estate.type === 'bank_deposit' && '银行存款'}
-              {estate.type === 'securities' && '股票证券'}
-              {estate.type === 'vehicle' && '车辆'}
-              {estate.type === 'other' && '其他财产'}
-            </Text>
-            <Text style={styles.listItemDescription}>{estate.description}</Text>
-            {estate.location && (
-              <Text style={styles.listItemDetail}>位置：{estate.location}</Text>
-            )}
-            <Text style={styles.listItemDetail}>
-              估值：¥{estate.estimatedValue.toLocaleString()}
-            </Text>
-          </View>
-          <TouchableOpacity onPress={() => removeEstate(index)}>
-            <Ionicons name="trash-outline" size={20} color="#ff4d4f" />
-          </TouchableOpacity>
+    <YStack gap="$2">
+      <Text fontSize="$5" fontWeight="600" color="$color12">财产清单</Text>
+      <Text fontSize="$2" color="$color10" marginBottom="$2">请详细列出您的财产</Text>
+      {formData.estates.map((estate, i) => (
+        <View key={i} padding="$2" borderRadius="$4" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+          <XStack justifyContent="space-between" alignItems="flex-start">
+            <YStack flex={1}>
+              <Text fontSize="$3" fontWeight="600" color="$color12">{getEstateTypeLabel(estate.type)}</Text>
+              <Text fontSize="$2" color="$color10">{estate.description}</Text>
+              {estate.location && <Text fontSize="$2" color="$color10">位置：{estate.location}</Text>}
+              <Text fontSize="$2" color="$primary" fontWeight="500">¥{estate.estimatedValue.toLocaleString()}</Text>
+            </YStack>
+            <Pressable onPress={() => removeEstate(i)}><Trash2 size={18} color={errorColor} /></Pressable>
+          </XStack>
         </View>
       ))}
-
-      {/* 添加财产表单 */}
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>财产类型</Text>
-        <View style={styles.radioGroup}>
-          {[
-            { value: 'real_estate', label: '房产' },
-            { value: 'bank_deposit', label: '存款' },
-            { value: 'securities', label: '股票' },
-            { value: 'vehicle', label: '车辆' },
-            { value: 'other', label: '其他' },
-          ].map(option => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.radioButton,
-                estateInput.type === option.value && styles.radioButtonSelected,
-              ]}
-              onPress={() => setEstateInput({ ...estateInput, type: option.value as Estate['type'] })}
-            >
-              <Text
-                style={[
-                  styles.radioButtonText,
-                  estateInput.type === option.value && styles.radioButtonTextSelected,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
+      <View padding="$2" borderRadius="$5" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+        <Text fontSize="$3" fontWeight="500" color="$color12" marginBottom="$1.5">添加财产</Text>
+        <XStack flexWrap="wrap" gap="$1" marginBottom="$2">
+          {estateTypes.map(et => (
+            <Pressable key={et.value} onPress={() => setEstateInput({ ...estateInput, type: et.value as Estate['type'] })}>
+              <View paddingHorizontal="$2" paddingVertical="$1" borderRadius="$10" backgroundColor={estateInput.type === et.value ? '$primary' : '$color4'}>
+                <Text fontSize="$2" color={estateInput.type === et.value ? 'white' : '$color10'}>{et.label}</Text>
+              </View>
+            </Pressable>
           ))}
-        </View>
-
-        <Text style={styles.inputLabel}>财产描述</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="例如：北京市朝阳区xx小区xx号楼xx单元"
-          value={estateInput.description}
-          onChangeText={text => setEstateInput({ ...estateInput, description: text })}
-        />
-
-        <Text style={styles.inputLabel}>位置/账号</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="房产地址或银行账号等"
-          value={estateInput.location}
-          onChangeText={text => setEstateInput({ ...estateInput, location: text })}
-        />
-
-        <Text style={styles.inputLabel}>估值（元）</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入估计价值"
-          value={estateInput.estimatedValue}
-          onChangeText={text => setEstateInput({ ...estateInput, estimatedValue: text })}
-          keyboardType="numeric"
-        />
-
-        <TouchableOpacity style={styles.addButton} onPress={addEstate}>
-          <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>添加财产</Text>
-        </TouchableOpacity>
+        </XStack>
+        <RNTextInput style={inputStyle} placeholder="财产描述" value={estateInput.description} onChangeText={t => setEstateInput({ ...estateInput, description: t })} />
+        <View height={8} />
+        <RNTextInput style={inputStyle} placeholder="位置/账号" value={estateInput.location} onChangeText={t => setEstateInput({ ...estateInput, location: t })} />
+        <View height={8} />
+        <RNTextInput style={inputStyle} placeholder="估值（元）" value={estateInput.estimatedValue} onChangeText={t => setEstateInput({ ...estateInput, estimatedValue: t })} keyboardType="numeric" />
+        <Pressable style={{ marginTop: 12 }} onPress={addEstate}>
+          <View backgroundColor="$primary" paddingVertical="$2" borderRadius="$10" alignItems="center">
+            <XStack alignItems="center" gap="$1"><PlusCircle size={16} color="white" /><Text color="white" fontWeight="500">添加财产</Text></XStack>
+          </View>
+        </Pressable>
       </View>
-
       {formData.estates.length > 0 && (
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>财产总计</Text>
-          <Text style={styles.summaryValue}>
-            ¥
-            {formData.estates
-              .reduce((sum, estate) => sum + estate.estimatedValue, 0)
-              .toLocaleString()}
-          </Text>
+        <View padding="$2" borderRadius="$5" backgroundColor="$color2" alignItems="center">
+          <Text fontSize="$2" color="$color10">财产总计</Text>
+          <Text fontSize="$6" fontWeight="700" color="$primary">¥{formData.estates.reduce((s, e) => s + e.estimatedValue, 0).toLocaleString()}</Text>
         </View>
       )}
-    </View>
+    </YStack>
   );
 
-  // 渲染步骤3：受益人指定
   const renderStep3 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>受益人指定</Text>
-      <Text style={styles.stepDescription}>
-        请指定财产的受益人及其继承份额
-      </Text>
-
-      {/* 已添加的受益人列表 */}
-      {formData.beneficiaries.map((beneficiary, index) => (
-        <View key={index} style={styles.listItem}>
-          <View style={styles.listItemContent}>
-            <Text style={styles.listItemTitle}>{beneficiary.name}</Text>
-            <Text style={styles.listItemDescription}>
-              关系：{beneficiary.relationship}
-            </Text>
-            {beneficiary.idNumber && (
-              <Text style={styles.listItemDetail}>身份证：{beneficiary.idNumber}</Text>
-            )}
-            <Text style={styles.listItemDetail}>继承份额：{beneficiary.share}</Text>
-          </View>
-          <TouchableOpacity onPress={() => removeBeneficiary(index)}>
-            <Ionicons name="trash-outline" size={20} color="#ff4d4f" />
-          </TouchableOpacity>
+    <YStack gap="$2">
+      <Text fontSize="$5" fontWeight="600" color="$color12">受益人指定</Text>
+      <Text fontSize="$2" color="$color10" marginBottom="$2">请指定财产的受益人及其继承份额</Text>
+      {formData.beneficiaries.map((b, i) => (
+        <View key={i} padding="$2" borderRadius="$4" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+          <XStack justifyContent="space-between" alignItems="flex-start">
+            <YStack flex={1}>
+              <Text fontSize="$3" fontWeight="600" color="$color12">{b.name}</Text>
+              <Text fontSize="$2" color="$color10">关系：{b.relationship}</Text>
+              <Text fontSize="$2" color="$primary">份额：{b.share}</Text>
+            </YStack>
+            <Pressable onPress={() => removeBeneficiary(i)}><Trash2 size={18} color={errorColor} /></Pressable>
+          </XStack>
         </View>
       ))}
-
-      {/* 添加受益人表单 */}
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>受益人姓名 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入姓名"
-          value={beneficiaryInput.name}
-          onChangeText={text => setBeneficiaryInput({ ...beneficiaryInput, name: text })}
-        />
-
-        <Text style={styles.inputLabel}>与您的关系 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="例如：配偶、子女、孙辈等"
-          value={beneficiaryInput.relationship}
-          onChangeText={text =>
-            setBeneficiaryInput({ ...beneficiaryInput, relationship: text })
-          }
-        />
-
-        <Text style={styles.inputLabel}>身份证号</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入身份证号"
-          value={beneficiaryInput.idNumber}
-          onChangeText={text => setBeneficiaryInput({ ...beneficiaryInput, idNumber: text })}
-        />
-
-        <Text style={styles.inputLabel}>继承份额 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="例如：全部财产的1/2、房产的1/3等"
-          value={beneficiaryInput.share}
-          onChangeText={text => setBeneficiaryInput({ ...beneficiaryInput, share: text })}
-        />
-
-        <TouchableOpacity style={styles.addButton} onPress={addBeneficiary}>
-          <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>添加受益人</Text>
-        </TouchableOpacity>
+      <View padding="$2" borderRadius="$5" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+        <Text fontSize="$3" fontWeight="500" color="$color12" marginBottom="$1.5">添加受益人</Text>
+        <RNTextInput style={inputStyle} placeholder="姓名 *" value={beneficiaryInput.name} onChangeText={t => setBeneficiaryInput({ ...beneficiaryInput, name: t })} />
+        <View height={8} />
+        <RNTextInput style={inputStyle} placeholder="与您的关系 *" value={beneficiaryInput.relationship} onChangeText={t => setBeneficiaryInput({ ...beneficiaryInput, relationship: t })} />
+        <View height={8} />
+        <RNTextInput style={inputStyle} placeholder="身份证号" value={beneficiaryInput.idNumber} onChangeText={t => setBeneficiaryInput({ ...beneficiaryInput, idNumber: t })} />
+        <View height={8} />
+        <RNTextInput style={inputStyle} placeholder="继承份额 * (如：1/2)" value={beneficiaryInput.share} onChangeText={t => setBeneficiaryInput({ ...beneficiaryInput, share: t })} />
+        <Pressable style={{ marginTop: 12 }} onPress={addBeneficiary}>
+          <View backgroundColor="$primary" paddingVertical="$2" borderRadius="$10" alignItems="center">
+            <XStack alignItems="center" gap="$1"><PlusCircle size={16} color="white" /><Text color="white" fontWeight="500">添加受益人</Text></XStack>
+          </View>
+        </Pressable>
       </View>
-    </View>
+    </YStack>
   );
 
-  // 渲染步骤4：特殊条款
   const renderStep4 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>特殊条款设置</Text>
-      <Text style={styles.stepDescription}>
-        您可以设置附条件继承、特定物品归属等特殊条款（可选）
-      </Text>
-
-      {/* 已添加的条款列表 */}
-      {formData.specialClauses.map((clause, index) => (
-        <View key={index} style={styles.listItem}>
-          <View style={styles.listItemContent}>
-            <Text style={styles.listItemDescription}>{clause}</Text>
-          </View>
-          <TouchableOpacity onPress={() => removeClause(index)}>
-            <Ionicons name="trash-outline" size={20} color="#ff4d4f" />
-          </TouchableOpacity>
+    <YStack gap="$2">
+      <Text fontSize="$5" fontWeight="600" color="$color12">特殊条款设置</Text>
+      <Text fontSize="$2" color="$color10" marginBottom="$2">您可以设置附条件继承等特殊条款（可选）</Text>
+      {formData.specialClauses.map((c, i) => (
+        <View key={i} padding="$2" borderRadius="$4" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+          <XStack justifyContent="space-between" alignItems="flex-start">
+            <Text flex={1} fontSize="$2" color="$color12">{c}</Text>
+            <Pressable onPress={() => removeClause(i)}><Trash2 size={16} color={errorColor} /></Pressable>
+          </XStack>
         </View>
       ))}
-
-      {/* 条款示例 */}
-      <View style={styles.exampleCard}>
-        <Text style={styles.exampleTitle}>常见条款示例：</Text>
-        <Text style={styles.exampleItem}>
-          • 房产由长子继承，但需照顾母亲至其百年归老
-        </Text>
-        <Text style={styles.exampleItem}>
-          • 股票收益优先用于孙辈教育支出
-        </Text>
-        <Text style={styles.exampleItem}>
-          • 特定古董字画由次女继承
-        </Text>
-        <Text style={styles.exampleItem}>
-          • 若受益人先于我过世，其份额由其子女继承
-        </Text>
+      <View padding="$2" borderRadius="$5" style={{ backgroundColor: `${warningColor}15` }} borderLeftWidth={3} borderLeftColor={warningColor}>
+        <Text fontSize="$3" fontWeight="500" color="$color12" marginBottom="$1">常见条款示例：</Text>
+        <Text fontSize="$2" color="$color10">• 房产由长子继承，但需照顾母亲至其百年归老</Text>
+        <Text fontSize="$2" color="$color10">• 股票收益优先用于孙辈教育支出</Text>
+        <Text fontSize="$2" color="$color10">• 若受益人先于我过世，其份额由其子女继承</Text>
       </View>
-
-      {/* 添加条款表单 */}
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>条款内容</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="请输入特殊条款内容"
-          value={clauseInput}
-          onChangeText={setClauseInput}
-          multiline
-          numberOfLines={4}
-        />
-
-        <TouchableOpacity style={styles.addButton} onPress={addSpecialClause}>
-          <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>添加条款</Text>
-        </TouchableOpacity>
+      <View padding="$2" borderRadius="$5" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+        <RNTextInput style={{ ...inputStyle, height: 80, textAlignVertical: 'top' }} placeholder="请输入特殊条款内容" value={clauseInput} onChangeText={setClauseInput} multiline />
+        <Pressable style={{ marginTop: 12 }} onPress={addSpecialClause}>
+          <View backgroundColor="$primary" paddingVertical="$2" borderRadius="$10" alignItems="center">
+            <XStack alignItems="center" gap="$1"><PlusCircle size={16} color="white" /><Text color="white" fontWeight="500">添加条款</Text></XStack>
+          </View>
+        </Pressable>
       </View>
-
-      <TouchableOpacity
-        style={styles.skipButton}
-        onPress={() => setCurrentStep(currentStep + 1)}
-      >
-        <Text style={styles.skipButtonText}>跳过此步骤</Text>
-      </TouchableOpacity>
-    </View>
+      <Pressable onPress={() => setCurrentStep(5)}>
+        <Text fontSize="$3" color="$primary" textAlign="center" paddingVertical="$2">跳过此步骤</Text>
+      </Pressable>
+    </YStack>
   );
 
-  // 渲染步骤5：遗嘱执行人
   const renderStep5 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>遗嘱执行人指定</Text>
-      <Text style={styles.stepDescription}>
-        遗嘱执行人负责按照遗嘱内容分配财产，建议选择信任的亲友或专业律师
-      </Text>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>执行人姓名 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入执行人姓名"
-          value={formData.executor}
-          onChangeText={text => updateFormData({ executor: text })}
-        />
-
-        <Text style={styles.inputLabel}>身份证号 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入身份证号"
-          value={formData.executorIdNumber}
-          onChangeText={text => updateFormData({ executorIdNumber: text })}
-        />
-
-        <Text style={styles.inputLabel}>联系电话 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入联系电话"
-          value={formData.executorPhone}
-          onChangeText={text => updateFormData({ executorPhone: text })}
-          keyboardType="phone-pad"
-        />
+    <YStack gap="$2">
+      <Text fontSize="$5" fontWeight="600" color="$color12">遗嘱执行人指定</Text>
+      <Text fontSize="$2" color="$color10" marginBottom="$2">遗嘱执行人负责按照遗嘱内容分配财产</Text>
+      <View padding="$2" borderRadius="$5" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+        <Text fontSize="$2" color="$color12" marginBottom="$1">执行人姓名 *</Text>
+        <RNTextInput style={inputStyle} placeholder="请输入执行人姓名" value={formData.executor} onChangeText={t => updateFormData({ executor: t })} />
+        <View height={12} />
+        <Text fontSize="$2" color="$color12" marginBottom="$1">身份证号</Text>
+        <RNTextInput style={inputStyle} placeholder="请输入身份证号" value={formData.executorIdNumber} onChangeText={t => updateFormData({ executorIdNumber: t })} />
+        <View height={12} />
+        <Text fontSize="$2" color="$color12" marginBottom="$1">联系电话</Text>
+        <RNTextInput style={inputStyle} placeholder="请输入联系电话" value={formData.executorPhone} onChangeText={t => updateFormData({ executorPhone: t })} keyboardType="phone-pad" />
       </View>
-
-      <View style={styles.tipCard}>
-        <Ionicons name="information-circle-outline" size={20} color="COLORS.primary" />
-        <Text style={styles.tipText}>
-          执行人的职责包括：办理继承手续、分配财产、处理债务等。请务必与执行人沟通，确保其知晓并同意担任此职。
-        </Text>
+      <View padding="$2" borderRadius="$5" style={{ backgroundColor: `${primaryColor}10` }}>
+        <XStack gap="$2">
+          <Info size={18} color={primaryColor} />
+          <Text flex={1} fontSize="$2" color="$color10" lineHeight={16}>执行人的职责包括：办理继承手续、分配财产、处理债务等。请务必与执行人沟通，确保其知晓并同意担任此职。</Text>
+        </XStack>
       </View>
-    </View>
+    </YStack>
   );
 
-  // 渲染步骤6：确认信息
-  const renderStep6 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>确认信息</Text>
-      <Text style={styles.stepDescription}>
-        请填写立遗嘱人信息并确认所有内容
-      </Text>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>遗嘱标题</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="例如：我的遗嘱"
-          value={formData.title}
-          onChangeText={text => updateFormData({ title: text })}
-        />
-
-        <Text style={styles.inputLabel}>立遗嘱人姓名 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入您的姓名"
-          value={formData.testatorName}
-          onChangeText={text => updateFormData({ testatorName: text })}
-        />
-
-        <Text style={styles.inputLabel}>身份证号 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入身份证号"
-          value={formData.testatorIdNumber}
-          onChangeText={text => updateFormData({ testatorIdNumber: text })}
-        />
-
-        <Text style={styles.inputLabel}>年龄 *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="请输入年龄"
-          value={formData.testatorAge > 0 ? formData.testatorAge.toString() : ''}
-          onChangeText={text => updateFormData({ testatorAge: parseInt(text) || 0 })}
-          keyboardType="numeric"
-        />
-      </View>
-
-      {/* 信息摘要 */}
-      <View style={styles.summarySection}>
-        <Text style={styles.summaryTitle}>遗嘱摘要</Text>
-
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>遗嘱类型：</Text>
-          <Text style={styles.summaryText}>
-            {formData.willType === WillType.SELF_WRITTEN && '自书遗嘱'}
-            {formData.willType === WillType.WITNESSED && '代书遗嘱'}
-            {formData.willType === WillType.NOTARIZED && '公证遗嘱'}
-            {formData.willType === WillType.AUDIO_VIDEO && '录音录像遗嘱'}
-          </Text>
+  const renderStep6 = () => {
+    const willTypeLabel = { [WillType.SELF_WRITTEN]: '自书遗嘱', [WillType.WITNESSED]: '代书遗嘱', [WillType.NOTARIZED]: '公证遗嘱', [WillType.AUDIO_VIDEO]: '录音录像遗嘱' };
+    return (
+      <YStack gap="$2">
+        <Text fontSize="$5" fontWeight="600" color="$color12">确认信息</Text>
+        <Text fontSize="$2" color="$color10" marginBottom="$2">请填写立遗嘱人信息并确认所有内容</Text>
+        <View padding="$2" borderRadius="$5" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+          <Text fontSize="$2" color="$color12" marginBottom="$1">遗嘱标题</Text>
+          <RNTextInput style={inputStyle} placeholder="例如：我的遗嘱" value={formData.title} onChangeText={t => updateFormData({ title: t })} />
+          <View height={12} />
+          <Text fontSize="$2" color="$color12" marginBottom="$1">立遗嘱人姓名 *</Text>
+          <RNTextInput style={inputStyle} placeholder="请输入您的姓名" value={formData.testatorName} onChangeText={t => updateFormData({ testatorName: t })} />
+          <View height={12} />
+          <Text fontSize="$2" color="$color12" marginBottom="$1">身份证号 *</Text>
+          <RNTextInput style={inputStyle} placeholder="请输入身份证号" value={formData.testatorIdNumber} onChangeText={t => updateFormData({ testatorIdNumber: t })} />
+          <View height={12} />
+          <Text fontSize="$2" color="$color12" marginBottom="$1">年龄 *</Text>
+          <RNTextInput style={inputStyle} placeholder="请输入年龄" value={formData.testatorAge > 0 ? formData.testatorAge.toString() : ''} onChangeText={t => updateFormData({ testatorAge: parseInt(t) || 0 })} keyboardType="numeric" />
         </View>
-
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>财产项目：</Text>
-          <Text style={styles.summaryText}>{formData.estates.length} 项</Text>
+        <View padding="$2" borderRadius="$5" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+          <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">遗嘱摘要</Text>
+          <YStack gap="$1">
+            <XStack><Text fontSize="$2" color="$color10" width={80}>遗嘱类型：</Text><Text fontSize="$2" color="$color12">{formData.willType ? willTypeLabel[formData.willType] : '-'}</Text></XStack>
+            <XStack><Text fontSize="$2" color="$color10" width={80}>财产项目：</Text><Text fontSize="$2" color="$color12">{formData.estates.length} 项</Text></XStack>
+            <XStack><Text fontSize="$2" color="$color10" width={80}>受益人：</Text><Text fontSize="$2" color="$color12">{formData.beneficiaries.length} 位</Text></XStack>
+            <XStack><Text fontSize="$2" color="$color10" width={80}>特殊条款：</Text><Text fontSize="$2" color="$color12">{formData.specialClauses.length} 条</Text></XStack>
+            <XStack><Text fontSize="$2" color="$color10" width={80}>执行人：</Text><Text fontSize="$2" color="$color12">{formData.executor || '-'}</Text></XStack>
+          </YStack>
         </View>
-
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>受益人：</Text>
-          <Text style={styles.summaryText}>{formData.beneficiaries.length} 位</Text>
+        <View padding="$2" borderRadius="$5" style={{ backgroundColor: `${warningColor}15` }} borderLeftWidth={3} borderLeftColor={warningColor}>
+          <XStack gap="$2">
+            <AlertTriangle size={18} color={warningColor} />
+            <Text flex={1} fontSize="$2" color="$color10" lineHeight={16}>遗嘱草稿保存后，强烈建议您咨询专业律师进行审核，以确保遗嘱的法律效力。</Text>
+          </XStack>
         </View>
+      </YStack>
+    );
+  };
 
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>特殊条款：</Text>
-          <Text style={styles.summaryText}>{formData.specialClauses.length} 条</Text>
-        </View>
-
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>执行人：</Text>
-          <Text style={styles.summaryText}>{formData.executor}</Text>
-        </View>
-      </View>
-
-      <View style={styles.warningCard}>
-        <Ionicons name="warning-outline" size={20} color="#faad14" />
-        <Text style={styles.warningText}>
-          遗嘱草稿保存后，强烈建议您咨询专业律师进行审核，以确保遗嘱的法律效力。
-        </Text>
-      </View>
-    </View>
-  );
-
-  // 渲染当前步骤内容
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 1:
-        return renderStep1();
-      case 2:
-        return renderStep2();
-      case 3:
-        return renderStep3();
-      case 4:
-        return renderStep4();
-      case 5:
-        return renderStep5();
-      case 6:
-        return renderStep6();
-      default:
-        return null;
+      case 1: return renderStep1();
+      case 2: return renderStep2();
+      case 3: return renderStep3();
+      case 4: return renderStep4();
+      case 5: return renderStep5();
+      case 6: return renderStep6();
+      default: return null;
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      {/* 顶部进度指示器 */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="close" size={24} color="#333" />
-        </TouchableOpacity>
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>
-            {currentStep} / {totalSteps}
-          </Text>
-          <View style={styles.progressBar}>
-            <View
-              style={[styles.progressFill, { width: `${(currentStep / totalSteps) * 100}%` }]}
-            />
-          </View>
-          <Text style={styles.stepTitleText}>{stepTitles[currentStep - 1]}</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View flex={1} backgroundColor="$background">
+        {/* Header */}
+        <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
+          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
+            <Pressable onPress={() => navigation.goBack()}>
+              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+                <X size={24} color={color12} />
+              </View>
+            </Pressable>
+            <YStack flex={1} alignItems="center" marginHorizontal="$2">
+              <Text fontSize="$2" color="$color10">{currentStep} / {totalSteps}</Text>
+              <View width="100%" height={4} borderRadius={2} backgroundColor="$color5" marginVertical="$0.5">
+                <View height={4} borderRadius={2} backgroundColor="$primary" width={`${(currentStep / totalSteps) * 100}%`} />
+              </View>
+              <Text fontSize="$3" fontWeight="600" color="$color12">{stepTitles[currentStep - 1]}</Text>
+            </YStack>
+            <View width={40} />
+          </XStack>
         </View>
-        <View style={{ width: 24 }} />
-      </View>
 
-      {/* 步骤内容 */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {renderCurrentStep()}
-      </ScrollView>
+        {/* Content */}
+        <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+          <YStack padding="$2.5">
+            {renderCurrentStep()}
+          </YStack>
+        </ScrollView>
 
-      {/* 底部按钮 */}
-      <View style={styles.footer}>
-        {currentStep > 1 && (
-          <TouchableOpacity style={styles.backButton} onPress={handlePrevious}>
-            <Ionicons name="chevron-back" size={20} color="#666" />
-            <Text style={styles.backButtonText}>上一步</Text>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          style={[styles.nextButton, currentStep === 1 && styles.nextButtonFull]}
-          onPress={handleNext}
-        >
-          <Text style={styles.nextButtonText}>
-            {currentStep === totalSteps ? '生成遗嘱' : '下一步'}
-          </Text>
-          {currentStep < totalSteps && <Ionicons name="chevron-forward" size={20} color="#fff" />}
-        </TouchableOpacity>
+        {/* Footer */}
+        <View padding="$2.5" backgroundColor="$color2" borderTopWidth={1} borderTopColor="$color5" paddingBottom={insets.bottom + 14}>
+          <XStack gap="$2">
+            {currentStep > 1 && (
+              <Pressable style={{ flex: 1 }} onPress={handlePrevious}>
+                <View borderWidth={1} borderColor="$color5" paddingVertical="$2.5" borderRadius="$10" alignItems="center">
+                  <XStack alignItems="center" gap="$1">
+                    <ChevronLeft size={18} color={color10} />
+                    <Text fontSize="$3" color="$color10">上一步</Text>
+                  </XStack>
+                </View>
+              </Pressable>
+            )}
+            <Pressable style={{ flex: currentStep === 1 ? 1 : 2 }} onPress={handleNext}>
+              <View backgroundColor="$primary" paddingVertical="$2.5" borderRadius="$10" alignItems="center">
+                <XStack alignItems="center" gap="$1">
+                  <Text fontSize="$3" fontWeight="600" color="white">{currentStep === totalSteps ? '生成遗嘱' : '下一步'}</Text>
+                  {currentStep < totalSteps && <ChevronRight size={18} color="white" />}
+                </XStack>
+              </View>
+            </Pressable>
+          </XStack>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e8e8',
-  },
-  progressContainer: {
-    flex: 1,
-    marginHorizontal: 16,
-  },
-  progressText: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#e8e8e8',
-    borderRadius: 2,
-    marginBottom: 4,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: COLORS.primary,
-    borderRadius: 2,
-  },
-  stepTitleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-  },
-  content: {
-    flex: 1,
-  },
-  stepContainer: {
-    padding: 16,
-  },
-  stepTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  stepDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  optionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#e8e8e8',
-  },
-  optionCardSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: '#f3e5f5',
-  },
-  optionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  optionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 8,
-    flex: 1,
-  },
-  optionDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginLeft: 32,
-  },
-  inputSection: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d9d9d9',
-    borderRadius: 4,
-    padding: 12,
-    fontSize: 14,
-    backgroundColor: '#fff',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  radioGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 8,
-  },
-  radioButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#d9d9d9',
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  radioButtonSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: '#f3e5f5',
-  },
-  radioButtonText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  radioButtonTextSelected: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-    borderRadius: 4,
-    padding: 12,
-    marginTop: 16,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  listItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    alignItems: 'center',
-  },
-  listItemContent: {
-    flex: 1,
-  },
-  listItemTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  listItemDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  listItemDetail: {
-    fontSize: 12,
-    color: '#999',
-  },
-  summaryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  summaryTitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  summaryValue: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  exampleCard: {
-    backgroundColor: '#fffbe6',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#faad14',
-  },
-  exampleTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  exampleItem: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  skipButton: {
-    alignItems: 'center',
-    padding: 12,
-    marginTop: 16,
-  },
-  skipButtonText: {
-    fontSize: 14,
-    color: COLORS.primary,
-  },
-  tipCard: {
-    flexDirection: 'row',
-    backgroundColor: '#f3e5f5',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 16,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-    marginLeft: 8,
-  },
-  summarySection: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 16,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#666',
-    width: 100,
-  },
-  summaryText: {
-    fontSize: 14,
-    color: '#333',
-    flex: 1,
-  },
-  warningCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fffbe6',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#faad14',
-  },
-  warningText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-    marginLeft: 8,
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e8e8e8',
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    padding: 14,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#d9d9d9',
-    marginRight: 8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 4,
-  },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 2,
-    padding: 14,
-    borderRadius: 4,
-    backgroundColor: COLORS.primary,
-  },
-  nextButtonFull: {
-    flex: 1,
-  },
-  nextButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginRight: 4,
-  },
-});
 
 export default WillCreatorScreen;

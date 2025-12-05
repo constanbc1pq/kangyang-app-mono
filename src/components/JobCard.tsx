@@ -1,14 +1,17 @@
+/**
+ * JobCard 零工需求卡片组件
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
+ */
 import React from 'react';
 import {
   YStack,
   XStack,
   Text,
-  Card,
   View,
+  useTheme,
 } from 'tamagui';
-import { TouchableOpacity } from 'react-native';
+import { Pressable } from 'react-native';
 import { MapPin, Clock, DollarSign, Users, AlertCircle } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { ServiceJob, ServiceType } from '@/types/community';
 
 interface JobCardProps {
@@ -18,9 +21,15 @@ interface JobCardProps {
 
 /**
  * 零工需求卡片组件
- * 用于在列表中展示零工需求摘要信息
  */
 export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+
   // 获取服务类型的显示文本
   const getServiceTypeLabel = (type: ServiceType): string => {
     const labels: { [key in ServiceType]: string } = {
@@ -68,32 +77,31 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
   };
 
   return (
-    <TouchableOpacity onPress={() => onPress(job.id)} activeOpacity={0.7}>
-      <Card
-        padding="$4"
-        borderRadius="$4"
-        backgroundColor="$surface"
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.1}
-        shadowRadius={8}
-        elevation={4}
-        marginBottom="$3"
-        borderWidth={job.isUrgent ? 2 : 0}
-        borderColor={job.isUrgent ? COLORS.error : 'transparent'}
+    <Pressable onPress={() => onPress(job.id)}>
+      <View
+        padding="$2"
+        borderRadius="$5"
+        backgroundColor="$color2"
+        shadowOffset={{ width: 0, height: 4 }}
+        shadowOpacity={0.08}
+        elevation={2}
+        borderWidth={1}
+        borderColor={job.isUrgent ? errorColor : '$color5'}
+        borderLeftWidth={job.isUrgent ? 3 : 1}
+        borderLeftColor={job.isUrgent ? errorColor : '$color5'}
       >
         {/* 顶部标签区 */}
-        <XStack marginBottom="$3" flexWrap="wrap" gap="$2">
+        <XStack marginBottom="$2" flexWrap="wrap" gap="$1.5">
           {/* 服务类型标签 */}
           <View
-            backgroundColor={COLORS.primary}
+            backgroundColor={primaryColor}
             paddingHorizontal="$2"
-            paddingVertical="$1"
-            borderRadius="$2"
+            paddingVertical="$0.5"
+            borderRadius="$10"
           >
-            <XStack space="$1" alignItems="center">
-              <Text fontSize={14}>{getServiceTypeEmoji(job.serviceType)}</Text>
-              <Text fontSize="$2" color="white" fontWeight="600">
+            <XStack gap="$1" alignItems="center">
+              <Text fontSize={12}>{getServiceTypeEmoji(job.serviceType)}</Text>
+              <Text fontSize={10} color="white" fontWeight="500">
                 {getServiceTypeLabel(job.serviceType)}
               </Text>
             </XStack>
@@ -102,14 +110,14 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
           {/* 紧急标签 */}
           {job.isUrgent && (
             <View
-              backgroundColor={COLORS.error}
+              backgroundColor={errorColor}
               paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
+              paddingVertical="$0.5"
+              borderRadius="$10"
             >
-              <XStack space="$1" alignItems="center">
-                <AlertCircle size={12} color="white" />
-                <Text fontSize="$2" color="white" fontWeight="600">
+              <XStack gap="$0.5" alignItems="center">
+                <AlertCircle size={10} color="white" />
+                <Text fontSize={10} color="white" fontWeight="500">
                   紧急
                 </Text>
               </XStack>
@@ -119,30 +127,26 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
           {/* 高佣金标签 */}
           {job.isHighReward && (
             <View
-              backgroundColor="#FFD700"
+              backgroundColor={warningColor}
               paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
+              paddingVertical="$0.5"
+              borderRadius="$10"
             >
-              <XStack space="$1" alignItems="center">
-                <Text fontSize="$2" color="#8B4513" fontWeight="600">
-                  💰 高佣金
-                </Text>
-              </XStack>
+              <Text fontSize={10} color="white" fontWeight="500">
+                💰 高佣金
+              </Text>
             </View>
           )}
 
           {/* 健康数据关联标签 */}
           {job.healthTags && job.healthTags.length > 0 && (
             <View
-              backgroundColor={`${COLORS.warning}30`}
+              backgroundColor={`${warningColor}15`}
               paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
-              borderWidth={1}
-              borderColor={COLORS.warning}
+              paddingVertical="$0.5"
+              borderRadius="$10"
             >
-              <Text fontSize="$2" color={COLORS.warning} fontWeight="600">
+              <Text fontSize={10} color={warningColor} fontWeight="500">
                 🏥 {job.healthTags[0]}
               </Text>
             </View>
@@ -150,45 +154,43 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
         </XStack>
 
         {/* 标题 */}
-        <Text fontSize="$5" fontWeight="bold" color="$text" marginBottom="$2" numberOfLines={2}>
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1.5" numberOfLines={2}>
           {job.title}
         </Text>
 
         {/* 描述 */}
-        <Text fontSize="$3" color="$textSecondary" marginBottom="$3" numberOfLines={2}>
+        <Text fontSize="$3" color="$color10" marginBottom="$2" numberOfLines={2} lineHeight={20}>
           {job.description}
         </Text>
 
         {/* 信息栏 */}
-        <YStack space="$2" marginBottom="$3">
+        <YStack gap="$1.5" marginBottom="$2">
           {/* 位置 */}
-          <XStack space="$2" alignItems="center">
-            <MapPin size={16} color={COLORS.textSecondary} />
-            <Text fontSize="$3" color="$textSecondary">
+          <XStack gap="$1.5" alignItems="center">
+            <MapPin size={14} color={color10} />
+            <Text fontSize="$2" color="$color10" numberOfLines={1} flex={1}>
               {job.location.district} · {job.location.address}
             </Text>
           </XStack>
 
           {/* 时间 */}
-          <XStack space="$2" alignItems="center">
-            <Clock size={16} color={COLORS.textSecondary} />
-            <Text fontSize="$3" color="$textSecondary">
+          <XStack gap="$1.5" alignItems="center">
+            <Clock size={14} color={color10} />
+            <Text fontSize="$2" color="$color10">
               {job.serviceTime} · {job.duration}
             </Text>
           </XStack>
 
           {/* 预算 */}
-          <XStack space="$2" alignItems="center">
-            <DollarSign size={16} color={COLORS.success} />
-            <Text fontSize="$4" color={COLORS.success} fontWeight="600">
+          <XStack gap="$1.5" alignItems="center">
+            <DollarSign size={14} color={successColor} />
+            <Text fontSize="$3" color={successColor} fontWeight="600">
               {job.budget.currency}{job.budget.min}-{job.budget.max}
             </Text>
             {job.requirements && job.requirements.length > 0 && (
               <>
-                <Text fontSize="$3" color="$textSecondary">
-                  ·
-                </Text>
-                <Text fontSize="$3" color="$textSecondary" numberOfLines={1}>
+                <Text fontSize="$2" color="$color10">·</Text>
+                <Text fontSize="$2" color="$color10" numberOfLines={1} flex={1}>
                   {job.requirements.slice(0, 2).join('、')}
                 </Text>
               </>
@@ -197,27 +199,27 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
         </YStack>
 
         {/* 底部统计信息 */}
-        <XStack justifyContent="space-between" alignItems="center" marginTop="$2">
+        <XStack justifyContent="space-between" alignItems="center">
           {/* 雇主信息 */}
-          <XStack space="$2" alignItems="center">
-            <Text fontSize={20}>{job.employerAvatar || '👤'}</Text>
-            <Text fontSize="$3" color="$textSecondary">
+          <XStack gap="$1.5" alignItems="center">
+            <Text fontSize={16}>{job.employerAvatar || '👤'}</Text>
+            <Text fontSize="$2" color="$color10">
               {job.employerName}
             </Text>
           </XStack>
 
           {/* 报名人数 */}
-          <XStack space="$2" alignItems="center">
-            <Users size={14} color={COLORS.textSecondary} />
-            <Text fontSize="$3" color="$textSecondary">
+          <XStack gap="$1.5" alignItems="center">
+            <Users size={12} color={color10} />
+            <Text fontSize="$2" color="$color10">
               {job.applicants}人报名
             </Text>
-            <Text fontSize="$2" color="$textSecondary">
+            <Text fontSize="$2" color="$color10">
               · {job.publishTime}
             </Text>
           </XStack>
         </XStack>
-      </Card>
-    </TouchableOpacity>
+      </View>
+    </Pressable>
   );
 };

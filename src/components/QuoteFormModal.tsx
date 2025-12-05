@@ -1,3 +1,8 @@
+/**
+ * 报价表单弹窗组件
+ * 达人填写报价信息并发送
+ */
+
 import React, { useState } from 'react';
 import {
   YStack,
@@ -6,23 +11,12 @@ import {
   View,
   Input,
   TextArea,
-  H3,
+  Button,
+  useTheme,
 } from 'tamagui';
-import {
-  Modal,
-  TouchableOpacity,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import {
-  X,
-  DollarSign,
-  Clock,
-  MessageCircle,
-} from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
+import { Pressable, Alert } from 'react-native';
+import { DollarSign, Clock, MessageCircle } from 'lucide-react-native';
+import { BottomSheet } from './BottomSheet';
 
 interface QuoteFormModalProps {
   visible: boolean;
@@ -38,10 +32,6 @@ interface QuoteFormModalProps {
   }) => void;
 }
 
-/**
- * 报价表单弹窗组件
- * 达人填写报价信息并发送
- */
 export const QuoteFormModal: React.FC<QuoteFormModalProps> = ({
   visible,
   jobTitle,
@@ -49,6 +39,10 @@ export const QuoteFormModal: React.FC<QuoteFormModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const errorColor = theme.error?.val;
+
   const [price, setPrice] = useState('');
   const [serviceTime, setServiceTime] = useState('');
   const [duration, setDuration] = useState('');
@@ -68,7 +62,6 @@ export const QuoteFormModal: React.FC<QuoteFormModalProps> = ({
   };
 
   const handleSubmit = () => {
-    // 验证必填项
     if (!price || parseFloat(price) <= 0) {
       Alert.alert('提示', '请输入有效的报价金额');
       return;
@@ -104,302 +97,202 @@ export const QuoteFormModal: React.FC<QuoteFormModalProps> = ({
     }
   };
 
-  // 快速设置时长
   const quickDurations = ['1小时', '2小时', '3小时', '半天', '1天'];
 
   return (
-    <Modal
+    <BottomSheet
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <View
-          flex={1}
-          backgroundColor="rgba(0,0,0,0.5)"
-          justifyContent="flex-end"
-        >
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            activeOpacity={1}
+      onClose={handleClose}
+      title="发送报价"
+      variant="form"
+      avoidKeyboard
+      footer={
+        <XStack gap="$2">
+          <Button
+            flex={1}
+            size="$4"
+            backgroundColor="$color2"
+            color="$primary"
+            borderWidth={1}
+            borderColor="$primary"
+            borderRadius="$3"
             onPress={handleClose}
-          />
-
-          <View
-            backgroundColor="white"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
-            paddingBottom={Platform.OS === 'ios' ? 34 : 20}
           >
-            {/* 顶部标题栏 */}
-            <View
-              paddingHorizontal="$4"
-              paddingVertical="$3"
-              borderBottomWidth={1}
-              borderBottomColor="$borderColor"
-            >
-              <XStack justifyContent="space-between" alignItems="center">
-                <H3 fontSize="$5" fontWeight="600" color="$text">
-                  发送报价
-                </H3>
-                <TouchableOpacity onPress={handleClose}>
-                  <View
-                    width={32}
-                    height={32}
-                    justifyContent="center"
-                    alignItems="center"
-                  >
-                    <X size={24} color={COLORS.text} />
-                  </View>
-                </TouchableOpacity>
-              </XStack>
-            </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              style={{ maxHeight: 500 }}
-            >
-              <View padding="$4">
-                <YStack space="$4">
-                  {/* 需求标题 */}
-                  <View
-                    padding="$3"
-                    backgroundColor="$background"
-                    borderRadius="$3"
-                  >
-                    <Text fontSize="$2" color="$textSecondary" marginBottom="$1">
-                      服务需求
-                    </Text>
-                    <Text fontSize="$4" color="$text" fontWeight="600">
-                      {jobTitle}
-                    </Text>
-                  </View>
-
-                  {/* 报价金额 */}
-                  <YStack>
-                    <Text fontSize="$3" color="$text" marginBottom="$2">
-                      报价金额 <Text color={COLORS.error}>*</Text>
-                    </Text>
-                    <XStack space="$2" alignItems="center">
-                      <View
-                        width={40}
-                        height={44}
-                        backgroundColor="$background"
-                        borderWidth={1}
-                        borderColor="$borderColor"
-                        borderRadius="$3"
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <DollarSign size={20} color={COLORS.primary} />
-                      </View>
-                      <Input
-                        flex={1}
-                        value={price}
-                        onChangeText={setPrice}
-                        placeholder="请输入金额"
-                        keyboardType="numeric"
-                        backgroundColor="white"
-                        borderWidth={1}
-                        borderColor="$borderColor"
-                        borderRadius="$3"
-                        fontSize="$4"
-                        paddingHorizontal="$3"
-                        height={44}
-                      />
-                      <Text fontSize="$4" color="$text">
-                        元
-                      </Text>
-                    </XStack>
-                  </YStack>
-
-                  {/* 服务时间 */}
-                  <YStack>
-                    <Text fontSize="$3" color="$text" marginBottom="$2">
-                      服务时间 <Text color={COLORS.error}>*</Text>
-                    </Text>
-                    <XStack space="$2" alignItems="center">
-                      <View
-                        width={40}
-                        height={44}
-                        backgroundColor="$background"
-                        borderWidth={1}
-                        borderColor="$borderColor"
-                        borderRadius="$3"
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <Clock size={20} color={COLORS.primary} />
-                      </View>
-                      <Input
-                        flex={1}
-                        value={serviceTime}
-                        onChangeText={setServiceTime}
-                        placeholder="例如：明天下午2点"
-                        backgroundColor="white"
-                        borderWidth={1}
-                        borderColor="$borderColor"
-                        borderRadius="$3"
-                        fontSize="$4"
-                        paddingHorizontal="$3"
-                        height={44}
-                      />
-                    </XStack>
-                  </YStack>
-
-                  {/* 预计时长 */}
-                  <YStack>
-                    <Text fontSize="$3" color="$text" marginBottom="$2">
-                      预计时长 <Text color={COLORS.error}>*</Text>
-                    </Text>
-                    <Input
-                      value={duration}
-                      onChangeText={setDuration}
-                      placeholder="例如：2小时"
-                      backgroundColor="white"
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                      borderRadius="$3"
-                      fontSize="$4"
-                      paddingHorizontal="$3"
-                      height={44}
-                      marginBottom="$2"
-                    />
-                    {/* 快速选择时长 */}
-                    <View flexDirection="row" flexWrap="wrap" gap="$2">
-                      {quickDurations.map((dur) => (
-                        <TouchableOpacity
-                          key={dur}
-                          onPress={() => setDuration(dur)}
-                        >
-                          <View
-                            paddingHorizontal="$3"
-                            paddingVertical="$1"
-                            borderRadius="$6"
-                            backgroundColor={
-                              duration === dur
-                                ? `${COLORS.primary}20`
-                                : '$background'
-                            }
-                            borderWidth={1}
-                            borderColor={
-                              duration === dur
-                                ? COLORS.primary
-                                : '$borderColor'
-                            }
-                          >
-                            <Text
-                              fontSize="$2"
-                              color={duration === dur ? COLORS.primary : '$text'}
-                            >
-                              {dur}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </YStack>
-
-                  {/* 留言说明 */}
-                  <YStack>
-                    <Text fontSize="$3" color="$text" marginBottom="$2">
-                      留言说明（可选）
-                    </Text>
-                    <XStack space="$2" alignItems="flex-start">
-                      <View
-                        width={40}
-                        height={44}
-                        backgroundColor="$background"
-                        borderWidth={1}
-                        borderColor="$borderColor"
-                        borderRadius="$3"
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        <MessageCircle size={20} color={COLORS.primary} />
-                      </View>
-                      <TextArea
-                        flex={1}
-                        value={message}
-                        onChangeText={setMessage}
-                        placeholder="向雇主介绍您的服务优势..."
-                        minHeight={80}
-                        backgroundColor="white"
-                        borderWidth={1}
-                        borderColor="$borderColor"
-                        borderRadius="$3"
-                        fontSize="$4"
-                        paddingHorizontal="$3"
-                        paddingVertical="$2"
-                        maxLength={200}
-                      />
-                    </XStack>
-                    <Text
-                      fontSize="$2"
-                      color="$textSecondary"
-                      textAlign="right"
-                      marginTop="$1"
-                    >
-                      {message.length}/200
-                    </Text>
-                  </YStack>
-                </YStack>
-              </View>
-            </ScrollView>
-
-            {/* 底部操作按钮 */}
-            <View
-              paddingHorizontal="$4"
-              paddingTop="$3"
-              borderTopWidth={1}
-              borderTopColor="$borderColor"
-            >
-              <XStack space="$3">
-                <TouchableOpacity
-                  style={{ flex: 1 }}
-                  onPress={handleClose}
-                >
-                  <View
-                    backgroundColor="white"
-                    borderWidth={1}
-                    borderColor={COLORS.primary}
-                    borderRadius="$3"
-                    paddingVertical="$3"
-                    alignItems="center"
-                  >
-                    <Text fontSize="$4" color={COLORS.primary} fontWeight="600">
-                      取消
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ flex: 1 }}
-                  onPress={handleSubmit}
-                  disabled={submitting}
-                >
-                  <View
-                    backgroundColor={
-                      submitting ? COLORS.textSecondary : COLORS.primary
-                    }
-                    borderRadius="$3"
-                    paddingVertical="$3"
-                    alignItems="center"
-                  >
-                    <Text fontSize="$4" color="white" fontWeight="600">
-                      {submitting ? '发送中...' : '发送报价'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </XStack>
-            </View>
-          </View>
+            取消
+          </Button>
+          <Button
+            flex={1}
+            size="$4"
+            backgroundColor={submitting ? '$color6' : '$primary'}
+            color="white"
+            borderRadius="$3"
+            fontWeight="600"
+            onPress={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? '发送中...' : '发送报价'}
+          </Button>
+        </XStack>
+      }
+    >
+      <YStack gap="$4">
+        {/* 需求标题 */}
+        <View padding="$2" backgroundColor="$color4" borderRadius="$3">
+          <Text fontSize="$2" color="$color10" marginBottom="$1">
+            服务需求
+          </Text>
+          <Text fontSize="$4" color="$color12" fontWeight="600">
+            {jobTitle}
+          </Text>
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+
+        {/* 报价金额 */}
+        <YStack gap="$2">
+          <Text fontSize="$3" color="$color12">
+            报价金额 <Text color={errorColor}>*</Text>
+          </Text>
+          <XStack gap="$2" alignItems="center">
+            <View
+              width={40}
+              height={44}
+              backgroundColor="$color4"
+              borderRadius="$3"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <DollarSign size={20} color={primaryColor} />
+            </View>
+            <Input
+              flex={1}
+              value={price}
+              onChangeText={setPrice}
+              placeholder="请输入金额"
+              keyboardType="numeric"
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              borderRadius="$3"
+              fontSize="$4"
+              paddingHorizontal="$2"
+              height={44}
+            />
+            <Text fontSize="$4" color="$color12">
+              元
+            </Text>
+          </XStack>
+        </YStack>
+
+        {/* 服务时间 */}
+        <YStack gap="$2">
+          <Text fontSize="$3" color="$color12">
+            服务时间 <Text color={errorColor}>*</Text>
+          </Text>
+          <XStack gap="$2" alignItems="center">
+            <View
+              width={40}
+              height={44}
+              backgroundColor="$color4"
+              borderRadius="$3"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Clock size={20} color={primaryColor} />
+            </View>
+            <Input
+              flex={1}
+              value={serviceTime}
+              onChangeText={setServiceTime}
+              placeholder="例如：明天下午2点"
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              borderRadius="$3"
+              fontSize="$4"
+              paddingHorizontal="$2"
+              height={44}
+            />
+          </XStack>
+        </YStack>
+
+        {/* 预计时长 */}
+        <YStack gap="$2">
+          <Text fontSize="$3" color="$color12">
+            预计时长 <Text color={errorColor}>*</Text>
+          </Text>
+          <Input
+            value={duration}
+            onChangeText={setDuration}
+            placeholder="例如：2小时"
+            backgroundColor="$color2"
+            borderWidth={1}
+            borderColor="$color5"
+            borderRadius="$3"
+            fontSize="$4"
+            paddingHorizontal="$2"
+            height={44}
+            marginBottom="$2"
+          />
+          {/* 快速选择时长 */}
+          <XStack flexWrap="wrap" gap="$2">
+            {quickDurations.map((dur) => (
+              <Pressable key={dur} onPress={() => setDuration(dur)}>
+                <View
+                  paddingHorizontal="$2"
+                  paddingVertical="$1"
+                  borderRadius="$10"
+                  backgroundColor={duration === dur ? `${primaryColor}15` : '$color4'}
+                  borderWidth={1}
+                  borderColor={duration === dur ? primaryColor : '$color5'}
+                >
+                  <Text
+                    fontSize="$2"
+                    color={duration === dur ? primaryColor : '$color12'}
+                  >
+                    {dur}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </XStack>
+        </YStack>
+
+        {/* 留言说明 */}
+        <YStack gap="$2">
+          <Text fontSize="$3" color="$color12">
+            留言说明（可选）
+          </Text>
+          <XStack gap="$2" alignItems="flex-start">
+            <View
+              width={40}
+              height={44}
+              backgroundColor="$color4"
+              borderRadius="$3"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <MessageCircle size={20} color={primaryColor} />
+            </View>
+            <TextArea
+              flex={1}
+              value={message}
+              onChangeText={setMessage}
+              placeholder="向雇主介绍您的服务优势..."
+              minHeight={80}
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              borderRadius="$3"
+              fontSize="$4"
+              paddingHorizontal="$2"
+              paddingVertical="$2"
+              maxLength={200}
+            />
+          </XStack>
+          <Text fontSize="$2" color="$color10" textAlign="right">
+            {message.length}/200
+          </Text>
+        </YStack>
+      </YStack>
+    </BottomSheet>
   );
 };

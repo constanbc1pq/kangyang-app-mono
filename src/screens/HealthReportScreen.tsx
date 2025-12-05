@@ -11,13 +11,12 @@ import {
   Theme,
   ScrollView,
   Progress,
+  useTheme,
 } from 'tamagui';
-import { Pressable, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
 import {
-  ArrowLeft,
   Share2,
   Download,
   Heart,
@@ -40,11 +39,21 @@ import {
   FileBarChart,
   Zap,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 
 export const HealthReportScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const theme = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+
+  // 主题色值
+  const primaryColor = theme.primary?.val || '#6366F1';
+  const successColor = theme.success?.val || '#10B981';
+  const warningColor = theme.warning?.val || '#F59E0B';
+  const errorColor = theme.error?.val || '#EF4444';
+  const accentColor = theme.accent?.val || '#A78BFA';
+  const secondaryColor = theme.secondary?.val || '#22D3EE';
+  const textColor = theme.color12?.val || '#1F2937';
+  const textSecondaryColor = theme.color10?.val || '#6B7280';
 
   const periods = [
     { id: 'week', name: '本周' },
@@ -59,42 +68,42 @@ export const HealthReportScreen: React.FC = () => {
       score: 95,
       trend: 'up',
       icon: Heart,
-      color: COLORS.error
+      color: errorColor
     },
     {
       name: '代谢健康',
       score: 88,
       trend: 'stable',
       icon: Activity,
-      color: COLORS.success
+      color: successColor
     },
     {
       name: '睡眠质量',
       score: 90,
       trend: 'up',
       icon: Moon,
-      color: COLORS.primary
+      color: primaryColor
     },
     {
       name: '体重管理',
       score: 92,
       trend: 'down',
       icon: Scale,
-      color: COLORS.secondary
+      color: secondaryColor
     },
     {
       name: '血液指标',
       score: 87,
       trend: 'stable',
       icon: Droplets,
-      color: COLORS.primaryLight
+      color: accentColor
     },
     {
       name: '精神状态',
       score: 94,
       trend: 'up',
       icon: Brain,
-      color: COLORS.accent
+      color: accentColor
     }
   ];
 
@@ -237,11 +246,11 @@ export const HealthReportScreen: React.FC = () => {
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case 'up':
-        return <TrendingUp size={16} color={COLORS.success} />;
+        return <TrendingUp size={16} color={successColor} />;
       case 'down':
-        return <TrendingDown size={16} color={COLORS.error} />;
+        return <TrendingDown size={16} color={errorColor} />;
       default:
-        return <Minus size={16} color={COLORS.textSecondary} />;
+        return <Minus size={16} color={textSecondaryColor} />;
     }
   };
 
@@ -261,51 +270,15 @@ export const HealthReportScreen: React.FC = () => {
 
   return (
     <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        {/* 粘性头部导航 */}
-        <View
-          backgroundColor="$background"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-        >
-          <XStack justifyContent="space-between" alignItems="center">
-            {/* 左侧返回按钮 */}
-            <Pressable onPress={() => navigation.goBack()}>
-              <ArrowLeft size={24} color={COLORS.text} />
-            </Pressable>
-
-            {/* 中间标题 */}
-            <Text fontSize="$5" fontWeight="600" color="$text">
-              健康报告
-            </Text>
-
-            {/* 右侧操作按钮 */}
-            <XStack space="$2">
-              <TouchableOpacity onPress={handleShareReport}>
-                <View
-                  width={40}
-                  height={40}
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Share2 size={20} color={COLORS.text} />
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleExportReport}>
-                <View
-                  width={40}
-                  height={40}
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Download size={20} color={COLORS.text} />
-                </View>
-              </TouchableOpacity>
-            </XStack>
-          </XStack>
-        </View>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+        {/* 顶部标题栏 */}
+        <TitleBar
+          title="健康报告"
+          actions={[
+            { icon: Share2, onPress: handleShareReport },
+            { icon: Download, onPress: handleExportReport },
+          ]}
+        />
 
         {/* 可滚动内容区域 */}
         <ScrollView
@@ -313,20 +286,20 @@ export const HealthReportScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20 }}
         >
-          <YStack space="$4" padding="$4">
+          <YStack gap="$2" padding="$2.5">
 
             {/* 综合健康评分卡片 */}
             <View borderRadius="$6" overflow="hidden">
               <LinearGradient
-                colors={[COLORS.primary, COLORS.accent]}
+                colors={[primaryColor, accentColor]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ padding: 24 }}
+                style={{ padding: 16 }}
               >
                 {/* 头部信息 */}
-                <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
                   <YStack>
-                    <H2 fontSize="$8" fontWeight="bold" color="white" marginBottom="$1">
+                    <H2 fontSize="$7" fontWeight="bold" color="white" marginBottom="$1">
                       综合健康评分
                     </H2>
                     <Text fontSize="$3" color="rgba(255,255,255,0.8)">
@@ -334,7 +307,7 @@ export const HealthReportScreen: React.FC = () => {
                     </Text>
                   </YStack>
                   <YStack alignItems="center">
-                    <Text fontSize="$12" fontWeight="bold" color="white">
+                    <Text fontSize="$10" fontWeight="bold" color="white">
                       92
                     </Text>
                     <Text fontSize="$3" color="rgba(255,255,255,0.8)">
@@ -344,7 +317,7 @@ export const HealthReportScreen: React.FC = () => {
                 </XStack>
 
                 {/* 进度条 */}
-                <Progress value={92} backgroundColor="rgba(255,255,255,0.2)" marginBottom="$3">
+                <Progress value={92} backgroundColor="rgba(255,255,255,0.2)" marginBottom="$2">
                   <Progress.Indicator backgroundColor="white" />
                 </Progress>
 
@@ -353,9 +326,9 @@ export const HealthReportScreen: React.FC = () => {
                   <Text fontSize="$3" color="rgba(255,255,255,0.8)">
                     较上月
                   </Text>
-                  <XStack space="$1" alignItems="center">
+                  <XStack gap="$1" alignItems="center">
                     <TrendingUp size={16} color="white" />
-                    <Text fontSize="$3" fontWeight="600" color="white">
+                    <Text fontSize="$3" fontWeight="500" color="white">
                       +3分
                     </Text>
                   </XStack>
@@ -364,7 +337,7 @@ export const HealthReportScreen: React.FC = () => {
             </View>
 
             {/* 时间段选择器 */}
-            <XStack backgroundColor="$surface" borderRadius="$3" padding="$1">
+            <XStack backgroundColor="$color2" borderRadius="$10" padding="$1">
               {periods.map((period) => (
                 <TouchableOpacity
                   key={period.id}
@@ -372,15 +345,15 @@ export const HealthReportScreen: React.FC = () => {
                   style={{ flex: 1 }}
                 >
                   <View
-                    backgroundColor={selectedPeriod === period.id ? COLORS.primary : 'transparent'}
-                    borderRadius="$3"
+                    backgroundColor={selectedPeriod === period.id ? '$primary' : 'transparent'}
+                    borderRadius="$10"
                     paddingVertical="$2"
                     justifyContent="center"
                     alignItems="center"
                   >
                     <Text
                       fontSize="$3"
-                      color={selectedPeriod === period.id ? 'white' : '$textSecondary'}
+                      color={selectedPeriod === period.id ? 'white' : '$color10'}
                       fontWeight={selectedPeriod === period.id ? '600' : '400'}
                     >
                       {period.name}
@@ -392,38 +365,40 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* 健康维度评分卡片 */}
             <Card
-              padding="$4"
+              padding="$2"
               borderRadius="$6"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              shadowColor="$shadowColor"
+              shadowOffset={{ width: 0, height: 8 }}
+              shadowOpacity={0.12}
+              shadowRadius={16}
               elevation={4}
             >
-              <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$4">
+              <H3 fontSize="$5" fontWeight="600" color="$color12" marginBottom="$2">
                 健康维度评分
               </H3>
-              <YStack space="$4">
+              <YStack gap="$2">
                 {healthDimensions.map((dimension, index) => {
                   const IconComponent = dimension.icon;
                   return (
-                    <YStack key={index} space="$2">
+                    <YStack key={index} gap="$1">
                       <XStack justifyContent="space-between" alignItems="center">
-                        <XStack space="$2" alignItems="center">
+                        <XStack gap="$2" alignItems="center">
                           <IconComponent size={20} color={dimension.color} />
-                          <Text fontSize="$3" fontWeight="500" color="$text">
+                          <Text fontSize="$3" fontWeight="500" color="$color12">
                             {dimension.name}
                           </Text>
                         </XStack>
-                        <XStack space="$2" alignItems="center">
-                          <Text fontSize="$3" fontWeight="bold" color="$text">
+                        <XStack gap="$2" alignItems="center">
+                          <Text fontSize="$3" fontWeight="bold" color="$color12">
                             {dimension.score}分
                           </Text>
                           {getTrendIcon(dimension.trend)}
                         </XStack>
                       </XStack>
-                      <Progress value={dimension.score} backgroundColor="$borderLight" height={8}>
+                      <Progress value={dimension.score} backgroundColor="$color5" height={8}>
                         <Progress.Indicator backgroundColor={dimension.color} />
                       </Progress>
                     </YStack>
@@ -434,49 +409,51 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* 重要发现卡片 */}
             <Card
-              padding="$4"
+              padding="$2"
               borderRadius="$6"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              shadowColor="$shadowColor"
+              shadowOffset={{ width: 0, height: 8 }}
+              shadowOpacity={0.12}
+              shadowRadius={16}
               elevation={4}
             >
-              <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$4">
+              <H3 fontSize="$5" fontWeight="600" color="$color12" marginBottom="$2">
                 重要发现
               </H3>
-              <YStack space="$3">
+              <YStack gap="$2">
                 {importantFindings.map((finding, index) => {
                   const IconComponent = finding.icon;
                   return (
                     <View
                       key={index}
-                      padding="$4"
-                      borderRadius="$4"
+                      padding="$2"
+                      borderRadius="$5"
                       backgroundColor={
                         finding.type === 'positive'
-                          ? 'rgba(16, 185, 129, 0.1)'
-                          : 'rgba(245, 158, 11, 0.1)'
+                          ? `${successColor}15`
+                          : `${warningColor}15`
                       }
                       borderWidth={1}
                       borderColor={
                         finding.type === 'positive'
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : 'rgba(245, 158, 11, 0.2)'
+                          ? `${successColor}30`
+                          : `${warningColor}30`
                       }
                     >
-                      <XStack space="$3" alignItems="flex-start">
+                      <XStack gap="$2" alignItems="flex-start">
                         <IconComponent
                           size={20}
-                          color={finding.type === 'positive' ? COLORS.success : COLORS.warning}
+                          color={finding.type === 'positive' ? successColor : warningColor}
                           style={{ marginTop: 2 }}
                         />
                         <YStack flex={1}>
-                          <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$1">
+                          <Text fontSize="$3" fontWeight="500" color="$color12" marginBottom="$1">
                             {finding.title}
                           </Text>
-                          <Text fontSize="$3" color="$textSecondary" lineHeight="$1">
+                          <Text fontSize="$3" color="$color10" lineHeight="$2">
                             {finding.description}
                           </Text>
                         </YStack>
@@ -489,40 +466,42 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* 健康趋势卡片 - 2x2网格布局 */}
             <Card
-              padding="$4"
+              padding="$2"
               borderRadius="$6"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              shadowColor="$shadowColor"
+              shadowOffset={{ width: 0, height: 8 }}
+              shadowOpacity={0.12}
+              shadowRadius={16}
               elevation={4}
             >
-              <H3 fontSize="$5" fontWeight="600" color="$text" marginBottom="$4">
+              <H3 fontSize="$5" fontWeight="600" color="$color12" marginBottom="$2">
                 健康趋势
               </H3>
-              <YStack space="$3">
+              <YStack gap="$2">
                 {/* 第一行 */}
-                <XStack space="$3">
+                <XStack gap="$2">
                   {healthTrends.slice(0, 2).map((trend, index) => (
                     <View
                       key={index}
                       flex={1}
-                      padding="$3"
-                      borderRadius="$4"
-                      backgroundColor="$surface"
+                      padding="$2"
+                      borderRadius="$5"
+                      backgroundColor="$color2"
                     >
-                      <Text fontSize="$2" color="$textSecondary" marginBottom="$1">
+                      <Text fontSize="$2" color="$color10" marginBottom="$1">
                         {trend.metric}
                       </Text>
-                      <Text fontSize="$5" fontWeight="bold" color="$text" marginBottom="$1">
+                      <Text fontSize="$5" fontWeight="bold" color="$color12" marginBottom="$1">
                         {trend.value}
                       </Text>
                       <View
-                        backgroundColor={trend.status === 'good' ? COLORS.success : COLORS.warning}
+                        backgroundColor={trend.status === 'good' ? successColor : warningColor}
                         paddingHorizontal="$2"
-                        paddingVertical="$1"
-                        borderRadius="$2"
+                        paddingVertical="$0.5"
+                        borderRadius="$10"
                         alignSelf="flex-start"
                       >
                         <Text fontSize="$1" color="white">
@@ -533,26 +512,26 @@ export const HealthReportScreen: React.FC = () => {
                   ))}
                 </XStack>
                 {/* 第二行 */}
-                <XStack space="$3">
+                <XStack gap="$2">
                   {healthTrends.slice(2, 4).map((trend, index) => (
                     <View
                       key={index + 2}
                       flex={1}
-                      padding="$3"
-                      borderRadius="$4"
-                      backgroundColor="$surface"
+                      padding="$2"
+                      borderRadius="$5"
+                      backgroundColor="$color2"
                     >
-                      <Text fontSize="$2" color="$textSecondary" marginBottom="$1">
+                      <Text fontSize="$2" color="$color10" marginBottom="$1">
                         {trend.metric}
                       </Text>
-                      <Text fontSize="$5" fontWeight="bold" color="$text" marginBottom="$1">
+                      <Text fontSize="$5" fontWeight="bold" color="$color12" marginBottom="$1">
                         {trend.value}
                       </Text>
                       <View
-                        backgroundColor={trend.status === 'good' ? COLORS.success : COLORS.warning}
+                        backgroundColor={trend.status === 'good' ? successColor : warningColor}
                         paddingHorizontal="$2"
-                        paddingVertical="$1"
-                        borderRadius="$2"
+                        paddingVertical="$0.5"
+                        borderRadius="$10"
                         alignSelf="flex-start"
                       >
                         <Text fontSize="$1" color="white">
@@ -567,102 +546,103 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* AI健康分析卡片 */}
             <Card
-              padding="$4"
+              padding="$2"
               borderRadius="$6"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              shadowColor="$shadowColor"
+              shadowOffset={{ width: 0, height: 8 }}
+              shadowOpacity={0.12}
+              shadowRadius={16}
               elevation={4}
             >
-              <XStack space="$3" alignItems="center" marginBottom="$4">
+              <XStack gap="$2" alignItems="center" marginBottom="$2">
                 <View
-                  width={40}
-                  height={40}
-                  backgroundColor="rgba(200, 85, 240, 0.1)"
-                  borderRadius={20}
+                  width={32}
+                  height={32}
+                  backgroundColor={`${primaryColor}15`}
+                  borderRadius="$12"
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <Bot size={20} color={COLORS.primary} />
+                  <Bot size={18} color={primaryColor} />
                 </View>
-                <H3 fontSize="$5" fontWeight="600" color="$text">
+                <H3 fontSize="$5" fontWeight="600" color="$color12">
                   AI健康分析
                 </H3>
               </XStack>
 
               {/* 整体评估 */}
               <View
-                padding="$4"
-                borderRadius="$4"
-                backgroundColor="rgba(200, 85, 240, 0.05)"
+                padding="$2"
+                borderRadius="$5"
+                backgroundColor={`${primaryColor}08`}
                 borderWidth={1}
-                borderColor="rgba(200, 85, 240, 0.1)"
-                marginBottom="$4"
+                borderColor={`${primaryColor}15`}
+                marginBottom="$2"
               >
-                <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                  <Text fontSize="$4" fontWeight="600" color="$text">
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                  <Text fontSize="$4" fontWeight="600" color="$color12">
                     整体健康评估
                   </Text>
                   <View
                     backgroundColor={
                       aiAnalysis.overallAssessment.riskLevel === 'low'
-                        ? COLORS.success
+                        ? successColor
                         : aiAnalysis.overallAssessment.riskLevel === 'medium'
-                        ? COLORS.warning
-                        : COLORS.error
+                        ? warningColor
+                        : errorColor
                     }
-                    paddingHorizontal="$3"
-                    paddingVertical="$1"
-                    borderRadius="$3"
+                    paddingHorizontal="$2"
+                    paddingVertical="$0.5"
+                    borderRadius="$10"
                   >
-                    <Text fontSize="$3" color="white" fontWeight="600">
+                    <Text fontSize="$3" color="white" fontWeight="500">
                       {aiAnalysis.overallAssessment.level}
                     </Text>
                   </View>
                 </XStack>
-                <Text fontSize="$3" color="$textSecondary" lineHeight="$2">
+                <Text fontSize="$3" color="$color10" lineHeight="$2">
                   {aiAnalysis.overallAssessment.summary}
                 </Text>
               </View>
 
               {/* AI洞察 */}
-              <YStack space="$3">
+              <YStack gap="$2">
                 {aiAnalysis.insights.map((insight, index) => {
                   const IconComponent = insight.icon;
                   return (
                     <View
                       key={index}
-                      padding="$3"
-                      borderRadius="$4"
-                      backgroundColor="$surface"
+                      padding="$2"
+                      borderRadius="$5"
+                      backgroundColor="$color2"
                       borderLeftWidth={3}
                       borderLeftColor={
                         insight.importance === 'high'
-                          ? COLORS.error
+                          ? errorColor
                           : insight.importance === 'medium'
-                          ? COLORS.warning
-                          : COLORS.success
+                          ? warningColor
+                          : successColor
                       }
                     >
-                      <XStack space="$3" alignItems="flex-start">
+                      <XStack gap="$2" alignItems="flex-start">
                         <View
-                          width={36}
-                          height={36}
-                          backgroundColor="$background"
-                          borderRadius={18}
+                          width={32}
+                          height={32}
+                          backgroundColor="$color3"
+                          borderRadius="$12"
                           justifyContent="center"
                           alignItems="center"
-                          marginTop="$1"
                         >
-                          <IconComponent size={18} color={COLORS.primary} />
+                          <IconComponent size={16} color={primaryColor} />
                         </View>
                         <YStack flex={1}>
-                          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$2">
+                          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1">
                             {insight.title}
                           </Text>
-                          <Text fontSize="$3" color="$textSecondary" lineHeight="$2">
+                          <Text fontSize="$3" color="$color10" lineHeight="$2">
                             {insight.content}
                           </Text>
                         </YStack>
@@ -675,58 +655,60 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* 健康风险评估卡片 */}
             <Card
-              padding="$4"
+              padding="$2"
               borderRadius="$6"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              shadowColor="$shadowColor"
+              shadowOffset={{ width: 0, height: 8 }}
+              shadowOpacity={0.12}
+              shadowRadius={16}
               elevation={4}
             >
-              <XStack space="$3" alignItems="center" marginBottom="$4">
+              <XStack gap="$2" alignItems="center" marginBottom="$2">
                 <View
-                  width={40}
-                  height={40}
-                  backgroundColor="rgba(239, 68, 68, 0.1)"
-                  borderRadius={20}
+                  width={32}
+                  height={32}
+                  backgroundColor={`${errorColor}15`}
+                  borderRadius="$12"
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <Shield size={20} color={COLORS.error} />
+                  <Shield size={18} color={errorColor} />
                 </View>
-                <H3 fontSize="$5" fontWeight="600" color="$text">
+                <H3 fontSize="$5" fontWeight="600" color="$color12">
                   健康风险评估
                 </H3>
               </XStack>
 
-              <YStack space="$4">
+              <YStack gap="$2">
                 {riskAssessment.map((risk, index) => (
                   <View
                     key={index}
-                    padding="$4"
-                    borderRadius="$4"
-                    backgroundColor="$surface"
+                    padding="$2"
+                    borderRadius="$5"
+                    backgroundColor="$color2"
                   >
-                    <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                      <Text fontSize="$4" fontWeight="600" color="$text">
+                    <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                      <Text fontSize="$4" fontWeight="600" color="$color12">
                         {risk.category}
                       </Text>
-                      <XStack space="$2" alignItems="center">
-                        <Text fontSize="$3" color="$textSecondary">
+                      <XStack gap="$2" alignItems="center">
+                        <Text fontSize="$3" color="$color10">
                           {risk.percentage}%
                         </Text>
                         <View
                           backgroundColor={
                             risk.level === 'low'
-                              ? COLORS.success
+                              ? successColor
                               : risk.level === 'medium'
-                              ? COLORS.warning
-                              : COLORS.error
+                              ? warningColor
+                              : errorColor
                           }
                           paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$2"
+                          paddingVertical="$0.5"
+                          borderRadius="$10"
                         >
                           <Text fontSize="$2" color="white">
                             {risk.level === 'low' ? '低风险' : risk.level === 'medium' ? '中风险' : '高风险'}
@@ -736,39 +718,39 @@ export const HealthReportScreen: React.FC = () => {
                     </XStack>
 
                     {/* 风险进度条 */}
-                    <View marginBottom="$3">
+                    <View marginBottom="$2">
                       <Progress
                         value={risk.percentage}
-                        backgroundColor="$surface"
+                        backgroundColor="$color5"
                         size="$1"
                       >
                         <Progress.Indicator
                           backgroundColor={
                             risk.level === 'low'
-                              ? COLORS.success
+                              ? successColor
                               : risk.level === 'medium'
-                              ? COLORS.warning
-                              : COLORS.error
+                              ? warningColor
+                              : errorColor
                           }
                         />
                       </Progress>
                     </View>
 
                     {/* 影响因素 */}
-                    <YStack space="$2" marginBottom="$3">
-                      <Text fontSize="$3" fontWeight="500" color="$text">
+                    <YStack gap="$1" marginBottom="$2">
+                      <Text fontSize="$3" fontWeight="500" color="$color12">
                         影响因素:
                       </Text>
-                      <XStack flexWrap="wrap" gap="$2">
+                      <XStack flexWrap="wrap" gap="$1">
                         {risk.factors.map((factor, factorIndex) => (
                           <View
                             key={factorIndex}
-                            backgroundColor="$background"
+                            backgroundColor="$color3"
                             paddingHorizontal="$2"
-                            paddingVertical="$1"
-                            borderRadius="$2"
+                            paddingVertical="$0.5"
+                            borderRadius="$10"
                           >
-                            <Text fontSize="$2" color="$textSecondary">
+                            <Text fontSize="$2" color="$color10">
                               {factor}
                             </Text>
                           </View>
@@ -777,16 +759,16 @@ export const HealthReportScreen: React.FC = () => {
                     </YStack>
 
                     {/* 改善建议 */}
-                    <YStack space="$1">
-                      <Text fontSize="$3" fontWeight="500" color="$text">
+                    <YStack gap="$1">
+                      <Text fontSize="$3" fontWeight="500" color="$color12">
                         改善建议:
                       </Text>
                       {risk.recommendations.map((rec, recIndex) => (
-                        <XStack key={recIndex} space="$2" alignItems="flex-start">
-                          <Text fontSize="$2" color={COLORS.primary} marginTop="$1">
+                        <XStack key={recIndex} gap="$2" alignItems="flex-start">
+                          <Text fontSize="$2" color="$primary" marginTop="$1">
                             •
                           </Text>
-                          <Text fontSize="$3" color="$textSecondary" flex={1} lineHeight="$1">
+                          <Text fontSize="$3" color="$color10" flex={1} lineHeight="$2">
                             {rec}
                           </Text>
                         </XStack>
@@ -799,61 +781,63 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* 详细趋势图表卡片 */}
             <Card
-              padding="$4"
+              padding="$2"
               borderRadius="$6"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              shadowColor="$shadowColor"
+              shadowOffset={{ width: 0, height: 8 }}
+              shadowOpacity={0.12}
+              shadowRadius={16}
               elevation={4}
             >
-              <XStack space="$3" alignItems="center" marginBottom="$4">
+              <XStack gap="$2" alignItems="center" marginBottom="$2">
                 <View
-                  width={40}
-                  height={40}
-                  backgroundColor="rgba(16, 185, 129, 0.1)"
-                  borderRadius={20}
+                  width={32}
+                  height={32}
+                  backgroundColor={`${successColor}15`}
+                  borderRadius="$12"
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <BarChart3 size={20} color={COLORS.success} />
+                  <BarChart3 size={18} color={successColor} />
                 </View>
-                <H3 fontSize="$5" fontWeight="600" color="$text">
+                <H3 fontSize="$5" fontWeight="600" color="$color12">
                   详细趋势分析
                 </H3>
               </XStack>
 
-              <YStack space="$4">
+              <YStack gap="$2">
                 {/* 心率趋势 */}
                 <View
-                  padding="$4"
-                  borderRadius="$4"
-                  backgroundColor="$surface"
+                  padding="$2"
+                  borderRadius="$5"
+                  backgroundColor="$color2"
                 >
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                    <Text fontSize="$4" fontWeight="600" color="$text">
+                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                    <Text fontSize="$4" fontWeight="600" color="$color12">
                       心率趋势 (过去7天)
                     </Text>
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       平均: 71 bpm
                     </Text>
                   </XStack>
                   <View
                     height={60}
-                    backgroundColor="$background"
-                    borderRadius="$3"
+                    backgroundColor="$color3"
+                    borderRadius="$4"
                     justifyContent="center"
                     alignItems="center"
                     marginBottom="$2"
                   >
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       📊 心率变化趋势图 (模拟)
                     </Text>
                   </View>
                   <XStack justifyContent="space-between">
                     {detailedTrends.heartRate.labels.map((label, index) => (
-                      <Text key={index} fontSize="$2" color="$textSecondary">
+                      <Text key={index} fontSize="$2" color="$color10">
                         {label.slice(1)}
                       </Text>
                     ))}
@@ -862,33 +846,33 @@ export const HealthReportScreen: React.FC = () => {
 
                 {/* 血压趋势 */}
                 <View
-                  padding="$4"
-                  borderRadius="$4"
-                  backgroundColor="$surface"
+                  padding="$2"
+                  borderRadius="$5"
+                  backgroundColor="$color2"
                 >
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                    <Text fontSize="$4" fontWeight="600" color="$text">
+                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                    <Text fontSize="$4" fontWeight="600" color="$color12">
                       血压趋势 (过去7天)
                     </Text>
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       平均: 119/79 mmHg
                     </Text>
                   </XStack>
                   <View
                     height={60}
-                    backgroundColor="$background"
-                    borderRadius="$3"
+                    backgroundColor="$color3"
+                    borderRadius="$4"
                     justifyContent="center"
                     alignItems="center"
                     marginBottom="$2"
                   >
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       📈 血压双线趋势图 (模拟)
                     </Text>
                   </View>
                   <XStack justifyContent="space-between">
                     {detailedTrends.bloodPressure.labels.map((label, index) => (
-                      <Text key={index} fontSize="$2" color="$textSecondary">
+                      <Text key={index} fontSize="$2" color="$color10">
                         {label.slice(1)}
                       </Text>
                     ))}
@@ -899,38 +883,40 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* 个性化建议卡片 */}
             <Card
-              padding="$4"
+              padding="$2"
               borderRadius="$6"
-              backgroundColor="$cardBg"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
+              backgroundColor="$color2"
+              borderWidth={1}
+              borderColor="$color5"
+              shadowColor="$shadowColor"
+              shadowOffset={{ width: 0, height: 8 }}
+              shadowOpacity={0.12}
+              shadowRadius={16}
               elevation={4}
             >
-              <XStack space="$2" alignItems="center" marginBottom="$4">
-                <Award size={20} color={COLORS.primary} />
-                <H3 fontSize="$5" fontWeight="600" color="$text">
+              <XStack gap="$2" alignItems="center" marginBottom="$2">
+                <Award size={20} color={primaryColor} />
+                <H3 fontSize="$5" fontWeight="600" color="$color12">
                   个性化建议
                 </H3>
               </XStack>
-              <YStack space="$4">
+              <YStack gap="$2">
                 {personalizedRecommendations.map((recommendation, index) => (
                   <YStack key={index}>
-                    <Text fontSize="$3" fontWeight="600" color={COLORS.primary} marginBottom="$2">
+                    <Text fontSize="$3" fontWeight="500" color="$primary" marginBottom="$1">
                       {recommendation.category}
                     </Text>
-                    <YStack space="$2">
+                    <YStack gap="$1">
                       {recommendation.items.map((item, itemIndex) => (
-                        <XStack key={itemIndex} space="$2" alignItems="flex-start">
+                        <XStack key={itemIndex} gap="$2" alignItems="flex-start">
                           <View
                             width={6}
                             height={6}
                             borderRadius={3}
-                            backgroundColor={COLORS.primary}
+                            backgroundColor="$primary"
                             marginTop="$1"
                           />
-                          <Text fontSize="$3" color="$textSecondary" flex={1} lineHeight="$1">
+                          <Text fontSize="$3" color="$color10" flex={1} lineHeight="$2">
                             {item}
                           </Text>
                         </XStack>
@@ -943,19 +929,19 @@ export const HealthReportScreen: React.FC = () => {
 
             {/* 报告页脚 */}
             <Card
-              padding="$4"
+              padding="$2"
               borderRadius="$6"
-              backgroundColor="rgba(200, 85, 240, 0.05)"
+              backgroundColor={`${primaryColor}08`}
               borderWidth={1}
-              borderColor="rgba(200, 85, 240, 0.1)"
+              borderColor={`${primaryColor}15`}
             >
-              <XStack space="$3" alignItems="flex-start">
-                <Calendar size={20} color={COLORS.textSecondary} style={{ marginTop: 2 }} />
+              <XStack gap="$2" alignItems="flex-start">
+                <Calendar size={18} color={textSecondaryColor} style={{ marginTop: 2 }} />
                 <YStack flex={1}>
-                  <Text fontSize="$3" fontWeight="500" color="$text" marginBottom="$1">
+                  <Text fontSize="$3" fontWeight="500" color="$color12" marginBottom="$1">
                     下次报告生成时间
                   </Text>
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     2024年4月1日
                   </Text>
                 </YStack>

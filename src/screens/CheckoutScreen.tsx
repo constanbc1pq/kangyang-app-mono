@@ -1,10 +1,15 @@
+/**
+ * CheckoutScreen 订单确认页
+ * 支持多种商品类型：营养套餐、咨询预约、养老服务、法律会员
+ * 遵循 CLAUDE.md 组件规范
+ */
+
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Pressable, Platform, Alert, TextInput, Image } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Pressable, Alert, TextInput } from 'react-native';
+import { View, Text, XStack, YStack, useTheme, Image } from 'tamagui';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, MapPin, Clock, ChevronRight, Edit, Star, User2, Calendar } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
+import { ArrowLeft, MapPin, Clock, Edit, Star } from 'lucide-react-native';
 import { createOrder } from '@/services/orderService';
 import { CartItem, DeliveryAddress } from '@/types/commerce';
 import { getCaregiverById, getPackageById } from '@/services/elderlyService';
@@ -18,21 +23,18 @@ interface RouteParams {
   price: number;
   providerId?: string;
   providerName?: string;
-  // 营养套餐专用
   packageIcon?: string;
-  // 营养师预约专用
+  packageImage?: string;
   serviceType?: string;
   appointmentDate?: string;
   appointmentTime?: string;
   duration?: number;
-  // 养老服务专用
   caregiverId?: string;
   packageId?: string;
   elderlyServiceType?: 'elderly-care' | 'escort' | 'medical-staff';
-  serviceDate?: string;      // 服务日期（从AI对话传入）
-  serviceTime?: string;       // 服务时间（从AI对话传入）
-  // 法律尊享计划专用
-  metadata?: Record<string, any>;  // 会员计划的详细信息
+  serviceDate?: string;
+  serviceTime?: string;
+  metadata?: Record<string, any>;
 }
 
 const CYCLE_OPTIONS = [
@@ -47,9 +49,8 @@ const TIME_SLOTS = [
   { id: 'dinner', label: '晚餐', time: '17:00-19:00' },
 ];
 
-// 资质匹配辅助函数（EN登记护士使用RN的价格）
 const getMatchingQualification = (qualification: string): string => {
-  if (qualification === 'EN') return 'RN';  // EN使用RN的价格
+  if (qualification === 'EN') return 'RN';
   return qualification;
 };
 
@@ -58,6 +59,13 @@ const CheckoutScreen: React.FC = () => {
   const route = useRoute();
   const params = (route.params || {}) as RouteParams;
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+
+  const primaryColor = theme.primary?.val;
+  const color12 = theme.color12?.val;
+  const color10 = theme.color10?.val;
+
+  const GOLD_COLOR = '#D4AF37';
 
   const [selectedCycle, setSelectedCycle] = useState(7);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>(['breakfast', 'lunch', 'dinner']);
@@ -67,7 +75,6 @@ const CheckoutScreen: React.FC = () => {
   const [serviceDate, setServiceDate] = useState('');
   const [serviceTime, setServiceTime] = useState('');
 
-  // 默认地址（实际应该从地址管理服务获取）
   const defaultAddress: DeliveryAddress = {
     id: 'addr_1',
     recipientName: '张先生',
@@ -79,7 +86,6 @@ const CheckoutScreen: React.FC = () => {
     isDefault: true,
   };
 
-  // 加载养老服务数据
   useEffect(() => {
     if (params.itemType === 'elderly_service' && params.caregiverId && params.packageId) {
       const caregiver = getCaregiverById(params.caregiverId);
@@ -87,12 +93,10 @@ const CheckoutScreen: React.FC = () => {
       setCaregiverData(caregiver);
       setPackageData(pkg);
 
-      // 自动填充服务日期和时间（从AI对话传入）
       if (params.serviceDate) {
         setServiceDate(params.serviceDate);
       }
       if (params.serviceTime) {
-        // 如果serviceTime包含"|"（包月服务格式），只取时间段部分
         const timeOnly = params.serviceTime.includes('|')
           ? params.serviceTime.split('|')[0]
           : params.serviceTime;
@@ -106,7 +110,6 @@ const CheckoutScreen: React.FC = () => {
   const isElderlyService = params.itemType === 'elderly_service';
   const isLegalMembership = params.itemType === 'legal_membership';
 
-  // 获取养老服务的价格
   const getElderlyServicePrice = (): number => {
     if (!packageData || !caregiverData) return params.price;
     const matchingQualification = getMatchingQualification(caregiverData.qualificationBadge);
@@ -114,13 +117,8 @@ const CheckoutScreen: React.FC = () => {
     return priceInfo?.price || params.price;
   };
 
-  // 计算价格
   const cycleOption = CYCLE_OPTIONS.find(opt => opt.days === selectedCycle) || CYCLE_OPTIONS[0];
 
-  // 咨询订单：固定价格，不按周期计算
-  // 养老服务：使用套餐价格
-  // 法律会员：固定年费价格
-  // 套餐订单：价格 × 天数 × 折扣
   const subtotal = isConsultation || isLegalMembership
     ? params.price
     : isElderlyService && packageData
@@ -148,19 +146,17 @@ const CheckoutScreen: React.FC = () => {
 
   const handleSubmitOrder = async () => {
     try {
-      // 养老服务验证
       if (isElderlyService && (!serviceDate || !serviceTime)) {
         Alert.alert('提示', '请选择服务日期和时间');
         return;
       }
 
-      // 构建 CartItem
       const cartItem: CartItem = {
         id: `cart_${Date.now()}`,
         itemType: params.itemType,
         itemId: isElderlyService ? params.packageId! : params.itemId,
-        itemName: params.itemName,  // 直接使用传入的itemName（AI对话中已构建好详细名称）
-        itemImage: params.itemImage || params.packageIcon,
+        itemName: params.itemName,
+        itemImage: params.itemImage || params.packageImage || params.packageIcon,
         price: isElderlyService && packageData ? getElderlyServicePrice() : params.price,
         quantity: 1,
         unit: isElderlyService && packageData ? packageData.prices[0].unit : (isMealPlan ? '天' : (isLegalMembership ? '年' : '次')),
@@ -192,7 +188,6 @@ const CheckoutScreen: React.FC = () => {
         addedAt: new Date().toISOString(),
       };
 
-      // 创建订单
       const order = await createOrder({
         userId: 'user_test01',
         cartItems: [cartItem],
@@ -202,7 +197,6 @@ const CheckoutScreen: React.FC = () => {
       });
 
       if (order) {
-        // 跳转到支付页面
         navigation.navigate('Payment' as never, {
           orderId: order.id,
           totalAmount: order.totalAmount,
@@ -218,51 +212,80 @@ const CheckoutScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      {/* TitleBar */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          确认订单
-        </Text>
-        <View width={24} />
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            确认订单
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
-      <ScrollView>
-        <YStack padding="$4" gap="$4">
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <YStack padding="$2.5" gap="$2">
           {/* 商品信息卡片 */}
-          <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-            <XStack gap="$3" alignItems="center">
+          <View
+            backgroundColor="$color2"
+            borderRadius="$5"
+            borderWidth={1}
+            borderColor="$color5"
+            padding="$2"
+          >
+            <XStack gap="$2" alignItems="center">
               <View
                 width={60}
                 height={60}
-                backgroundColor={COLORS.primaryLight}
-                borderRadius="$3"
+                backgroundColor="$color4"
+                borderRadius="$4"
                 justifyContent="center"
                 alignItems="center"
+                overflow="hidden"
               >
-                <Text fontSize={32}>{params.packageIcon || params.itemImage || '🍱'}</Text>
+                {params.packageImage?.startsWith('http') ? (
+                  <Image
+                    source={{ uri: params.packageImage }}
+                    width={60}
+                    height={60}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text fontSize={32}>{params.packageIcon || params.itemImage || '🍱'}</Text>
+                )}
               </View>
-              <YStack flex={1} gap="$1">
-                <Text fontSize="$4" fontWeight="600" color="$text">
+              <YStack flex={1} gap="$0.5">
+                <Text fontSize="$4" fontWeight="600" color="$color12">
                   {params.itemName}
                 </Text>
                 {isConsultation && params.serviceType && (
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     {params.serviceType}
                   </Text>
                 )}
-                <Text fontSize="$5" fontWeight="700" color={COLORS.primary}>
+                <Text fontSize="$5" fontWeight="700" color="$primary">
                   ¥{params.price}
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     /{isMealPlan ? '天' : (isLegalMembership ? '年' : '次')}
                   </Text>
                 </Text>
@@ -273,30 +296,35 @@ const CheckoutScreen: React.FC = () => {
           {/* 养老服务专用：护理人员和套餐信息 */}
           {isElderlyService && caregiverData && packageData && (
             <>
-              {/* 护理人员信息 */}
-              <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-                <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+              <View
+                backgroundColor="$color2"
+                borderRadius="$5"
+                borderWidth={1}
+                borderColor="$color5"
+                padding="$2"
+              >
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   护理人员
                 </Text>
-                <XStack gap="$3" alignItems="center">
-                  <Image source={{ uri: caregiverData.avatar }} style={{ width: 60, height: 60, borderRadius: 30 }} />
-                  <YStack flex={1} gap="$1">
+                <XStack gap="$2" alignItems="center">
+                  <Image source={{ uri: caregiverData.avatar }} width={60} height={60} borderRadius={30} />
+                  <YStack flex={1} gap="$0.5">
                     <XStack alignItems="center" gap="$2">
-                      <Text fontSize="$4" fontWeight="600" color="$text">
+                      <Text fontSize="$4" fontWeight="600" color="$color12">
                         {caregiverData.name}
                       </Text>
-                      <View backgroundColor={COLORS.primaryLight} paddingHorizontal="$2" paddingVertical="$1" borderRadius="$2">
+                      <View backgroundColor="$primary" paddingHorizontal="$2" paddingVertical="$0.5" borderRadius="$10">
                         <Text fontSize="$1" color="white" fontWeight="600">
                           {caregiverData.qualificationBadge}
                         </Text>
                       </View>
                     </XStack>
                     <XStack alignItems="center" gap="$2">
-                      <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-                      <Text fontSize="$2" fontWeight="600" color="$text">
+                      <Star size={14} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                      <Text fontSize="$2" fontWeight="600" color="$color12">
                         {caregiverData.rating}
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         ({caregiverData.reviews}评价)
                       </Text>
                     </XStack>
@@ -304,77 +332,87 @@ const CheckoutScreen: React.FC = () => {
                 </XStack>
               </View>
 
-              {/* 服务套餐信息 */}
-              <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-                <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+              <View
+                backgroundColor="$color2"
+                borderRadius="$5"
+                borderWidth={1}
+                borderColor="$color5"
+                padding="$2"
+              >
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   服务套餐
                 </Text>
-                <YStack gap="$2">
-                  <Text fontSize="$5" fontWeight="bold" color="$text">
+                <YStack gap="$1">
+                  <Text fontSize="$5" fontWeight="700" color="$color12">
                     {packageData.name}
                   </Text>
                   <XStack alignItems="baseline" gap="$1">
-                    <Text fontSize="$7" fontWeight="bold" color={COLORS.primary}>
+                    <Text fontSize="$6" fontWeight="700" color="$primary">
                       ¥{getElderlyServicePrice()}
                     </Text>
-                    <Text fontSize="$2" color="$textSecondary">
+                    <Text fontSize="$2" color="$color10">
                       {packageData.prices.find(p => p.type === getMatchingQualification(caregiverData?.qualificationBadge || ''))?.unit || packageData.prices[0].unit}
                     </Text>
                   </XStack>
-                  <Text fontSize="$3" color="$textSecondary">
+                  <Text fontSize="$3" color="$color10">
                     {packageData.description}
                   </Text>
                 </YStack>
               </View>
 
-              {/* 服务日期时间选择 */}
-              <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-                <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+              <View
+                backgroundColor="$color2"
+                borderRadius="$5"
+                borderWidth={1}
+                borderColor="$color5"
+                padding="$2"
+              >
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                   预约服务时间
                 </Text>
-                <YStack gap="$3">
+                <YStack gap="$2">
                   <View>
-                    <Text fontSize="$3" color="$textSecondary" marginBottom="$2">
+                    <Text fontSize="$3" color="$color10" marginBottom="$1">
                       服务日期
                     </Text>
                     <View
                       borderWidth={1}
-                      borderColor="$borderColor"
-                      borderRadius="$3"
-                      backgroundColor="$background"
+                      borderColor="$color5"
+                      borderRadius="$4"
+                      backgroundColor="$color2"
                     >
                       <TextInput
                         value={serviceDate}
                         onChangeText={setServiceDate}
                         placeholder="请选择服务日期（如：2024-01-15）"
-                        placeholderTextColor={COLORS.textSecondary}
+                        placeholderTextColor={color10}
                         style={{
                           padding: 12,
                           fontSize: 14,
-                          color: COLORS.text,
+                          color: color12,
                         }}
                       />
                     </View>
                   </View>
                   <View>
-                    <Text fontSize="$3" color="$textSecondary" marginBottom="$2">
+                    <Text fontSize="$3" color="$color10" marginBottom="$1">
                       服务时间
                     </Text>
                     <View
                       borderWidth={1}
-                      borderColor="$borderColor"
-                      borderRadius="$3"
-                      backgroundColor="$background"
+                      borderColor="$color5"
+                      borderRadius="$4"
+                      backgroundColor="$color2"
                     >
                       <TextInput
                         value={serviceTime}
                         onChangeText={setServiceTime}
                         placeholder="请选择服务时间（如：09:00-17:00）"
-                        placeholderTextColor={COLORS.textSecondary}
+                        placeholderTextColor={color10}
                         style={{
                           padding: 12,
                           fontSize: 14,
-                          color: COLORS.text,
+                          color: color12,
                         }}
                       />
                     </View>
@@ -386,11 +424,17 @@ const CheckoutScreen: React.FC = () => {
 
           {/* 营养套餐专用：周期选择 */}
           {isMealPlan && (
-            <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <View
+              backgroundColor="$color2"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$color5"
+              padding="$2"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 订购周期
               </Text>
-              <XStack gap="$3">
+              <XStack gap="$2">
                 {CYCLE_OPTIONS.map(option => {
                   const isSelected = selectedCycle === option.days;
                   return (
@@ -402,23 +446,23 @@ const CheckoutScreen: React.FC = () => {
                       <View
                         flex={1}
                         height={72}
-                        borderRadius="$3"
+                        borderRadius="$4"
                         borderWidth={2}
-                        borderColor={isSelected ? COLORS.primary : '$borderColor'}
-                        backgroundColor={isSelected ? COLORS.primary : '$background'}
+                        borderColor={isSelected ? '$primary' : '$color5'}
+                        backgroundColor={isSelected ? '$primary' : '$color2'}
                         justifyContent="center"
                         alignItems="center"
-                        gap="$1"
+                        gap="$0.5"
                       >
                         <Text
                           fontSize="$5"
                           fontWeight="700"
-                          color={isSelected ? 'white' : '$text'}
+                          color={isSelected ? 'white' : '$color12'}
                         >
                           {option.label}
                         </Text>
                         {option.discount < 1 && (
-                          <Text fontSize="$2" color={isSelected ? 'white' : COLORS.primary}>
+                          <Text fontSize="$2" color={isSelected ? 'white' : '$primary'}>
                             {((1 - option.discount) * 100).toFixed(0)}% OFF
                           </Text>
                         )}
@@ -432,40 +476,46 @@ const CheckoutScreen: React.FC = () => {
 
           {/* 营养套餐专用：配送时间段 */}
           {isMealPlan && (
-            <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <View
+              backgroundColor="$color2"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$color5"
+              padding="$2"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 配送时间段
               </Text>
-              <YStack gap="$2">
+              <YStack gap="$1.5">
                 {TIME_SLOTS.map(slot => {
                   const isSelected = selectedTimeSlots.includes(slot.id);
                   return (
                     <Pressable key={slot.id} onPress={() => toggleTimeSlot(slot.id)}>
                       <XStack
                         height={48}
-                        paddingHorizontal="$3"
-                        borderRadius="$3"
+                        paddingHorizontal="$2"
+                        borderRadius="$4"
                         borderWidth={2}
-                        borderColor={isSelected ? COLORS.primary : '$borderColor'}
-                        backgroundColor={isSelected ? COLORS.primary : '$background'}
+                        borderColor={isSelected ? '$primary' : '$color5'}
+                        backgroundColor={isSelected ? '$primary' : '$color2'}
                         alignItems="center"
                         gap="$2"
                       >
                         <Clock
                           size={20}
-                          color={isSelected ? 'white' : COLORS.textSecondary}
+                          color={isSelected ? 'white' : color10}
                         />
                         <Text
                           flex={1}
                           fontSize="$3"
                           fontWeight={isSelected ? '600' : '400'}
-                          color={isSelected ? 'white' : '$text'}
+                          color={isSelected ? 'white' : '$color12'}
                         >
                           {slot.label}
                         </Text>
                         <Text
                           fontSize="$2"
-                          color={isSelected ? 'white' : '$textSecondary'}
+                          color={isSelected ? 'white' : '$color10'}
                         >
                           {slot.time}
                         </Text>
@@ -479,43 +529,41 @@ const CheckoutScreen: React.FC = () => {
 
           {/* 营养师预约专用：预约信息 */}
           {isConsultation && params.appointmentDate && (
-            <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <View
+              backgroundColor="$color2"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$color5"
+              padding="$2"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 预约信息
               </Text>
-              <YStack gap="$2">
+              <YStack gap="$1.5">
                 <XStack justifyContent="space-between">
-                  <Text fontSize="$3" color="$textSecondary">
-                    预约日期
-                  </Text>
-                  <Text fontSize="$3" fontWeight="600" color="$text">
+                  <Text fontSize="$3" color="$color10">预约日期</Text>
+                  <Text fontSize="$3" fontWeight="600" color="$color12">
                     {params.appointmentDate}
                   </Text>
                 </XStack>
                 <XStack justifyContent="space-between">
-                  <Text fontSize="$3" color="$textSecondary">
-                    预约时间
-                  </Text>
-                  <Text fontSize="$3" fontWeight="600" color="$text">
+                  <Text fontSize="$3" color="$color10">预约时间</Text>
+                  <Text fontSize="$3" fontWeight="600" color="$color12">
                     {params.appointmentTime}
                   </Text>
                 </XStack>
                 {params.duration && (
                   <XStack justifyContent="space-between">
-                    <Text fontSize="$3" color="$textSecondary">
-                      服务时长
-                    </Text>
-                    <Text fontSize="$3" fontWeight="600" color="$text">
+                    <Text fontSize="$3" color="$color10">服务时长</Text>
+                    <Text fontSize="$3" fontWeight="600" color="$color12">
                       {params.duration}分钟
                     </Text>
                   </XStack>
                 )}
                 {params.providerName && (
                   <XStack justifyContent="space-between">
-                    <Text fontSize="$3" color="$textSecondary">
-                      营养师
-                    </Text>
-                    <Text fontSize="$3" fontWeight="600" color="$text">
+                    <Text fontSize="$3" color="$color10">营养师</Text>
+                    <Text fontSize="$3" fontWeight="600" color="$color12">
                       {params.providerName}
                     </Text>
                   </XStack>
@@ -527,31 +575,35 @@ const CheckoutScreen: React.FC = () => {
           {/* 收货地址 */}
           {isMealPlan && !isElderlyService && (
             <Pressable>
-              <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-                <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                  <XStack gap="$2" alignItems="center">
-                    <MapPin size={20} color={COLORS.primary} />
-                    <Text fontSize="$4" fontWeight="600" color="$text">
+              <View
+                backgroundColor="$color2"
+                borderRadius="$5"
+                borderWidth={1}
+                borderColor="$color5"
+                padding="$2"
+              >
+                <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                  <XStack gap="$1.5" alignItems="center">
+                    <MapPin size={18} color={primaryColor} />
+                    <Text fontSize="$4" fontWeight="600" color="$color12">
                       收货地址
                     </Text>
                   </XStack>
-                  <XStack gap="$1" alignItems="center">
-                    <Edit size={16} color={COLORS.primary} />
-                    <Text fontSize="$2" color={COLORS.primary}>
-                      修改
-                    </Text>
+                  <XStack gap="$0.5" alignItems="center">
+                    <Edit size={14} color={primaryColor} />
+                    <Text fontSize="$2" color="$primary">修改</Text>
                   </XStack>
                 </XStack>
-                <YStack gap="$2">
-                  <XStack gap="$3">
-                    <Text fontSize="$3" fontWeight="600" color="$text">
+                <YStack gap="$1">
+                  <XStack gap="$2">
+                    <Text fontSize="$3" fontWeight="600" color="$color12">
                       {defaultAddress.recipientName}
                     </Text>
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       {defaultAddress.recipientPhone}
                     </Text>
                   </XStack>
-                  <Text fontSize="$3" color="$textSecondary" lineHeight={20}>
+                  <Text fontSize="$3" color="$color10" lineHeight={20}>
                     {defaultAddress.province} {defaultAddress.city} {defaultAddress.district}{' '}
                     {defaultAddress.detailAddress}
                   </Text>
@@ -561,27 +613,33 @@ const CheckoutScreen: React.FC = () => {
           )}
 
           {/* 配送备注 */}
-          <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-            <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+          <View
+            backgroundColor="$color2"
+            borderRadius="$5"
+            borderWidth={1}
+            borderColor="$color5"
+            padding="$2"
+          >
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               {isElderlyService ? '服务备注' : (isMealPlan ? '配送备注' : '预约备注')}
             </Text>
             <View
               borderWidth={1}
-              borderColor="$borderColor"
-              borderRadius="$3"
-              backgroundColor="$background"
+              borderColor="$color5"
+              borderRadius="$4"
+              backgroundColor="$color2"
             >
               <TextInput
                 value={deliveryNotes}
                 onChangeText={setDeliveryNotes}
                 placeholder="请输入备注信息（选填）"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={color10}
                 multiline
                 numberOfLines={3}
                 style={{
                   padding: 12,
                   fontSize: 14,
-                  color: COLORS.text,
+                  color: color12,
                   minHeight: 80,
                   textAlignVertical: 'top',
                 }}
@@ -590,18 +648,24 @@ const CheckoutScreen: React.FC = () => {
           </View>
 
           {/* 价格明细 */}
-          <View backgroundColor="$surface" borderRadius="$4" padding="$4">
-            <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+          <View
+            backgroundColor="$color2"
+            borderRadius="$5"
+            borderWidth={1}
+            borderColor="$color5"
+            padding="$2"
+          >
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               价格明细
             </Text>
-            <YStack gap="$2">
+            <YStack gap="$1.5">
               <XStack justifyContent="space-between">
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   {isElderlyService && packageData
                     ? packageData.name
                     : (isMealPlan ? `${params.itemName} x ${selectedCycle}天` : params.itemName)}
                 </Text>
-                <Text fontSize="$3" color="$text">
+                <Text fontSize="$3" color="$color12">
                   ¥{isElderlyService && packageData
                     ? getElderlyServicePrice().toFixed(2)
                     : (params.price * (isMealPlan ? selectedCycle : 1)).toFixed(2)}
@@ -609,30 +673,26 @@ const CheckoutScreen: React.FC = () => {
               </XStack>
               {discountAmount > 0 && (
                 <XStack justifyContent="space-between">
-                  <Text fontSize="$3" color="$textSecondary">
-                    周期优惠
-                  </Text>
-                  <Text fontSize="$3" color={COLORS.primary}>
+                  <Text fontSize="$3" color="$color10">周期优惠</Text>
+                  <Text fontSize="$3" color="$primary">
                     -¥{discountAmount.toFixed(2)}
                   </Text>
                 </XStack>
               )}
               {isMealPlan && (
                 <XStack justifyContent="space-between">
-                  <Text fontSize="$3" color="$textSecondary">
+                  <Text fontSize="$3" color="$color10">
                     配送费 {subtotal >= 200 && '（满200免运费）'}
                   </Text>
-                  <Text fontSize="$3" color={deliveryFee === 0 ? COLORS.primary : '$text'}>
+                  <Text fontSize="$3" color={deliveryFee === 0 ? '$primary' : '$color12'}>
                     {deliveryFee === 0 ? '免费' : `¥${deliveryFee.toFixed(2)}`}
                   </Text>
                 </XStack>
               )}
-              <View height={1} backgroundColor="$borderColor" marginVertical="$2" />
+              <View height={1} backgroundColor="$color5" marginVertical="$1" />
               <XStack justifyContent="space-between">
-                <Text fontSize="$4" fontWeight="700" color="$text">
-                  总计
-                </Text>
-                <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+                <Text fontSize="$4" fontWeight="700" color="$color12">总计</Text>
+                <Text fontSize="$6" fontWeight="700" color="$primary">
                   ¥{totalAmount.toFixed(2)}
                 </Text>
               </XStack>
@@ -640,7 +700,7 @@ const CheckoutScreen: React.FC = () => {
           </View>
 
           {/* 底部占位 */}
-          <View height={80} />
+          <View height={100} />
         </YStack>
       </ScrollView>
 
@@ -650,26 +710,25 @@ const CheckoutScreen: React.FC = () => {
         bottom={0}
         left={0}
         right={0}
-        backgroundColor="$surface"
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
-        padding="$4"
-        paddingBottom={insets.bottom + 16}
+        borderTopColor="$color5"
+        paddingHorizontal="$2.5"
+        paddingVertical="$2"
+        paddingBottom={insets.bottom + 8}
       >
-        <XStack gap="$3" alignItems="center">
+        <XStack gap="$2" alignItems="center">
           <YStack flex={1}>
-            <Text fontSize="$2" color="$textSecondary">
-              合计
-            </Text>
-            <Text fontSize="$6" fontWeight="700" color={COLORS.primary}>
+            <Text fontSize="$2" color="$color10">合计</Text>
+            <Text fontSize="$6" fontWeight="700" color="$primary">
               ¥{totalAmount.toFixed(2)}
             </Text>
           </YStack>
           <Pressable onPress={handleSubmitOrder} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              backgroundColor="$primary"
               justifyContent="center"
               alignItems="center"
             >

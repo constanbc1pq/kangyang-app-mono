@@ -2,6 +2,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Article, UserCommunityData } from '@/types/community';
 
 const STORAGE_KEY = '@kangyang_community_data';
+const ARTICLES_STORAGE_KEY = '@kangyang_user_articles';
+const DRAFTS_STORAGE_KEY = '@kangyang_article_drafts';
+
+// 草稿类型
+export interface ArticleDraft {
+  id: string;
+  title: string;
+  content: string;
+  summary: string;
+  category: string;
+  tags: string[];
+  coverImage?: string;
+  images?: string[];
+  savedAt: string;
+}
 
 // Mock文章数据
 const mockArticles: Article[] = [
@@ -1189,11 +1204,15 @@ async function saveUserCommunityData(data: UserCommunityData): Promise<void> {
   }
 }
 
-// 获取所有文章
+// 获取所有文章（合并 mock 数据和用户创建的文章）
 export async function getArticles(): Promise<Article[]> {
   const userData = await getUserCommunityData();
+  const userArticles = await getUserArticles();
 
-  return mockArticles.map(article => ({
+  // 合并用户文章和 mock 文章，用户文章排在前面
+  const allArticles = [...userArticles, ...mockArticles];
+
+  return allArticles.map(article => ({
     ...article,
     isBookmarked: userData.bookmarkedArticles.includes(article.id),
     isLiked: userData.likedArticles.includes(article.id),
@@ -1257,6 +1276,178 @@ export async function searchArticles(query: string): Promise<Article[]> {
   );
 }
 
+// ==================== 用户创建的文章 ====================
+
+// 获取用户创建的文章
+async function getUserArticles(): Promise<Article[]> {
+  try {
+    const data = await AsyncStorage.getItem(ARTICLES_STORAGE_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Failed to load user articles:', error);
+  }
+  return [];
+}
+
+// 保存用户创建的文章
+async function saveUserArticles(articles: Article[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(ARTICLES_STORAGE_KEY, JSON.stringify(articles));
+  } catch (error) {
+    console.error('Failed to save user articles:', error);
+  }
+}
+
+// 创建文章
+export async function createArticle(data: {
+  title: string;
+  content: string;
+  summary?: string;
+  category: string;
+  tags: string[];
+  coverImage?: string;
+  images?: string[];
+}): Promise<Article> {
+  const userArticles = await getUserArticles();
+  const now = new Date();
+
+  // 生成摘要：如果没有提供，从内容中截取
+  const summary = data.summary || data.content.substring(0, 100).replace(/[#*\n]/g, '').trim() + '...';
+
+  // 计算阅读时长（约 300 字/分钟）
+  const wordCount = data.content.length;
+  const readMinutes = Math.max(1, Math.ceil(wordCount / 300));
+
+  const newArticle: Article = {
+    id: `user_article_${Date.now()}`,
+    title: data.title,
+    summary,
+    content: data.content,
+    author: {
+      id: 'user_current',
+      name: '我',
+      title: '社区用户',
+      verified: false,
+      followers: 0,
+      articles: userArticles.length + 1,
+    },
+    publishTime: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+    readTime: `${readMinutes}分钟`,
+    views: 0,
+    likes: 0,
+    shares: 0,
+    comments: 0,
+    category: data.category,
+    tags: data.tags,
+    image: data.coverImage,
+  };
+
+  // 将新文章添加到用户文章列表开头
+  userArticles.unshift(newArticle);
+  await saveUserArticles(userArticles);
+
+  return newArticle;
+}
+
+// ==================== 草稿功能 ====================
+
+// 获取所有草稿
+export async function getDrafts(): Promise<ArticleDraft[]> {
+  try {
+    const data = await AsyncStorage.getItem(DRAFTS_STORAGE_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Failed to load drafts:', error);
+  }
+  return [];
+}
+
+// 保存草稿
+export async function saveDraft(data: {
+  id?: string;
+  title: string;
+  content: string;
+  summary?: string;
+  category: string;
+  tags: string[];
+  coverImage?: string;
+  images?: string[];
+}): Promise<ArticleDraft> {
+  const drafts = await getDrafts();
+  const now = new Date().toISOString();
+
+  // 生成摘要
+  const summary = data.summary || data.content.substring(0, 100).replace(/[#*\n]/g, '').trim();
+
+  const draft: ArticleDraft = {
+    id: data.id || `draft_${Date.now()}`,
+    title: data.title,
+    content: data.content,
+    summary,
+    category: data.category,
+    tags: data.tags,
+    coverImage: data.coverImage,
+    images: data.images,
+    savedAt: now,
+  };
+
+  // 如果是更新现有草稿，先移除旧的
+  const existingIndex = drafts.findIndex(d => d.id === draft.id);
+  if (existingIndex > -1) {
+    drafts.splice(existingIndex, 1);
+  }
+
+  // 添加到列表开头
+  drafts.unshift(draft);
+
+  try {
+    await AsyncStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
+  } catch (error) {
+    console.error('Failed to save draft:', error);
+    throw error;
+  }
+
+  return draft;
+}
+
+// 获取单个草稿
+export async function getDraftById(id: string): Promise<ArticleDraft | null> {
+  const drafts = await getDrafts();
+  return drafts.find(d => d.id === id) || null;
+}
+
+// 删除草稿
+export async function deleteDraft(id: string): Promise<void> {
+  const drafts = await getDrafts();
+  const filteredDrafts = drafts.filter(d => d.id !== id);
+
+  try {
+    await AsyncStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(filteredDrafts));
+  } catch (error) {
+    console.error('Failed to delete draft:', error);
+    throw error;
+  }
+}
+
+// 删除用户文章
+export async function deleteArticle(id: string): Promise<boolean> {
+  const userArticles = await getUserArticles();
+  const articleIndex = userArticles.findIndex(a => a.id === id);
+
+  if (articleIndex === -1) {
+    // 文章不存在或不是用户创建的文章
+    return false;
+  }
+
+  userArticles.splice(articleIndex, 1);
+  await saveUserArticles(userArticles);
+  return true;
+}
+
 export const articleService = {
   getArticles,
   getArticleById,
@@ -1264,4 +1455,10 @@ export const articleService = {
   toggleBookmarkArticle,
   toggleLikeArticle,
   searchArticles,
+  createArticle,
+  deleteArticle,
+  getDrafts,
+  saveDraft,
+  getDraftById,
+  deleteDraft,
 };

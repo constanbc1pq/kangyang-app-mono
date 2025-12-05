@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Pressable, TouchableOpacity, ScrollView as RNScrollView } from 'react-native';
-import { View, Text, YStack, XStack, Card, Theme, H2, H3, Progress, Select } from 'tamagui';
+import { TouchableOpacity, ScrollView as RNScrollView } from 'react-native';
+import { View, Text, YStack, XStack, Card, Theme, Progress, useTheme } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useToastController } from '@tamagui/toast';
 import {
-  ArrowLeft,
   Plus,
   CheckCircle,
   Clock,
@@ -17,15 +16,24 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getTasks, completeTask } from '@/services/userDataService';
 import { HealthTask } from '@/types/userData';
 import * as Icons from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 export const TaskListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const toast = useToastController();
+  const theme = useTheme();
+
+  // 主题色值
+  const primaryColor = theme.primary?.val || '#6366F1';
+  const successColor = theme.success?.val || '#10B981';
+  const errorColor = theme.error?.val || '#EF4444';
+  const accentColor = theme.accent?.val || '#A78BFA';
+  const textColor = theme.color12?.val || '#1F2937';
+  const textSecondaryColor = theme.color10?.val || '#6B7280';
   const [tasks, setTasks] = useState<HealthTask[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<HealthTask[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -118,13 +126,13 @@ export const TaskListScreen: React.FC = () => {
   const getStatusColor = (status: HealthTask['status']) => {
     switch (status) {
       case 'completed':
-        return COLORS.success;
+        return successColor;
       case 'in_progress':
-        return COLORS.primary;
+        return primaryColor;
       case 'overdue':
-        return COLORS.error;
+        return errorColor;
       default:
-        return COLORS.textSecondary;
+        return textSecondaryColor;
     }
   };
 
@@ -171,41 +179,27 @@ export const TaskListScreen: React.FC = () => {
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
         {/* Header */}
-        <XStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          alignItems="center"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="white"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <ArrowLeft size={24} color={COLORS.text} />
-          </Pressable>
-          <H2 fontSize="$7" fontWeight="bold" color="$text" marginLeft="$3" flex={1}>
-            健康任务
-          </H2>
-          <TouchableOpacity onPress={() => navigation.navigate('TaskForm')}>
-            <Plus size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-        </XStack>
+        <TitleBar
+          title="健康任务"
+          actions={[{ icon: Plus, onPress: () => navigation.navigate('TaskForm') }]}
+        />
 
         <RNScrollView showsVerticalScrollIndicator={false}>
-          <YStack padding="$4" space="$4">
+          <YStack padding="$2.5" gap="$2">
             {/* Stats Card */}
             <View borderRadius="$6" overflow="hidden">
               <LinearGradient
-                colors={[COLORS.primary, COLORS.accent]}
+                colors={[primaryColor, accentColor]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ padding: 20 }}
+                style={{ padding: 16 }}
               >
-                <YStack space="$3">
+                <YStack gap="$2">
                   <XStack justifyContent="space-between" alignItems="center">
                     <YStack>
                       <Text fontSize="$3" color="rgba(255,255,255,0.8)">今日任务完成度</Text>
-                      <XStack alignItems="baseline" space="$2" marginTop="$1">
-                        <Text fontSize="$10" fontWeight="bold" color="white">
+                      <XStack alignItems="baseline" gap="$2" marginTop="$1">
+                        <Text fontSize="$9" fontWeight="bold" color="white">
                           {stats.completionRate}%
                         </Text>
                         <Text fontSize="$3" color="rgba(255,255,255,0.8)">
@@ -214,22 +208,22 @@ export const TaskListScreen: React.FC = () => {
                       </XStack>
                     </YStack>
                     <View
-                      width={60}
-                      height={60}
-                      borderRadius={30}
+                      width={52}
+                      height={52}
+                      borderRadius={26}
                       backgroundColor="rgba(255,255,255,0.2)"
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Target size={28} color="white" />
+                      <Target size={24} color="white" />
                     </View>
                   </XStack>
 
-                  <XStack space="$4">
+                  <XStack gap="$2">
                     <YStack flex={1}>
                       <Text fontSize="$2" color="rgba(255,255,255,0.8)">连续完成</Text>
-                      <XStack alignItems="baseline" space="$1" marginTop="$1">
-                        <Text fontSize="$6" fontWeight="bold" color="white">
+                      <XStack alignItems="baseline" gap="$1" marginTop="$1">
+                        <Text fontSize="$5" fontWeight="bold" color="white">
                           {stats.avgStreak}
                         </Text>
                         <Text fontSize="$2" color="rgba(255,255,255,0.8)">天</Text>
@@ -237,8 +231,8 @@ export const TaskListScreen: React.FC = () => {
                     </YStack>
                     <YStack flex={1}>
                       <Text fontSize="$2" color="rgba(255,255,255,0.8)">总任务数</Text>
-                      <XStack alignItems="baseline" space="$1" marginTop="$1">
-                        <Text fontSize="$6" fontWeight="bold" color="white">
+                      <XStack alignItems="baseline" gap="$1" marginTop="$1">
+                        <Text fontSize="$5" fontWeight="bold" color="white">
                           {tasks.length}
                         </Text>
                         <Text fontSize="$2" color="rgba(255,255,255,0.8)">个</Text>
@@ -250,45 +244,45 @@ export const TaskListScreen: React.FC = () => {
             </View>
 
             {/* Filters */}
-            <Card padding="$4" borderRadius="$4" backgroundColor="$surface">
+            <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
               <TouchableOpacity onPress={() => setShowFilters(!showFilters)}>
                 <XStack justifyContent="space-between" alignItems="center">
-                  <XStack space="$2" alignItems="center">
-                    <Filter size={16} color={COLORS.text} />
-                    <Text fontSize="$4" fontWeight="600" color="$text">筛选</Text>
+                  <XStack gap="$2" alignItems="center">
+                    <Filter size={16} color={textColor} />
+                    <Text fontSize="$4" fontWeight="600" color="$color12">筛选</Text>
                   </XStack>
                   {showFilters ? (
-                    <ChevronUp size={20} color={COLORS.textSecondary} />
+                    <ChevronUp size={20} color={textSecondaryColor} />
                   ) : (
-                    <ChevronDown size={20} color={COLORS.textSecondary} />
+                    <ChevronDown size={20} color={textSecondaryColor} />
                   )}
                 </XStack>
               </TouchableOpacity>
 
               {showFilters && (
-                <YStack space="$3" marginTop="$3">
+                <YStack gap="$2" marginTop="$2">
                   {/* Category Filter */}
-                  <YStack space="$2">
-                    <Text fontSize="$3" color="$textSecondary">任务分类</Text>
-                    <XStack space="$2" flexWrap="wrap">
+                  <YStack gap="$1">
+                    <Text fontSize="$3" color="$color10">任务分类</Text>
+                    <XStack gap="$1" flexWrap="wrap">
                       {['all', 'fitness', 'nutrition', 'medication', 'monitoring', 'lifestyle'].map(cat => (
                         <TouchableOpacity
                           key={cat}
                           onPress={() => setCategoryFilter(cat)}
                         >
                           <View
-                            paddingHorizontal="$3"
-                            paddingVertical="$2"
-                            borderRadius="$3"
-                            backgroundColor={categoryFilter === cat ? COLORS.primary : '$surface'}
+                            paddingHorizontal="$2"
+                            paddingVertical="$1.5"
+                            borderRadius="$10"
+                            backgroundColor={categoryFilter === cat ? '$primary' : '$color2'}
                             borderWidth={1}
-                            borderColor={categoryFilter === cat ? COLORS.primary : '$borderColor'}
-                            marginBottom="$2"
+                            borderColor={categoryFilter === cat ? '$primary' : '$color5'}
+                            marginBottom="$1"
                           >
                             <Text
                               fontSize="$3"
-                              color={categoryFilter === cat ? 'white' : '$text'}
-                              fontWeight={categoryFilter === cat ? '600' : 'normal'}
+                              color={categoryFilter === cat ? 'white' : '$color12'}
+                              fontWeight={categoryFilter === cat ? '500' : 'normal'}
                             >
                               {cat === 'all' ? '全部' : getCategoryName(cat as any)}
                             </Text>
@@ -299,27 +293,27 @@ export const TaskListScreen: React.FC = () => {
                   </YStack>
 
                   {/* Status Filter */}
-                  <YStack space="$2">
-                    <Text fontSize="$3" color="$textSecondary">任务状态</Text>
-                    <XStack space="$2" flexWrap="wrap">
+                  <YStack gap="$1">
+                    <Text fontSize="$3" color="$color10">任务状态</Text>
+                    <XStack gap="$1" flexWrap="wrap">
                       {['all', 'pending', 'in_progress', 'completed', 'overdue'].map(status => (
                         <TouchableOpacity
                           key={status}
                           onPress={() => setStatusFilter(status)}
                         >
                           <View
-                            paddingHorizontal="$3"
-                            paddingVertical="$2"
-                            borderRadius="$3"
-                            backgroundColor={statusFilter === status ? COLORS.primary : '$surface'}
+                            paddingHorizontal="$2"
+                            paddingVertical="$1.5"
+                            borderRadius="$10"
+                            backgroundColor={statusFilter === status ? '$primary' : '$color2'}
                             borderWidth={1}
-                            borderColor={statusFilter === status ? COLORS.primary : '$borderColor'}
-                            marginBottom="$2"
+                            borderColor={statusFilter === status ? '$primary' : '$color5'}
+                            marginBottom="$1"
                           >
                             <Text
                               fontSize="$3"
-                              color={statusFilter === status ? 'white' : '$text'}
-                              fontWeight={statusFilter === status ? '600' : 'normal'}
+                              color={statusFilter === status ? 'white' : '$color12'}
+                              fontWeight={statusFilter === status ? '500' : 'normal'}
                             >
                               {status === 'all' ? '全部' : getStatusText(status as any)}
                             </Text>
@@ -333,22 +327,22 @@ export const TaskListScreen: React.FC = () => {
             </Card>
 
             {/* Task List */}
-            <YStack space="$3">
+            <YStack gap="$2">
               {filteredTasks.length === 0 ? (
-                <Card padding="$6" borderRadius="$4" backgroundColor="$surface" alignItems="center">
-                  <Award size={48} color={COLORS.textSecondary} />
-                  <Text fontSize="$5" color="$textSecondary" marginTop="$3" textAlign="center">
+                <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5" alignItems="center">
+                  <Award size={48} color={textSecondaryColor} />
+                  <Text fontSize="$5" color="$color10" marginTop="$2" textAlign="center">
                     暂无任务
                   </Text>
                   <TouchableOpacity onPress={() => navigation.navigate('TaskForm')}>
                     <View
-                      marginTop="$4"
-                      paddingHorizontal="$4"
+                      marginTop="$2"
+                      paddingHorizontal="$3"
                       paddingVertical="$2"
-                      borderRadius="$3"
-                      backgroundColor={COLORS.primary}
+                      borderRadius="$10"
+                      backgroundColor="$primary"
                     >
-                      <Text fontSize="$3" color="white" fontWeight="600">创建第一个任务</Text>
+                      <Text fontSize="$3" color="white" fontWeight="500">创建第一个任务</Text>
                     </View>
                   </TouchableOpacity>
                 </Card>
@@ -362,56 +356,58 @@ export const TaskListScreen: React.FC = () => {
                       activeOpacity={0.7}
                     >
                       <Card
-                        padding="$4"
-                        borderRadius="$4"
-                        backgroundColor="$surface"
+                        padding="$2"
+                        borderRadius="$6"
+                        backgroundColor="$color2"
+                        borderWidth={1}
+                        borderColor="$color5"
                         borderLeftWidth={4}
                         borderLeftColor={task.color}
                       >
-                        <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$3">
-                          <XStack space="$3" alignItems="center" flex={1}>
+                        <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$2">
+                          <XStack gap="$2" alignItems="center" flex={1}>
                             <View
-                              width={44}
-                              height={44}
-                              borderRadius={22}
+                              width={40}
+                              height={40}
+                              borderRadius="$12"
                               backgroundColor={`${task.color}20`}
                               justifyContent="center"
                               alignItems="center"
                             >
-                              <IconComponent size={22} color={task.color} />
+                              <IconComponent size={20} color={task.color} />
                             </View>
                             <YStack flex={1}>
-                              <Text fontSize="$5" fontWeight="600" color="$text" marginBottom="$1">
+                              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$0.5">
                                 {task.title}
                               </Text>
-                              <Text fontSize="$3" color="$textSecondary" numberOfLines={1}>
+                              <Text fontSize="$3" color="$color10" numberOfLines={1}>
                                 {task.description || getCategoryName(task.category)}
                               </Text>
                             </YStack>
                           </XStack>
                           <View
                             paddingHorizontal="$2"
-                            paddingVertical="$1"
-                            borderRadius="$2"
+                            paddingVertical="$0.5"
+                            borderRadius="$10"
                             backgroundColor={`${getStatusColor(task.status)}20`}
                           >
-                            <Text fontSize="$1" color={getStatusColor(task.status)} fontWeight="600">
+                            <Text fontSize="$1" color={getStatusColor(task.status)} fontWeight="500">
                               {getStatusText(task.status)}
                             </Text>
                           </View>
                         </XStack>
 
                         <XStack justifyContent="space-between" alignItems="center">
-                          <XStack space="$4">
+                          <XStack gap="$2">
                             {task.startTime && (
-                              <XStack space="$1" alignItems="center">
-                                <Clock size={14} color={COLORS.textSecondary} />
-                                <Text fontSize="$2" color="$textSecondary">{task.startTime}</Text>
+                              <XStack gap="$1" alignItems="center">
+                                <Clock size={14} color={textSecondaryColor} />
+                                <Text fontSize="$2" color="$color10">{task.startTime}</Text>
                               </XStack>
                             )}
-                            <XStack space="$1" alignItems="center">
-                              <TrendingUp size={14} color={COLORS.success} />
-                              <Text fontSize="$2" color="$textSecondary">
+                            <XStack gap="$1" alignItems="center">
+                              <TrendingUp size={14} color={successColor} />
+                              <Text fontSize="$2" color="$color10">
                                 连续{task.currentStreak}天
                               </Text>
                             </XStack>
@@ -419,11 +415,11 @@ export const TaskListScreen: React.FC = () => {
                           <TouchableOpacity onPress={() => handleTaskAction(task)}>
                             <View
                               paddingHorizontal="$3"
-                              paddingVertical="$2"
-                              borderRadius="$3"
-                              backgroundColor={task.status === 'completed' ? COLORS.success : COLORS.primary}
+                              paddingVertical="$1.5"
+                              borderRadius="$10"
+                              backgroundColor={task.status === 'completed' ? successColor : primaryColor}
                             >
-                              <Text fontSize="$2" color="white" fontWeight="600">
+                              <Text fontSize="$2" color="white" fontWeight="500">
                                 {task.status === 'completed' ? '查看' : task.status === 'in_progress' ? '继续' : '开始'}
                               </Text>
                             </View>
@@ -432,14 +428,14 @@ export const TaskListScreen: React.FC = () => {
 
                         {/* Progress Bar for in_progress tasks */}
                         {task.status === 'in_progress' && task.progress > 0 && (
-                          <YStack marginTop="$3" space="$1">
+                          <YStack marginTop="$2" gap="$1">
                             <XStack justifyContent="space-between">
-                              <Text fontSize="$2" color="$textSecondary">进度</Text>
-                              <Text fontSize="$2" color={task.color} fontWeight="600">
+                              <Text fontSize="$2" color="$color10">进度</Text>
+                              <Text fontSize="$2" color={task.color} fontWeight="500">
                                 {task.progress}%
                               </Text>
                             </XStack>
-                            <Progress value={task.progress} backgroundColor="$borderColor">
+                            <Progress value={task.progress} backgroundColor="$color5">
                               <Progress.Indicator backgroundColor={task.color} />
                             </Progress>
                           </YStack>

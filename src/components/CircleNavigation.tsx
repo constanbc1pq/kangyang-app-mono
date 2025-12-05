@@ -20,6 +20,7 @@ export interface CircleNavItem {
   color: string;
   route: string;
   params?: any;
+  badge?: number; // 红点数量，0或undefined表示不显示
 }
 
 interface CircleNavigationProps {
@@ -50,19 +51,40 @@ export const CircleNavigation: React.FC<CircleNavigationProps> = ({
               onPress={() => onItemPress(item)}
               style={{ alignItems: 'center', width: 70 }}
             >
-              <View
-                width={56}
-                height={56}
-                borderRadius={28}
-                backgroundColor={`${item.color}20`}
-                justifyContent="center"
-                alignItems="center"
-                marginBottom="$2"
-              >
-                {/[\p{Emoji}]/u.test(item.icon) ? (
-                  <Text fontSize={32}>{item.icon}</Text>
-                ) : (
-                  getIcon(item.icon, item.color)
+              <View position="relative">
+                <View
+                  width={56}
+                  height={56}
+                  borderRadius={28}
+                  backgroundColor={`${item.color}20`}
+                  justifyContent="center"
+                  alignItems="center"
+                  marginBottom="$2"
+                >
+                  {/[\p{Emoji}]/u.test(item.icon) ? (
+                    <Text fontSize={32}>{item.icon}</Text>
+                  ) : (
+                    getIcon(item.icon, item.color)
+                  )}
+                </View>
+                {/* 未读红点 */}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <View
+                    position="absolute"
+                    top={-2}
+                    right={-2}
+                    minWidth={18}
+                    height={18}
+                    borderRadius={9}
+                    backgroundColor={COLORS.error}
+                    justifyContent="center"
+                    alignItems="center"
+                    paddingHorizontal={4}
+                  >
+                    <Text fontSize={10} color="white" fontWeight="600">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </Text>
+                  </View>
                 )}
               </View>
               <Text
@@ -129,11 +151,11 @@ export const defaultCircleNavItems: CircleNavItem[] = [
     route: 'SecondHandList',
   },
   {
-    id: 'nearby',
-    label: '附近服务',
-    icon: '📍',
+    id: 'article',
+    label: '邻里分享',
+    icon: '📝',
     color: COLORS.warning,
-    route: 'nearby-tab', // 特殊标识，切换到附近Tab
+    route: 'ArticleList',
   },
   {
     id: 'expert',

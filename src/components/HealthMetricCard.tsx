@@ -5,10 +5,12 @@ import {
   Text,
   Card,
   View,
+  Theme,
+  useTheme,
+  Paragraph,
 } from 'tamagui';
 import { Pressable } from 'react-native';
 import * as Icons from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 interface DeviceInfo {
   id: string;
@@ -18,15 +20,23 @@ interface DeviceInfo {
   status: 'online' | 'offline' | 'syncing';
 }
 
+/** 支持的主题色键名 */
+type ThemeColorKey = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error';
+
+/** 健康状态类型 */
+type HealthStatus = 'normal' | 'warning' | 'danger';
+
 interface HealthMetricCardProps {
   title: string;
   value: string;
   unit: string;
   change?: string;
+  /** 健康状态，决定状态标签颜色 */
+  status?: HealthStatus;
   trend?: 'up' | 'down' | 'stable';
   icon: keyof typeof Icons;
-  color: string;
-  bgColor: string;
+  /** 使用主题色键名，组件内部会从主题获取对应颜色 */
+  colorKey: ThemeColorKey;
   device?: DeviceInfo;
   onPress?: () => void;
   onDevicePress?: () => void;
@@ -35,48 +45,55 @@ interface HealthMetricCardProps {
 /**
  * 健康指标卡片组件（带设备标签）
  * 显示健康数据及其来源设备信息
+ * 使用 Tamagui 主题色系统和官方组件规范
  */
 export const HealthMetricCard: React.FC<HealthMetricCardProps> = ({
   title,
   value,
   unit,
   change,
+  status = 'normal',
   trend,
   icon,
-  color,
-  bgColor,
+  colorKey,
   device,
   onPress,
   onDevicePress,
 }) => {
+  const theme = useTheme();
   const IconComponent = (Icons as any)[icon] || Icons.Activity;
 
-  // 获取设备状态颜色
-  const getDeviceStatusColor = (status?: string) => {
+  // 从主题获取颜色
+  const color = theme[colorKey]?.val || theme.primary?.val;
+
+  // 状态标签颜色 - 统一使用主题色，不随卡片颜色变化
+  const getStatusColor = () => {
     switch (status) {
-      case 'online':
-        return COLORS.success;
-      case 'offline':
-        return COLORS.textSecondary;
-      case 'syncing':
-        return COLORS.warning;
+      case 'normal':
+        return theme.success?.val; // 深紫 - 正常
+      case 'warning':
+        return theme.warning?.val; // 中灰 - 需关注
+      case 'danger':
+        return theme.error?.val;   // 灰红 - 危险
       default:
-        return COLORS.textSecondary;
+        return theme.success?.val;
     }
   };
+  const statusColor = getStatusColor();
 
-  // 获取设备状态文本
-  const getDeviceStatusText = (status?: string) => {
-    switch (status) {
-      case 'online':
-        return '在线';
-      case 'offline':
-        return '离线';
-      case 'syncing':
-        return '同步中';
-      default:
-        return '未知';
-    }
+  // 判断是否今天同步过 - 根据 lastSync 文本判断
+  const isSyncedToday = (lastSync?: string) => {
+    if (!lastSync) return false;
+    // 如果包含"刚刚"、"分钟"、"小时"等表示今天同步过
+    return lastSync.includes('刚刚') ||
+           lastSync.includes('分钟') ||
+           lastSync.includes('小时') ||
+           lastSync.includes('秒');
+  };
+
+  // 获取同步状态颜色 - 今天同步过=主紫色，否则=灰色
+  const getSyncStatusColor = (lastSync?: string) => {
+    return isSyncedToday(lastSync) ? theme.primary?.val : theme.color8?.val;
   };
 
   return (
@@ -87,36 +104,37 @@ export const HealthMetricCard: React.FC<HealthMetricCardProps> = ({
     >
       <Card
         flex={1}
-        padding="$4"
+        padding="$1.5"
         borderRadius="$4"
-        backgroundColor="$cardBg"
         pressStyle={{ scale: onPress ? 0.98 : 1 }}
-        shadowColor="$shadow"
+        borderWidth={1}
+        borderColor="$color5"
+        shadowColor="$shadowColor"
         shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.1}
-        shadowRadius={8}
-        elevation={4}
+        shadowOpacity={0.06}
+        shadowRadius={4}
+        elevation={1}
       >
-        {/* 指标icon和变化标签 */}
-        <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
+        {/* 指标icon和变化标签 - 紧凑布局 */}
+        <XStack justifyContent="space-between" alignItems="center" gap="$1" marginBottom={10}>
           <View
-            width={40}
-            height={40}
-            borderRadius={20}
-            backgroundColor={bgColor}
+            width={28}
+            height={28}
+            borderRadius="$4"
+            backgroundColor={`${color}15`}
             justifyContent="center"
             alignItems="center"
           >
-            <IconComponent size={20} color={color} />
+            <IconComponent size={14} color={color} />
           </View>
           {change && (
             <View
-              backgroundColor={color}
+              backgroundColor={statusColor}
               paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
+              paddingVertical="$0.5"
+              borderRadius="$10"
             >
-              <Text fontSize="$1" color="white" fontWeight="500">
+              <Text fontSize={10} color="white" fontWeight="500">
                 {change}
               </Text>
             </View>
@@ -124,52 +142,49 @@ export const HealthMetricCard: React.FC<HealthMetricCardProps> = ({
         </XStack>
 
         {/* 指标名称 */}
-        <Text fontSize="$3" color="$textSecondary" marginBottom="$1">
+        <Text fontSize="$2" color="$color10" marginBottom="$0.5">
           {title}
         </Text>
 
-        {/* 指标数值 */}
-        <XStack alignItems="baseline" marginBottom="$3">
-          <Text fontSize="$6" fontWeight="bold" color="$text">
+        {/* 指标数值 - 紧凑 */}
+        <XStack alignItems="baseline" gap="$0.5" marginBottom="$2">
+          <Text fontSize="$5" fontWeight="700" color="$color12">
             {value}
           </Text>
-          <Text fontSize="$2" color="$textSecondary" marginLeft="$1">
+          <Text fontSize="$1" color="$color10">
             {unit}
           </Text>
         </XStack>
 
-        {/* 设备来源信息 */}
+        {/* 设备来源信息 - 图标和设备名换行显示 */}
         {device && (
           <Pressable onPress={onDevicePress}>
             <View
-              backgroundColor="$surface"
-              padding="$2"
+              backgroundColor="$color2"
+              paddingVertical="$1"
+              paddingHorizontal="$1.5"
               borderRadius="$3"
               borderWidth={1}
-              borderColor="$borderColor"
+              borderColor="$color5"
             >
               <XStack justifyContent="space-between" alignItems="center">
-                <XStack space="$2" alignItems="center" flex={1}>
-                  {/* 设备icon */}
+                <YStack alignItems="center" flex={1} gap="$0.5">
                   <Text fontSize={14}>{device.icon}</Text>
-                  {/* 设备名称 */}
-                  <Text fontSize="$2" color="$text" numberOfLines={1} flex={1}>
+                  <Text fontSize={9} color="$color11" numberOfLines={1} textAlign="center">
                     {device.name}
                   </Text>
-                </XStack>
-                {/* 在线状态指示器 */}
+                </YStack>
+                {/* 同步状态点：今天同步=紫色，否则=灰色 */}
                 <View
                   width={6}
                   height={6}
-                  borderRadius={3}
-                  backgroundColor={getDeviceStatusColor(device.status)}
-                  marginLeft="$2"
+                  borderRadius="$12"
+                  backgroundColor={getSyncStatusColor(device.lastSync)}
+                  position="absolute"
+                  top={2}
+                  right={2}
                 />
               </XStack>
-              {/* 同步时间 */}
-              <Text fontSize="$1" color="$textSecondary" marginTop="$1">
-                {device.lastSync}同步
-              </Text>
             </View>
           </Pressable>
         )}
@@ -177,13 +192,14 @@ export const HealthMetricCard: React.FC<HealthMetricCardProps> = ({
         {/* 无设备数据提示 */}
         {!device && (
           <View
-            backgroundColor="$surface"
-            padding="$2"
+            backgroundColor="$color2"
+            paddingVertical="$1"
+            paddingHorizontal="$1.5"
             borderRadius="$3"
             borderWidth={1}
-            borderColor="$borderColor"
+            borderColor="$color5"
           >
-            <Text fontSize="$2" color="$textSecondary" textAlign="center">
+            <Text fontSize={10} color="$color9" textAlign="center">
               手动输入
             </Text>
           </View>

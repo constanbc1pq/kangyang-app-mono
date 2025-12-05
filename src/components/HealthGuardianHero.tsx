@@ -4,15 +4,13 @@ import {
   XStack,
   Text,
   View,
-  H2,
-  Theme,
-  Button,
-  Sheet,
+  useTheme,
+  Paragraph,
 } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Heart, MessageCircle, TrendingUp, ChevronDown, Users, CheckCircle } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
-import { Pressable, Modal } from 'react-native';
+import { MessageCircle, TrendingUp, ChevronDown, Users, CheckCircle } from 'lucide-react-native';
+import { Pressable } from 'react-native';
+import { BottomSheet } from './BottomSheet';
 
 export interface FamilyMember {
   id: string;
@@ -37,6 +35,7 @@ interface HealthGuardianHeroProps {
 /**
  * 智能健康守护中心 - Hero区组件
  * 展示健康评分、AI解读和行动建议
+ * 使用 Tamagui 主题色系统和官方组件规范
  */
 export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
   userName,
@@ -49,30 +48,28 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
   onAIConsultPress,
   onMemberChange,
 }) => {
+  const theme = useTheme();
   const [showFamilySelector, setShowFamilySelector] = useState(false);
 
-  // 根据健康评分确定状态和表情
+  // 根据健康评分确定状态和表情 - 使用主题色
   const getHealthStatus = (score: number) => {
     if (score >= 85) {
       return {
         emoji: '😊',
         status: '优秀',
-        color: COLORS.success,
-        bgColor: 'rgba(16, 185, 129, 0.1)',
+        colorKey: 'success' as const,
       };
     } else if (score >= 70) {
       return {
         emoji: '🙂',
         status: '良好',
-        color: COLORS.primary,
-        bgColor: 'rgba(99, 102, 241, 0.1)',
+        colorKey: 'primary' as const,
       };
     } else {
       return {
         emoji: '😐',
         status: '需关注',
-        color: COLORS.warning,
-        bgColor: 'rgba(245, 158, 11, 0.1)',
+        colorKey: 'warning' as const,
       };
     }
   };
@@ -81,11 +78,11 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
   const getMemberStatusColor = (status: FamilyMember['healthStatus']) => {
     switch (status) {
       case 'excellent':
-        return COLORS.success;
+        return theme.success?.val;
       case 'good':
-        return COLORS.primary;
+        return theme.primary?.val;
       case 'attention':
-        return COLORS.warning;
+        return theme.warning?.val;
     }
   };
 
@@ -102,41 +99,43 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
   };
 
   const healthStatus = getHealthStatus(healthScore);
+  const statusColor = theme[healthStatus.colorKey]?.val;
 
   // 找到当前选中的家庭成员
   const currentMember = familyMembers.find(m => m.id === currentMemberId);
   const hasFamilyMembers = familyMembers.length > 0;
 
+  // 获取渐变色 - 使用主题色
+  const gradientColors = [
+    theme.primary?.val,
+    theme.accent?.val,
+  ] as [string, string];
+
   return (
-    <Theme name="light">
-      <View borderRadius="$6" overflow="hidden" marginBottom="$4">
+    <>
+      <View borderRadius="$7" overflow="hidden" marginBottom="$4">
         <LinearGradient
-          colors={[COLORS.primary, COLORS.accent]}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
             padding: 24,
-            shadowColor: '#6366F1',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 15,
-            elevation: 8,
           }}
         >
           {/* 问候语和家人切换 */}
-          <YStack marginBottom="$4">
+          <YStack gap="$1" marginBottom="$4">
             <XStack justifyContent="space-between" alignItems="center">
-              <XStack space="$2" alignItems="center" flex={1}>
+              <XStack gap="$2" alignItems="center" flex={1}>
                 {currentMember?.relationship === '本人' ? (
                   <>
-                    <Text fontSize="$3" color="rgba(255,255,255,0.8)">
+                    <Paragraph size="$3" color="rgba(255,255,255,0.8)">
                       早安，{userName}
-                    </Text>
+                    </Paragraph>
                     <View
                       backgroundColor="rgba(255,255,255,0.2)"
                       paddingHorizontal="$2"
                       paddingVertical="$0.5"
-                      borderRadius="$2"
+                      borderRadius="$10"
                     >
                       <Text fontSize="$1" color="rgba(255,255,255,0.9)">
                         本人
@@ -145,42 +144,42 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
                   </>
                 ) : (
                   <>
-                    <Text fontSize="$3" color="rgba(255,255,255,0.8)">
+                    <Paragraph size="$3" color="rgba(255,255,255,0.8)">
                       正在查看
-                    </Text>
+                    </Paragraph>
                     <View
                       backgroundColor="rgba(255,255,255,0.25)"
                       paddingHorizontal="$2.5"
                       paddingVertical="$1"
-                      borderRadius="$2"
+                      borderRadius="$10"
                       borderWidth={1}
                       borderColor="rgba(255,255,255,0.4)"
                     >
-                      <Text fontSize="$3" color="white" fontWeight="600">
+                      <Text fontSize="$3" color="white" fontWeight="500">
                         {userName}
                       </Text>
                     </View>
-                    <Text fontSize="$3" color="rgba(255,255,255,0.8)">
+                    <Paragraph size="$3" color="rgba(255,255,255,0.8)">
                       的健康
-                    </Text>
+                    </Paragraph>
                   </>
                 )}
               </XStack>
 
-              {/* 家人切换按钮 */}
+              {/* 家人切换按钮 - 胶囊形状 */}
               {hasFamilyMembers && onMemberChange && (
                 <Pressable onPress={() => setShowFamilySelector(true)}>
                   <View
                     backgroundColor="rgba(255,255,255,0.2)"
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$3"
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
                     borderWidth={1}
                     borderColor="rgba(255,255,255,0.3)"
                   >
-                    <XStack space="$1" alignItems="center">
+                    <XStack gap="$1" alignItems="center">
                       <Users size={14} color="white" />
-                      <Text fontSize="$2" color="white" fontWeight="600">
+                      <Text fontSize="$2" color="white" fontWeight="500">
                         切换家人
                       </Text>
                       <ChevronDown size={12} color="white" />
@@ -189,39 +188,37 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
                 </Pressable>
               )}
             </XStack>
-            <Text fontSize="$2" color="rgba(255,255,255,0.6)" marginTop="$1">
+            <Paragraph size="$2" color="rgba(255,255,255,0.6)">
               {currentMember?.relationship === '本人'
                 ? '让我们开始今天的健康之旅'
                 : '关注家人健康，守护家庭幸福'}
-            </Text>
+            </Paragraph>
           </YStack>
 
           {/* AI虚拟形象和健康评分 */}
-          <YStack alignItems="center" marginBottom="$4">
+          <YStack alignItems="center" gap="$3" marginBottom="$4">
             {/* AI表情头像 */}
             <View
               width={80}
               height={80}
-              borderRadius={40}
-              backgroundColor={healthStatus.bgColor}
+              borderRadius="$12"
+              backgroundColor={`${statusColor}25`}
               justifyContent="center"
               alignItems="center"
-              marginBottom="$5"
               borderWidth={3}
               borderColor="rgba(255,255,255,0.3)"
-              overflow="hidden"
             >
               <Text fontSize={40}>{healthStatus.emoji}</Text>
             </View>
 
-            {/* 健康状态提示 */}
+            {/* 健康状态提示 - 胶囊形状 */}
             <View
               backgroundColor="rgba(255,255,255,0.2)"
               paddingHorizontal="$3"
               paddingVertical="$1"
-              borderRadius="$3"
+              borderRadius="$10"
             >
-              <Text fontSize="$4" color="white" fontWeight="600">
+              <Text fontSize="$4" color="white" fontWeight="500">
                 健康状态{healthStatus.status}
               </Text>
             </View>
@@ -230,43 +227,43 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
           {/* AI解读区域 */}
           <View
             backgroundColor="rgba(255,255,255,0.15)"
-            padding="$4"
-            borderRadius="$4"
-            marginBottom="$4"
+            padding="$2"
+            borderRadius="$5"
+            marginBottom="$2"
             borderWidth={1}
             borderColor="rgba(255,255,255,0.2)"
           >
-            <XStack space="$2" alignItems="flex-start" marginBottom="$2">
+            <XStack gap="$2" alignItems="flex-start" marginBottom="$2">
               <MessageCircle size={16} color="white" />
               <Text fontSize="$3" color="white" fontWeight="600">
                 AI健康师说：
               </Text>
             </XStack>
-            <Text fontSize="$3" color="rgba(255,255,255,0.9)" lineHeight="$2" marginBottom="$3">
+            <Paragraph size="$3" color="rgba(255,255,255,0.9)" lineHeight="$2" marginBottom="$3">
               {aiInterpretation}
-            </Text>
-            <XStack space="$2" alignItems="flex-start">
-              <TrendingUp size={16} color="#4ADE80" />
-              <Text fontSize="$3" color="rgba(255,255,255,0.9)" lineHeight="$2">
+            </Paragraph>
+            <XStack gap="$2" alignItems="flex-start">
+              <TrendingUp size={16} color={theme.success?.val} />
+              <Paragraph size="$3" color="rgba(255,255,255,0.9)" lineHeight="$2">
                 今日建议：{aiSuggestion}
-              </Text>
+              </Paragraph>
             </XStack>
           </View>
 
-          {/* 操作按钮 */}
-          <XStack space="$3">
+          {/* 操作按钮 - 胶囊形状 */}
+          <XStack gap="$3">
             <Pressable style={{ flex: 1 }} onPress={onReportPress}>
               <View
                 flex={1}
                 backgroundColor="white"
-                borderRadius="$3"
-                paddingVertical="$3"
+                borderRadius="$10"
+                paddingVertical="$2.5"
                 justifyContent="center"
                 alignItems="center"
               >
-                <XStack space="$2" alignItems="center">
-                  <TrendingUp size={18} color={COLORS.primary} />
-                  <Text fontSize="$3" color={COLORS.primary} fontWeight="600">
+                <XStack gap="$2" alignItems="center">
+                  <TrendingUp size={18} color={theme.primary?.val} />
+                  <Text fontSize="$3" color="$primary" fontWeight="500">
                     查看详细分析
                   </Text>
                 </XStack>
@@ -276,16 +273,16 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
               <View
                 flex={1}
                 backgroundColor="rgba(255,255,255,0.2)"
-                borderRadius="$3"
-                paddingVertical="$3"
+                borderRadius="$10"
+                paddingVertical="$2.5"
                 justifyContent="center"
                 alignItems="center"
                 borderWidth={1}
                 borderColor="rgba(255,255,255,0.3)"
               >
-                <XStack space="$2" alignItems="center">
+                <XStack gap="$2" alignItems="center">
                   <MessageCircle size={18} color="white" />
-                  <Text fontSize="$3" color="white" fontWeight="600">
+                  <Text fontSize="$3" color="white" fontWeight="500">
                     问AI
                   </Text>
                 </XStack>
@@ -296,125 +293,96 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
       </View>
 
       {/* 家人选择器弹窗 */}
-      <Modal
+      <BottomSheet
         visible={showFamilySelector}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowFamilySelector(false)}
+        onClose={() => setShowFamilySelector(false)}
+        title="选择家庭成员"
+        variant="picker"
+        scrollable={false}
       >
-        <Pressable
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'flex-end',
-          }}
-          onPress={() => setShowFamilySelector(false)}
-        >
-          <Pressable onPress={(e) => e.stopPropagation()}>
-            <View
-              backgroundColor="white"
-              borderTopLeftRadius="$6"
-              borderTopRightRadius="$6"
-              padding="$4"
-              paddingBottom="$8"
-            >
-              {/* 标题 */}
-              <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-                <XStack space="$2" alignItems="center">
-                  <Users size={20} color={COLORS.primary} />
-                  <Text fontSize="$5" fontWeight="600" color="$text">
-                    选择家庭成员
-                  </Text>
-                </XStack>
-                <Pressable onPress={() => setShowFamilySelector(false)}>
-                  <Text fontSize="$4" color="$textSecondary">
-                    关闭
-                  </Text>
-                </Pressable>
-              </XStack>
+        <YStack gap="$2">
+          {familyMembers.map((member) => {
+            const isSelected = member.id === currentMemberId;
+            const memberStatusColor = getMemberStatusColor(member.healthStatus);
+            const primaryColor = theme.primary?.val;
 
-              {/* 家人列表 */}
-              <YStack space="$3">
-                {familyMembers.map((member) => {
-                  const isSelected = member.id === currentMemberId;
-                  const statusColor = getMemberStatusColor(member.healthStatus);
-
-                  return (
-                    <Pressable
-                      key={member.id}
-                      onPress={() => {
-                        onMemberChange?.(member.id);
-                        setShowFamilySelector(false);
-                      }}
-                    >
+            return (
+              <Pressable
+                key={member.id}
+                onPress={() => {
+                  onMemberChange?.(member.id);
+                  setShowFamilySelector(false);
+                }}
+              >
+                <View
+                  padding="$2"
+                  borderRadius="$4"
+                  backgroundColor={isSelected ? `${primaryColor}15` : '$color1'}
+                  borderWidth={1}
+                  borderColor={isSelected ? primaryColor : '$color5'}
+                >
+                  <XStack justifyContent="space-between" alignItems="center">
+                    <XStack gap="$2" alignItems="center" flex={1}>
+                      {/* 头像 */}
                       <View
-                        padding="$4"
-                        borderRadius="$4"
-                        backgroundColor={isSelected ? `${COLORS.primary}10` : '$surface'}
-                        borderWidth={isSelected ? 2 : 1}
-                        borderColor={isSelected ? COLORS.primary : '$borderColor'}
+                        width={44}
+                        height={44}
+                        borderRadius="$10"
+                        backgroundColor={`${memberStatusColor}20`}
+                        justifyContent="center"
+                        alignItems="center"
                       >
-                        <XStack justifyContent="space-between" alignItems="center">
-                          <XStack space="$3" alignItems="center" flex={1}>
-                            {/* 头像占位 */}
-                            <View
-                              width={48}
-                              height={48}
-                              borderRadius={24}
-                              backgroundColor={`${statusColor}20`}
-                              justifyContent="center"
-                              alignItems="center"
-                            >
-                              <Text fontSize={24}>
-                                {member.avatar || '👤'}
-                              </Text>
-                            </View>
-
-                            {/* 姓名和关系 */}
-                            <YStack flex={1}>
-                              <XStack space="$2" alignItems="center" marginBottom="$1">
-                                <Text fontSize="$4" fontWeight="600" color="$text">
-                                  {member.name}
-                                </Text>
-                                <View
-                                  backgroundColor="$surface"
-                                  paddingHorizontal="$2"
-                                  paddingVertical="$0.5"
-                                  borderRadius="$2"
-                                >
-                                  <Text fontSize="$2" color="$textSecondary">
-                                    {member.relationship}
-                                  </Text>
-                                </View>
-                              </XStack>
-                              <XStack space="$1" alignItems="center">
-                                <View
-                                  width={6}
-                                  height={6}
-                                  borderRadius={3}
-                                  backgroundColor={statusColor}
-                                />
-                                <Text fontSize="$3" color={statusColor} fontWeight="500">
-                                  健康状态{getMemberStatusText(member.healthStatus)}
-                                </Text>
-                              </XStack>
-                            </YStack>
-                          </XStack>
-
-                          {/* 选中标识 */}
-                          {isSelected && (
-                            <CheckCircle size={24} color={COLORS.primary} />
-                          )}
-                        </XStack>
+                        <Text fontSize={22}>
+                          {member.avatar || '👤'}
+                        </Text>
                       </View>
-                    </Pressable>
-                  );
-                })}
-              </YStack>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </Theme>
+
+                      {/* 姓名和关系 */}
+                      <YStack flex={1} gap="$0.5">
+                        <XStack gap="$2" alignItems="center">
+                          <Text
+                            fontSize="$4"
+                            fontWeight={isSelected ? '600' : '500'}
+                            color={isSelected ? primaryColor : '$color12'}
+                          >
+                            {member.name}
+                          </Text>
+                          <View
+                            paddingHorizontal="$1.5"
+                            paddingVertical="$0.5"
+                            borderRadius="$10"
+                            backgroundColor="$color4"
+                          >
+                            <Text fontSize="$2" color="$color10">
+                              {member.relationship}
+                            </Text>
+                          </View>
+                        </XStack>
+                        <XStack gap="$1" alignItems="center">
+                          <View
+                            width={6}
+                            height={6}
+                            borderRadius="$10"
+                            backgroundColor={memberStatusColor}
+                          />
+                          <Text fontSize="$2" color={memberStatusColor} fontWeight="500">
+                            健康状态{getMemberStatusText(member.healthStatus)}
+                          </Text>
+                        </XStack>
+                      </YStack>
+                    </XStack>
+
+                    {/* 选中标识 */}
+                    {isSelected && (
+                      <CheckCircle size={22} color={primaryColor} />
+                    )}
+                  </XStack>
+                </View>
+              </Pressable>
+            );
+          })}
+        </YStack>
+      </BottomSheet>
+    </>
   );
 };

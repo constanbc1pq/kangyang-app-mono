@@ -4,17 +4,27 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Alert, TextInput, ActivityIndicator, Pressable } from 'react-native';
+import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  TextInput,
-  ActivityIndicator,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+  ArrowLeft,
+  Clock,
+  Hourglass,
+  CheckCircle2,
+  XCircle,
+  FileText,
+  ShieldCheck,
+  Calendar,
+  MapPin,
+  Phone,
+  Building2,
+  Info,
+  Upload,
+  AlertCircle,
+  ChevronRight,
+  Check,
+} from 'lucide-react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { Will, WillStatus } from '../types/legalService';
 import { getWillById, updateWill } from '../services/legalService';
@@ -23,6 +33,8 @@ import {
   generateWitnessedWillTemplate,
   generateAudioVideoWillGuidelines,
 } from '../services/willTemplateEngine';
+
+const GOLD_COLOR = '#D4AF37';
 
 type RouteParams = {
   WillReview: {
@@ -54,9 +66,17 @@ interface NotaryAppointment {
 }
 
 const WillReviewScreen: React.FC = () => {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const route = useRoute<RouteProp<RouteParams, 'WillReview'>>();
   const navigation = useNavigation();
   const { willId } = route.params;
+
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const [will, setWill] = useState<Will | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,9 +109,6 @@ const WillReviewScreen: React.FC = () => {
       const willData = await getWillById(willId);
       if (willData) {
         setWill(willData);
-        // TODO: 从后端加载审核和公证状态
-        // loadReviewStatus(willId);
-        // loadNotaryStatus(willId);
       }
     } catch (error) {
       console.error('Error loading will:', error);
@@ -112,7 +129,6 @@ const WillReviewScreen: React.FC = () => {
           text: '确认提交',
           onPress: async () => {
             try {
-              // TODO: 调用后端API提交审核
               setReviewResult({
                 status: 'in_review',
                 approved: false,
@@ -148,7 +164,6 @@ const WillReviewScreen: React.FC = () => {
           text: '确认预约',
           onPress: async () => {
             try {
-              // TODO: 调用后端API预约公证
               setNotaryAppointment({
                 status: 'scheduled',
                 appointmentDate: notaryForm.preferredDate,
@@ -192,296 +207,426 @@ const WillReviewScreen: React.FC = () => {
     });
   };
 
+  // 获取审核状态图标
+  const getReviewStatusIcon = () => {
+    switch (reviewResult.status) {
+      case 'pending':
+        return <Clock size={32} color={primaryColor} />;
+      case 'in_review':
+        return <Hourglass size={32} color={primaryColor} />;
+      case 'approved':
+        return <CheckCircle2 size={32} color={successColor} />;
+      case 'rejected':
+        return <XCircle size={32} color={errorColor} />;
+      default:
+        return <Clock size={32} color={primaryColor} />;
+    }
+  };
+
+  // 获取公证状态图标
+  const getNotaryStatusIcon = () => {
+    switch (notaryAppointment.status) {
+      case 'not_started':
+        return <FileText size={32} color={primaryColor} />;
+      case 'scheduled':
+        return <Calendar size={32} color={primaryColor} />;
+      case 'in_progress':
+        return <Clock size={32} color={primaryColor} />;
+      case 'completed':
+        return <CheckCircle2 size={32} color={successColor} />;
+      default:
+        return <FileText size={32} color={primaryColor} />;
+    }
+  };
+
   // 渲染审核标签页
   const renderReviewTab = () => (
-    <View style={styles.tabContent}>
+    <YStack padding="$2.5" gap="$2">
       {/* 审核状态卡片 */}
-      <View style={styles.statusCard}>
-        <View style={styles.statusHeader}>
-          <Ionicons
-            name={
-              reviewResult.status === 'pending'
-                ? 'time-outline'
-                : reviewResult.status === 'in_review'
-                ? 'hourglass-outline'
-                : reviewResult.status === 'approved'
-                ? 'checkmark-circle-outline'
-                : 'close-circle-outline'
-            }
-            size={32}
-            color={
-              reviewResult.status === 'approved'
-                ? '#52c41a'
-                : reviewResult.status === 'rejected'
-                ? '#ff4d4f'
-                : '#1890ff'
-            }
-          />
-          <Text style={styles.statusTitle}>
+      <View
+        backgroundColor="$color2"
+        borderRadius="$5"
+        padding="$2.5"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <XStack alignItems="center" gap="$2" marginBottom="$2">
+          {getReviewStatusIcon()}
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             {reviewResult.status === 'pending' && '待提交审核'}
             {reviewResult.status === 'in_review' && '审核中'}
             {reviewResult.status === 'approved' && '审核通过'}
             {reviewResult.status === 'rejected' && '需要修改'}
           </Text>
-        </View>
+        </XStack>
 
         {reviewResult.status === 'pending' && (
-          <View style={styles.statusBody}>
-            <Text style={styles.statusDescription}>
+          <YStack gap="$2">
+            <Text fontSize="$3" color="$color10" lineHeight={20}>
               专业律师将从以下方面审核您的遗嘱：
             </Text>
-            <View style={styles.checkList}>
-              <View style={styles.checkItem}>
-                <Ionicons name="checkmark-circle" size={16} color="#52c41a" />
-                <Text style={styles.checkText}>法律条款完整性</Text>
-              </View>
-              <View style={styles.checkItem}>
-                <Ionicons name="checkmark-circle" size={16} color="#52c41a" />
-                <Text style={styles.checkText}>财产分配合理性</Text>
-              </View>
-              <View style={styles.checkItem}>
-                <Ionicons name="checkmark-circle" size={16} color="#52c41a" />
-                <Text style={styles.checkText}>受益人信息准确性</Text>
-              </View>
-              <View style={styles.checkItem}>
-                <Ionicons name="checkmark-circle" size={16} color="#52c41a" />
-                <Text style={styles.checkText}>特殊条款合法性</Text>
-              </View>
-              <View style={styles.checkItem}>
-                <Ionicons name="checkmark-circle" size={16} color="#52c41a" />
-                <Text style={styles.checkText}>潜在法律风险识别</Text>
-              </View>
+            <YStack gap="$1.5">
+              {[
+                '法律条款完整性',
+                '财产分配合理性',
+                '受益人信息准确性',
+                '特殊条款合法性',
+                '潜在法律风险识别',
+              ].map((item, index) => (
+                <XStack key={index} alignItems="center" gap="$1.5">
+                  <CheckCircle2 size={16} color={successColor} />
+                  <Text fontSize="$3" color="$color12">{item}</Text>
+                </XStack>
+              ))}
+            </YStack>
+
+            <View
+              backgroundColor="$color4"
+              borderRadius="$4"
+              padding="$2"
+              alignItems="center"
+            >
+              <Text fontSize="$3" color="$color10">审核费用</Text>
+              <Text fontSize="$8" fontWeight="700" color="$primary" marginVertical="$1">
+                ¥500
+              </Text>
+              <Text fontSize="$2" color="$color10">1-3个工作日完成</Text>
             </View>
 
-            <View style={styles.priceCard}>
-              <Text style={styles.priceLabel}>审核费用</Text>
-              <Text style={styles.priceValue}>¥500</Text>
-              <Text style={styles.priceNote}>1-3个工作日完成</Text>
-            </View>
-
-            <TouchableOpacity style={styles.primaryButton} onPress={handleSubmitForReview}>
-              <Text style={styles.primaryButtonText}>提交律师审核</Text>
-            </TouchableOpacity>
-          </View>
+            <Pressable onPress={handleSubmitForReview}>
+              <View
+                backgroundColor="$primary"
+                borderRadius="$10"
+                paddingVertical="$2"
+                alignItems="center"
+              >
+                <Text fontSize="$4" fontWeight="600" color="white">提交律师审核</Text>
+              </View>
+            </Pressable>
+          </YStack>
         )}
 
         {reviewResult.status === 'in_review' && (
-          <View style={styles.statusBody}>
-            <Text style={styles.statusDescription}>
+          <YStack gap="$2">
+            <Text fontSize="$3" color="$color10" lineHeight={20}>
               您的遗嘱正在审核中，预计1-3个工作日内完成
             </Text>
-            <View style={styles.timelineContainer}>
-              <View style={styles.timelineItem}>
-                <View style={[styles.timelineDot, styles.timelineDotCompleted]} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineTitle}>提交审核</Text>
-                  <Text style={styles.timelineTime}>
-                    {new Date().toLocaleDateString()}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.timelineItem}>
-                <View style={[styles.timelineDot, styles.timelineDotActive]} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineTitle}>律师审核中</Text>
-                  <Text style={styles.timelineTime}>审核中...</Text>
-                </View>
-              </View>
-              <View style={styles.timelineItem}>
-                <View style={styles.timelineDot} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineTitle}>审核完成</Text>
-                  <Text style={styles.timelineTime}>待完成</Text>
-                </View>
-              </View>
-            </View>
-          </View>
+            <YStack gap="$3" marginTop="$2">
+              {/* 时间线 */}
+              <XStack gap="$2">
+                <View
+                  width={12}
+                  height={12}
+                  borderRadius={6}
+                  backgroundColor="$success"
+                  marginTop={4}
+                />
+                <YStack flex={1}>
+                  <Text fontSize="$3" fontWeight="600" color="$color12">提交审核</Text>
+                  <Text fontSize="$2" color="$color10">{new Date().toLocaleDateString()}</Text>
+                </YStack>
+              </XStack>
+              <XStack gap="$2">
+                <View
+                  width={12}
+                  height={12}
+                  borderRadius={6}
+                  backgroundColor="$primary"
+                  marginTop={4}
+                />
+                <YStack flex={1}>
+                  <Text fontSize="$3" fontWeight="600" color="$color12">律师审核中</Text>
+                  <Text fontSize="$2" color="$color10">审核中...</Text>
+                </YStack>
+              </XStack>
+              <XStack gap="$2">
+                <View
+                  width={12}
+                  height={12}
+                  borderRadius={6}
+                  backgroundColor="$color5"
+                  marginTop={4}
+                />
+                <YStack flex={1}>
+                  <Text fontSize="$3" fontWeight="600" color="$color12">审核完成</Text>
+                  <Text fontSize="$2" color="$color10">待完成</Text>
+                </YStack>
+              </XStack>
+            </YStack>
+          </YStack>
         )}
 
         {reviewResult.status === 'approved' && (
-          <View style={styles.statusBody}>
-            <View style={styles.approvedCard}>
-              <Text style={styles.approvedTitle}>审核通过</Text>
-              <Text style={styles.approvedText}>
+          <YStack gap="$2">
+            <View
+              backgroundColor="$color4"
+              borderRadius="$4"
+              padding="$2"
+              borderLeftWidth={3}
+              borderLeftColor="$success"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$success" marginBottom="$1">
+                审核通过
+              </Text>
+              <Text fontSize="$3" color="$color10" lineHeight={20}>
                 您的遗嘱已通过律师审核，符合法律要求。
               </Text>
               {reviewResult.reviewerName && (
-                <Text style={styles.reviewerInfo}>
+                <Text fontSize="$2" color="$color10" marginTop="$1">
                   审核律师：{reviewResult.reviewerName}
                 </Text>
               )}
               {reviewResult.reviewDate && (
-                <Text style={styles.reviewerInfo}>
+                <Text fontSize="$2" color="$color10">
                   审核日期：{reviewResult.reviewDate}
                 </Text>
               )}
             </View>
 
             {reviewResult.suggestions && reviewResult.suggestions.length > 0 && (
-              <View style={styles.suggestionsCard}>
-                <Text style={styles.suggestionsTitle}>律师建议</Text>
+              <View
+                style={{ backgroundColor: `${GOLD_COLOR}15` }}
+                borderRadius="$4"
+                padding="$2"
+              >
+                <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
+                  律师建议
+                </Text>
                 {reviewResult.suggestions.map((suggestion, index) => (
-                  <Text key={index} style={styles.suggestionItem}>
+                  <Text key={index} fontSize="$2" color="$color10" lineHeight={20}>
                     • {suggestion}
                   </Text>
                 ))}
               </View>
             )}
 
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={() => setActiveTab('notary')}
-            >
-              <Text style={styles.secondaryButtonText}>前往预约公证</Text>
-              <Ionicons name="arrow-forward" size={16} color="#1890ff" />
-            </TouchableOpacity>
-          </View>
+            <Pressable onPress={() => setActiveTab('notary')}>
+              <View
+                borderWidth={1}
+                borderColor="$primary"
+                borderRadius="$10"
+                paddingVertical="$2"
+              >
+                <XStack justifyContent="center" alignItems="center" gap="$1">
+                  <Text fontSize="$4" fontWeight="600" color="$primary">前往预约公证</Text>
+                  <ChevronRight size={16} color={primaryColor} />
+                </XStack>
+              </View>
+            </Pressable>
+          </YStack>
         )}
 
         {reviewResult.status === 'rejected' && (
-          <View style={styles.statusBody}>
-            <View style={styles.rejectedCard}>
-              <Text style={styles.rejectedTitle}>需要修改</Text>
-              <Text style={styles.rejectedText}>
+          <YStack gap="$2">
+            <View
+              style={{ backgroundColor: `${errorColor}10` }}
+              borderRadius="$4"
+              padding="$2"
+              borderLeftWidth={3}
+              borderLeftColor="$error"
+            >
+              <Text fontSize="$4" fontWeight="600" color="$error" marginBottom="$1">
+                需要修改
+              </Text>
+              <Text fontSize="$3" color="$color10" lineHeight={20}>
                 律师审核发现以下问题，请修改后重新提交：
               </Text>
               {reviewResult.comments && (
-                <Text style={styles.commentText}>{reviewResult.comments}</Text>
+                <Text fontSize="$2" color="$color12" fontStyle="italic" marginTop="$1">
+                  {reviewResult.comments}
+                </Text>
               )}
             </View>
 
             {reviewResult.suggestions && reviewResult.suggestions.length > 0 && (
-              <View style={styles.modificationsCard}>
-                <Text style={styles.modificationsTitle}>修改建议</Text>
+              <View
+                style={{ backgroundColor: `${GOLD_COLOR}15` }}
+                borderRadius="$4"
+                padding="$2"
+              >
+                <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
+                  修改建议
+                </Text>
                 {reviewResult.suggestions.map((suggestion, index) => (
-                  <Text key={index} style={styles.modificationItem}>
+                  <Text key={index} fontSize="$2" color="$color10" lineHeight={20}>
                     {index + 1}. {suggestion}
                   </Text>
                 ))}
               </View>
             )}
 
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={styles.primaryButtonText}>返回修改遗嘱</Text>
-            </TouchableOpacity>
-          </View>
+            <Pressable onPress={() => navigation.goBack()}>
+              <View
+                backgroundColor="$primary"
+                borderRadius="$10"
+                paddingVertical="$2"
+                alignItems="center"
+              >
+                <Text fontSize="$4" fontWeight="600" color="white">返回修改遗嘱</Text>
+              </View>
+            </Pressable>
+          </YStack>
         )}
       </View>
 
       {/* 遗嘱预览 */}
-      <View style={styles.previewCard}>
-        <Text style={styles.previewTitle}>遗嘱预览</Text>
-        <TouchableOpacity style={styles.previewButton} onPress={handleViewWillContent}>
-          <Ionicons name="document-text-outline" size={20} color="#1890ff" />
-          <Text style={styles.previewButtonText}>查看完整遗嘱</Text>
-        </TouchableOpacity>
+      <View
+        backgroundColor="$color2"
+        borderRadius="$5"
+        padding="$2"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
+          遗嘱预览
+        </Text>
+        <Pressable onPress={handleViewWillContent}>
+          <View
+            borderWidth={1}
+            borderColor="$color5"
+            borderRadius="$4"
+            paddingVertical="$2"
+          >
+            <XStack justifyContent="center" alignItems="center" gap="$1">
+              <FileText size={18} color={primaryColor} />
+              <Text fontSize="$3" color="$primary" fontWeight="500">查看完整遗嘱</Text>
+            </XStack>
+          </View>
+        </Pressable>
       </View>
-    </View>
+    </YStack>
   );
 
   // 渲染公证标签页
   const renderNotaryTab = () => (
-    <View style={styles.tabContent}>
+    <YStack padding="$2.5" gap="$2">
       {/* 公证状态卡片 */}
-      <View style={styles.statusCard}>
-        <View style={styles.statusHeader}>
-          <Ionicons
-            name={
-              notaryAppointment.status === 'not_started'
-                ? 'clipboard-outline'
-                : notaryAppointment.status === 'scheduled'
-                ? 'calendar-outline'
-                : notaryAppointment.status === 'in_progress'
-                ? 'time-outline'
-                : 'checkmark-circle-outline'
-            }
-            size={32}
-            color={
-              notaryAppointment.status === 'completed'
-                ? '#52c41a'
-                : '#1890ff'
-            }
-          />
-          <Text style={styles.statusTitle}>
+      <View
+        backgroundColor="$color2"
+        borderRadius="$5"
+        padding="$2.5"
+        borderWidth={1}
+        borderColor="$color5"
+      >
+        <XStack alignItems="center" gap="$2" marginBottom="$2">
+          {getNotaryStatusIcon()}
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             {notaryAppointment.status === 'not_started' && '未预约'}
             {notaryAppointment.status === 'scheduled' && '已预约'}
             {notaryAppointment.status === 'in_progress' && '公证中'}
             {notaryAppointment.status === 'completed' && '公证完成'}
           </Text>
-        </View>
+        </XStack>
 
         {notaryAppointment.status === 'not_started' && (
-          <View style={styles.statusBody}>
-            <Text style={styles.statusDescription}>
+          <YStack gap="$2">
+            <Text fontSize="$3" color="$color10" lineHeight={20}>
               公证遗嘱具有最高的法律效力，建议进行公证
             </Text>
 
             {/* 公证说明 */}
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>公证服务包括</Text>
-              <View style={styles.infoList}>
-                <Text style={styles.infoItem}>✓ 遗嘱内容审查</Text>
-                <Text style={styles.infoItem}>✓ 立遗嘱人身份确认</Text>
-                <Text style={styles.infoItem}>✓ 真实意愿核实</Text>
-                <Text style={styles.infoItem}>✓ 法律效力认证</Text>
-                <Text style={styles.infoItem}>✓ 遗嘱档案保管（可选）</Text>
-              </View>
+            <View backgroundColor="$color4" borderRadius="$4" padding="$2">
+              <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1.5">
+                公证服务包括
+              </Text>
+              {[
+                '遗嘱内容审查',
+                '立遗嘱人身份确认',
+                '真实意愿核实',
+                '法律效力认证',
+                '遗嘱档案保管（可选）',
+              ].map((item, index) => (
+                <Text key={index} fontSize="$2" color="$color10" lineHeight={22}>
+                  ✓ {item}
+                </Text>
+              ))}
             </View>
 
             {/* 所需材料 */}
-            <View style={styles.documentsCard}>
-              <Text style={styles.documentsTitle}>所需材料</Text>
-              <View style={styles.documentsList}>
-                <View style={styles.documentItem}>
-                  <Ionicons name="document-outline" size={16} color="#666" />
-                  <Text style={styles.documentText}>身份证原件及复印件</Text>
-                </View>
-                <View style={styles.documentItem}>
-                  <Ionicons name="document-outline" size={16} color="#666" />
-                  <Text style={styles.documentText}>户口本原件及复印件</Text>
-                </View>
-                <View style={styles.documentItem}>
-                  <Ionicons name="document-outline" size={16} color="#666" />
-                  <Text style={styles.documentText}>财产证明材料</Text>
-                </View>
-                <View style={styles.documentItem}>
-                  <Ionicons name="document-outline" size={16} color="#666" />
-                  <Text style={styles.documentText}>遗嘱草稿</Text>
-                </View>
-              </View>
+            <View
+              backgroundColor="$color2"
+              borderRadius="$4"
+              padding="$2"
+              borderWidth={1}
+              borderColor="$color5"
+            >
+              <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1.5">
+                所需材料
+              </Text>
+              {[
+                '身份证原件及复印件',
+                '户口本原件及复印件',
+                '财产证明材料',
+                '遗嘱草稿',
+              ].map((item, index) => (
+                <XStack key={index} alignItems="center" gap="$1.5" marginBottom="$1">
+                  <FileText size={16} color={color10} />
+                  <Text fontSize="$2" color="$color10">{item}</Text>
+                </XStack>
+              ))}
             </View>
 
             {/* 预约表单 */}
-            <View style={styles.formCard}>
-              <Text style={styles.formTitle}>预约公证</Text>
+            <YStack gap="$1.5">
+              <Text fontSize="$4" fontWeight="600" color="$color12">预约公证</Text>
 
-              <Text style={styles.formLabel}>期望日期 *</Text>
+              <Text fontSize="$3" fontWeight="500" color="$color12" marginTop="$1">
+                期望日期 *
+              </Text>
               <TextInput
-                style={styles.formInput}
+                style={{
+                  borderWidth: 1,
+                  borderColor: theme.color5?.val,
+                  borderRadius: 8,
+                  padding: 12,
+                  fontSize: 14,
+                  backgroundColor: theme.color2?.val,
+                  color: theme.color12?.val,
+                }}
                 placeholder="请选择期望的公证日期"
+                placeholderTextColor={theme.color10?.val}
                 value={notaryForm.preferredDate}
                 onChangeText={text =>
                   setNotaryForm({ ...notaryForm, preferredDate: text })
                 }
               />
 
-              <Text style={styles.formLabel}>期望时间</Text>
+              <Text fontSize="$3" fontWeight="500" color="$color12" marginTop="$1">
+                期望时间
+              </Text>
               <TextInput
-                style={styles.formInput}
+                style={{
+                  borderWidth: 1,
+                  borderColor: theme.color5?.val,
+                  borderRadius: 8,
+                  padding: 12,
+                  fontSize: 14,
+                  backgroundColor: theme.color2?.val,
+                  color: theme.color12?.val,
+                }}
                 placeholder="例如：上午9:00-11:00"
+                placeholderTextColor={theme.color10?.val}
                 value={notaryForm.preferredTime}
                 onChangeText={text =>
                   setNotaryForm({ ...notaryForm, preferredTime: text })
                 }
               />
 
-              <Text style={styles.formLabel}>联系电话 *</Text>
+              <Text fontSize="$3" fontWeight="500" color="$color12" marginTop="$1">
+                联系电话 *
+              </Text>
               <TextInput
-                style={styles.formInput}
+                style={{
+                  borderWidth: 1,
+                  borderColor: theme.color5?.val,
+                  borderRadius: 8,
+                  padding: 12,
+                  fontSize: 14,
+                  backgroundColor: theme.color2?.val,
+                  color: theme.color12?.val,
+                }}
                 placeholder="请输入您的联系电话"
+                placeholderTextColor={theme.color10?.val}
                 value={notaryForm.contactPhone}
                 onChangeText={text =>
                   setNotaryForm({ ...notaryForm, contactPhone: text })
@@ -489,644 +634,275 @@ const WillReviewScreen: React.FC = () => {
                 keyboardType="phone-pad"
               />
 
-              <Text style={styles.formLabel}>备注</Text>
+              <Text fontSize="$3" fontWeight="500" color="$color12" marginTop="$1">
+                备注
+              </Text>
               <TextInput
-                style={[styles.formInput, styles.formTextArea]}
+                style={{
+                  borderWidth: 1,
+                  borderColor: theme.color5?.val,
+                  borderRadius: 8,
+                  padding: 12,
+                  fontSize: 14,
+                  backgroundColor: theme.color2?.val,
+                  color: theme.color12?.val,
+                  height: 80,
+                  textAlignVertical: 'top',
+                }}
                 placeholder="其他需要说明的事项"
+                placeholderTextColor={theme.color10?.val}
                 value={notaryForm.notes}
                 onChangeText={text => setNotaryForm({ ...notaryForm, notes: text })}
                 multiline
                 numberOfLines={3}
               />
 
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={handleScheduleNotary}
-              >
-                <Text style={styles.primaryButtonText}>提交预约</Text>
-              </TouchableOpacity>
-            </View>
+              <Pressable onPress={handleScheduleNotary}>
+                <View
+                  backgroundColor="$primary"
+                  borderRadius="$10"
+                  paddingVertical="$2"
+                  alignItems="center"
+                  marginTop="$1"
+                >
+                  <Text fontSize="$4" fontWeight="600" color="white">提交预约</Text>
+                </View>
+              </Pressable>
+            </YStack>
 
-            <View style={styles.feeCard}>
-              <Text style={styles.feeLabel}>公证费用</Text>
-              <Text style={styles.feeValue}>约 ¥300-800</Text>
-              <Text style={styles.feeNote}>根据遗产价值确定，以公证处实际收费为准</Text>
+            <View
+              style={{ backgroundColor: `${GOLD_COLOR}15` }}
+              borderRadius="$4"
+              padding="$2"
+              alignItems="center"
+            >
+              <Text fontSize="$3" color="$color10">公证费用</Text>
+              <Text fontSize="$6" fontWeight="700" style={{ color: GOLD_COLOR }} marginVertical="$1">
+                约 ¥300-800
+              </Text>
+              <Text fontSize="$2" color="$color10" textAlign="center">
+                根据遗产价值确定，以公证处实际收费为准
+              </Text>
             </View>
-          </View>
+          </YStack>
         )}
 
         {notaryAppointment.status === 'scheduled' && (
-          <View style={styles.statusBody}>
-            <Text style={styles.statusDescription}>您已成功预约公证服务</Text>
+          <YStack gap="$2">
+            <Text fontSize="$3" color="$color10" lineHeight={20}>
+              您已成功预约公证服务
+            </Text>
 
-            <View style={styles.appointmentCard}>
-              <View style={styles.appointmentRow}>
-                <Ionicons name="business-outline" size={20} color="#666" />
-                <Text style={styles.appointmentLabel}>公证处：</Text>
-                <Text style={styles.appointmentValue}>
-                  {notaryAppointment.notaryOffice}
-                </Text>
-              </View>
-              <View style={styles.appointmentRow}>
-                <Ionicons name="calendar-outline" size={20} color="#666" />
-                <Text style={styles.appointmentLabel}>预约日期：</Text>
-                <Text style={styles.appointmentValue}>
-                  {notaryAppointment.appointmentDate}
-                </Text>
-              </View>
-              <View style={styles.appointmentRow}>
-                <Ionicons name="time-outline" size={20} color="#666" />
-                <Text style={styles.appointmentLabel}>预约时间：</Text>
-                <Text style={styles.appointmentValue}>
-                  {notaryAppointment.appointmentTime || '待确认'}
-                </Text>
-              </View>
-              <View style={styles.appointmentRow}>
-                <Ionicons name="location-outline" size={20} color="#666" />
-                <Text style={styles.appointmentLabel}>地址：</Text>
-                <Text style={styles.appointmentValue}>
-                  {notaryAppointment.address || '待确认'}
-                </Text>
-              </View>
-              <View style={styles.appointmentRow}>
-                <Ionicons name="call-outline" size={20} color="#666" />
-                <Text style={styles.appointmentLabel}>联系人：</Text>
-                <Text style={styles.appointmentValue}>
-                  {notaryAppointment.contact || '待确认'}
-                </Text>
-              </View>
+            <View backgroundColor="$color4" borderRadius="$4" padding="$2">
+              {[
+                { icon: Building2, label: '公证处', value: notaryAppointment.notaryOffice },
+                { icon: Calendar, label: '预约日期', value: notaryAppointment.appointmentDate },
+                { icon: Clock, label: '预约时间', value: notaryAppointment.appointmentTime || '待确认' },
+                { icon: MapPin, label: '地址', value: notaryAppointment.address || '待确认' },
+                { icon: Phone, label: '联系人', value: notaryAppointment.contact || '待确认' },
+              ].map((item, index) => (
+                <XStack key={index} alignItems="center" marginBottom="$1.5">
+                  <item.icon size={18} color={color10} />
+                  <Text fontSize="$3" color="$color10" marginLeft="$1" width={70}>
+                    {item.label}：
+                  </Text>
+                  <Text fontSize="$3" color="$color12" flex={1}>{item.value}</Text>
+                </XStack>
+              ))}
             </View>
 
-            <View style={styles.reminderCard}>
-              <Ionicons name="information-circle-outline" size={20} color="#1890ff" />
-              <Text style={styles.reminderText}>
+            <XStack
+              backgroundColor="$color4"
+              borderRadius="$4"
+              padding="$2"
+              alignItems="center"
+              gap="$1"
+            >
+              <Info size={18} color={primaryColor} />
+              <Text fontSize="$2" color="$color10" flex={1} lineHeight={18}>
                 请携带所需材料，提前15分钟到达公证处
               </Text>
-            </View>
-          </View>
+            </XStack>
+          </YStack>
         )}
 
         {notaryAppointment.status === 'completed' && (
-          <View style={styles.statusBody}>
-            <View style={styles.completedCard}>
-              <Ionicons name="checkmark-circle" size={48} color="#52c41a" />
-              <Text style={styles.completedTitle}>公证完成</Text>
-              <Text style={styles.completedText}>
+          <YStack gap="$2">
+            <YStack alignItems="center" padding="$3">
+              <CheckCircle2 size={48} color={successColor} />
+              <Text fontSize="$5" fontWeight="600" color="$success" marginTop="$2">
+                公证完成
+              </Text>
+              <Text fontSize="$3" color="$color10" textAlign="center" marginTop="$1">
                 您的遗嘱已完成公证，具有完全的法律效力
               </Text>
-            </View>
+            </YStack>
 
-            <View style={styles.certificateCard}>
-              <Text style={styles.certificateTitle}>公证书信息</Text>
-              <View style={styles.certificateRow}>
-                <Text style={styles.certificateLabel}>公证书编号：</Text>
-                <Text style={styles.certificateValue}>待上传</Text>
-              </View>
-              <View style={styles.certificateRow}>
-                <Text style={styles.certificateLabel}>公证日期：</Text>
-                <Text style={styles.certificateValue}>待上传</Text>
-              </View>
-              <TouchableOpacity style={styles.uploadButton}>
-                <Ionicons name="cloud-upload-outline" size={20} color="#1890ff" />
-                <Text style={styles.uploadButtonText}>上传公证书扫描件</Text>
-              </TouchableOpacity>
+            <View backgroundColor="$color4" borderRadius="$4" padding="$2">
+              <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
+                公证书信息
+              </Text>
+              <XStack marginBottom="$1">
+                <Text fontSize="$2" color="$color10" width={100}>公证书编号：</Text>
+                <Text fontSize="$2" color="$color12" flex={1}>待上传</Text>
+              </XStack>
+              <XStack marginBottom="$2">
+                <Text fontSize="$2" color="$color10" width={100}>公证日期：</Text>
+                <Text fontSize="$2" color="$color12" flex={1}>待上传</Text>
+              </XStack>
+              <Pressable>
+                <View
+                  borderWidth={1}
+                  borderColor="$primary"
+                  borderRadius="$4"
+                  paddingVertical="$2"
+                >
+                  <XStack justifyContent="center" alignItems="center" gap="$1">
+                    <Upload size={18} color={primaryColor} />
+                    <Text fontSize="$3" color="$primary" fontWeight="500">上传公证书扫描件</Text>
+                  </XStack>
+                </View>
+              </Pressable>
             </View>
-          </View>
+          </YStack>
         )}
       </View>
-    </View>
+    </YStack>
   );
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1890ff" />
+      <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
+        <ActivityIndicator size="large" color={primaryColor} />
       </View>
     );
   }
 
   if (!will) {
     return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle-outline" size={48} color="#ff4d4f" />
-        <Text style={styles.errorText}>未找到遗嘱信息</Text>
+      <View flex={1} backgroundColor="$background">
+        {/* TitleBar */}
+        <View
+          paddingTop={insets.top}
+          backgroundColor="$color2"
+          borderBottomWidth={1}
+          borderBottomColor="$color5"
+        >
+          <XStack
+            height={56}
+            paddingHorizontal="$2.5"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Pressable onPress={() => navigation.goBack()}>
+              <View
+                width={40}
+                height={40}
+                borderRadius={20}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <ArrowLeft size={24} color={color12} />
+              </View>
+            </Pressable>
+            <Text fontSize="$5" fontWeight="600" color="$color12">
+              遗嘱审核与公证
+            </Text>
+            <View width={40} />
+          </XStack>
+        </View>
+        <YStack flex={1} justifyContent="center" alignItems="center">
+          <AlertCircle size={48} color={errorColor} />
+          <Text fontSize="$4" color="$color10" marginTop="$2">未找到遗嘱信息</Text>
+        </YStack>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* 标签页切换 */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'review' && styles.tabActive]}
-          onPress={() => setActiveTab('review')}
+    <View flex={1} backgroundColor="$background">
+      {/* TitleBar */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
+        borderBottomWidth={1}
+        borderBottomColor="$color5"
+      >
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
         >
-          <Ionicons
-            name="document-text-outline"
-            size={20}
-            color={activeTab === 'review' ? '#1890ff' : '#999'}
-          />
-          <Text style={[styles.tabText, activeTab === 'review' && styles.tabTextActive]}>
-            律师审核
+          <Pressable onPress={() => navigation.goBack()}>
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            遗嘱审核与公证
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'notary' && styles.tabActive]}
-          onPress={() => setActiveTab('notary')}
-        >
-          <Ionicons
-            name="shield-checkmark-outline"
-            size={20}
-            color={activeTab === 'notary' ? '#1890ff' : '#999'}
-          />
-          <Text style={[styles.tabText, activeTab === 'notary' && styles.tabTextActive]}>
-            公证服务
-          </Text>
-        </TouchableOpacity>
+          <View width={40} />
+        </XStack>
       </View>
 
+      {/* 标签页切换 */}
+      <XStack backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
+        <Pressable style={{ flex: 1 }} onPress={() => setActiveTab('review')}>
+          <XStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            paddingVertical="$2"
+            borderBottomWidth={2}
+            borderBottomColor={activeTab === 'review' ? '$primary' : 'transparent'}
+          >
+            <FileText size={18} color={activeTab === 'review' ? primaryColor : color10} />
+            <Text
+              fontSize="$3"
+              color={activeTab === 'review' ? '$primary' : '$color10'}
+              fontWeight={activeTab === 'review' ? '600' : '400'}
+              marginLeft="$1"
+            >
+              律师审核
+            </Text>
+          </XStack>
+        </Pressable>
+
+        <Pressable style={{ flex: 1 }} onPress={() => setActiveTab('notary')}>
+          <XStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            paddingVertical="$2"
+            borderBottomWidth={2}
+            borderBottomColor={activeTab === 'notary' ? '$primary' : 'transparent'}
+          >
+            <ShieldCheck size={18} color={activeTab === 'notary' ? primaryColor : color10} />
+            <Text
+              fontSize="$3"
+              color={activeTab === 'notary' ? '$primary' : '$color10'}
+              fontWeight={activeTab === 'notary' ? '600' : '400'}
+              marginLeft="$1"
+            >
+              公证服务
+            </Text>
+          </XStack>
+        </Pressable>
+      </XStack>
+
       {/* 标签页内容 */}
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         {activeTab === 'review' ? renderReviewTab() : renderNotaryTab()}
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 16,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e8e8',
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: '#1890ff',
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#999',
-    marginLeft: 4,
-  },
-  tabTextActive: {
-    color: '#1890ff',
-    fontWeight: '600',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  tabContent: {
-    padding: 16,
-  },
-  statusCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 20,
-    marginBottom: 16,
-  },
-  statusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 12,
-  },
-  statusBody: {
-    marginTop: 8,
-  },
-  statusDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  checkList: {
-    marginBottom: 16,
-  },
-  checkItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  checkText: {
-    fontSize: 14,
-    color: '#333',
-    marginLeft: 8,
-  },
-  priceCard: {
-    backgroundColor: '#f0f7ff',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  priceLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  priceValue: {
-    fontSize: 32,
-    fontWeight: '600',
-    color: '#1890ff',
-    marginVertical: 8,
-  },
-  priceNote: {
-    fontSize: 12,
-    color: '#999',
-  },
-  primaryButton: {
-    backgroundColor: '#1890ff',
-    borderRadius: 4,
-    padding: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#1890ff',
-    borderRadius: 4,
-    padding: 14,
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1890ff',
-    marginRight: 4,
-  },
-  timelineContainer: {
-    marginTop: 16,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    marginBottom: 24,
-  },
-  timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#d9d9d9',
-    marginRight: 12,
-    marginTop: 4,
-  },
-  timelineDotCompleted: {
-    backgroundColor: '#52c41a',
-  },
-  timelineDotActive: {
-    backgroundColor: '#1890ff',
-  },
-  timelineContent: {
-    flex: 1,
-  },
-  timelineTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  timelineTime: {
-    fontSize: 12,
-    color: '#999',
-  },
-  approvedCard: {
-    backgroundColor: '#f6ffed',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#52c41a',
-  },
-  approvedTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#52c41a',
-    marginBottom: 8,
-  },
-  approvedText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  reviewerInfo: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-  },
-  suggestionsCard: {
-    backgroundColor: '#fff7e6',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  suggestionsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  suggestionItem: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  rejectedCard: {
-    backgroundColor: '#fff1f0',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#ff4d4f',
-  },
-  rejectedTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ff4d4f',
-    marginBottom: 8,
-  },
-  rejectedText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  commentText: {
-    fontSize: 13,
-    color: '#333',
-    lineHeight: 18,
-    fontStyle: 'italic',
-  },
-  modificationsCard: {
-    backgroundColor: '#fffbe6',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  modificationsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  modificationItem: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  previewCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-  },
-  previewTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  previewButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#d9d9d9',
-    borderRadius: 4,
-    padding: 12,
-  },
-  previewButtonText: {
-    fontSize: 14,
-    color: '#1890ff',
-    marginLeft: 8,
-  },
-  infoCard: {
-    backgroundColor: '#f0f7ff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  infoList: {},
-  infoItem: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 24,
-  },
-  documentsCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e8e8e8',
-  },
-  documentsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  documentsList: {},
-  documentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  documentText: {
-    fontSize: 13,
-    color: '#666',
-    marginLeft: 8,
-  },
-  formCard: {
-    marginBottom: 16,
-  },
-  formTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  formLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  formInput: {
-    borderWidth: 1,
-    borderColor: '#d9d9d9',
-    borderRadius: 4,
-    padding: 12,
-    fontSize: 14,
-    backgroundColor: '#fff',
-  },
-  formTextArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  feeCard: {
-    backgroundColor: '#fff7e6',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  feeLabel: {
-    fontSize: 14,
-    color: '#666',
-  },
-  feeValue: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#faad14',
-    marginVertical: 8,
-  },
-  feeNote: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-  },
-  appointmentCard: {
-    backgroundColor: '#f0f7ff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  appointmentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  appointmentLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
-    width: 80,
-  },
-  appointmentValue: {
-    fontSize: 14,
-    color: '#333',
-    flex: 1,
-  },
-  reminderCard: {
-    flexDirection: 'row',
-    backgroundColor: '#e6f7ff',
-    borderRadius: 8,
-    padding: 16,
-  },
-  reminderText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#666',
-    marginLeft: 8,
-    lineHeight: 18,
-  },
-  completedCard: {
-    alignItems: 'center',
-    padding: 24,
-    marginBottom: 16,
-  },
-  completedTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#52c41a',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  completedText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  certificateCard: {
-    backgroundColor: '#f0f7ff',
-    borderRadius: 8,
-    padding: 16,
-  },
-  certificateTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  certificateRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  certificateLabel: {
-    fontSize: 13,
-    color: '#666',
-    width: 100,
-  },
-  certificateValue: {
-    fontSize: 13,
-    color: '#333',
-    flex: 1,
-  },
-  uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#1890ff',
-    borderRadius: 4,
-    padding: 12,
-    marginTop: 12,
-  },
-  uploadButtonText: {
-    fontSize: 14,
-    color: '#1890ff',
-    marginLeft: 8,
-  },
-});
 
 export default WillReviewScreen;

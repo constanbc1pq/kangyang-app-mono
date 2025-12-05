@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+/**
+ * SecondHandPublishScreen 邻里闲物发布页面
+ * 支持完整的二手商品发布流程
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
+ */
+import React, { useState, useCallback } from 'react';
 import {
   YStack,
   XStack,
@@ -7,19 +12,22 @@ import {
   ScrollView,
   Input,
   TextArea,
-  Card,
-  H3,
+  useTheme,
 } from 'tamagui';
-import { SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import { Pressable, Alert, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   ArrowLeft,
   MapPin,
   DollarSign,
   Tag,
-  Clock,
-  Image as ImageIcon,
+  Calendar,
+  Check,
+  Hand,
+  Truck,
+  ChevronDown,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import {
   SecondHandItem,
   ItemCategory,
@@ -28,6 +36,7 @@ import {
   ItemStatus,
 } from '@/types/community';
 import { createItem } from '@/services/communityDataService';
+import { usePublishLimit } from '@/hooks/useMembershipBenefit';
 
 interface SecondHandPublishScreenProps {
   navigation: any;
@@ -35,11 +44,17 @@ interface SecondHandPublishScreenProps {
 
 /**
  * 邻里闲物发布页面
- * 支持完整的二手商品发布流程
  */
 export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = ({
   navigation,
 }) => {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   // 基本信息
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -53,8 +68,9 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
   const [isNegotiable, setIsNegotiable] = useState(true);
 
   // 商品状态
-  const [purchaseTime, setPurchaseTime] = useState('');
+  const [purchaseDate, setPurchaseDate] = useState<Date | null>(null);
   const [usageDuration, setUsageDuration] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // 交易信息
   const [tradeMethods, setTradeMethods] = useState<TradeMethod[]>([TradeMethod.PICKUP]);
@@ -63,6 +79,30 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
 
   // 状态
   const [loading, setLoading] = useState(false);
+
+  // 发布次数限制 Hook
+  const {
+    canPublish,
+    remaining: publishRemaining,
+    limit: publishLimit,
+    isUnlimited: isPublishUnlimited,
+    recordUsage: recordPublishUsage,
+  } = usePublishLimit();
+
+  // 显示发布限制升级提示
+  const showPublishLimitAlert = useCallback(() => {
+    Alert.alert(
+      '本月发布次数已用完',
+      `免费用户每月可发布${publishLimit}次内容。升级会员可无限发布！`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '升级会员',
+          onPress: () => navigation.navigate('MembershipCenter' as never),
+        },
+      ]
+    );
+  }, [publishLimit, navigation]);
 
   // 分类选项
   const categoryOptions = [
@@ -77,11 +117,11 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
   // 成色选项
   const conditionOptions = [
     { label: '全新', value: ItemCondition.NEW },
-    { label: '99成新', value: ItemCondition.LIKE_NEW },
-    { label: '95成新', value: ItemCondition.EXCELLENT },
+    { label: '99新', value: ItemCondition.LIKE_NEW },
+    { label: '95新', value: ItemCondition.EXCELLENT },
     { label: '9成新', value: ItemCondition.GOOD },
     { label: '8成新', value: ItemCondition.FAIR },
-    { label: '有明显使用痕迹', value: ItemCondition.USED },
+    { label: '有痕迹', value: ItemCondition.USED },
   ];
 
   // 交易方式切换
@@ -91,6 +131,29 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
     } else {
       setTradeMethods([...tradeMethods, method]);
     }
+  };
+
+  // 日期选择处理
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (event.type === 'set' && selectedDate) {
+      setPurchaseDate(selectedDate);
+      if (Platform.OS === 'android') {
+        setShowDatePicker(false);
+      }
+    } else if (event.type === 'dismissed') {
+      setShowDatePicker(false);
+    }
+  };
+
+  // 格式化日期显示
+  const formatDate = (date: Date | null): string => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    return `${year}年${month}月`;
   };
 
   // 表单验证
@@ -128,6 +191,12 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
       return;
     }
 
+    // 检查发布次数限制
+    if (!canPublish) {
+      showPublishLimitAlert();
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -145,7 +214,7 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
         isNegotiable,
         currency: '¥',
         condition,
-        purchaseTime: purchaseTime.trim() || undefined,
+        purchaseTime: purchaseDate ? formatDate(purchaseDate) : undefined,
         usageDuration: usageDuration.trim() || undefined,
         tradeMethods,
         location: {
@@ -159,6 +228,9 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
       };
 
       const newItem = await createItem(itemData);
+
+      // 记录发布次数
+      await recordPublishUsage();
 
       Alert.alert('发布成功', '您的商品已发布到邻里闲物', [
         {
@@ -182,197 +254,184 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
     }
   };
 
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* 顶部导航栏 */}
+    <View flex={1} backgroundColor="$background">
+      {/* 标准 TitleBar */}
       <View
-        backgroundColor="white"
-        padding="$3"
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <XStack alignItems="center" justifyContent="space-between">
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <XStack space="$2" alignItems="center">
-              <ArrowLeft size={20} color={COLORS.text} />
-              <Text fontSize="$4" fontWeight="600" color="$text">
-                发布闲置物品
-              </Text>
-            </XStack>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handlePublish} disabled={loading}>
-            <View
-              backgroundColor={loading ? '$borderColor' : COLORS.primary}
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-              borderRadius="$3"
-            >
-              <Text fontSize="$3" color="white" fontWeight="600">
-                {loading ? '发布中...' : '发布'}
-              </Text>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+        >
+          <Pressable onPress={handleBack}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
             </View>
-          </TouchableOpacity>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12" flex={1} textAlign="center" marginRight={40}>
+            发布闲置物品
+          </Text>
         </XStack>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack padding="$4" space="$4">
-          {/* 基本信息 */}
-          <Card
-            padding="$4"
-            borderRadius="$4"
-            backgroundColor="$surface"
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <YStack padding="$2.5" gap="$2">
+          {/* 基本信息卡片 */}
+          <View
+            padding="$2"
+            borderRadius="$5"
+            backgroundColor="$color2"
             borderWidth={1}
-            borderColor="$borderColor"
+            borderColor="$color5"
           >
-            <H3 fontSize="$5" color="$text" fontWeight="600" marginBottom="$3">
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               基本信息
-            </H3>
+            </Text>
 
             {/* 商品标题 */}
-            <View marginBottom="$3">
-              <Text fontSize="$3" color="$text" marginBottom="$2">
+            <YStack marginBottom="$2">
+              <Text fontSize="$3" color="$color12" marginBottom="$1">
                 商品标题
               </Text>
               <Input
                 value={title}
                 onChangeText={setTitle}
                 placeholder="例如：九成新血压计，品牌欧姆龙"
-                backgroundColor="$background"
+                backgroundColor="$color4"
                 borderWidth={1}
-                borderColor="$borderColor"
-                borderRadius="$3"
-                paddingHorizontal="$3"
+                borderColor="$color5"
+                borderRadius="$4"
+                paddingHorizontal="$2"
                 paddingVertical="$2"
                 fontSize="$3"
                 maxLength={50}
               />
-            </View>
+            </YStack>
 
             {/* 商品描述 */}
-            <View marginBottom="$3">
-              <Text fontSize="$3" color="$text" marginBottom="$2">
+            <YStack marginBottom="$2">
+              <Text fontSize="$3" color="$color12" marginBottom="$1">
                 商品描述
               </Text>
               <TextArea
                 value={description}
                 onChangeText={setDescription}
                 placeholder="详细描述商品的功能、外观、使用情况等"
-                backgroundColor="$background"
+                backgroundColor="$color4"
                 borderWidth={1}
-                borderColor="$borderColor"
-                borderRadius="$3"
-                paddingHorizontal="$3"
+                borderColor="$color5"
+                borderRadius="$4"
+                paddingHorizontal="$2"
                 paddingVertical="$2"
                 fontSize="$3"
                 numberOfLines={5}
                 maxLength={500}
               />
-            </View>
+            </YStack>
 
             {/* 商品分类 */}
-            <View marginBottom="$3">
-              <Text fontSize="$3" color="$text" marginBottom="$2">
+            <YStack marginBottom="$2">
+              <Text fontSize="$3" color="$color12" marginBottom="$1">
                 商品分类
               </Text>
-              <XStack flexWrap="wrap" gap="$2">
+              <XStack flexWrap="wrap" gap="$1.5">
                 {categoryOptions.map((option) => (
-                  <TouchableOpacity
+                  <Pressable
                     key={option.value}
                     onPress={() => setCategory(option.value)}
                   >
                     <View
-                      backgroundColor={
-                        category === option.value ? COLORS.primary : '$background'
-                      }
-                      paddingHorizontal="$3"
-                      paddingVertical="$2"
-                      borderRadius="$3"
+                      backgroundColor={category === option.value ? primaryColor : '$color4'}
+                      paddingHorizontal="$2"
+                      paddingVertical="$1.5"
+                      borderRadius="$10"
                       borderWidth={1}
-                      borderColor={
-                        category === option.value ? COLORS.primary : '$borderColor'
-                      }
+                      borderColor={category === option.value ? primaryColor : '$color5'}
                     >
                       <Text
                         fontSize="$3"
-                        color={category === option.value ? 'white' : '$text'}
+                        color={category === option.value ? 'white' : '$color12'}
+                        fontWeight={category === option.value ? '500' : '400'}
                       >
                         {option.label}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
               </XStack>
-            </View>
+            </YStack>
 
             {/* 商品成色 */}
-            <View>
-              <Text fontSize="$3" color="$text" marginBottom="$2">
+            <YStack>
+              <Text fontSize="$3" color="$color12" marginBottom="$1">
                 商品成色
               </Text>
-              <XStack flexWrap="wrap" gap="$2">
+              <XStack flexWrap="wrap" gap="$1.5">
                 {conditionOptions.map((option) => (
-                  <TouchableOpacity
+                  <Pressable
                     key={option.value}
                     onPress={() => setCondition(option.value)}
                   >
                     <View
-                      backgroundColor={
-                        condition === option.value ? COLORS.success : '$background'
-                      }
-                      paddingHorizontal="$3"
-                      paddingVertical="$2"
-                      borderRadius="$3"
+                      backgroundColor={condition === option.value ? successColor : '$color4'}
+                      paddingHorizontal="$2"
+                      paddingVertical="$1.5"
+                      borderRadius="$10"
                       borderWidth={1}
-                      borderColor={
-                        condition === option.value ? COLORS.success : '$borderColor'
-                      }
+                      borderColor={condition === option.value ? successColor : '$color5'}
                     >
                       <Text
                         fontSize="$3"
-                        color={condition === option.value ? 'white' : '$text'}
+                        color={condition === option.value ? 'white' : '$color12'}
+                        fontWeight={condition === option.value ? '500' : '400'}
                       >
                         {option.label}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                  </Pressable>
                 ))}
               </XStack>
-            </View>
-          </Card>
+            </YStack>
+          </View>
 
-          {/* 价格信息 */}
-          <Card
-            padding="$4"
-            borderRadius="$4"
-            backgroundColor="$surface"
+          {/* 价格信息卡片 */}
+          <View
+            padding="$2"
+            borderRadius="$5"
+            backgroundColor="$color2"
             borderWidth={1}
-            borderColor="$borderColor"
+            borderColor="$color5"
           >
-            <H3 fontSize="$5" color="$text" fontWeight="600" marginBottom="$3">
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               价格信息
-            </H3>
+            </Text>
 
             {/* 免费赠送开关 */}
-            <TouchableOpacity onPress={() => setIsFree(!isFree)}>
+            <Pressable onPress={() => setIsFree(!isFree)}>
               <XStack
-                space="$2"
+                gap="$1.5"
                 alignItems="center"
-                backgroundColor="$background"
-                padding="$3"
-                borderRadius="$3"
+                backgroundColor="$color4"
+                padding="$2"
+                borderRadius="$4"
                 borderWidth={1}
-                borderColor={isFree ? COLORS.success : '$borderColor'}
-                marginBottom="$3"
+                borderColor={isFree ? successColor : '$color5'}
+                marginBottom="$2"
               >
-                <Tag
-                  size={20}
-                  color={isFree ? COLORS.success : COLORS.textSecondary}
-                />
+                <Tag size={18} color={isFree ? successColor : color10} />
                 <Text
                   flex={1}
                   fontSize="$3"
-                  color={isFree ? COLORS.success : '$text'}
+                  color={isFree ? successColor : '$color12'}
                   fontWeight={isFree ? '600' : '400'}
                 >
                   免费赠送
@@ -380,34 +439,30 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
                 <View
                   width={20}
                   height={20}
-                  borderRadius={4}
+                  borderRadius={10}
                   borderWidth={2}
-                  borderColor={isFree ? COLORS.success : '$borderColor'}
-                  backgroundColor={isFree ? COLORS.success : 'transparent'}
+                  borderColor={isFree ? successColor : '$color5'}
+                  backgroundColor={isFree ? successColor : 'transparent'}
                   justifyContent="center"
                   alignItems="center"
                 >
-                  {isFree && (
-                    <Text color="white" fontSize="$2">
-                      ✓
-                    </Text>
-                  )}
+                  {isFree && <Check size={12} color="white" />}
                 </View>
               </XStack>
-            </TouchableOpacity>
+            </Pressable>
 
             {/* 价格输入 */}
             {!isFree && (
               <>
-                <View marginBottom="$3">
-                  <XStack space="$2" alignItems="center" marginBottom="$2">
-                    <DollarSign size={16} color={COLORS.textSecondary} />
-                    <Text fontSize="$3" color="$text">
+                <YStack marginBottom="$2">
+                  <XStack gap="$1" alignItems="center" marginBottom="$1">
+                    <DollarSign size={14} color={color10} />
+                    <Text fontSize="$3" color="$color12">
                       出售价格
                     </Text>
                   </XStack>
-                  <XStack space="$2" alignItems="center">
-                    <Text fontSize="$4" color="$text">
+                  <XStack gap="$1.5" alignItems="center">
+                    <Text fontSize="$4" color="$color12" fontWeight="600">
                       ¥
                     </Text>
                     <Input
@@ -415,24 +470,24 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
                       onChangeText={setCurrentPrice}
                       placeholder="请输入价格"
                       keyboardType="numeric"
-                      backgroundColor="$background"
+                      backgroundColor="$color4"
                       borderWidth={1}
-                      borderColor="$borderColor"
-                      borderRadius="$3"
-                      paddingHorizontal="$3"
+                      borderColor="$color5"
+                      borderRadius="$4"
+                      paddingHorizontal="$2"
                       paddingVertical="$2"
                       fontSize="$3"
                       flex={1}
                     />
                   </XStack>
-                </View>
+                </YStack>
 
-                <View marginBottom="$3">
-                  <Text fontSize="$3" color="$text" marginBottom="$2">
+                <YStack marginBottom="$2">
+                  <Text fontSize="$3" color="$color12" marginBottom="$1">
                     原价（可选）
                   </Text>
-                  <XStack space="$2" alignItems="center">
-                    <Text fontSize="$4" color="$text">
+                  <XStack gap="$1.5" alignItems="center">
+                    <Text fontSize="$4" color="$color12" fontWeight="600">
                       ¥
                     </Text>
                     <Input
@@ -440,192 +495,241 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
                       onChangeText={setOriginalPrice}
                       placeholder="购买时的价格"
                       keyboardType="numeric"
-                      backgroundColor="$background"
+                      backgroundColor="$color4"
                       borderWidth={1}
-                      borderColor="$borderColor"
-                      borderRadius="$3"
-                      paddingHorizontal="$3"
+                      borderColor="$color5"
+                      borderRadius="$4"
+                      paddingHorizontal="$2"
                       paddingVertical="$2"
                       fontSize="$3"
                       flex={1}
                     />
                   </XStack>
-                </View>
+                </YStack>
 
                 {/* 可议价开关 */}
-                <TouchableOpacity onPress={() => setIsNegotiable(!isNegotiable)}>
-                  <XStack space="$2" alignItems="center">
+                <Pressable onPress={() => setIsNegotiable(!isNegotiable)}>
+                  <XStack gap="$1.5" alignItems="center">
                     <View
                       width={20}
                       height={20}
-                      borderRadius={4}
+                      borderRadius={10}
                       borderWidth={2}
-                      borderColor={isNegotiable ? COLORS.primary : '$borderColor'}
-                      backgroundColor={isNegotiable ? COLORS.primary : 'transparent'}
+                      borderColor={isNegotiable ? primaryColor : '$color5'}
+                      backgroundColor={isNegotiable ? primaryColor : 'transparent'}
                       justifyContent="center"
                       alignItems="center"
                     >
-                      {isNegotiable && (
-                        <Text color="white" fontSize="$2">
-                          ✓
-                        </Text>
-                      )}
+                      {isNegotiable && <Check size={12} color="white" />}
                     </View>
-                    <Text fontSize="$3" color="$text">
+                    <Text fontSize="$3" color="$color12">
                       价格可议
                     </Text>
                   </XStack>
-                </TouchableOpacity>
+                </Pressable>
               </>
             )}
-          </Card>
+          </View>
 
-          {/* 使用情况 */}
-          <Card
-            padding="$4"
-            borderRadius="$4"
-            backgroundColor="$surface"
+          {/* 使用情况卡片 */}
+          <View
+            padding="$2"
+            borderRadius="$5"
+            backgroundColor="$color2"
             borderWidth={1}
-            borderColor="$borderColor"
+            borderColor="$color5"
           >
-            <H3 fontSize="$5" color="$text" fontWeight="600" marginBottom="$3">
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               使用情况（可选）
-            </H3>
+            </Text>
 
-            {/* 购买时间 */}
-            <View marginBottom="$3">
-              <XStack space="$2" alignItems="center" marginBottom="$2">
-                <Clock size={16} color={COLORS.textSecondary} />
-                <Text fontSize="$3" color="$text">
+            {/* 购买时间 - 日期选择器 */}
+            <YStack marginBottom="$2">
+              <XStack gap="$1" alignItems="center" marginBottom="$1">
+                <Calendar size={14} color={color10} />
+                <Text fontSize="$3" color="$color12">
                   购买时间
                 </Text>
               </XStack>
-              <Input
-                value={purchaseTime}
-                onChangeText={setPurchaseTime}
-                placeholder="例如：2023年3月"
-                backgroundColor="$background"
-                borderWidth={1}
-                borderColor="$borderColor"
-                borderRadius="$3"
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                fontSize="$3"
-              />
-            </View>
+
+              {Platform.OS === 'web' ? (
+                // Web端使用原生input type="month"
+                <View
+                  backgroundColor="$color4"
+                  borderWidth={1}
+                  borderColor="$color5"
+                  borderRadius="$4"
+                  paddingHorizontal="$2"
+                  paddingVertical="$2"
+                >
+                  <input
+                    type="month"
+                    value={purchaseDate ? `${purchaseDate.getFullYear()}-${String(purchaseDate.getMonth() + 1).padStart(2, '0')}` : ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const [year, month] = e.target.value.split('-');
+                        setPurchaseDate(new Date(parseInt(year), parseInt(month) - 1, 1));
+                      } else {
+                        setPurchaseDate(null);
+                      }
+                    }}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      fontSize: 14,
+                      color: purchaseDate ? color12 : color10,
+                      width: '100%',
+                      outline: 'none',
+                    }}
+                    placeholder="选择购买月份"
+                  />
+                </View>
+              ) : (
+                // 移动端使用原生日期选择器
+                <>
+                  <Pressable onPress={() => setShowDatePicker(true)}>
+                    <View
+                      backgroundColor="$color4"
+                      borderWidth={1}
+                      borderColor="$color5"
+                      borderRadius="$4"
+                      paddingHorizontal="$2"
+                      paddingVertical="$2"
+                    >
+                      <XStack justifyContent="space-between" alignItems="center">
+                        <Text fontSize="$3" color={purchaseDate ? '$color12' : '$color10'}>
+                          {purchaseDate ? formatDate(purchaseDate) : '选择购买月份'}
+                        </Text>
+                        <ChevronDown size={16} color={color10} />
+                      </XStack>
+                    </View>
+                  </Pressable>
+
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={purchaseDate || new Date()}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={handleDateChange}
+                      maximumDate={new Date()}
+                    />
+                  )}
+                </>
+              )}
+            </YStack>
 
             {/* 使用时长 */}
-            <View>
-              <Text fontSize="$3" color="$text" marginBottom="$2">
+            <YStack>
+              <Text fontSize="$3" color="$color12" marginBottom="$1">
                 使用时长
               </Text>
               <Input
                 value={usageDuration}
                 onChangeText={setUsageDuration}
                 placeholder="例如：使用1年"
-                backgroundColor="$background"
+                backgroundColor="$color4"
                 borderWidth={1}
-                borderColor="$borderColor"
-                borderRadius="$3"
-                paddingHorizontal="$3"
+                borderColor="$color5"
+                borderRadius="$4"
+                paddingHorizontal="$2"
                 paddingVertical="$2"
                 fontSize="$3"
               />
-            </View>
-          </Card>
+            </YStack>
+          </View>
 
-          {/* 交易信息 */}
-          <Card
-            padding="$4"
-            borderRadius="$4"
-            backgroundColor="$surface"
+          {/* 交易信息卡片 */}
+          <View
+            padding="$2"
+            borderRadius="$5"
+            backgroundColor="$color2"
             borderWidth={1}
-            borderColor="$borderColor"
+            borderColor="$color5"
           >
-            <H3 fontSize="$5" color="$text" fontWeight="600" marginBottom="$3">
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
               交易信息
-            </H3>
+            </Text>
 
             {/* 交易方式 */}
-            <View marginBottom="$3">
-              <Text fontSize="$3" color="$text" marginBottom="$2">
+            <YStack marginBottom="$2">
+              <Text fontSize="$3" color="$color12" marginBottom="$1">
                 交易方式（可多选）
               </Text>
-              <XStack space="$2">
-                <TouchableOpacity
+              <XStack gap="$2">
+                <Pressable
                   style={{ flex: 1 }}
                   onPress={() => handleTradeMethodToggle(TradeMethod.PICKUP)}
                 >
                   <View
                     flex={1}
                     backgroundColor={
-                      tradeMethods.includes(TradeMethod.PICKUP)
-                        ? COLORS.primary
-                        : '$background'
+                      tradeMethods.includes(TradeMethod.PICKUP) ? primaryColor : '$color4'
                     }
-                    paddingVertical="$3"
-                    borderRadius="$3"
+                    paddingVertical="$2"
+                    borderRadius="$10"
                     borderWidth={1}
                     borderColor={
-                      tradeMethods.includes(TradeMethod.PICKUP)
-                        ? COLORS.primary
-                        : '$borderColor'
+                      tradeMethods.includes(TradeMethod.PICKUP) ? primaryColor : '$color5'
                     }
                     justifyContent="center"
                     alignItems="center"
                   >
-                    <Text
-                      fontSize="$3"
-                      color={
-                        tradeMethods.includes(TradeMethod.PICKUP) ? 'white' : '$text'
-                      }
-                      fontWeight="600"
-                    >
-                      同城自取
-                    </Text>
+                    <XStack gap="$1" alignItems="center">
+                      <Hand
+                        size={16}
+                        color={tradeMethods.includes(TradeMethod.PICKUP) ? 'white' : color10}
+                      />
+                      <Text
+                        fontSize="$3"
+                        color={tradeMethods.includes(TradeMethod.PICKUP) ? 'white' : '$color12'}
+                        fontWeight="500"
+                      >
+                        同城自取
+                      </Text>
+                    </XStack>
                   </View>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </Pressable>
+                <Pressable
                   style={{ flex: 1 }}
                   onPress={() => handleTradeMethodToggle(TradeMethod.DELIVERY)}
                 >
                   <View
                     flex={1}
                     backgroundColor={
-                      tradeMethods.includes(TradeMethod.DELIVERY)
-                        ? COLORS.primary
-                        : '$background'
+                      tradeMethods.includes(TradeMethod.DELIVERY) ? primaryColor : '$color4'
                     }
-                    paddingVertical="$3"
-                    borderRadius="$3"
+                    paddingVertical="$2"
+                    borderRadius="$10"
                     borderWidth={1}
                     borderColor={
-                      tradeMethods.includes(TradeMethod.DELIVERY)
-                        ? COLORS.primary
-                        : '$borderColor'
+                      tradeMethods.includes(TradeMethod.DELIVERY) ? primaryColor : '$color5'
                     }
                     justifyContent="center"
                     alignItems="center"
                   >
-                    <Text
-                      fontSize="$3"
-                      color={
-                        tradeMethods.includes(TradeMethod.DELIVERY) ? 'white' : '$text'
-                      }
-                      fontWeight="600"
-                    >
-                      快递邮寄
-                    </Text>
+                    <XStack gap="$1" alignItems="center">
+                      <Truck
+                        size={16}
+                        color={tradeMethods.includes(TradeMethod.DELIVERY) ? 'white' : color10}
+                      />
+                      <Text
+                        fontSize="$3"
+                        color={tradeMethods.includes(TradeMethod.DELIVERY) ? 'white' : '$color12'}
+                        fontWeight="500"
+                      >
+                        快递邮寄
+                      </Text>
+                    </XStack>
                   </View>
-                </TouchableOpacity>
+                </Pressable>
               </XStack>
-            </View>
+            </YStack>
 
             {/* 交易地址 */}
-            <View>
-              <XStack space="$2" alignItems="center" marginBottom="$2">
-                <MapPin size={16} color={COLORS.textSecondary} />
-                <Text fontSize="$3" color="$text">
+            <YStack>
+              <XStack gap="$1" alignItems="center" marginBottom="$1">
+                <MapPin size={14} color={color10} />
+                <Text fontSize="$3" color="$color12">
                   交易地址
                 </Text>
               </XStack>
@@ -633,42 +737,69 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
                 value={address}
                 onChangeText={setAddress}
                 placeholder="详细地址"
-                backgroundColor="$background"
+                backgroundColor="$color4"
                 borderWidth={1}
-                borderColor="$borderColor"
-                borderRadius="$3"
-                paddingHorizontal="$3"
+                borderColor="$color5"
+                borderRadius="$4"
+                paddingHorizontal="$2"
                 paddingVertical="$2"
                 fontSize="$3"
-                marginBottom="$2"
+                marginBottom="$1.5"
               />
               <Input
                 value={district}
                 onChangeText={setDistrict}
                 placeholder="所在区域（如：南山区）"
-                backgroundColor="$background"
+                backgroundColor="$color4"
                 borderWidth={1}
-                borderColor="$borderColor"
-                borderRadius="$3"
-                paddingHorizontal="$3"
+                borderColor="$color5"
+                borderRadius="$4"
+                paddingHorizontal="$2"
                 paddingVertical="$2"
                 fontSize="$3"
               />
-            </View>
-          </Card>
+            </YStack>
+          </View>
 
           {/* 发布提示 */}
           <View
-            backgroundColor={`${COLORS.primary}10`}
-            padding="$3"
-            borderRadius="$3"
+            backgroundColor="rgba(107, 91, 123, 0.075)"
+            padding="$2"
+            borderRadius="$4"
           >
-            <Text fontSize="$2" color="$textSecondary" lineHeight="$1">
-              💡 发布后，您的商品会展示在邻里闲物市场。感兴趣的邻居可以联系您洽谈交易。
+            <Text fontSize="$2" color="$color10" lineHeight={18}>
+              发布后，您的商品会展示在邻里闲物市场。感兴趣的邻居可以联系您洽谈交易。
             </Text>
           </View>
         </YStack>
       </ScrollView>
-    </SafeAreaView>
+
+      {/* 底部悬停发布按钮 */}
+      <View
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
+        backgroundColor="$color2"
+        paddingHorizontal="$2.5"
+        paddingTop="$2"
+        paddingBottom={insets.bottom + 10}
+        borderTopWidth={1}
+        borderTopColor="$color5"
+      >
+        <Pressable onPress={handlePublish} disabled={loading}>
+          <View
+            backgroundColor={loading ? '$color5' : primaryColor}
+            paddingVertical="$3"
+            borderRadius="$10"
+            alignItems="center"
+          >
+            <Text fontSize="$4" color="white" fontWeight="600">
+              {loading ? '发布中...' : '发布闲置物品'}
+            </Text>
+          </View>
+        </Pressable>
+      </View>
+    </View>
   );
 };

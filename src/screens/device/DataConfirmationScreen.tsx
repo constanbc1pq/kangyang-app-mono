@@ -145,9 +145,9 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
     const rangeDesc = getFieldRangeDescription(parsedData.deviceType, field);
 
     return (
-      <View key={field} marginBottom="$3">
+      <View key={field} marginBottom="$2">
         <XStack
-          padding="$3"
+          padding="$2"
           borderRadius="$3"
           backgroundColor={isAbnormal ? `${COLORS.error}10` : '$surface'}
           borderWidth={1}
@@ -210,7 +210,8 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
       <XStack
         justifyContent="space-between"
         alignItems="center"
-        padding="$4"
+        paddingHorizontal="$2.5"
+        paddingVertical="$2"
         backgroundColor="white"
         borderBottomWidth={1}
         borderBottomColor="$borderColor"
@@ -239,11 +240,11 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
       </XStack>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack padding="$4" space="$4">
+        <YStack padding="$2.5" space="$2">
           {/* 设备信息 */}
           <View
             backgroundColor="white"
-            padding="$4"
+            padding="$2"
             borderRadius="$3"
             borderWidth={1}
             borderColor="$borderColor"
@@ -272,7 +273,7 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
             {parsedData.errors.length > 0 && (
               <View
                 backgroundColor={`${COLORS.warning}15`}
-                padding="$3"
+                padding="$2"
                 borderRadius="$3"
                 borderWidth={1}
                 borderColor={COLORS.warning}
@@ -307,13 +308,13 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
 
             <Pressable onPress={() => setShowDatePicker(true)}>
               <XStack
-                padding="$3"
+                padding="$2"
                 borderRadius="$3"
                 backgroundColor="$surface"
                 borderWidth={1}
                 borderColor="$borderColor"
                 alignItems="center"
-                space="$3"
+                space="$2"
               >
                 <View
                   width={40}
@@ -359,7 +360,7 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
           {/* 提示信息 */}
           <View
             backgroundColor="$background"
-            padding="$3"
+            padding="$2"
             borderRadius="$3"
             marginTop="$2"
           >
@@ -378,10 +379,10 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
           </View>
 
           {/* 底部操作按钮 */}
-          <YStack space="$3" marginTop="$4" marginBottom="$8">
+          <YStack space="$2" marginTop="$2" marginBottom="$2">
             <Pressable onPress={handleConfirm} disabled={saving}>
               <View
-                padding="$4"
+                padding="$2"
                 borderRadius="$3"
                 backgroundColor={saving ? COLORS.borderColor : COLORS.primary}
                 alignItems="center"
@@ -398,7 +399,7 @@ export const DataConfirmationScreen: React.FC<DataConfirmationScreenProps> = ({
 
             <Pressable onPress={handleRetake}>
               <View
-                padding="$4"
+                padding="$2"
                 borderRadius="$3"
                 backgroundColor="$borderColor"
                 alignItems="center"

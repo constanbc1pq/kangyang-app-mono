@@ -1,14 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   YStack,
   XStack,
   Text,
   Card,
   View,
-  H3,
   Theme,
   ScrollView,
   Button,
+  useTheme,
 } from 'tamagui';
 import {
   Pressable,
@@ -17,6 +17,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -35,11 +36,13 @@ import {
   Star,
   Shield,
   Cpu,
+  Crown,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useAIQuestionLimit } from '@/hooks/useMembershipBenefit';
 import { CaregiverSelectCard } from '@/components/CaregiverSelectCard';
 import { PackageSelectCard } from '@/components/PackageSelectCard';
+import { BottomSheet } from '@/components/BottomSheet';
 import { getCaregiversByServiceType, servicePackages, getCaregiverById, getPackageById } from '@/services/elderlyService';
 import type { Caregiver, ServicePackage, ServiceType } from '@/types/elderly';
 
@@ -133,6 +136,14 @@ interface ConversationState {
 export const AIConsultationScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<AIConsultationScreenRouteProp>();
+  const theme = useTheme();
+
+  // 主题色值
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const textColor = theme.color12?.val;
+  const textSecondaryColor = theme.color10?.val;
 
   // 根据来源决定初始消息
   const getInitialMessage = (): Message => {
@@ -169,6 +180,31 @@ export const AIConsultationScreen: React.FC = () => {
   const [initialMessageSent, setInitialMessageSent] = useState(false);
   const [selectedCaregiverId, setSelectedCaregiverId] = useState<string | null>(null);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+
+  // AI问答次数限制 Hook
+  const {
+    canUse: canUseAI,
+    remaining: aiRemaining,
+    limit: aiLimit,
+    message: aiLimitMessage,
+    isUnlimited: isAIUnlimited,
+    recordUsage: recordAIUsage,
+  } = useAIQuestionLimit();
+
+  // 显示升级提示
+  const showUpgradeAlert = useCallback(() => {
+    Alert.alert(
+      '今日AI问答次数已用完',
+      `免费用户每日可使用${aiLimit}次AI问答。升级会员可无限使用！`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '升级会员',
+          onPress: () => navigation.navigate('MembershipCenter' as never),
+        },
+      ]
+    );
+  }, [aiLimit, navigation]);
 
   // Conversation state management
   const [conversationState, setConversationState] = useState<ConversationState>({
@@ -637,6 +673,12 @@ export const AIConsultationScreen: React.FC = () => {
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
 
+    // 检查AI问答次数限制
+    if (!canUseAI) {
+      showUpgradeAlert();
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -647,6 +689,9 @@ export const AIConsultationScreen: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsTyping(true);
+
+    // 记录AI使用次数
+    await recordAIUsage();
 
     // 滚动到底部
     setTimeout(() => {
@@ -731,61 +776,64 @@ export const AIConsultationScreen: React.FC = () => {
 
   return (
     <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-        {/* 顶部导航栏 */}
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+        {/* 顶部导航栏 - 按照CLAUDE.md规范 */}
         <View
-          backgroundColor="$cardBg"
-          paddingHorizontal="$4"
-          paddingVertical="$3"
+          backgroundColor="$color2"
           borderBottomWidth={1}
-          borderBottomColor="$borderColor"
+          borderBottomColor="$color5"
         >
-            <XStack justifyContent="space-between" alignItems="center">
+          <XStack
+            height={56}
+            paddingHorizontal="$2.5"
+            justifyContent="space-between"
+            alignItems="center"
+          >
               {/* 返回按钮 */}
               <Pressable onPress={() => navigation.goBack()}>
-                <ArrowLeft size={24} color={COLORS.text} />
+                <ArrowLeft size={24} color={textColor} />
               </Pressable>
 
               {/* 标题和状态 */}
-              <XStack alignItems="center" flex={1} marginHorizontal="$3" space="$2">
+              <XStack alignItems="center" flex={1} marginHorizontal="$2" gap="$2">
                 <View
                   width={32}
                   height={32}
-                  backgroundColor={COLORS.primary}
-                  borderRadius={16}
+                  backgroundColor="$primary"
+                  borderRadius="$12"
                   justifyContent="center"
                   alignItems="center"
                 >
                   <Bot size={16} color="white" />
                 </View>
                 <YStack flex={1}>
-                  <Text fontSize="$4" fontWeight="600" color="$text" numberOfLines={1}>
+                  <Text fontSize="$4" fontWeight="500" color="$color12" numberOfLines={1}>
                     AI健康咨询
                   </Text>
-                  <XStack space="$2" alignItems="center">
+                  <XStack gap="$2" alignItems="center">
                     <View
-                      backgroundColor={getCurrentModel().isRecommended ? COLORS.primary : COLORS.surface}
+                      backgroundColor={getCurrentModel().isRecommended ? '$primary' : '$color2'}
                       paddingHorizontal="$2"
                       paddingVertical="$0.5"
-                      borderRadius="$2"
+                      borderRadius="$10"
                     >
                       <Text
                         fontSize="$1"
-                        color={getCurrentModel().isRecommended ? "white" : "$text"}
+                        color={getCurrentModel().isRecommended ? "white" : "$color12"}
                         fontWeight="500"
                         numberOfLines={1}
                       >
                         {getCurrentModel().name}
                       </Text>
                     </View>
-                    <XStack space="$1" alignItems="center">
+                    <XStack gap="$1" alignItems="center">
                       <View
                         width={6}
                         height={6}
-                        backgroundColor={COLORS.success}
+                        backgroundColor="$success"
                         borderRadius={3}
                       />
-                      <Text fontSize="$1" color="$textSecondary">
+                      <Text fontSize="$1" color="$color10">
                         在线
                       </Text>
                     </XStack>
@@ -798,15 +846,15 @@ export const AIConsultationScreen: React.FC = () => {
                 <View
                   width={40}
                   height={40}
-                  borderRadius={20}
+                  borderRadius="$12"
                   justifyContent="center"
                   alignItems="center"
-                  backgroundColor="$surface"
+                  backgroundColor="$color4"
                 >
-                  <Cpu size={20} color={COLORS.text} />
+                  <Cpu size={20} color={textColor} />
                 </View>
               </TouchableOpacity>
-            </XStack>
+          </XStack>
         </View>
 
         <View style={{ flex: 1 }}>
@@ -815,192 +863,30 @@ export const AIConsultationScreen: React.FC = () => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
           >
-          {/* 模型选择器 */}
-          {showModelSelector && (
-            <View
-              position="absolute"
-              top={0}
-              left={0}
-              right={0}
-              backgroundColor="rgba(0,0,0,0.5)"
-              zIndex={1000}
-              paddingTop="$20"
-              paddingHorizontal="$4"
-            >
-              <Pressable onPress={() => setShowModelSelector(false)} style={{ flex: 1 }}>
-                <View />
-              </Pressable>
-              <Card
-                padding="$4"
-                borderRadius="$6"
-                backgroundColor="$cardBg"
-                marginBottom="$4"
-              >
-                <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-                  <H3 fontSize="$5" fontWeight="600" color="$text">
-                    选择AI模型
-                  </H3>
-                  <TouchableOpacity onPress={() => setShowModelSelector(false)}>
-                    <View
-                      width={32}
-                      height={32}
-                      borderRadius={16}
-                      backgroundColor="$surface"
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Text fontSize="$4" color="$textSecondary">×</Text>
-                    </View>
-                  </TouchableOpacity>
-                </XStack>
-
-                <YStack space="$3">
-                  {aiModels.map((model) => {
-                    const IconComponent = model.icon;
-                    const isSelected = selectedModel === model.id;
-
-                    return (
-                      <TouchableOpacity
-                        key={model.id}
-                        onPress={() => {
-                          setSelectedModel(model.id);
-                          setShowModelSelector(false);
-                        }}
-                      >
-                        <View
-                          padding="$4"
-                          borderRadius="$4"
-                          backgroundColor={isSelected ? COLORS.primaryLight : '$surface'}
-                          borderWidth={2}
-                          borderColor={isSelected ? COLORS.primary : '$borderColor'}
-                        >
-                          <XStack space="$3" alignItems="flex-start">
-                            <View
-                              width={48}
-                              height={48}
-                              backgroundColor={isSelected ? 'rgba(255,255,255,0.2)' : COLORS.primary}
-                              borderRadius={24}
-                              justifyContent="center"
-                              alignItems="center"
-                            >
-                              <IconComponent
-                                size={24}
-                                color={isSelected ? 'white' : 'white'}
-                              />
-                            </View>
-
-                            <YStack flex={1} space="$2">
-                              <XStack justifyContent="space-between" alignItems="center">
-                                <Text
-                                  fontSize="$5"
-                                  fontWeight="600"
-                                  color={isSelected ? 'white' : '$text'}
-                                >
-                                  {model.name}
-                                </Text>
-                                <XStack space="$2" alignItems="center">
-                                  {model.isRecommended && (
-                                    <View
-                                      backgroundColor={COLORS.success}
-                                      paddingHorizontal="$2"
-                                      paddingVertical="$1"
-                                      borderRadius="$2"
-                                    >
-                                      <Text fontSize="$1" color="white" fontWeight="500">
-                                        推荐
-                                      </Text>
-                                    </View>
-                                  )}
-                                  {model.isPremium && (
-                                    <View
-                                      backgroundColor={COLORS.warning}
-                                      paddingHorizontal="$2"
-                                      paddingVertical="$1"
-                                      borderRadius="$2"
-                                    >
-                                      <Text fontSize="$1" color="white" fontWeight="500">
-                                        专业版
-                                      </Text>
-                                    </View>
-                                  )}
-                                </XStack>
-                              </XStack>
-
-                              <Text
-                                fontSize="$3"
-                                color={isSelected ? 'rgba(255,255,255,0.8)' : '$textSecondary'}
-                                lineHeight="$2"
-                              >
-                                {model.description}
-                              </Text>
-
-                              <XStack flexWrap="wrap" gap="$2" marginTop="$2">
-                                {model.features.map((feature, index) => (
-                                  <View
-                                    key={index}
-                                    backgroundColor={isSelected ? 'rgba(255,255,255,0.2)' : '$background'}
-                                    paddingHorizontal="$2"
-                                    paddingVertical="$1"
-                                    borderRadius="$2"
-                                  >
-                                    <Text
-                                      fontSize="$2"
-                                      color={isSelected ? 'white' : '$textSecondary'}
-                                    >
-                                      {feature}
-                                    </Text>
-                                  </View>
-                                ))}
-                              </XStack>
-
-                              <XStack justifyContent="space-between" marginTop="$2">
-                                <Text
-                                  fontSize="$2"
-                                  color={isSelected ? 'rgba(255,255,255,0.8)' : '$textSecondary'}
-                                >
-                                  准确率: {model.accuracy}%
-                                </Text>
-                                <Text
-                                  fontSize="$2"
-                                  color={isSelected ? 'rgba(255,255,255,0.8)' : '$textSecondary'}
-                                >
-                                  响应: {model.responseTime}
-                                </Text>
-                              </XStack>
-                            </YStack>
-                          </XStack>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </YStack>
-              </Card>
-            </View>
-          )}
 
           {/* 聊天消息区域 */}
           <ScrollView
             ref={scrollViewRef}
             flex={1}
-            padding="$4"
+            padding="$2.5"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
           >
-            <YStack space="$5">
+            <YStack gap="$2">
               {messages.map((message) => (
                 <XStack
                   key={message.id}
                   justifyContent={message.type === 'user' ? 'flex-end' : 'flex-start'}
                   alignItems="flex-end"
-                  space="$2"
+                  gap="$2"
                   marginBottom="$2"
                 >
                   {message.type === 'ai' && (
                     <View
                       width={32}
                       height={32}
-                      backgroundColor={COLORS.primary}
-                      borderRadius={16}
+                      backgroundColor="$primary"
+                      borderRadius="$12"
                       justifyContent="center"
                       alignItems="center"
                     >
@@ -1008,19 +894,19 @@ export const AIConsultationScreen: React.FC = () => {
                     </View>
                   )}
 
-                  <YStack maxWidth="80%" space="$2">
+                  <YStack maxWidth="80%" gap="$2">
                     <View
                       backgroundColor={
-                        message.type === 'user' ? COLORS.primary : '$surface'
+                        message.type === 'user' ? '$primary' : '$color2'
                       }
-                      padding="$3"
-                      borderRadius="$4"
-                      borderTopLeftRadius={message.type === 'ai' ? '$1' : '$4'}
-                      borderTopRightRadius={message.type === 'user' ? '$1' : '$4'}
+                      padding="$2"
+                      borderRadius="$6"
+                      borderTopLeftRadius={message.type === 'ai' ? '$1' : '$6'}
+                      borderTopRightRadius={message.type === 'user' ? '$1' : '$6'}
                     >
                       <Text
                         fontSize="$3"
-                        color={message.type === 'user' ? 'white' : '$text'}
+                        color={message.type === 'user' ? 'white' : '$color12'}
                         lineHeight="$2"
                       >
                         {message.content}
@@ -1030,7 +916,7 @@ export const AIConsultationScreen: React.FC = () => {
                         color={
                           message.type === 'user'
                             ? 'rgba(255,255,255,0.7)'
-                            : '$textSecondary'
+                            : '$color10'
                         }
                         marginTop="$1"
                       >
@@ -1046,25 +932,25 @@ export const AIConsultationScreen: React.FC = () => {
                       <>
                         {/* 如果是第一条欢迎消息（服务类型选择），使用卡片样式 */}
                         {message.id === '1' ? (
-                          <YStack gap="$2" paddingTop="$3" width="100%">
+                          <YStack gap="$2" paddingTop="$2" width="100%">
                             {message.quickReplies.map((reply) => {
                               const IconComponent = reply.icon;
                               return (
                                 <Pressable key={reply.id} onPress={() => handleQuickReply(reply)}>
                                   <View
-                                    backgroundColor="$surface"
-                                    padding="$3"
-                                    borderRadius="$4"
+                                    backgroundColor="$color2"
+                                    padding="$2"
+                                    borderRadius="$6"
                                     borderWidth={1}
-                                    borderColor="$borderColor"
+                                    borderColor="$color5"
                                   >
-                                    <XStack alignItems="center" gap="$3">
+                                    <XStack alignItems="center" gap="$2">
                                       {/* 图标 */}
                                       <View
                                         width={36}
                                         height={36}
-                                        backgroundColor={COLORS.primaryLight}
-                                        borderRadius={18}
+                                        backgroundColor="$primary"
+                                        borderRadius="$12"
                                         justifyContent="center"
                                         alignItems="center"
                                       >
@@ -1073,19 +959,19 @@ export const AIConsultationScreen: React.FC = () => {
 
                                       {/* 文本内容 */}
                                       <YStack flex={1}>
-                                        <Text fontSize="$3" fontWeight="500" color="$text">
+                                        <Text fontSize="$3" fontWeight="500" color="$color12">
                                           {reply.label}
                                         </Text>
                                       </YStack>
 
                                       {/* 右侧提示 */}
                                       <View
-                                        backgroundColor="rgba(200, 85, 240, 0.1)"
+                                        backgroundColor={`${primaryColor}15`}
                                         paddingHorizontal="$2"
                                         paddingVertical="$1"
-                                        borderRadius="$2"
+                                        borderRadius="$10"
                                       >
-                                        <Text fontSize="$1" color={COLORS.primary}>
+                                        <Text fontSize="$1" color="$primary">
                                           点击选择
                                         </Text>
                                       </View>
@@ -1101,14 +987,14 @@ export const AIConsultationScreen: React.FC = () => {
                             {message.quickReplies.map((reply) => (
                               <Pressable key={reply.id} onPress={() => handleQuickReply(reply)}>
                                 <View
-                                  backgroundColor={COLORS.primary}
-                                  paddingHorizontal="$3"
+                                  backgroundColor="$primary"
+                                  paddingHorizontal="$2"
                                   paddingVertical="$2"
-                                  borderRadius="$4"
+                                  borderRadius="$10"
                                   borderWidth={1}
-                                  borderColor={COLORS.primary}
+                                  borderColor="$primary"
                                 >
-                                  <Text fontSize="$3" color="white" fontWeight="600">
+                                  <Text fontSize="$3" color="white" fontWeight="500">
                                     {reply.label}
                                   </Text>
                                 </View>
@@ -1126,7 +1012,7 @@ export const AIConsultationScreen: React.FC = () => {
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ paddingRight: 16 }}
                       >
-                        <XStack space="$3" paddingVertical="$2">
+                        <XStack gap="$2" paddingVertical="$2">
                           {message.interactiveData.caregivers.slice(0, 6).map((caregiver) => (
                             <View key={caregiver.id} width={280}>
                               <CaregiverSelectCard
@@ -1142,7 +1028,7 @@ export const AIConsultationScreen: React.FC = () => {
 
                     {/* 交互式套餐选择卡片 */}
                     {message.type === 'ai' && message.interactiveType === 'package_selection' && message.interactiveData?.packages && (
-                      <YStack space="$3" paddingVertical="$2" width="100%">
+                      <YStack gap="$2" paddingVertical="$2" width="100%">
                         {message.interactiveData.packages.map((pkg) => {
                           // 根据已选择的护理员获取资质类型
                           const caregiver = conversationState.caregiverId
@@ -1168,12 +1054,12 @@ export const AIConsultationScreen: React.FC = () => {
                     <View
                       width={32}
                       height={32}
-                      backgroundColor="$surface"
-                      borderRadius={16}
+                      backgroundColor="$color2"
+                      borderRadius="$12"
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <User size={16} color={COLORS.textSecondary} />
+                      <User size={16} color={textSecondaryColor} />
                     </View>
                   )}
                 </XStack>
@@ -1184,13 +1070,13 @@ export const AIConsultationScreen: React.FC = () => {
                 <XStack
                   justifyContent="flex-start"
                   alignItems="flex-end"
-                  space="$2"
+                  gap="$2"
                 >
                   <View
                     width={32}
                     height={32}
-                    backgroundColor={COLORS.primary}
-                    borderRadius={16}
+                    backgroundColor="$primary"
+                    borderRadius="$12"
                     justifyContent="center"
                     alignItems="center"
                   >
@@ -1198,13 +1084,13 @@ export const AIConsultationScreen: React.FC = () => {
                   </View>
 
                   <View
-                    backgroundColor="$surface"
-                    padding="$3"
-                    borderRadius="$4"
+                    backgroundColor="$color2"
+                    padding="$2"
+                    borderRadius="$6"
                     borderTopLeftRadius="$1"
                   >
-                    <XStack space="$1" alignItems="center">
-                      <Text fontSize="$3" color="$textSecondary">
+                    <XStack gap="$1" alignItems="center">
+                      <Text fontSize="$3" color="$color10">
                         AI助手正在思考
                       </Text>
                       <View
@@ -1213,7 +1099,7 @@ export const AIConsultationScreen: React.FC = () => {
                         justifyContent="center"
                         alignItems="center"
                       >
-                        <Text fontSize="$3" color={COLORS.primary}>
+                        <Text fontSize="$3" color="$primary">
                           ···
                         </Text>
                       </View>
@@ -1224,53 +1110,53 @@ export const AIConsultationScreen: React.FC = () => {
 
               {/* 快捷问题 - 仅在非养老服务来源时显示 */}
               {messages.length === 1 && route.params?.source !== 'elderly_service' && (
-                <YStack space="$3" marginTop="$4">
-                  <XStack space="$2" alignItems="center">
-                    <Sparkles size={16} color={COLORS.primary} />
-                    <Text fontSize="$4" fontWeight="500" color="$text">
+                <YStack gap="$2" marginTop="$2">
+                  <XStack gap="$2" alignItems="center">
+                    <Sparkles size={16} color={primaryColor} />
+                    <Text fontSize="$4" fontWeight="500" color="$color12">
                       常见问题
                     </Text>
                   </XStack>
-                  <YStack space="$2">
+                  <YStack gap="$2">
                     {quickQuestions.map((question) => {
                       const IconComponent = question.icon;
                       return (
                           <Card
                             key={question.id}
-                            padding="$3"
-                            borderRadius="$4"
-                            backgroundColor="$surface"
+                            padding="$2"
+                            borderRadius="$6"
+                            backgroundColor="$color2"
                             borderWidth={1}
-                            borderColor="$borderColor"
+                            borderColor="$color5"
                             pressStyle={{ scale: 0.98 }}
                             onPress={() => handleQuickQuestion(question)}
                           >
-                            <XStack space="$3" alignItems="center">
+                            <XStack gap="$2" alignItems="center">
                               <View
                                 width={36}
                                 height={36}
-                                backgroundColor={COLORS.primaryLight}
-                                borderRadius={18}
+                                backgroundColor="$primary"
+                                borderRadius="$12"
                                 justifyContent="center"
                                 alignItems="center"
                               >
                                 <IconComponent size={18} color="white" />
                               </View>
                               <YStack flex={1}>
-                                <Text fontSize="$3" fontWeight="500" color="$text">
+                                <Text fontSize="$3" fontWeight="500" color="$color12">
                                   {question.text}
                                 </Text>
-                                <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+                                <Text fontSize="$2" color="$color10" marginTop="$1">
                                   {question.category}
                                 </Text>
                               </YStack>
                               <View
-                                backgroundColor="rgba(200, 85, 240, 0.1)"
+                                backgroundColor={`${primaryColor}15`}
                                 paddingHorizontal="$2"
                                 paddingVertical="$1"
-                                borderRadius="$2"
+                                borderRadius="$10"
                               >
-                                <Text fontSize="$1" color={COLORS.primary}>
+                                <Text fontSize="$1" color="$primary">
                                   点击咨询
                                 </Text>
                               </View>
@@ -1282,50 +1168,50 @@ export const AIConsultationScreen: React.FC = () => {
 
                   {/* AI特色功能提示 */}
                   <Card
-                    padding="$4"
-                    borderRadius="$4"
-                    backgroundColor="rgba(200, 85, 240, 0.05)"
+                    padding="$2"
+                    borderRadius="$6"
+                    backgroundColor={`${primaryColor}08`}
                     borderWidth={1}
-                    borderColor="rgba(200, 85, 240, 0.1)"
-                    marginTop="$3"
+                    borderColor={`${primaryColor}15`}
+                    marginTop="$2"
                   >
-                    <XStack space="$3" alignItems="center" marginBottom="$3">
+                    <XStack gap="$2" alignItems="center" marginBottom="$2">
                       <View
                         width={40}
                         height={40}
-                        backgroundColor={COLORS.primary}
-                        borderRadius={20}
+                        backgroundColor="$primary"
+                        borderRadius="$12"
                         justifyContent="center"
                         alignItems="center"
                       >
                         <Sparkles size={20} color="white" />
                       </View>
                       <YStack flex={1}>
-                        <Text fontSize="$4" fontWeight="600" color="$text">
+                        <Text fontSize="$4" fontWeight="500" color="$color12">
                           AI智能诊断
                         </Text>
-                        <Text fontSize="$3" color="$textSecondary">
+                        <Text fontSize="$3" color="$color10">
                           基于您的健康数据提供个性化建议
                         </Text>
                       </YStack>
                     </XStack>
 
-                    <YStack space="$2">
-                      <XStack space="$2" alignItems="center">
-                        <CheckCircle size={16} color={COLORS.success} />
-                        <Text fontSize="$3" color="$textSecondary">
+                    <YStack gap="$2">
+                      <XStack gap="$2" alignItems="center">
+                        <CheckCircle size={16} color={successColor} />
+                        <Text fontSize="$3" color="$color10">
                           智能症状分析和健康评估
                         </Text>
                       </XStack>
-                      <XStack space="$2" alignItems="center">
-                        <CheckCircle size={16} color={COLORS.success} />
-                        <Text fontSize="$3" color="$textSecondary">
+                      <XStack gap="$2" alignItems="center">
+                        <CheckCircle size={16} color={successColor} />
+                        <Text fontSize="$3" color="$color10">
                           个性化健康建议和改善方案
                         </Text>
                       </XStack>
-                      <XStack space="$2" alignItems="center">
-                        <CheckCircle size={16} color={COLORS.success} />
-                        <Text fontSize="$3" color="$textSecondary">
+                      <XStack gap="$2" alignItems="center">
+                        <CheckCircle size={16} color={successColor} />
+                        <Text fontSize="$3" color="$color10">
                           24小时在线医疗咨询服务
                         </Text>
                       </XStack>
@@ -1341,35 +1227,62 @@ export const AIConsultationScreen: React.FC = () => {
 
           {/* 输入区域 */}
           <View
-            backgroundColor="$cardBg"
-            paddingHorizontal="$4"
+            backgroundColor="$color2"
+            paddingHorizontal="$2.5"
             paddingVertical="$2"
             borderTopWidth={1}
-            borderTopColor="$borderColor"
+            borderTopColor="$color5"
           >
-            <XStack space="$3" alignItems="center">
+            {/* AI问答次数提示 */}
+            {!isAIUnlimited && (
+              <XStack
+                justifyContent="center"
+                paddingBottom="$2"
+                gap="$1"
+                alignItems="center"
+              >
+                {canUseAI ? (
+                  <Text fontSize="$1" color="$color10">
+                    今日剩余 {aiRemaining} 次问答
+                  </Text>
+                ) : (
+                  <XStack gap="$1" alignItems="center">
+                    <Crown size={12} color={warningColor} />
+                    <Text fontSize="$1" color="$warning">
+                      今日次数已用完
+                    </Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('MembershipCenter' as never)}>
+                      <Text fontSize="$1" color="$primary" fontWeight="500">
+                        升级会员
+                      </Text>
+                    </TouchableOpacity>
+                  </XStack>
+                )}
+              </XStack>
+            )}
+            <XStack gap="$2" alignItems="center">
               {/* 附件按钮 */}
               <TouchableOpacity>
                 <View
                   width={40}
                   height={40}
-                  borderRadius={20}
-                  backgroundColor="$surface"
+                  borderRadius="$12"
+                  backgroundColor="$color3"
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <Paperclip size={20} color={COLORS.textSecondary} />
+                  <Paperclip size={20} color={textSecondaryColor} />
                 </View>
               </TouchableOpacity>
 
               {/* 输入框 */}
               <View
                 flex={1}
-                backgroundColor="$surface"
-                borderRadius="$6"
+                backgroundColor="white"
+                borderRadius="$10"
                 borderWidth={1}
-                borderColor="$borderColor"
-                paddingHorizontal="$3"
+                borderColor="$color5"
+                paddingHorizontal="$2"
                 height={40}
                 justifyContent="center"
               >
@@ -1378,7 +1291,7 @@ export const AIConsultationScreen: React.FC = () => {
                   value={inputText}
                   onChangeText={setInputText}
                   placeholder="请描述您的健康问题..."
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor={textSecondaryColor}
                   style={styles.textInput}
                   multiline
                   maxLength={500}
@@ -1393,8 +1306,8 @@ export const AIConsultationScreen: React.FC = () => {
                   <View
                     width={40}
                     height={40}
-                    borderRadius={20}
-                    backgroundColor={COLORS.primary}
+                    borderRadius="$12"
+                    backgroundColor="$primary"
                     justifyContent="center"
                     alignItems="center"
                   >
@@ -1406,12 +1319,12 @@ export const AIConsultationScreen: React.FC = () => {
                   <View
                     width={40}
                     height={40}
-                    borderRadius={20}
-                    backgroundColor="$surface"
+                    borderRadius="$12"
+                    backgroundColor="$color3"
                     justifyContent="center"
                     alignItems="center"
                   >
-                    <Mic size={20} color={COLORS.textSecondary} />
+                    <Mic size={20} color={textSecondaryColor} />
                   </View>
                 </TouchableOpacity>
               )}
@@ -1419,6 +1332,137 @@ export const AIConsultationScreen: React.FC = () => {
           </View>
           </KeyboardAvoidingView>
         </View>
+
+        {/* AI模型选择器 BottomSheet */}
+        <BottomSheet
+          visible={showModelSelector}
+          onClose={() => setShowModelSelector(false)}
+          title="选择AI模型"
+          variant="picker"
+        >
+          <YStack gap="$2">
+            {aiModels.map((model) => {
+              const IconComponent = model.icon;
+              const isSelected = selectedModel === model.id;
+
+              return (
+                <Pressable
+                  key={model.id}
+                  onPress={() => {
+                    setSelectedModel(model.id);
+                    setShowModelSelector(false);
+                  }}
+                >
+                  <View
+                    padding="$2"
+                    borderRadius="$4"
+                    backgroundColor={isSelected ? '$primary' : '$color1'}
+                    borderWidth={isSelected ? 2 : 1}
+                    borderColor={isSelected ? '$primary' : '$color5'}
+                  >
+                    <XStack gap="$2" alignItems="flex-start">
+                      {/* 模型图标 */}
+                      <View
+                        width={48}
+                        height={48}
+                        backgroundColor={isSelected ? 'rgba(255,255,255,0.2)' : '$primary'}
+                        borderRadius="$12"
+                        justifyContent="center"
+                        alignItems="center"
+                      >
+                        <IconComponent size={24} color="white" />
+                      </View>
+
+                      <YStack flex={1} gap="$1">
+                        {/* 模型名称和标签 */}
+                        <XStack justifyContent="space-between" alignItems="center">
+                          <Text
+                            fontSize="$4"
+                            fontWeight="600"
+                            color={isSelected ? 'white' : '$color12'}
+                          >
+                            {model.name}
+                          </Text>
+                          <XStack gap="$1" alignItems="center">
+                            {model.isRecommended && (
+                              <View
+                                backgroundColor={isSelected ? 'rgba(255,255,255,0.25)' : '$success'}
+                                paddingHorizontal="$1.5"
+                                paddingVertical="$0.5"
+                                borderRadius="$10"
+                              >
+                                <Text fontSize="$1" color="white" fontWeight="500">
+                                  推荐
+                                </Text>
+                              </View>
+                            )}
+                            {model.isPremium && (
+                              <View
+                                backgroundColor={isSelected ? 'rgba(255,255,255,0.25)' : '$warning'}
+                                paddingHorizontal="$1.5"
+                                paddingVertical="$0.5"
+                                borderRadius="$10"
+                              >
+                                <Text fontSize="$1" color="white" fontWeight="500">
+                                  专业版
+                                </Text>
+                              </View>
+                            )}
+                          </XStack>
+                        </XStack>
+
+                        {/* 模型描述 */}
+                        <Text
+                          fontSize="$2"
+                          color={isSelected ? 'rgba(255,255,255,0.85)' : '$color10'}
+                          lineHeight="$1"
+                        >
+                          {model.description}
+                        </Text>
+
+                        {/* 模型特性标签 */}
+                        <XStack flexWrap="wrap" gap="$1" marginTop="$1">
+                          {model.features.map((feature, index) => (
+                            <View
+                              key={index}
+                              backgroundColor={isSelected ? 'rgba(255,255,255,0.2)' : '$color4'}
+                              paddingHorizontal="$1.5"
+                              paddingVertical="$0.5"
+                              borderRadius="$10"
+                            >
+                              <Text
+                                fontSize="$1"
+                                color={isSelected ? 'white' : '$color10'}
+                              >
+                                {feature}
+                              </Text>
+                            </View>
+                          ))}
+                        </XStack>
+
+                        {/* 模型性能指标 */}
+                        <XStack justifyContent="space-between" marginTop="$1">
+                          <Text
+                            fontSize="$2"
+                            color={isSelected ? 'rgba(255,255,255,0.85)' : '$color10'}
+                          >
+                            准确率: {model.accuracy}%
+                          </Text>
+                          <Text
+                            fontSize="$2"
+                            color={isSelected ? 'rgba(255,255,255,0.85)' : '$color10'}
+                          >
+                            响应: {model.responseTime}
+                          </Text>
+                        </XStack>
+                      </YStack>
+                    </XStack>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </YStack>
+        </BottomSheet>
       </SafeAreaView>
     </Theme>
   );
@@ -1427,7 +1471,7 @@ export const AIConsultationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   textInput: {
     fontSize: 16,
-    color: COLORS.text,
+    color: '#1F2937',
     lineHeight: 20,
     height: 40,
     paddingVertical: 8,

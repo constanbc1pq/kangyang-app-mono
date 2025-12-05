@@ -1,3 +1,9 @@
+/**
+ * DeliveryServiceScreen 闪送到家页面
+ * 生鲜商品列表、分类、搜索、秒杀、购物车功能
+ * 遵循 CLAUDE.md 组件规范
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Pressable,
@@ -8,15 +14,14 @@ import {
   Dimensions,
   Modal,
 } from 'react-native';
-import { View, Text, YStack, XStack, Card, Theme, H3, Sheet } from 'tamagui';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, YStack, XStack, useTheme } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  ChevronLeft,
+  ArrowLeft,
   Search,
   MapPin,
   ChevronRight,
-  Mic,
   ShoppingCart,
   Plus,
   Minus,
@@ -27,9 +32,9 @@ import {
   Navigation,
   Trash2,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { groceryCartService } from '@/services/groceryCartService';
+import { BottomSheet } from '@/components/BottomSheet';
 import { flashSaleProducts as importedFlashSaleProducts, groceryProducts as importedGroceryProducts } from '@/data/groceryProducts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -56,16 +61,16 @@ const banners = [
   },
 ];
 
-// 分类数据
+// 分类数据 - 使用真实图片
 const categories = [
-  { id: 'all', name: '全部', icon: '🏪' },
-  { id: 'vegetables', name: '蔬菜', icon: '🥬' },
-  { id: 'fruits', name: '水果', icon: '🍎' },
-  { id: 'meat', name: '肉禽蛋', icon: '🥩' },
-  { id: 'seafood', name: '海鲜', icon: '🦐' },
-  { id: 'grain', name: '粮油', icon: '🌾' },
-  { id: 'therapy', name: '食疗', icon: '🍵' },
-  { id: 'dairy', name: '乳品', icon: '🥛' },
+  { id: 'all', name: '全部', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=100' },
+  { id: 'vegetables', name: '蔬菜', image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100' },
+  { id: 'fruits', name: '水果', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=100' },
+  { id: 'meat', name: '肉禽蛋', image: 'https://images.unsplash.com/photo-1607623488027-f6876899e3e5?w=100' },
+  { id: 'seafood', name: '海鲜', image: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=100' },
+  { id: 'grain', name: '粮油', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=100' },
+  { id: 'therapy', name: '食疗', image: 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=100' },
+  { id: 'dairy', name: '乳品', image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=100' },
 ];
 
 // 使用导入的限时秒杀商品
@@ -76,6 +81,12 @@ const products = importedGroceryProducts;
 
 export const DeliveryServiceScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
   const bannerScrollRef = useRef<RNScrollView>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -242,65 +253,83 @@ export const DeliveryServiceScreen: React.FC = () => {
   };
 
   return (
-    <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
-        {/* Header */}
+    <View flex={1} backgroundColor="$background">
+      {/* TitleBar - 按照CLAUDE.md规范 */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
+        borderBottomWidth={1}
+        borderBottomColor="$color5"
+      >
         <XStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
+          height={56}
+          paddingHorizontal="$2.5"
           alignItems="center"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="white"
-          space="$3"
+          justifyContent="space-between"
         >
           <Pressable onPress={() => navigation.goBack()}>
-            <ChevronLeft size={24} color={COLORS.text} />
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <ArrowLeft size={24} color={color12} />
+            </View>
           </Pressable>
 
-          {/* Address */}
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            闪送到家
+          </Text>
+
+          {/* 地址选择 */}
           <Pressable onPress={() => setShowCityModal(true)}>
-            <XStack alignItems="center" space="$1">
-              <MapPin size={16} color={COLORS.primary} />
-              <Text fontSize="$3" fontWeight="600">
+            <XStack alignItems="center" gap="$1">
+              <MapPin size={16} color={primaryColor} />
+              <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={1} maxWidth={80}>
                 {selectedCity}
               </Text>
-              <ChevronRight size={16} color={COLORS.textSecondary} />
+              <ChevronRight size={14} color={color10} />
             </XStack>
           </Pressable>
+        </XStack>
+      </View>
 
-          {/* Search */}
+      <RNScrollView showsVerticalScrollIndicator={false}>
+        {/* 搜索栏 - 独立于TitleBar */}
+        <View padding="$2.5" backgroundColor="$color2">
           <XStack
-            flex={1}
-            backgroundColor="$background"
+            backgroundColor="$color4"
             borderRadius="$3"
             paddingHorizontal="$3"
             paddingVertical="$2"
             alignItems="center"
-            space="$2"
+            gap="$2"
           >
-            <Search size={16} color={COLORS.textSecondary} />
+            <Search size={18} color={color10} />
             <TextInput
-              placeholder="搜索商品"
+              placeholder="搜索新鲜好物..."
               value={searchQuery}
               onChangeText={setSearchQuery}
               style={{
                 flex: 1,
                 fontSize: 14,
                 padding: 0,
-                color: COLORS.text,
+                color: color12,
               }}
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={color10}
             />
-            <TouchableOpacity>
-              <Mic size={16} color={COLORS.textSecondary} />
-            </TouchableOpacity>
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery('')}>
+                <X size={16} color={color10} />
+              </Pressable>
+            )}
           </XStack>
-        </XStack>
+        </View>
 
-        <RNScrollView showsVerticalScrollIndicator={false}>
-          {/* Banner Carousel */}
-          <View height={160}>
+        {/* Banner Carousel */}
+        <View height={160}>
             <RNScrollView
               ref={bannerScrollRef}
               horizontal
@@ -360,112 +389,82 @@ export const DeliveryServiceScreen: React.FC = () => {
             </XStack>
           </View>
 
-          {/* Categories */}
-          <RNScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ padding: 16, gap: 16 }}
-          >
-            {categories.map((category) => (
+        {/* Categories - 使用真实图片 */}
+        <RNScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}
+        >
+          {categories.map((category) => {
+            const isSelected = selectedCategory === category.id;
+            return (
               <TouchableOpacity
                 key={category.id}
                 onPress={() => setSelectedCategory(category.id)}
               >
-                <YStack alignItems="center" space="$2">
+                <YStack alignItems="center" gap="$1.5">
                   <View
-                    width={56}
-                    height={56}
-                    borderRadius={28}
-                    backgroundColor={
-                      selectedCategory === category.id ? `${COLORS.primary}20` : '$background'
-                    }
-                    borderWidth={selectedCategory === category.id ? 2 : 0}
-                    borderColor={COLORS.primary}
-                    justifyContent="center"
-                    alignItems="center"
+                    width={60}
+                    height={60}
+                    borderRadius={30}
+                    borderWidth={2}
+                    borderColor={isSelected ? '$primary' : '$color5'}
+                    overflow="hidden"
                   >
-                    <Text fontSize={28}>{category.icon}</Text>
+                    <Image
+                      source={{ uri: category.image }}
+                      style={{ width: 60, height: 60 }}
+                      resizeMode="cover"
+                    />
                   </View>
                   <Text
                     fontSize="$2"
-                    fontWeight={selectedCategory === category.id ? '600' : 'normal'}
-                    color={selectedCategory === category.id ? COLORS.primary : COLORS.text}
+                    fontWeight={isSelected ? '600' : '400'}
+                    color={isSelected ? '$primary' : '$color12'}
                   >
                     {category.name}
                   </Text>
                 </YStack>
               </TouchableOpacity>
-            ))}
-          </RNScrollView>
-
-          {/* Filter Bar */}
-          <XStack
-            justifyContent="space-between"
-            alignItems="center"
-            paddingHorizontal="$4"
-            paddingVertical="$3"
-            borderTopWidth={1}
-            borderTopColor="$borderColor"
-            borderBottomWidth={1}
-            borderBottomColor="$borderColor"
-          >
-            <Text fontSize="$3" color="$textSecondary">
-              共 {filteredProducts.length} 件商品
-            </Text>
-            <TouchableOpacity onPress={() => setShowSortSheet(true)}>
-              <XStack
-                alignItems="center"
-                space="$2"
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                borderWidth={1}
-                borderColor="$borderColor"
-                borderRadius="$3"
-              >
-                <SlidersHorizontal size={16} color={COLORS.text} />
-                <Text fontSize="$3">排序</Text>
-              </XStack>
-            </TouchableOpacity>
-          </XStack>
+            );
+          })}
+        </RNScrollView>
 
           {/* Flash Sale Section */}
-          <LinearGradient
-            colors={['#FEF2F2', '#FFEDD5']}
-            style={{ padding: 16 }}
-          >
-            <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-              <XStack space="$2" alignItems="center">
-                <Flame size={20} color="#EF4444" />
-                <H3 fontSize="$6" fontWeight="bold">
+          <View backgroundColor="$color4" padding="$2">
+            <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+              <XStack gap="$2" alignItems="center">
+                <Flame size={20} color={primaryColor} />
+                <Text fontSize="$5" fontWeight="600" color="$color12">
                   限时秒杀
-                </H3>
-                <XStack space="$1" alignItems="center">
-                  <Clock size={16} color="#EF4444" />
-                  <Text fontSize="$3" color="#EF4444" fontFamily="$mono">
+                </Text>
+                <XStack gap="$1" alignItems="center">
+                  <Clock size={16} color={primaryColor} />
+                  <Text fontSize="$3" color="$primary" fontFamily="$mono">
                     02:34:56
                   </Text>
                 </XStack>
               </XStack>
               <TouchableOpacity>
-                <XStack alignItems="center" space="$1">
-                  <Text fontSize="$3" color="#EF4444">
+                <XStack alignItems="center" gap="$0.5">
+                  <Text fontSize="$3" color="$primary" fontWeight="500">
                     更多
                   </Text>
-                  <ChevronRight size={16} color="#EF4444" />
+                  <ChevronRight size={14} color={primaryColor} />
                 </XStack>
               </TouchableOpacity>
             </XStack>
 
             <RNScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {flashSaleProducts.map((product) => (
-                <Card
+                <View
                   key={product.id}
                   width={128}
-                  padding="$3"
+                  padding="$2"
                   borderRadius="$4"
-                  backgroundColor="white"
-                  borderWidth={2}
-                  borderColor="#FCA5A5"
+                  backgroundColor="$color2"
+                  borderWidth={1}
+                  borderColor="$color5"
                 >
                   <View marginBottom="$2">
                     <Image
@@ -477,62 +476,62 @@ export const DeliveryServiceScreen: React.FC = () => {
                       position="absolute"
                       top={4}
                       left={4}
-                      backgroundColor="#EF4444"
-                      paddingHorizontal="$2"
-                      paddingVertical="$1"
+                      backgroundColor="$warning"
+                      paddingHorizontal="$1.5"
+                      paddingVertical="$0.5"
                       borderRadius="$2"
                     >
-                      <Text fontSize="$1" color="white" fontWeight="600">
+                      <Text fontSize={10} color="white" fontWeight="600">
                         {product.tag}
                       </Text>
                     </View>
                   </View>
-                  <Text fontSize="$3" fontWeight="600" numberOfLines={1} marginBottom="$1">
+                  <Text fontSize="$3" fontWeight="600" color="$color12" numberOfLines={1} marginBottom="$1">
                     {product.name}
                   </Text>
-                  <Text fontSize="$2" color="$textSecondary" marginBottom="$2">
+                  <Text fontSize="$2" color="$color10" marginBottom="$2">
                     {product.unit}
                   </Text>
-                  <XStack alignItems="baseline" space="$1" marginBottom="$2">
-                    <Text fontSize="$5" fontWeight="bold" color="#EF4444">
+                  <XStack alignItems="baseline" gap="$1" marginBottom="$2">
+                    <Text fontSize="$5" fontWeight="700" color="$primary">
                       ¥{product.price}
                     </Text>
-                    <Text fontSize="$2" color="$textSecondary" textDecorationLine="line-through">
+                    <Text fontSize="$2" color="$color10" textDecorationLine="line-through">
                       ¥{product.originalPrice}
                     </Text>
                   </XStack>
-                  <Text fontSize="$2" color="$textSecondary" marginBottom="$2">
+                  <Text fontSize="$2" color="$color10" marginBottom="$2">
                     仅剩 {product.stock} 件
                   </Text>
                   {cart[product.id] ? (
                     <XStack
                       justifyContent="space-between"
                       alignItems="center"
-                      backgroundColor={`${COLORS.primary}10`}
-                      borderRadius={16}
+                      style={{ backgroundColor: `${primaryColor}10` }}
+                      borderRadius="$10"
                       paddingHorizontal="$2"
                       paddingVertical="$1"
                     >
                       <TouchableOpacity onPress={() => removeFromCart(product.id)}>
                         <View width={24} height={24} justifyContent="center" alignItems="center">
-                          <Minus size={12} color={COLORS.primary} />
+                          <Minus size={12} color={primaryColor} />
                         </View>
                       </TouchableOpacity>
-                      <Text fontSize="$3" fontWeight="600">
+                      <Text fontSize="$3" fontWeight="600" color="$color12">
                         {cart[product.id]}
                       </Text>
                       <TouchableOpacity onPress={() => addToCart(product.id)}>
                         <View width={24} height={24} justifyContent="center" alignItems="center">
-                          <Plus size={12} color={COLORS.primary} />
+                          <Plus size={12} color={primaryColor} />
                         </View>
                       </TouchableOpacity>
                     </XStack>
                   ) : (
                     <TouchableOpacity onPress={() => addToCart(product.id)}>
                       <View
-                        backgroundColor="#EF4444"
+                        backgroundColor="$primary"
                         paddingVertical="$2"
-                        borderRadius="$3"
+                        borderRadius="$10"
                         alignItems="center"
                       >
                         <Text fontSize="$2" color="white" fontWeight="600">
@@ -541,465 +540,473 @@ export const DeliveryServiceScreen: React.FC = () => {
                       </View>
                     </TouchableOpacity>
                   )}
-                </Card>
+                </View>
               ))}
             </RNScrollView>
-          </LinearGradient>
+          </View>
 
-          {/* Products Grid */}
-          <YStack padding="$4" space="$5" paddingBottom={totalItems > 0 ? 100 : 20}>
-            {groupedProducts.map((group) => (
-              <YStack key={group.category.id} space="$3">
-                <XStack justifyContent="space-between" alignItems="center">
-                  <XStack space="$2" alignItems="center">
-                    <Text fontSize={24}>{group.category.icon}</Text>
-                    <H3 fontSize="$6" fontWeight="bold">
-                      {group.category.name}
-                    </H3>
-                  </XStack>
-                  {selectedCategory === 'all' && (
-                    <TouchableOpacity onPress={() => setSelectedCategory(group.category.id)}>
-                      <XStack alignItems="center" space="$1">
-                        <Text fontSize="$3" color="$textSecondary">
-                          更多
-                        </Text>
-                        <ChevronRight size={16} color={COLORS.textSecondary} />
-                      </XStack>
-                    </TouchableOpacity>
-                  )}
+          {/* Filter Bar - moved below Flash Sale */}
+          <XStack
+            justifyContent="flex-end"
+            alignItems="center"
+            paddingHorizontal="$2.5"
+            paddingVertical="$2"
+            borderBottomWidth={1}
+            borderBottomColor="$color5"
+          >
+            <TouchableOpacity onPress={() => setShowSortSheet(true)}>
+              <XStack
+                alignItems="center"
+                gap="$2"
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+              >
+                <SlidersHorizontal size={16} color={color12} />
+                <Text fontSize="$3" color="$color12">排序</Text>
+              </XStack>
+            </TouchableOpacity>
+          </XStack>
+
+        {/* Products Grid */}
+        <YStack padding="$2.5" gap="$4" paddingBottom={totalItems > 0 ? 100 : 20}>
+          {groupedProducts.map((group) => (
+            <YStack key={group.category.id} gap="$2">
+              <XStack justifyContent="space-between" alignItems="center">
+                <XStack gap="$2" alignItems="center">
+                  <View width={28} height={28} borderRadius={14} overflow="hidden">
+                    <Image
+                      source={{ uri: group.category.image }}
+                      style={{ width: 28, height: 28 }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                  <Text fontSize="$5" fontWeight="600" color="$color12">
+                    {group.category.name}
+                  </Text>
                 </XStack>
+                {selectedCategory === 'all' && (
+                  <TouchableOpacity onPress={() => setSelectedCategory(group.category.id)}>
+                    <XStack alignItems="center" gap="$0.5">
+                      <Text fontSize="$3" color="$primary" fontWeight="500">
+                        更多
+                      </Text>
+                      <ChevronRight size={14} color={primaryColor} />
+                    </XStack>
+                  </TouchableOpacity>
+                )}
+              </XStack>
 
-                <XStack flexWrap="wrap" gap="$3">
-                  {group.items.map((product) => (
-                    <Card
-                      key={product.id}
-                      width="48%"
-                      padding="$3"
-                      borderRadius="$4"
-                      backgroundColor="$surface"
-                    >
-                      <TouchableOpacity onPress={() => handleProductClick(product.id)}>
-                        <View marginBottom="$2">
-                          <Image
-                            source={{ uri: product.image }}
-                            style={{ width: '100%', height: 128, borderRadius: 8 }}
-                            resizeMode="cover"
-                          />
-                          <View
-                            position="absolute"
-                            top={8}
-                            left={8}
-                            backgroundColor={COLORS.primary}
-                            paddingHorizontal="$2"
-                            paddingVertical="$1"
-                            borderRadius="$2"
-                          >
-                            <Text fontSize="$1" color="white" fontWeight="600">
-                              {product.tag}
-                            </Text>
-                          </View>
+              <XStack flexWrap="wrap" gap="$2">
+                {group.items.map((product) => (
+                  <View
+                    key={product.id}
+                    width="48%"
+                    backgroundColor="$color2"
+                    borderRadius="$5"
+                    borderWidth={1}
+                    borderColor="$color5"
+                    overflow="hidden"
+                  >
+                    <TouchableOpacity onPress={() => handleProductClick(product.id)}>
+                      <View>
+                        <Image
+                          source={{ uri: product.image }}
+                          style={{ width: '100%', height: 120 }}
+                          resizeMode="cover"
+                        />
+                        <View
+                          position="absolute"
+                          top={8}
+                          left={8}
+                          backgroundColor="$primary"
+                          paddingHorizontal="$1.5"
+                          paddingVertical="$0.5"
+                          borderRadius="$2"
+                        >
+                          <Text fontSize={10} color="white" fontWeight="600">
+                            {product.tag}
+                          </Text>
                         </View>
+                      </View>
+                    </TouchableOpacity>
+                    <YStack padding="$2" gap="$1">
+                      <TouchableOpacity onPress={() => handleProductClick(product.id)}>
                         <Text
-                          fontSize="$4"
+                          fontSize="$3"
                           fontWeight="600"
+                          color="$color12"
                           numberOfLines={2}
-                          marginBottom="$1"
-                          minHeight={44}
+                          minHeight={36}
                         >
                           {product.name}
                         </Text>
                       </TouchableOpacity>
-                      <Text fontSize="$2" color="$textSecondary" marginBottom="$2">
-                        {product.unit}
+                      <Text fontSize="$2" color="$color10">
+                        {product.unit} · 已售{product.sales}
                       </Text>
-                      <XStack alignItems="baseline" space="$1" marginBottom="$2">
-                        <Text fontSize="$6" fontWeight="bold" color={COLORS.primary}>
+                      <XStack alignItems="baseline" gap="$1">
+                        <Text fontSize="$5" fontWeight="700" color="$primary">
                           ¥{product.price}
                         </Text>
                         {product.originalPrice && (
-                          <Text fontSize="$2" color="$textSecondary" textDecorationLine="line-through">
+                          <Text fontSize="$1" color="$color10" textDecorationLine="line-through">
                             ¥{product.originalPrice}
                           </Text>
                         )}
                       </XStack>
-                      <Text fontSize="$2" color="$textSecondary" marginBottom="$2">
-                        已售 {product.sales}
-                      </Text>
                       {cart[product.id] ? (
                         <XStack
                           justifyContent="space-between"
                           alignItems="center"
-                          backgroundColor={`${COLORS.primary}10`}
-                          borderRadius={20}
-                          paddingHorizontal="$3"
-                          paddingVertical="$2"
+                          style={{ backgroundColor: `${primaryColor}15` }}
+                          borderRadius="$10"
+                          paddingHorizontal="$2"
+                          paddingVertical="$1"
                         >
                           <TouchableOpacity onPress={() => removeFromCart(product.id)}>
-                            <View width={28} height={28} justifyContent="center" alignItems="center">
-                              <Minus size={16} color={COLORS.primary} />
+                            <View width={26} height={26} justifyContent="center" alignItems="center">
+                              <Minus size={14} color={primaryColor} />
                             </View>
                           </TouchableOpacity>
-                          <Text fontSize="$4" fontWeight="600">
+                          <Text fontSize="$3" fontWeight="600" color="$color12">
                             {cart[product.id]}
                           </Text>
                           <TouchableOpacity onPress={() => addToCart(product.id)}>
-                            <View width={28} height={28} justifyContent="center" alignItems="center">
-                              <Plus size={16} color={COLORS.primary} />
+                            <View width={26} height={26} justifyContent="center" alignItems="center">
+                              <Plus size={14} color={primaryColor} />
                             </View>
                           </TouchableOpacity>
                         </XStack>
                       ) : (
                         <TouchableOpacity onPress={() => addToCart(product.id)}>
                           <View
-                            backgroundColor={COLORS.primary}
+                            backgroundColor="$primary"
                             paddingVertical="$2"
-                            borderRadius="$3"
+                            borderRadius="$10"
                             alignItems="center"
                           >
-                            <XStack space="$1" alignItems="center">
-                              <Plus size={16} color="white" />
-                              <Text fontSize="$3" color="white" fontWeight="600">
+                            <XStack gap="$1" alignItems="center">
+                              <Plus size={14} color="white" />
+                              <Text fontSize="$3" color="white" fontWeight="500">
                                 加入购物车
                               </Text>
                             </XStack>
                           </View>
                         </TouchableOpacity>
                       )}
-                    </Card>
+                    </YStack>
+                  </View>
+                ))}
+              </XStack>
+            </YStack>
+          ))}
+        </YStack>
+      </RNScrollView>
+
+      {/* Floating Cart */}
+      {totalItems > 0 && (
+        <View
+          position="absolute"
+          bottom={0}
+          left={0}
+          right={0}
+          backgroundColor="$color2"
+          borderTopWidth={1}
+          borderTopColor="$color5"
+          paddingHorizontal="$2.5"
+          paddingVertical="$2"
+          paddingBottom={insets.bottom + 8}
+        >
+          <XStack justifyContent="space-between" alignItems="center">
+            <XStack gap="$3" alignItems="center">
+              <TouchableOpacity onPress={() => setShowCartSheet(true)}>
+                <View>
+                  <ShoppingCart size={24} color={primaryColor} />
+                  <View
+                    position="absolute"
+                    top={-8}
+                    right={-8}
+                    backgroundColor="$error"
+                    width={20}
+                    height={20}
+                    borderRadius={10}
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    <Text fontSize={10} color="white" fontWeight="700">
+                      {totalItems}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+              <YStack>
+                <Text fontSize="$2" color="$color10">
+                  总计
+                </Text>
+                <Text fontSize="$6" fontWeight="700" color="$primary">
+                  ¥{totalPrice.toFixed(2)}
+                </Text>
+              </YStack>
+            </XStack>
+            <TouchableOpacity onPress={handleCheckout}>
+              <View
+                backgroundColor="$primary"
+                paddingHorizontal="$5"
+                paddingVertical="$2.5"
+                borderRadius="$10"
+              >
+                <Text fontSize="$4" color="white" fontWeight="600">
+                  去结算
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </XStack>
+        </View>
+      )}
+
+      {/* City Selection Modal */}
+      <Modal
+        visible={showCityModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCityModal(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          onPress={() => setShowCityModal(false)}
+        >
+          <Pressable onPress={(e) => e.stopPropagation()}>
+            <View
+              backgroundColor="$color2"
+              borderTopLeftRadius="$5"
+              borderTopRightRadius="$5"
+              paddingBottom={insets.bottom + 16}
+            >
+              {/* Header */}
+              <XStack justifyContent="space-between" alignItems="center" padding="$2.5" borderBottomWidth={1} borderBottomColor="$color5">
+                <Text fontSize="$5" fontWeight="600" color="$color12">
+                  选择配送区域
+                </Text>
+                <TouchableOpacity onPress={() => setShowCityModal(false)}>
+                  <X size={22} color={color10} />
+                </TouchableOpacity>
+              </XStack>
+
+              {/* Auto Locate Button */}
+              <View padding="$2.5">
+                <TouchableOpacity onPress={handleAutoLocate}>
+                  <View
+                    backgroundColor="$primary"
+                    borderRadius="$10"
+                    padding="$2.5"
+                  >
+                    <XStack gap="$2" alignItems="center" justifyContent="center">
+                      <Navigation size={18} color="white" />
+                      <Text fontSize="$4" color="white" fontWeight="600">
+                        自动定位当前区域
+                      </Text>
+                    </XStack>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Hot Cities */}
+              <YStack padding="$2.5" paddingTop="$1">
+                <Text fontSize="$3" color="$color10" marginBottom="$2" fontWeight="500">
+                  配送区域
+                </Text>
+                <XStack flexWrap="wrap" gap="$2">
+                  {hotCities.map((city) => (
+                    <TouchableOpacity
+                      key={city.id}
+                      onPress={() => handleCitySelect(city.name)}
+                      style={{ width: '30%' }}
+                    >
+                      <View
+                        padding="$2"
+                        borderRadius="$3"
+                        backgroundColor={selectedCity === city.name ? '$primary' : '$color4'}
+                        alignItems="center"
+                      >
+                        <Text
+                          fontSize="$3"
+                          color={selectedCity === city.name ? 'white' : '$color12'}
+                          fontWeight={selectedCity === city.name ? '600' : '400'}
+                        >
+                          {city.name}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                   ))}
                 </XStack>
               </YStack>
-            ))}
-          </YStack>
-        </RNScrollView>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
-        {/* Floating Cart */}
-        {totalItems > 0 && (
-          <View
-            position="absolute"
-            bottom={0}
-            left={0}
-            right={0}
-            backgroundColor="white"
-            borderTopWidth={1}
-            borderTopColor="$borderColor"
-            padding="$4"
-            paddingBottom={16}
-          >
-            <XStack justifyContent="space-between" alignItems="center">
-              <XStack space="$3" alignItems="center">
-                <TouchableOpacity onPress={() => setShowCartSheet(true)}>
-                  <View>
-                    <ShoppingCart size={24} color={COLORS.primary} />
-                    <View
-                      position="absolute"
-                      top={-8}
-                      right={-8}
-                      backgroundColor={COLORS.error}
-                      width={20}
-                      height={20}
-                      borderRadius={10}
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Text fontSize="$1" color="white" fontWeight="bold">
-                        {totalItems}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-                <YStack>
-                  <Text fontSize="$2" color="$textSecondary">
-                    总计
-                  </Text>
-                  <Text fontSize="$7" fontWeight="bold" color={COLORS.primary}>
-                    ¥{totalPrice.toFixed(2)}
-                  </Text>
-                </YStack>
+      {/* Cart BottomSheet */}
+      <BottomSheet
+        visible={showCartSheet}
+        onClose={() => setShowCartSheet(false)}
+        title={`购物车 (${totalItems})`}
+        maxHeight="75%"
+        headerRight={
+          totalItems > 0 ? (
+            <TouchableOpacity onPress={clearCart}>
+              <XStack gap="$1" alignItems="center">
+                <Trash2 size={16} color={errorColor} />
+                <Text fontSize="$3" color="$error">
+                  清空
+                </Text>
               </XStack>
-              <TouchableOpacity onPress={handleCheckout}>
+            </TouchableOpacity>
+          ) : undefined
+        }
+        footer={
+          totalItems > 0 ? (
+            <YStack gap="$2">
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text fontSize="$4" fontWeight="600" color="$color12">
+                  合计：
+                </Text>
+                <Text fontSize="$6" fontWeight="700" color="$primary">
+                  ¥{totalPrice.toFixed(2)}
+                </Text>
+              </XStack>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCartSheet(false);
+                  handleCheckout();
+                }}
+              >
                 <View
-                  backgroundColor={COLORS.primary}
-                  paddingHorizontal="$6"
-                  paddingVertical="$3"
-                  borderRadius="$4"
+                  backgroundColor="$primary"
+                  paddingVertical="$2.5"
+                  borderRadius="$10"
+                  alignItems="center"
                 >
-                  <Text fontSize="$5" color="white" fontWeight="bold">
+                  <Text fontSize="$4" color="white" fontWeight="600">
                     去结算
                   </Text>
                 </View>
               </TouchableOpacity>
-            </XStack>
-          </View>
-        )}
+            </YStack>
+          ) : undefined
+        }
+      >
+        {totalItems === 0 ? (
+          <YStack padding="$6" alignItems="center" gap="$3">
+            <ShoppingCart size={64} color={color10} />
+            <Text fontSize="$5" color="$color10">
+              购物车是空的
+            </Text>
+            <Text fontSize="$3" color="$color10">
+              快去选购新鲜好物吧
+            </Text>
+          </YStack>
+        ) : (
+          <YStack gap="$2">
+            {Object.entries(cart).map(([id, count]) => {
+              const product = [...products, ...flashSaleProducts].find((p) => p.id === Number(id));
+              if (!product) return null;
 
-        {/* City Selection Modal */}
-        <Modal
-          visible={showCityModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowCityModal(false)}
-        >
-          <Pressable
-            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
-            onPress={() => setShowCityModal(false)}
-          >
-            <Pressable onPress={(e) => e.stopPropagation()}>
-              <View
-                backgroundColor="white"
-                borderTopLeftRadius="$6"
-                borderTopRightRadius="$6"
-                paddingBottom={40}
-              >
-                {/* Header */}
-                <XStack justifyContent="space-between" alignItems="center" padding="$4" borderBottomWidth={1} borderBottomColor="$borderColor">
-                  <H3 fontSize="$6" fontWeight="bold">
-                    选择配送区域
-                  </H3>
-                  <TouchableOpacity onPress={() => setShowCityModal(false)}>
-                    <X size={24} color={COLORS.textSecondary} />
-                  </TouchableOpacity>
-                </XStack>
-
-                {/* Auto Locate Button */}
-                <View padding="$4">
-                  <TouchableOpacity onPress={handleAutoLocate}>
-                    <View
-                      backgroundColor={COLORS.primary}
-                      borderRadius="$3"
-                      padding="$3"
-                    >
-                      <XStack space="$2" alignItems="center" justifyContent="center">
-                        <Navigation size={20} color="white" />
-                        <Text fontSize="$4" color="white" fontWeight="600">
-                          自动定位当前区域
+              return (
+                <View key={id} padding="$2" backgroundColor="$color4" borderRadius="$4">
+                  <XStack gap="$2">
+                    <TouchableOpacity onPress={() => handleProductClick(product.id)}>
+                      <Image
+                        source={{ uri: product.image }}
+                        style={{ width: 72, height: 72, borderRadius: 8 }}
+                      />
+                    </TouchableOpacity>
+                    <YStack flex={1} justifyContent="space-between">
+                      <TouchableOpacity onPress={() => handleProductClick(product.id)}>
+                        <Text fontSize="$3" fontWeight="600" color="$color12" numberOfLines={2}>
+                          {product.name}
                         </Text>
-                      </XStack>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Hot Cities */}
-                <YStack padding="$4" paddingTop="$2">
-                  <Text fontSize="$4" color="$textSecondary" marginBottom="$3" fontWeight="600">
-                    配送区域
-                  </Text>
-                  <XStack flexWrap="wrap" gap="$3">
-                    {hotCities.map((city) => (
-                      <TouchableOpacity
-                        key={city.id}
-                        onPress={() => handleCitySelect(city.name)}
-                        style={{ width: '30%' }}
-                      >
-                        <View
-                          padding="$3"
-                          borderRadius="$3"
-                          backgroundColor={selectedCity === city.name ? COLORS.primary : '$surface'}
-                          borderWidth={1}
-                          borderColor={selectedCity === city.name ? COLORS.primary : '$borderColor'}
-                          alignItems="center"
-                        >
-                          <Text
-                            fontSize="$4"
-                            color={selectedCity === city.name ? 'white' : '$text'}
-                            fontWeight={selectedCity === city.name ? '600' : 'normal'}
-                          >
-                            {city.name}
-                          </Text>
-                        </View>
                       </TouchableOpacity>
-                    ))}
-                  </XStack>
-                </YStack>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
-
-        {/* Cart Sheet */}
-        <Sheet
-          modal
-          open={showCartSheet}
-          onOpenChange={setShowCartSheet}
-          snapPoints={[75]}
-          dismissOnSnapToBottom
-        >
-          <Sheet.Overlay />
-          <Sheet.Frame backgroundColor="white" borderTopLeftRadius="$6" borderTopRightRadius="$6">
-            <Sheet.Handle />
-            <YStack flex={1}>
-              {/* Header */}
-              <XStack justifyContent="space-between" alignItems="center" padding="$4" borderBottomWidth={1} borderBottomColor="$borderColor">
-                <H3 fontSize="$6" fontWeight="bold">
-                  购物车 ({totalItems})
-                </H3>
-                {totalItems > 0 && (
-                  <TouchableOpacity onPress={clearCart}>
-                    <XStack space="$2" alignItems="center">
-                      <Trash2 size={16} color={COLORS.error} />
-                      <Text fontSize="$3" color={COLORS.error}>
-                        清空
+                      <Text fontSize="$2" color="$color10">
+                        {product.unit}
                       </Text>
-                    </XStack>
-                  </TouchableOpacity>
-                )}
-              </XStack>
-
-              {/* Cart Items */}
-              <RNScrollView style={{ flex: 1 }}>
-                {totalItems === 0 ? (
-                  <YStack padding="$6" alignItems="center" space="$3">
-                    <ShoppingCart size={64} color={COLORS.textSecondary} />
-                    <Text fontSize="$5" color="$textSecondary">
-                      购物车是空的
-                    </Text>
-                    <Text fontSize="$3" color="$textSecondary">
-                      快去选购新鲜好物吧
-                    </Text>
-                  </YStack>
-                ) : (
-                  <YStack padding="$4" space="$3">
-                    {Object.entries(cart).map(([id, count]) => {
-                      const product = [...products, ...flashSaleProducts].find((p) => p.id === Number(id));
-                      if (!product) return null;
-
-                      return (
-                        <Card key={id} padding="$3" backgroundColor="$background" borderRadius="$4">
-                          <XStack space="$3">
-                            <TouchableOpacity onPress={() => handleProductClick(product.id)}>
-                              <Image
-                                source={{ uri: product.image }}
-                                style={{ width: 80, height: 80, borderRadius: 8 }}
-                              />
-                            </TouchableOpacity>
-                            <YStack flex={1} justifyContent="space-between">
-                              <TouchableOpacity onPress={() => handleProductClick(product.id)}>
-                                <Text fontSize="$4" fontWeight="600" numberOfLines={2}>
-                                  {product.name}
-                                </Text>
-                              </TouchableOpacity>
-                              <Text fontSize="$3" color="$textSecondary">
-                                {product.unit}
-                              </Text>
-                              <XStack justifyContent="space-between" alignItems="center">
-                                <Text fontSize="$6" fontWeight="bold" color={COLORS.error}>
-                                  ¥{product.price}
-                                </Text>
-                                <XStack
-                                  space="$2"
-                                  alignItems="center"
-                                  backgroundColor={`${COLORS.primary}10`}
-                                  borderRadius={16}
-                                  paddingHorizontal="$2"
-                                  paddingVertical="$1"
-                                >
-                                  <TouchableOpacity onPress={() => removeFromCart(product.id)}>
-                                    <View width={24} height={24} justifyContent="center" alignItems="center">
-                                      <Minus size={14} color={COLORS.primary} />
-                                    </View>
-                                  </TouchableOpacity>
-                                  <Text fontSize="$4" fontWeight="600" minWidth={30} textAlign="center">
-                                    {count}
-                                  </Text>
-                                  <TouchableOpacity onPress={() => addToCart(product.id)}>
-                                    <View width={24} height={24} justifyContent="center" alignItems="center">
-                                      <Plus size={14} color={COLORS.primary} />
-                                    </View>
-                                  </TouchableOpacity>
-                                </XStack>
-                              </XStack>
-                            </YStack>
-                          </XStack>
-                        </Card>
-                      );
-                    })}
-                  </YStack>
-                )}
-              </RNScrollView>
-
-              {/* Bottom Action */}
-              {totalItems > 0 && (
-                <View padding="$4" borderTopWidth={1} borderTopColor="$borderColor">
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                    <Text fontSize="$5" fontWeight="bold">
-                      合计：
-                    </Text>
-                    <Text fontSize="$8" fontWeight="bold" color={COLORS.error}>
-                      ¥{totalPrice.toFixed(2)}
-                    </Text>
+                      <XStack justifyContent="space-between" alignItems="center">
+                        <Text fontSize="$5" fontWeight="700" color="$primary">
+                          ¥{product.price}
+                        </Text>
+                        <XStack
+                          gap="$1"
+                          alignItems="center"
+                          borderRadius="$10"
+                          paddingHorizontal="$2"
+                          paddingVertical="$1"
+                          style={{ backgroundColor: `${primaryColor}15` }}
+                        >
+                          <TouchableOpacity onPress={() => removeFromCart(product.id)}>
+                            <View width={24} height={24} justifyContent="center" alignItems="center">
+                              <Minus size={14} color={primaryColor} />
+                            </View>
+                          </TouchableOpacity>
+                          <Text fontSize="$3" fontWeight="600" color="$color12" minWidth={24} textAlign="center">
+                            {count}
+                          </Text>
+                          <TouchableOpacity onPress={() => addToCart(product.id)}>
+                            <View width={24} height={24} justifyContent="center" alignItems="center">
+                              <Plus size={14} color={primaryColor} />
+                            </View>
+                          </TouchableOpacity>
+                        </XStack>
+                      </XStack>
+                    </YStack>
                   </XStack>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowCartSheet(false);
-                      handleCheckout();
-                    }}
-                  >
-                    <View
-                      backgroundColor={COLORS.primary}
-                      paddingVertical="$3"
-                      borderRadius="$4"
-                      alignItems="center"
-                    >
-                      <Text fontSize="$5" color="white" fontWeight="600">
-                        去结算
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
                 </View>
-              )}
-            </YStack>
-          </Sheet.Frame>
-        </Sheet>
+              );
+            })}
+          </YStack>
+        )}
+      </BottomSheet>
 
-        {/* Sort Sheet */}
-        <Sheet
-          modal
-          open={showSortSheet}
-          onOpenChange={setShowSortSheet}
-          snapPoints={[40]}
-          dismissOnSnapToBottom
-        >
-          <Sheet.Overlay />
-          <Sheet.Frame backgroundColor="white" borderTopLeftRadius="$6" borderTopRightRadius="$6">
-            <Sheet.Handle />
-            <YStack padding="$4" space="$3">
-              <H3 fontSize="$6" fontWeight="bold">
-                排序方式
-              </H3>
-              {[
-                { value: 'comprehensive', label: '综合排序' },
-                { value: 'sales', label: '销量优先' },
-                { value: 'price-asc', label: '价格从低到高' },
-                { value: 'price-desc', label: '价格从高到低' },
-              ].map((option) => (
-                <TouchableOpacity
-                  key={option.value}
-                  onPress={() => {
-                    setSortBy(option.value);
-                    setShowSortSheet(false);
-                  }}
+      {/* Sort BottomSheet */}
+      <BottomSheet
+        visible={showSortSheet}
+        onClose={() => setShowSortSheet(false)}
+        title="排序方式"
+        variant="picker"
+        maxHeight="40%"
+      >
+        <YStack gap="$2">
+          {[
+            { value: 'comprehensive', label: '综合排序' },
+            { value: 'sales', label: '销量优先' },
+            { value: 'price-asc', label: '价格从低到高' },
+            { value: 'price-desc', label: '价格从高到低' },
+          ].map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              onPress={() => {
+                setSortBy(option.value);
+                setShowSortSheet(false);
+              }}
+            >
+              <View
+                padding="$2"
+                borderRadius="$3"
+                backgroundColor={sortBy === option.value ? '$primary' : '$color4'}
+              >
+                <Text
+                  fontSize="$4"
+                  fontWeight={sortBy === option.value ? '600' : '400'}
+                  color={sortBy === option.value ? 'white' : '$color12'}
                 >
-                  <View
-                    padding="$3"
-                    borderRadius="$3"
-                    backgroundColor={sortBy === option.value ? COLORS.primary : 'transparent'}
-                    borderWidth={1}
-                    borderColor={sortBy === option.value ? COLORS.primary : '$borderColor'}
-                  >
-                    <Text
-                      fontSize="$4"
-                      fontWeight={sortBy === option.value ? '600' : 'normal'}
-                      color={sortBy === option.value ? 'white' : COLORS.text}
-                    >
-                      {option.label}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </YStack>
-          </Sheet.Frame>
-        </Sheet>
-      </SafeAreaView>
-    </Theme>
+                  {option.label}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </YStack>
+      </BottomSheet>
+      </View>
   );
 };

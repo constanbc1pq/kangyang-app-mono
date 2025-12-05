@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, TextInput, RefreshControl } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowLeft,
   Search,
@@ -14,7 +15,6 @@ import {
   Heart,
   Share2,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 // 文章分类
 type ArticleCategory = 'all' | 'basics' | 'product_analysis' | 'claim_guide' | 'pitfall_prevention';
@@ -38,6 +38,15 @@ interface Article {
 
 const InsuranceArticleScreen: React.FC = () => {
   const navigation = useNavigation();
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [selectedCategory, setSelectedCategory] = useState<ArticleCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [articles, setArticles] = useState<Article[]>([]);
@@ -46,11 +55,11 @@ const InsuranceArticleScreen: React.FC = () => {
 
   // 文章分类配置
   const categories = [
-    { id: 'all', label: '全部', icon: BookOpen, color: COLORS.text },
-    { id: 'basics', label: '保险科普', icon: BookOpen, color: '#3B82F6' },
-    { id: 'product_analysis', label: '产品解读', icon: TrendingUp, color: '#10B981' },
-    { id: 'claim_guide', label: '理赔指南', icon: Shield, color: '#8B5CF6' },
-    { id: 'pitfall_prevention', label: '防坑避雷', icon: AlertTriangle, color: '#EF4444' },
+    { id: 'all', label: '全部', icon: BookOpen, color: color12 },
+    { id: 'basics', label: '保险科普', icon: BookOpen, color: primaryColor },
+    { id: 'product_analysis', label: '产品解读', icon: TrendingUp, color: successColor },
+    { id: 'claim_guide', label: '理赔指南', icon: Shield, color: primaryColor },
+    { id: 'pitfall_prevention', label: '防坑避雷', icon: AlertTriangle, color: errorColor },
   ];
 
   useEffect(() => {
@@ -200,28 +209,28 @@ const InsuranceArticleScreen: React.FC = () => {
 
   const getCategoryColor = (category: ArticleCategory) => {
     const categoryConfig = categories.find(c => c.id === category);
-    return categoryConfig?.color || COLORS.text;
+    return categoryConfig?.color || color12;
   };
 
   const renderArticleCard = (article: Article) => {
     return (
       <Pressable key={article.id} onPress={() => handleArticlePress(article)}>
         <View
-          marginBottom="$3"
-          backgroundColor="$surface"
-          borderRadius="$4"
+          marginBottom="$2"
+          backgroundColor="$color2"
+          borderRadius="$5"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
           overflow="hidden"
         >
-          <View padding="$4">
+          <View padding="$2">
             {/* 标签行 */}
             <XStack alignItems="center" gap="$2" marginBottom="$2">
               <View
                 paddingHorizontal="$2"
-                paddingVertical="$1"
-                backgroundColor={`${getCategoryColor(article.category)}20`}
-                borderRadius="$2"
+                paddingVertical="$0.5"
+                backgroundColor={`${getCategoryColor(article.category)}15`}
+                borderRadius="$10"
               >
                 <Text fontSize="$1" fontWeight="600" color={getCategoryColor(article.category)}>
                   {categories.find(c => c.id === article.category)?.label}
@@ -230,11 +239,11 @@ const InsuranceArticleScreen: React.FC = () => {
               {article.isHot && (
                 <View
                   paddingHorizontal="$2"
-                  paddingVertical="$1"
-                  backgroundColor="#FEF3C7"
-                  borderRadius="$2"
+                  paddingVertical="$0.5"
+                  backgroundColor={`${warningColor}15`}
+                  borderRadius="$10"
                 >
-                  <Text fontSize="$1" fontWeight="600" color="#F59E0B">
+                  <Text fontSize="$1" fontWeight="600" color={warningColor}>
                     热门
                   </Text>
                 </View>
@@ -242,26 +251,26 @@ const InsuranceArticleScreen: React.FC = () => {
             </XStack>
 
             {/* 标题 */}
-            <Text fontSize="$5" fontWeight="700" color="$text" marginBottom="$2" lineHeight={24}>
+            <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2" lineHeight={24}>
               {article.title}
             </Text>
 
             {/* 摘要 */}
-            <Text fontSize="$3" color="$textSecondary" lineHeight={22} marginBottom="$3">
+            <Text fontSize="$3" color="$color10" lineHeight={22} marginBottom="$2">
               {article.summary}
             </Text>
 
             {/* 标签 */}
-            <XStack gap="$2" marginBottom="$3" flexWrap="wrap">
+            <XStack gap="$2" marginBottom="$2" flexWrap="wrap">
               {article.tags.map(tag => (
                 <View
                   key={tag}
                   paddingHorizontal="$2"
-                  paddingVertical="$1"
-                  backgroundColor="$borderColor"
-                  borderRadius="$2"
+                  paddingVertical="$0.5"
+                  backgroundColor="$color4"
+                  borderRadius="$10"
                 >
-                  <Text fontSize="$1" color="$textSecondary">
+                  <Text fontSize="$1" color="$color10">
                     #{tag}
                   </Text>
                 </View>
@@ -272,24 +281,24 @@ const InsuranceArticleScreen: React.FC = () => {
             <XStack justifyContent="space-between" alignItems="center">
               <XStack alignItems="center" gap="$3">
                 <XStack alignItems="center" gap="$1">
-                  <Clock size={14} color={COLORS.textSecondary} />
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Clock size={14} color={color10} />
+                  <Text fontSize="$2" color="$color10">
                     {article.readTime}分钟
                   </Text>
                 </XStack>
                 <XStack alignItems="center" gap="$1">
-                  <Eye size={14} color={COLORS.textSecondary} />
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Eye size={14} color={color10} />
+                  <Text fontSize="$2" color="$color10">
                     {article.views}
                   </Text>
                 </XStack>
                 <XStack alignItems="center" gap="$1">
                   <Heart
                     size={14}
-                    color={article.likes > 1000 ? COLORS.error : COLORS.textSecondary}
-                    fill={article.likes > 1000 ? COLORS.error : 'none'}
+                    color={article.likes > 1000 ? errorColor : color10}
+                    fill={article.likes > 1000 ? errorColor : 'none'}
                   />
-                  <Text fontSize="$2" color="$textSecondary">
+                  <Text fontSize="$2" color="$color10">
                     {article.likes}
                   </Text>
                 </XStack>
@@ -298,18 +307,18 @@ const InsuranceArticleScreen: React.FC = () => {
               <Pressable onPress={() => handleBookmark(article.id)}>
                 <Heart
                   size={20}
-                  color={article.isBookmarked ? COLORS.error : COLORS.textSecondary}
-                  fill={article.isBookmarked ? COLORS.error : 'none'}
+                  color={article.isBookmarked ? errorColor : color10}
+                  fill={article.isBookmarked ? errorColor : 'none'}
                 />
               </Pressable>
             </XStack>
 
             {/* 作者和日期 */}
             <XStack justifyContent="space-between" alignItems="center" marginTop="$2">
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 {article.author}
               </Text>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 {article.publishDate}
               </Text>
             </XStack>
@@ -322,47 +331,53 @@ const InsuranceArticleScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-          保险知识文章
-        </Text>
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            保险知识文章
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
         {/* 搜索框 */}
-        <View padding="$4" paddingBottom="$2">
+        <View padding="$2.5" paddingBottom="$2">
           <View
-            backgroundColor="$surface"
-            borderRadius="$3"
-            borderWidth={1}
-            borderColor="$borderColor"
+            backgroundColor="$color4"
+            borderRadius="$10"
             paddingHorizontal="$3"
             height={44}
           >
             <XStack alignItems="center" gap="$2" height="100%">
-              <Search size={20} color={COLORS.textSecondary} />
+              <Search size={20} color={color10} />
               <TextInput
                 placeholder="搜索文章标题、内容或标签"
-                placeholderTextColor={COLORS.textSecondary}
+                placeholderTextColor={color10}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 style={{
                   flex: 1,
                   fontSize: 14,
-                  color: COLORS.text,
+                  color: color12,
                   padding: 0,
                 }}
               />
@@ -372,7 +387,7 @@ const InsuranceArticleScreen: React.FC = () => {
 
         {/* 分类标签 */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-          <XStack paddingHorizontal="$4" gap="$2">
+          <XStack paddingHorizontal="$2.5" gap="$2">
             {categories.map(category => {
               const Icon = category.icon;
               const isSelected = selectedCategory === category.id;
@@ -380,17 +395,15 @@ const InsuranceArticleScreen: React.FC = () => {
                 <Pressable key={category.id} onPress={() => setSelectedCategory(category.id as ArticleCategory)}>
                   <View
                     paddingHorizontal="$3"
-                    paddingVertical="$2"
-                    borderRadius="$3"
-                    backgroundColor={isSelected ? category.color : '$surface'}
-                    borderWidth={1}
-                    borderColor={isSelected ? category.color : '$borderColor'}
+                    paddingVertical="$1.5"
+                    borderRadius="$10"
+                    backgroundColor={isSelected ? category.color : '$color4'}
                   >
                     <XStack alignItems="center" gap="$2">
                       <Icon size={16} color={isSelected ? 'white' : category.color} />
                       <Text
                         fontSize="$3"
-                        fontWeight="600"
+                        fontWeight={isSelected ? '600' : '400'}
                         color={isSelected ? 'white' : category.color}
                       >
                         {category.label}
@@ -404,20 +417,20 @@ const InsuranceArticleScreen: React.FC = () => {
         </ScrollView>
 
         {/* 文章列表 */}
-        <View paddingHorizontal="$4">
+        <View paddingHorizontal="$2.5">
           {loading && articles.length === 0 ? (
             <View padding="$8" alignItems="center">
-              <Text fontSize="$3" color="$textSecondary">
+              <Text fontSize="$3" color="$color10">
                 加载中...
               </Text>
             </View>
           ) : articles.length === 0 ? (
             <View padding="$8" alignItems="center">
-              <BookOpen size={48} color={COLORS.textSecondary} />
-              <Text fontSize="$4" color="$text" marginTop="$4">
+              <BookOpen size={48} color={color10} />
+              <Text fontSize="$4" color="$color12" marginTop="$4">
                 暂无文章
               </Text>
-              <Text fontSize="$3" color="$textSecondary" marginTop="$2">
+              <Text fontSize="$3" color="$color10" marginTop="$2">
                 {searchQuery ? '试试其他搜索词' : '请选择其他分类'}
               </Text>
             </View>

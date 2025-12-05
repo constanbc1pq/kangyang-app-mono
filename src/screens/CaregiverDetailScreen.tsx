@@ -1,12 +1,17 @@
+/**
+ * CaregiverDetailScreen 护理人员详情页
+ * 展示简介、资质证书、工作经历、用户评价
+ * 遵循 CLAUDE.md 组件规范
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
   Pressable,
   Image,
-  useWindowDimensions,
   ActivityIndicator,
 } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import {
   ArrowLeft,
   Heart,
@@ -18,10 +23,11 @@ import {
   Briefcase,
   MessageCircle,
   Calendar,
+  ChevronRight,
 } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { COLORS } from '@/constants/app';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Caregiver, CaregiverReview } from '@/types/elderly';
 import { getCaregiverById, getCaregiverReviews } from '@/services/caregiverService';
 
@@ -33,11 +39,19 @@ type CaregiverDetailScreenRouteProp = RouteProp<RootStackParamList, 'CaregiverDe
 
 type TabType = 'intro' | 'certifications' | 'history' | 'reviews';
 
+const GOLD_COLOR = '#D4AF37';
+
 const CaregiverDetailScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<any>>();
   const route = useRoute<CaregiverDetailScreenRouteProp>();
   const { caregiverId } = route.params;
-  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const theme = useTheme();
+
+  const primaryColor = theme.primary?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+  const successColor = theme.success?.val;
 
   const [caregiver, setCaregiver] = useState<Caregiver | null>(null);
   const [reviews, setReviews] = useState<CaregiverReview[]>([]);
@@ -66,14 +80,12 @@ const CaregiverDetailScreen: React.FC = () => {
   };
 
   const handleShare = () => {
-    // TODO: Implement share functionality
     console.log('Share caregiver profile');
   };
 
   const handleBooking = () => {
     if (!caregiver) return;
 
-    // 导航到AI咨询，传递护理人员信息以跳过前面的选择步骤
     navigation.navigate('AIConsultation' as never, {
       source: 'elderly_service',
       caregiverId: caregiver.id,
@@ -85,7 +97,7 @@ const CaregiverDetailScreen: React.FC = () => {
   if (loading) {
     return (
       <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={primaryColor} />
       </View>
     );
   }
@@ -93,7 +105,7 @@ const CaregiverDetailScreen: React.FC = () => {
   if (!caregiver) {
     return (
       <View flex={1} backgroundColor="$background" justifyContent="center" alignItems="center">
-        <Text fontSize="$4" color="$textSecondary">
+        <Text fontSize="$4" color="$color10">
           护理人员信息不存在
         </Text>
       </View>
@@ -102,7 +114,7 @@ const CaregiverDetailScreen: React.FC = () => {
 
   const getTabIcon = (key: TabType) => {
     const isActive = activeTab === key;
-    const iconColor = isActive ? 'white' : COLORS.textSecondary;
+    const iconColor = isActive ? 'white' : color10;
 
     switch (key) {
       case 'intro':
@@ -125,28 +137,34 @@ const CaregiverDetailScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
+      {/* TitleBar - 按照CLAUDE.md规范 */}
       <View
-        paddingHorizontal="$4"
-        paddingTop="$4"
-        paddingBottom="$3"
-        backgroundColor="$background"
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <XStack justifyContent="space-between" alignItems="center">
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <Pressable onPress={() => navigation.goBack()}>
             <View
               width={40}
               height={40}
               borderRadius={20}
-              backgroundColor="$surface"
               justifyContent="center"
               alignItems="center"
             >
-              <ArrowLeft size={20} color={COLORS.text} />
+              <ArrowLeft size={24} color={color12} />
             </View>
           </Pressable>
+
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            护理人员详情
+          </Text>
 
           <XStack gap="$2">
             <Pressable onPress={() => setIsFavorite(!isFavorite)}>
@@ -154,14 +172,13 @@ const CaregiverDetailScreen: React.FC = () => {
                 width={40}
                 height={40}
                 borderRadius={20}
-                backgroundColor="$surface"
                 justifyContent="center"
                 alignItems="center"
               >
                 <Heart
                   size={20}
-                  color={isFavorite ? COLORS.error : COLORS.text}
-                  fill={isFavorite ? COLORS.error : 'none'}
+                  color={isFavorite ? '#EF4444' : color12}
+                  fill={isFavorite ? '#EF4444' : 'none'}
                 />
               </View>
             </Pressable>
@@ -170,11 +187,10 @@ const CaregiverDetailScreen: React.FC = () => {
                 width={40}
                 height={40}
                 borderRadius={20}
-                backgroundColor="$surface"
                 justifyContent="center"
                 alignItems="center"
               >
-                <Share2 size={20} color={COLORS.text} />
+                <Share2 size={20} color={color12} />
               </View>
             </Pressable>
           </XStack>
@@ -183,115 +199,119 @@ const CaregiverDetailScreen: React.FC = () => {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
-        <View padding="$4">
-          <XStack gap="$3" alignItems="flex-start">
-            {/* Avatar */}
-            <View position="relative">
-              <View
-                width={80}
-                height={80}
-                borderRadius={40}
-                backgroundColor="$surface"
-                overflow="hidden"
-              >
-                <Image
-                  source={{ uri: caregiver.avatar }}
-                  style={{ width: 80, height: 80 }}
-                />
-              </View>
-              {caregiver.verified && (
+        <View padding="$2.5">
+          <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+            <XStack gap="$2" alignItems="flex-start">
+              {/* Avatar */}
+              <View position="relative">
                 <View
-                  position="absolute"
-                  bottom={-2}
-                  right={-2}
-                  width={24}
-                  height={24}
-                  borderRadius={12}
-                  backgroundColor={COLORS.primary}
-                  justifyContent="center"
-                  alignItems="center"
-                  borderWidth={2}
-                  borderColor="$background"
+                  width={72}
+                  height={72}
+                  borderRadius={36}
+                  backgroundColor="$color4"
+                  overflow="hidden"
                 >
-                  <CheckCircle size={14} color="white" />
+                  <Image
+                    source={{ uri: caregiver.avatar }}
+                    style={{ width: 72, height: 72 }}
+                  />
                 </View>
-              )}
-            </View>
-
-            {/* Basic Info */}
-            <YStack flex={1} gap="$2">
-              <XStack alignItems="center" gap="$2">
-                <Text fontSize="$6" fontWeight="bold" color="$text">
-                  {caregiver.name}
-                </Text>
-                <Text fontSize="$3" color="$textSecondary">
-                  {caregiver.age}岁
-                </Text>
-                {caregiver.available && (
+                {caregiver.verified && (
                   <View
-                    backgroundColor={COLORS.successLight}
-                    paddingHorizontal="$2"
-                    paddingVertical="$1"
-                    borderRadius="$2"
+                    position="absolute"
+                    bottom={-2}
+                    right={-2}
+                    width={22}
+                    height={22}
+                    borderRadius={11}
+                    backgroundColor="$primary"
+                    justifyContent="center"
+                    alignItems="center"
+                    borderWidth={2}
+                    borderColor="$color2"
                   >
-                    <Text fontSize="$1" color={COLORS.success} fontWeight="600">
-                      可预约
-                    </Text>
+                    <CheckCircle size={12} color="white" />
                   </View>
                 )}
-              </XStack>
-
-              <View
-                backgroundColor={COLORS.primaryLight}
-                paddingHorizontal="$3"
-                paddingVertical="$1.5"
-                borderRadius="$2"
-                alignSelf="flex-start"
-              >
-                <Text fontSize="$2" color="white" fontWeight="600">
-                  {caregiver.qualificationBadge}
-                </Text>
               </View>
 
-              <XStack alignItems="center" gap="$3">
-                <XStack alignItems="center" gap="$1">
-                  <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
-                  <Text fontSize="$3" fontWeight="600" color="$text">
-                    {caregiver.rating}
+              {/* Basic Info */}
+              <YStack flex={1} gap="$1.5">
+                <XStack alignItems="center" gap="$2">
+                  <Text fontSize="$5" fontWeight="700" color="$color12">
+                    {caregiver.name}
                   </Text>
-                  <Text fontSize="$2" color="$textSecondary">
-                    ({caregiver.reviews}评价)
+                  <Text fontSize="$2" color="$color10">
+                    {caregiver.age}岁
+                  </Text>
+                  {caregiver.available && (
+                    <View
+                      backgroundColor="$success"
+                      paddingHorizontal="$2"
+                      paddingVertical="$0.5"
+                      borderRadius="$10"
+                    >
+                      <Text fontSize={10} color="white" fontWeight="500">
+                        可预约
+                      </Text>
+                    </View>
+                  )}
+                </XStack>
+
+                <View
+                  backgroundColor="$primary"
+                  paddingHorizontal="$2"
+                  paddingVertical="$0.5"
+                  borderRadius="$10"
+                  alignSelf="flex-start"
+                >
+                  <Text fontSize="$2" color="white" fontWeight="500">
+                    {caregiver.qualificationBadge}
+                  </Text>
+                </View>
+
+                <XStack alignItems="center" gap="$2" flexWrap="wrap">
+                  <XStack alignItems="center" gap="$0.5">
+                    <Star size={14} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                    <Text fontSize="$3" fontWeight="600" color="$color12">
+                      {caregiver.rating}
+                    </Text>
+                    <Text fontSize="$2" color="$color10">
+                      ({caregiver.reviews}评价)
+                    </Text>
+                  </XStack>
+                  <Text fontSize="$2" color="$color10">
+                    从业{caregiver.experience}
+                  </Text>
+                  <Text fontSize="$2" color="$color10">
+                    {caregiver.completedJobs}单
                   </Text>
                 </XStack>
-                <Text fontSize="$2" color="$textSecondary">
-                  从业{caregiver.experience}
-                </Text>
-                <Text fontSize="$2" color="$textSecondary">
-                  {caregiver.completedJobs}单
-                </Text>
-              </XStack>
 
-              <XStack alignItems="center" gap="$1">
-                <Clock size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
-                  {caregiver.responseTime}
-                </Text>
-              </XStack>
-            </YStack>
-          </XStack>
+                <XStack alignItems="center" gap="$1">
+                  <Clock size={14} color={color10} />
+                  <Text fontSize="$2" color="$color10">
+                    {caregiver.responseTime}
+                  </Text>
+                </XStack>
+              </YStack>
+            </XStack>
 
-          {/* Specialty */}
-          <View
-            marginTop="$3"
-            backgroundColor="rgba(99, 102, 241, 0.1)"
-            paddingHorizontal="$3"
-            paddingVertical="$2"
-            borderRadius="$2"
-            alignSelf="flex-start"
-          >
-            <Text fontSize="$3" color={COLORS.primary} fontWeight="500">
-              专长：{caregiver.specialty}
-            </Text>
+            {/* Specialty */}
+            <View
+              marginTop="$2"
+              borderWidth={1}
+              borderColor="$primary"
+              paddingHorizontal="$2"
+              paddingVertical="$1.5"
+              borderRadius="$10"
+              alignSelf="flex-start"
+              style={{ backgroundColor: `${primaryColor}10` }}
+            >
+              <Text fontSize="$3" color="$primary" fontWeight="500">
+                专长：{caregiver.specialty}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -299,25 +319,25 @@ const CaregiverDetailScreen: React.FC = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 18 }}
         >
           <XStack gap="$2">
             {tabs.map((tab) => (
               <Pressable key={tab.key} onPress={() => setActiveTab(tab.key)}>
                 <View
-                  paddingHorizontal="$4"
-                  paddingVertical="$2.5"
-                  borderRadius="$3"
-                  backgroundColor={activeTab === tab.key ? COLORS.primary : '$surface'}
+                  paddingHorizontal="$2.5"
+                  paddingVertical="$1.5"
+                  borderRadius="$10"
+                  backgroundColor={activeTab === tab.key ? '$primary' : '$color4'}
                   borderWidth={1}
-                  borderColor={activeTab === tab.key ? COLORS.primary : '$borderColor'}
+                  borderColor={activeTab === tab.key ? '$primary' : '$color5'}
                 >
-                  <XStack alignItems="center" gap="$1.5">
+                  <XStack alignItems="center" gap="$1">
                     {getTabIcon(tab.key)}
                     <Text
                       fontSize="$3"
                       fontWeight="500"
-                      color={activeTab === tab.key ? 'white' : '$text'}
+                      color={activeTab === tab.key ? 'white' : '$color12'}
                     >
                       {tab.label}
                     </Text>
@@ -329,35 +349,35 @@ const CaregiverDetailScreen: React.FC = () => {
         </ScrollView>
 
         {/* Tab Content */}
-        <View padding="$4">
+        <View padding="$2.5">
           {/* 简介 Tab */}
           {activeTab === 'intro' && (
-            <YStack gap="$4">
-              <View>
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$2">
+            <YStack gap="$2">
+              <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1.5">
                   个人简介
                 </Text>
-                <Text fontSize="$3" color="$text" lineHeight={24}>
+                <Text fontSize="$3" color="$color12" lineHeight={22}>
                   {caregiver.detailedIntro}
                 </Text>
               </View>
 
-              <View>
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1.5">
                   专业技能
                 </Text>
-                <XStack gap="$2" flexWrap="wrap">
+                <XStack gap="$1.5" flexWrap="wrap">
                   {caregiver.skills.map((skill, index) => (
                     <View
                       key={index}
-                      backgroundColor="$surface"
-                      paddingHorizontal="$3"
-                      paddingVertical="$2"
-                      borderRadius="$2"
                       borderWidth={1}
-                      borderColor="$borderColor"
+                      borderColor="$primary"
+                      paddingHorizontal="$2"
+                      paddingVertical="$1"
+                      borderRadius="$10"
+                      style={{ backgroundColor: `${primaryColor}10` }}
                     >
-                      <Text fontSize="$2" color="$text">
+                      <Text fontSize="$2" color="$primary">
                         {skill}
                       </Text>
                     </View>
@@ -365,22 +385,22 @@ const CaregiverDetailScreen: React.FC = () => {
                 </XStack>
               </View>
 
-              <View>
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1.5">
                   语言能力
                 </Text>
-                <XStack gap="$2" flexWrap="wrap">
+                <XStack gap="$1.5" flexWrap="wrap">
                   {caregiver.languages.map((lang, index) => (
                     <View
                       key={index}
-                      backgroundColor="$surface"
-                      paddingHorizontal="$3"
-                      paddingVertical="$2"
-                      borderRadius="$2"
+                      backgroundColor="$color4"
+                      paddingHorizontal="$2"
+                      paddingVertical="$1"
+                      borderRadius="$10"
                       borderWidth={1}
-                      borderColor="$borderColor"
+                      borderColor="$color5"
                     >
-                      <Text fontSize="$2" color="$text">
+                      <Text fontSize="$2" color="$color12">
                         {lang}
                       </Text>
                     </View>
@@ -388,32 +408,34 @@ const CaregiverDetailScreen: React.FC = () => {
                 </XStack>
               </View>
 
-              <View>
-                <Text fontSize="$4" fontWeight="bold" color="$text" marginBottom="$3">
+              <View backgroundColor="$color2" borderRadius="$5" borderWidth={1} borderColor="$color5" padding="$2">
+                <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$1.5">
                   服务价格
                 </Text>
-                <YStack gap="$2">
+                <YStack gap="$1.5">
                   <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       时薪
                     </Text>
-                    <Text fontSize="$5" fontWeight="bold" color={COLORS.primary}>
+                    <Text fontSize="$5" fontWeight="700" color="$primary">
                       ¥{caregiver.hourlyRate}/时
                     </Text>
                   </XStack>
+                  <View height={1} backgroundColor="$color5" />
                   <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       日薪
                     </Text>
-                    <Text fontSize="$5" fontWeight="bold" color={COLORS.primary}>
+                    <Text fontSize="$5" fontWeight="700" color="$primary">
                       ¥{caregiver.dailyRate}/天
                     </Text>
                   </XStack>
+                  <View height={1} backgroundColor="$color5" />
                   <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="$3" color="$textSecondary">
+                    <Text fontSize="$3" color="$color10">
                       月薪
                     </Text>
-                    <Text fontSize="$5" fontWeight="bold" color={COLORS.primary}>
+                    <Text fontSize="$5" fontWeight="700" color="$primary">
                       ¥{caregiver.monthlyRate}/月
                     </Text>
                   </XStack>
@@ -424,49 +446,49 @@ const CaregiverDetailScreen: React.FC = () => {
 
           {/* 资质证书 Tab */}
           {activeTab === 'certifications' && (
-            <YStack gap="$3">
-              <Text fontSize="$4" fontWeight="bold" color="$text">
+            <YStack gap="$2">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 资质证书
               </Text>
               {caregiver.certifications.map((cert) => (
                 <View
                   key={cert.id}
-                  backgroundColor="$surface"
-                  borderRadius="$3"
-                  padding="$3"
+                  backgroundColor="$color2"
+                  borderRadius="$5"
+                  padding="$2"
                   borderWidth={1}
-                  borderColor="$borderColor"
+                  borderColor="$color5"
                 >
-                  <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$2">
+                  <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$1.5">
                     <YStack flex={1} gap="$1">
                       <XStack alignItems="center" gap="$2">
-                        <Text fontSize="$4" fontWeight="600" color="$text">
+                        <Text fontSize="$4" fontWeight="600" color="$color12">
                           {cert.name}
                         </Text>
                         {cert.verified && (
                           <View
-                            backgroundColor={COLORS.successLight}
+                            backgroundColor="$success"
                             paddingHorizontal="$2"
-                            paddingVertical="$1"
-                            borderRadius="$2"
+                            paddingVertical="$0.5"
+                            borderRadius="$10"
                           >
-                            <Text fontSize="$1" color={COLORS.success} fontWeight="600">
+                            <Text fontSize={10} color="white" fontWeight="500">
                               已认证
                             </Text>
                           </View>
                         )}
                       </XStack>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         证书编号：{cert.number}
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         发证机构：{cert.issuer}
                       </Text>
-                      <Text fontSize="$2" color="$textSecondary">
+                      <Text fontSize="$2" color="$color10">
                         发证日期：{cert.issueDate}
                       </Text>
                       {cert.expiryDate && (
-                        <Text fontSize="$2" color="$textSecondary">
+                        <Text fontSize="$2" color="$color10">
                           有效期至：{cert.expiryDate}
                         </Text>
                       )}
@@ -474,10 +496,10 @@ const CaregiverDetailScreen: React.FC = () => {
                   </XStack>
                   {cert.image && (
                     <View
-                      marginTop="$2"
-                      borderRadius="$2"
+                      marginTop="$1.5"
+                      borderRadius="$4"
                       overflow="hidden"
-                      backgroundColor="$surface"
+                      backgroundColor="$color4"
                     >
                       <Image
                         source={{ uri: cert.image }}
@@ -493,45 +515,47 @@ const CaregiverDetailScreen: React.FC = () => {
 
           {/* 工作经历 Tab */}
           {activeTab === 'history' && (
-            <YStack gap="$3">
-              <Text fontSize="$4" fontWeight="bold" color="$text">
+            <YStack gap="$2">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 工作经历
               </Text>
               {caregiver.workHistory.map((work) => (
                 <View
                   key={work.id}
-                  backgroundColor="$surface"
-                  borderRadius="$3"
-                  padding="$3"
+                  backgroundColor="$color2"
+                  borderRadius="$5"
+                  padding="$2"
                   borderWidth={1}
-                  borderColor="$borderColor"
+                  borderColor="$color5"
+                  borderLeftWidth={3}
+                  borderLeftColor="$primary"
                 >
-                  <XStack alignItems="flex-start" gap="$3">
+                  <XStack alignItems="flex-start" gap="$2">
                     <View
-                      width={40}
-                      height={40}
-                      borderRadius={20}
-                      backgroundColor={COLORS.primaryLight}
+                      width={36}
+                      height={36}
+                      borderRadius={18}
+                      backgroundColor="$primary"
                       justifyContent="center"
                       alignItems="center"
                     >
-                      <Briefcase size={20} color="white" />
+                      <Briefcase size={18} color="white" />
                     </View>
-                    <YStack flex={1} gap="$1.5">
-                      <Text fontSize="$4" fontWeight="600" color="$text">
+                    <YStack flex={1} gap="$1">
+                      <Text fontSize="$4" fontWeight="600" color="$color12">
                         {work.position}
                       </Text>
-                      <Text fontSize="$3" color="$textSecondary">
+                      <Text fontSize="$3" color="$color10">
                         {work.institution}
                       </Text>
                       <XStack alignItems="center" gap="$1">
-                        <Calendar size={14} color={COLORS.textSecondary} />
-                        <Text fontSize="$2" color="$textSecondary">
+                        <Calendar size={14} color={color10} />
+                        <Text fontSize="$2" color="$color10">
                           {work.startDate} - {work.endDate || '至今'}
                         </Text>
                       </XStack>
                       {work.description && (
-                        <Text fontSize="$2" color="$text" marginTop="$1" lineHeight={20}>
+                        <Text fontSize="$2" color="$color12" marginTop="$1" lineHeight={18}>
                           {work.description}
                         </Text>
                       )}
@@ -544,14 +568,14 @@ const CaregiverDetailScreen: React.FC = () => {
 
           {/* 用户评价 Tab */}
           {activeTab === 'reviews' && (
-            <YStack gap="$3">
+            <YStack gap="$2">
               <XStack justifyContent="space-between" alignItems="center">
-                <Text fontSize="$4" fontWeight="bold" color="$text">
+                <Text fontSize="$4" fontWeight="600" color="$color12">
                   用户评价 ({reviews.length})
                 </Text>
                 <XStack alignItems="center" gap="$1">
-                  <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
-                  <Text fontSize="$3" fontWeight="600" color="$text">
+                  <Star size={16} color={GOLD_COLOR} fill={GOLD_COLOR} />
+                  <Text fontSize="$3" fontWeight="600" color="$color12">
                     {caregiver.rating}
                   </Text>
                 </XStack>
@@ -559,13 +583,15 @@ const CaregiverDetailScreen: React.FC = () => {
 
               {reviews.length === 0 ? (
                 <View
-                  padding="$8"
+                  padding="$4"
                   justifyContent="center"
                   alignItems="center"
-                  backgroundColor="$surface"
-                  borderRadius="$3"
+                  backgroundColor="$color2"
+                  borderRadius="$5"
+                  borderWidth={1}
+                  borderColor="$color5"
                 >
-                  <Text fontSize="$3" color="$textSecondary">
+                  <Text fontSize="$3" color="$color10">
                     暂无评价
                   </Text>
                 </View>
@@ -573,77 +599,79 @@ const CaregiverDetailScreen: React.FC = () => {
                 reviews.map((review) => (
                   <View
                     key={review.id}
-                    backgroundColor="$surface"
-                    borderRadius="$3"
-                    padding="$3"
+                    backgroundColor="$color2"
+                    borderRadius="$5"
+                    padding="$2"
                     borderWidth={1}
-                    borderColor="$borderColor"
+                    borderColor="$color5"
                   >
-                    <XStack gap="$3" alignItems="flex-start">
+                    <XStack gap="$2" alignItems="flex-start">
                       <View
-                        width={40}
-                        height={40}
-                        borderRadius={20}
-                        backgroundColor="$background"
+                        width={36}
+                        height={36}
+                        borderRadius={18}
+                        backgroundColor="$color4"
                         overflow="hidden"
                       >
                         <Image
                           source={{ uri: review.userAvatar }}
-                          style={{ width: 40, height: 40 }}
+                          style={{ width: 36, height: 36 }}
                         />
                       </View>
-                      <YStack flex={1} gap="$2">
+                      <YStack flex={1} gap="$1.5">
                         <XStack justifyContent="space-between" alignItems="center">
-                          <Text fontSize="$3" fontWeight="600" color="$text">
+                          <Text fontSize="$3" fontWeight="600" color="$color12">
                             {review.userName}
                           </Text>
-                          <Text fontSize="$2" color="$textSecondary">
+                          <Text fontSize="$2" color="$color10">
                             {review.date}
                           </Text>
                         </XStack>
 
-                        <XStack gap="$1">
+                        <XStack gap="$0.5">
                           {Array.from({ length: 5 }).map((_, index) => (
                             <Star
                               key={index}
                               size={14}
-                              color={index < review.rating ? COLORS.warning : COLORS.border}
-                              fill={index < review.rating ? COLORS.warning : 'none'}
+                              color={index < review.rating ? GOLD_COLOR : color10}
+                              fill={index < review.rating ? GOLD_COLOR : 'none'}
                             />
                           ))}
                         </XStack>
 
                         <View
-                          backgroundColor="rgba(99, 102, 241, 0.05)"
+                          borderWidth={1}
+                          borderColor="$primary"
                           paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$2"
+                          paddingVertical="$0.5"
+                          borderRadius="$10"
                           alignSelf="flex-start"
+                          style={{ backgroundColor: `${primaryColor}10` }}
                         >
-                          <Text fontSize="$2" color={COLORS.primary}>
+                          <Text fontSize="$2" color="$primary">
                             {review.serviceType}
                           </Text>
                         </View>
 
-                        <Text fontSize="$3" color="$text" lineHeight={20}>
+                        <Text fontSize="$3" color="$color12" lineHeight={20}>
                           {review.content}
                         </Text>
 
                         {review.images && review.images.length > 0 && (
                           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                            <XStack gap="$2">
+                            <XStack gap="$1.5">
                               {review.images.map((img, index) => (
                                 <View
                                   key={index}
-                                  width={100}
-                                  height={100}
-                                  borderRadius="$2"
+                                  width={80}
+                                  height={80}
+                                  borderRadius="$4"
                                   overflow="hidden"
-                                  backgroundColor="$background"
+                                  backgroundColor="$color4"
                                 >
                                   <Image
                                     source={{ uri: img }}
-                                    style={{ width: 100, height: 100 }}
+                                    style={{ width: 80, height: 80 }}
                                   />
                                 </View>
                               ))}
@@ -653,30 +681,28 @@ const CaregiverDetailScreen: React.FC = () => {
 
                         {review.reply && (
                           <View
-                            backgroundColor="$background"
-                            padding="$2.5"
-                            borderRadius="$2"
-                            marginTop="$2"
+                            backgroundColor="$color4"
+                            padding="$2"
+                            borderRadius="$4"
+                            marginTop="$1"
                           >
-                            <Text fontSize="$2" color="$textSecondary" marginBottom="$1">
+                            <Text fontSize="$2" color="$color10" marginBottom="$0.5">
                               护理人员回复：
                             </Text>
-                            <Text fontSize="$2" color="$text" lineHeight={18}>
+                            <Text fontSize="$2" color="$color12" lineHeight={18}>
                               {review.reply.content}
                             </Text>
-                            <Text fontSize="$1" color="$textSecondary" marginTop="$1">
+                            <Text fontSize={10} color="$color10" marginTop="$0.5">
                               {review.reply.date}
                             </Text>
                           </View>
                         )}
 
-                        <Pressable>
-                          <XStack alignItems="center" gap="$1" marginTop="$1">
-                            <Text fontSize="$2" color="$textSecondary">
-                              有帮助 ({review.helpful})
-                            </Text>
-                          </XStack>
-                        </Pressable>
+                        <XStack alignItems="center" gap="$0.5" marginTop="$0.5">
+                          <Text fontSize="$2" color="$color10">
+                            有帮助 ({review.helpful})
+                          </Text>
+                        </XStack>
                       </YStack>
                     </XStack>
                   </View>
@@ -696,43 +722,37 @@ const CaregiverDetailScreen: React.FC = () => {
         bottom={0}
         left={0}
         right={0}
-        backgroundColor="$background"
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
-        paddingHorizontal="$4"
-        paddingVertical="$3"
-        shadowColor="$shadowColor"
-        shadowOpacity={0.1}
-        shadowRadius={8}
-        elevation={8}
+        borderTopColor="$color5"
+        paddingHorizontal="$2.5"
+        paddingVertical="$2"
+        paddingBottom={insets.bottom + 8}
       >
-        <XStack gap="$3" alignItems="center">
+        <XStack gap="$2" alignItems="center">
           <YStack flex={1}>
-            <Text fontSize="$2" color="$textSecondary">
+            <Text fontSize="$2" color="$color10">
               参考价格
             </Text>
-            <XStack alignItems="baseline" gap="$1">
-              <Text fontSize="$6" fontWeight="bold" color={COLORS.primary}>
+            <XStack alignItems="baseline" gap="$0.5">
+              <Text fontSize="$5" fontWeight="700" color="$primary">
                 ¥{caregiver.hourlyRate}
               </Text>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 /时起
               </Text>
             </XStack>
           </YStack>
 
-          <Pressable
-            onPress={handleBooking}
-            style={{ flex: 1 }}
-          >
+          <Pressable onPress={handleBooking} style={{ flex: 1 }}>
             <View
               height={48}
-              borderRadius="$4"
-              backgroundColor={COLORS.primary}
+              borderRadius="$10"
+              backgroundColor="$primary"
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize="$4" color="white" fontWeight="600">
+              <Text fontSize="$4" fontWeight="600" color="white">
                 在线咨询
               </Text>
             </View>

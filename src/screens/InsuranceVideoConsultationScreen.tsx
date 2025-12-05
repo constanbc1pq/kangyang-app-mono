@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { ScrollView, Pressable, TextInput, Alert } from 'react-native';
-import { View, Text, XStack, YStack } from 'tamagui';
+import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Video, Calendar, Clock, Send, AlertCircle } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { createConsultation } from '@/services/insuranceAdvisorService';
 
 type RouteParams = {
@@ -17,6 +17,12 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RouteParams, 'InsuranceVideoConsultation'>>();
   const { advisorId, advisorName } = route.params;
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const primaryColor = theme.primary?.val;
+  const warningColor = theme.warning?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const [question, setQuestion] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -105,59 +111,67 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
         borderBottomWidth={1}
-        borderBottomColor="$borderColor"
+        borderBottomColor="$color5"
       >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text fontSize="$5" fontWeight="600" color="$text" marginLeft="$3">
-          视频咨询预约
-        </Text>
-      </XStack>
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            视频咨询预约
+          </Text>
+          <View width={40} />
+        </XStack>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 顾问信息 */}
         <View
-          marginHorizontal="$4"
-          marginTop="$4"
-          padding="$3"
-          backgroundColor="$surface"
-          borderRadius="$3"
+          marginHorizontal="$2.5"
+          marginTop="$2.5"
+          padding="$2"
+          backgroundColor="$color2"
+          borderRadius="$5"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
         >
           <XStack alignItems="center" gap="$2">
             <View
               width={40}
               height={40}
               borderRadius={20}
-              backgroundColor={COLORS.warning}
+              backgroundColor={warningColor}
               justifyContent="center"
               alignItems="center"
             >
               <Video size={20} color="white" />
             </View>
             <YStack flex={1}>
-              <Text fontSize="$4" fontWeight="600" color="$text">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
                 {advisorName} 顾问
               </Text>
-              <Text fontSize="$2" color="$textSecondary">
+              <Text fontSize="$2" color="$color10">
                 将与您进行视频面对面交流
               </Text>
             </YStack>
             <View
               paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
-              backgroundColor={`${COLORS.warning}20`}
+              paddingVertical="$0.5"
+              borderRadius="$10"
+              backgroundColor={`${warningColor}15`}
             >
-              <Text fontSize="$2" color={COLORS.warning} fontWeight="600">
+              <Text fontSize="$2" color={warningColor} fontWeight="600">
                 免费
               </Text>
             </View>
@@ -166,21 +180,21 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
 
         {/* 设备准备提醒 */}
         <View
-          marginHorizontal="$4"
-          marginTop="$3"
-          padding="$3"
-          backgroundColor="#FFF7ED"
-          borderRadius="$3"
+          marginHorizontal="$2.5"
+          marginTop="$2"
+          padding="$2"
+          backgroundColor={`${warningColor}10`}
+          borderRadius="$4"
           borderLeftWidth={3}
-          borderLeftColor={COLORS.warning}
+          borderLeftColor={warningColor}
         >
           <XStack alignItems="flex-start" gap="$2">
-            <AlertCircle size={18} color={COLORS.warning} style={{ marginTop: 2 }} />
+            <AlertCircle size={18} color={warningColor} style={{ marginTop: 2 }} />
             <YStack flex={1}>
-              <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
                 设备准备提醒
               </Text>
-              <Text fontSize="$2" color="$text" lineHeight={18}>
+              <Text fontSize="$2" color="$color12" lineHeight={18}>
                 请确保您的设备摄像头、麦克风和网络正常，建议在光线充足的环境下进行视频咨询
               </Text>
             </YStack>
@@ -188,25 +202,25 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
         </View>
 
         {/* 咨询主题 */}
-        <YStack padding="$4">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$2">
+        <YStack padding="$2.5">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             咨询主题 *
           </Text>
           <View
-            backgroundColor="$surface"
-            borderRadius="$3"
+            backgroundColor="$color2"
+            borderRadius="$5"
             borderWidth={1}
-            borderColor="$borderColor"
-            padding="$3"
+            borderColor="$color5"
+            padding="$2"
           >
             <TextInput
               placeholder="请简要描述您想咨询的问题..."
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={color10}
               multiline
               numberOfLines={4}
               style={{
                 fontSize: 14,
-                color: COLORS.text,
+                color: color12,
                 textAlignVertical: 'top',
                 minHeight: 80,
               }}
@@ -214,18 +228,18 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
               onChangeText={setQuestion}
               maxLength={200}
             />
-            <Text fontSize="$2" color="$textSecondary" textAlign="right" marginTop="$2">
+            <Text fontSize="$2" color="$color10" textAlign="right" marginTop="$2">
               {question.length}/200
             </Text>
           </View>
-          <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+          <Text fontSize="$2" color="$color10" marginTop="$1">
             建议提前准备好相关保单或产品资料，以便顾问更好地为您解答
           </Text>
         </YStack>
 
         {/* 预约日期 */}
-        <YStack paddingHorizontal="$4" marginBottom="$4">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$2">
+        <YStack paddingHorizontal="$2.5" marginBottom="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             预约日期 *
           </Text>
           <XStack gap="$2" flexWrap="wrap">
@@ -237,22 +251,20 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
               >
                 <View
                   paddingHorizontal="$3"
-                  paddingVertical="$2"
-                  borderRadius="$2"
-                  backgroundColor={
-                    selectedDate === date.value ? COLORS.warning : '$borderColor'
-                  }
+                  paddingVertical="$1.5"
+                  borderRadius="$10"
+                  backgroundColor={selectedDate === date.value ? '$warning' : '$color4'}
                   minWidth={80}
                   alignItems="center"
                 >
                   <XStack alignItems="center" gap="$1">
                     <Calendar
                       size={14}
-                      color={selectedDate === date.value ? 'white' : COLORS.text}
+                      color={selectedDate === date.value ? 'white' : color12}
                     />
                     <Text
                       fontSize="$3"
-                      color={selectedDate === date.value ? 'white' : '$text'}
+                      color={selectedDate === date.value ? 'white' : '$color12'}
                       fontWeight={selectedDate === date.value ? '600' : '400'}
                     >
                       {date.label}
@@ -265,8 +277,8 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
         </YStack>
 
         {/* 预约时间 */}
-        <YStack paddingHorizontal="$4" marginBottom="$4">
-          <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$2">
+        <YStack paddingHorizontal="$2.5" marginBottom="$2">
+          <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
             预约时间 *
           </Text>
           <XStack gap="$2" flexWrap="wrap">
@@ -278,22 +290,20 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
               >
                 <View
                   paddingHorizontal="$3"
-                  paddingVertical="$2"
-                  borderRadius="$2"
-                  backgroundColor={
-                    selectedTime === time.value ? COLORS.warning : '$borderColor'
-                  }
+                  paddingVertical="$1.5"
+                  borderRadius="$10"
+                  backgroundColor={selectedTime === time.value ? '$warning' : '$color4'}
                   minWidth={100}
                   alignItems="center"
                 >
                   <XStack alignItems="center" gap="$1">
                     <Clock
                       size={14}
-                      color={selectedTime === time.value ? 'white' : COLORS.text}
+                      color={selectedTime === time.value ? 'white' : color12}
                     />
                     <Text
                       fontSize="$3"
-                      color={selectedTime === time.value ? 'white' : '$text'}
+                      color={selectedTime === time.value ? 'white' : '$color12'}
                       fontWeight={selectedTime === time.value ? '600' : '400'}
                     >
                       {time.label}
@@ -307,18 +317,18 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
 
         {/* 服务说明 */}
         <View
-          marginHorizontal="$4"
-          marginBottom="$4"
-          padding="$3"
-          backgroundColor="#E0F2FE"
-          borderRadius="$3"
+          marginHorizontal="$2.5"
+          marginBottom="$2"
+          padding="$2"
+          backgroundColor={`${primaryColor}10`}
+          borderRadius="$4"
           borderLeftWidth={3}
-          borderLeftColor={COLORS.primary}
+          borderLeftColor={primaryColor}
         >
-          <Text fontSize="$3" fontWeight="600" color="$text" marginBottom="$1">
+          <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$1">
             视频咨询说明
           </Text>
-          <Text fontSize="$2" color="$text" lineHeight={20}>
+          <Text fontSize="$2" color="$color12" lineHeight={20}>
             • 视频咨询完全免费，无需购买会员{'\n'}
             • 支持屏幕共享功能，可展示产品条款{'\n'}
             • 建议使用Wi-Fi网络，保证通话质量{'\n'}
@@ -337,25 +347,26 @@ const InsuranceVideoConsultationScreen: React.FC = () => {
         bottom={0}
         left={0}
         right={0}
-        padding="$4"
-        backgroundColor="$surface"
+        padding="$2.5"
+        paddingBottom={insets.bottom > 0 ? insets.bottom : 16}
+        backgroundColor="$color2"
         borderTopWidth={1}
-        borderTopColor="$borderColor"
+        borderTopColor="$color5"
       >
         <Pressable onPress={handleSubmit} disabled={isSubmitDisabled} style={{ flex: 1 }}>
           <View
             height={48}
-            borderRadius="$3"
-            backgroundColor={isSubmitDisabled ? '$borderColor' : COLORS.warning}
+            borderRadius="$10"
+            backgroundColor={isSubmitDisabled ? '$color5' : '$warning'}
             justifyContent="center"
             alignItems="center"
           >
             <XStack alignItems="center" gap="$2">
-              <Send size={20} color={isSubmitDisabled ? COLORS.textSecondary : 'white'} />
+              <Send size={20} color={isSubmitDisabled ? color10 : 'white'} />
               <Text
-                color={isSubmitDisabled ? COLORS.textSecondary : 'white'}
+                color={isSubmitDisabled ? '$color10' : 'white'}
                 fontSize="$4"
-                fontWeight="600"
+                fontWeight="500"
               >
                 {submitting ? '提交中...' : '确认预约'}
               </Text>

@@ -5,17 +5,26 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
   TextInput,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  ArrowLeft,
+  MessageCircle,
+  User,
+  Send,
+  Users,
+  FileText,
+  HelpCircle,
+  Info,
+} from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+
+const GOLD_COLOR = '#D4AF37';
 
 interface Message {
   id: string;
@@ -42,8 +51,15 @@ interface FAQ {
 }
 
 const AILegalAssistantScreen: React.FC = () => {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const primaryColor = theme.primary?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -56,7 +72,6 @@ const AILegalAssistantScreen: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
-  // 常见问题库
   const faqs: FAQ[] = [
     {
       id: 'faq_1',
@@ -92,7 +107,6 @@ const AILegalAssistantScreen: React.FC = () => {
     },
   ];
 
-  // 常见问题快捷入口
   const quickQuestions = [
     '如何订立有效的遗嘱？',
     '子女不赡养怎么办？',
@@ -103,13 +117,11 @@ const AILegalAssistantScreen: React.FC = () => {
   ];
 
   useEffect(() => {
-    // 滚动到底部
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
   }, [messages]);
 
-  // 发送消息
   const handleSend = async () => {
     if (!inputText.trim()) return;
 
@@ -124,7 +136,6 @@ const AILegalAssistantScreen: React.FC = () => {
     setInputText('');
     setIsTyping(true);
 
-    // 模拟AI回复
     setTimeout(() => {
       const response = generateAIResponse(userMessage.content);
       setMessages(prev => [...prev, response]);
@@ -132,9 +143,7 @@ const AILegalAssistantScreen: React.FC = () => {
     }, 1500);
   };
 
-  // 生成AI回复（模拟）
   const generateAIResponse = (question: string): Message => {
-    // 关键词匹配
     const matchedFAQ = faqs.find(faq =>
       faq.keywords.some(keyword => question.includes(keyword))
     );
@@ -145,33 +154,28 @@ const AILegalAssistantScreen: React.FC = () => {
         type: 'assistant',
         content: matchedFAQ.answer,
         timestamp: new Date().toISOString(),
-        suggestions: [
-          '我还想了解更多',
-          '咨询专业律师',
-          '查看相关案例',
-        ],
+        suggestions: ['我还想了解更多', '咨询专业律师', '查看相关案例'],
       };
     }
 
-    // 案例匹配（模拟）
-    const relatedCases: RelatedCase[] = question.includes('遗嘱') || question.includes('继承')
-      ? [
-          {
-            id: 'case_1',
-            title: '王某遗嘱继承纠纷案',
-            summary: '本案中，法院认定自书遗嘱因缺少日期而无效...',
-            similarity: 0.85,
-          },
-          {
-            id: 'case_2',
-            title: '李某遗产分配案',
-            summary: '老人立有遗嘱，法院判决按遗嘱内容分配...',
-            similarity: 0.78,
-          },
-        ]
-      : [];
+    const relatedCases: RelatedCase[] =
+      question.includes('遗嘱') || question.includes('继承')
+        ? [
+            {
+              id: 'case_1',
+              title: '王某遗嘱继承纠纷案',
+              summary: '本案中，法院认定自书遗嘱因缺少日期而无效...',
+              similarity: 0.85,
+            },
+            {
+              id: 'case_2',
+              title: '李某遗产分配案',
+              summary: '老人立有遗嘱，法院判决按遗嘱内容分配...',
+              similarity: 0.78,
+            },
+          ]
+        : [];
 
-    // 默认回复
     return {
       id: `assistant_${Date.now()}`,
       type: 'assistant',
@@ -183,384 +187,302 @@ const AILegalAssistantScreen: React.FC = () => {
     };
   };
 
-  // 快速提问
   const handleQuickQuestion = (question: string) => {
     setInputText(question);
   };
 
-  // 点击建议
   const handleSuggestionClick = (suggestion: string) => {
     if (suggestion === '咨询专业律师') {
       navigation.navigate('LawyerList' as never);
-    } else if (suggestion === '查看相关案例') {
-      // TODO: 跳转到案例库
-    } else if (suggestion === '查看维权流程') {
-      // TODO: 显示维权流程
     } else {
       setInputText(suggestion);
     }
   };
 
-  // 查看案例详情
-  const handleCaseClick = (caseItem: RelatedCase) => {
-    // TODO: 跳转到案例详情页面
-    console.log('View case:', caseItem.id);
-  };
-
-  // 渲染消息
   const renderMessage = (message: Message) => {
     const isUser = message.type === 'user';
 
     return (
-      <View
+      <XStack
         key={message.id}
-        style={[styles.messageContainer, isUser ? styles.userMessage : styles.assistantMessage]}
+        marginBottom="$2.5"
+        alignItems="flex-end"
+        justifyContent={isUser ? 'flex-end' : 'flex-start'}
       >
         {!isUser && (
-          <View style={styles.avatarContainer}>
-            <Ionicons name="chatbubbles" size={24} color="#1890ff" />
+          <View
+            width={32}
+            height={32}
+            marginRight="$2"
+            borderRadius={16}
+            backgroundColor="$color4"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <MessageCircle size={18} color={primaryColor} />
           </View>
         )}
 
-        <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
-          <Text style={[styles.messageText, isUser && styles.userMessageText]}>
+        <View
+          maxWidth="75%"
+          borderRadius="$4"
+          padding="$2"
+          backgroundColor={isUser ? '$primary' : '$color2'}
+          borderWidth={isUser ? 0 : 1}
+          borderColor="$color5"
+        >
+          <Text
+            fontSize="$3"
+            color={isUser ? 'white' : '$color12'}
+            lineHeight={20}
+          >
             {message.content}
           </Text>
 
-          {/* 相关案例 */}
           {message.relatedCases && message.relatedCases.length > 0 && (
-            <View style={styles.relatedCasesContainer}>
-              <Text style={styles.relatedCasesTitle}>相关案例：</Text>
+            <YStack marginTop="$2" paddingTop="$2" borderTopWidth={1} borderTopColor="$color5">
+              <Text fontSize="$2" fontWeight="600" color="$color12" marginBottom="$1">
+                相关案例：
+              </Text>
               {message.relatedCases.map(caseItem => (
-                <TouchableOpacity
-                  key={caseItem.id}
-                  style={styles.caseCard}
-                  onPress={() => handleCaseClick(caseItem)}
-                >
-                  <Text style={styles.caseTitle}>{caseItem.title}</Text>
-                  <Text style={styles.caseSummary}>{caseItem.summary}</Text>
-                  <Text style={styles.caseSimilarity}>
-                    相似度：{(caseItem.similarity * 100).toFixed(0)}%
-                  </Text>
-                </TouchableOpacity>
+                <Pressable key={caseItem.id}>
+                  <View
+                    backgroundColor="$color4"
+                    borderRadius="$2"
+                    padding="$1.5"
+                    marginBottom="$1"
+                  >
+                    <Text fontSize="$2" fontWeight="600" color="$color12" marginBottom="$0.5">
+                      {caseItem.title}
+                    </Text>
+                    <Text fontSize="$1" color="$color10" lineHeight={16}>
+                      {caseItem.summary}
+                    </Text>
+                    <Text fontSize={10} color="$primary" marginTop="$0.5">
+                      相似度：{(caseItem.similarity * 100).toFixed(0)}%
+                    </Text>
+                  </View>
+                </Pressable>
               ))}
-            </View>
+            </YStack>
           )}
 
-          {/* 建议操作 */}
           {message.suggestions && message.suggestions.length > 0 && (
-            <View style={styles.suggestionsContainer}>
+            <XStack flexWrap="wrap" marginTop="$2" gap="$1">
               {message.suggestions.map((suggestion, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.suggestionButton}
-                  onPress={() => handleSuggestionClick(suggestion)}
-                >
-                  <Text style={styles.suggestionText}>{suggestion}</Text>
-                </TouchableOpacity>
+                <Pressable key={index} onPress={() => handleSuggestionClick(suggestion)}>
+                  <View
+                    backgroundColor="$color4"
+                    borderRadius="$10"
+                    paddingHorizontal="$2"
+                    paddingVertical="$1"
+                  >
+                    <Text fontSize="$1" color="$primary">{suggestion}</Text>
+                  </View>
+                </Pressable>
               ))}
-            </View>
+            </XStack>
           )}
         </View>
 
         {isUser && (
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle" size={24} color="#999" />
+          <View
+            width={32}
+            height={32}
+            marginLeft="$2"
+            borderRadius={16}
+            backgroundColor="$color4"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <User size={18} color={color10} />
           </View>
         )}
-      </View>
+      </XStack>
     );
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
-      {/* 顶部提示 */}
-      <View style={styles.header}>
-        <Ionicons name="information-circle-outline" size={20} color="#1890ff" />
-        <Text style={styles.headerText}>
-          AI助手可以帮您初步了解法律问题，如需专业建议请咨询律师
-        </Text>
-      </View>
-
-      {/* 消息列表 */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.messagesContainer}
-        contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {messages.map(renderMessage)}
-
-        {isTyping && (
-          <View style={[styles.messageContainer, styles.assistantMessage]}>
-            <View style={styles.avatarContainer}>
-              <Ionicons name="chatbubbles" size={24} color="#1890ff" />
-            </View>
-            <View style={[styles.messageBubble, styles.assistantBubble]}>
-              <View style={styles.typingIndicator}>
-                <View style={styles.typingDot} />
-                <View style={styles.typingDot} />
-                <View style={styles.typingDot} />
+      <View flex={1} backgroundColor="$background">
+        {/* TitleBar */}
+        <View
+          paddingTop={insets.top}
+          backgroundColor="$color2"
+          borderBottomWidth={1}
+          borderBottomColor="$color5"
+        >
+          <XStack
+            height={56}
+            paddingHorizontal="$2.5"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Pressable onPress={() => navigation.goBack()}>
+              <View
+                width={40}
+                height={40}
+                borderRadius={20}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <ArrowLeft size={24} color={color12} />
               </View>
-            </View>
-          </View>
-        )}
-
-        {/* 快捷问题 */}
-        {messages.length === 1 && (
-          <View style={styles.quickQuestionsContainer}>
-            <Text style={styles.quickQuestionsTitle}>您可能想问：</Text>
-            <View style={styles.quickQuestionsList}>
-              {quickQuestions.map((question, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.quickQuestionButton}
-                  onPress={() => handleQuickQuestion(question)}
-                >
-                  <Ionicons name="help-circle-outline" size={16} color="#1890ff" />
-                  <Text style={styles.quickQuestionText}>{question}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* 输入框 */}
-      <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder="输入您的法律问题..."
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-            <Ionicons name="send" size={20} color="#fff" />
-          </TouchableOpacity>
+            </Pressable>
+            <Text fontSize="$5" fontWeight="600" color="$color12">
+              AI法律助手
+            </Text>
+            <View width={40} />
+          </XStack>
         </View>
 
-        <View style={styles.inputActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('LawyerList' as never)}
-          >
-            <Ionicons name="people-outline" size={18} color="#1890ff" />
-            <Text style={styles.actionButtonText}>咨询律师</Text>
-          </TouchableOpacity>
+        {/* Header Tip */}
+        <XStack
+          backgroundColor="$color4"
+          padding="$2"
+          alignItems="center"
+          gap="$1"
+        >
+          <Info size={18} color={primaryColor} />
+          <Text fontSize="$2" color="$color10" flex={1}>
+            AI助手可以帮您初步了解法律问题，如需专业建议请咨询律师
+          </Text>
+        </XStack>
 
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="document-text-outline" size={18} color="#1890ff" />
-            <Text style={styles.actionButtonText}>查看案例</Text>
-          </TouchableOpacity>
+        {/* Messages */}
+        <ScrollView
+          ref={scrollViewRef as any}
+          flex={1}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ padding: 16 }}
+        >
+          {messages.map(renderMessage)}
+
+          {isTyping && (
+            <XStack marginBottom="$2.5" alignItems="flex-end">
+              <View
+                width={32}
+                height={32}
+                marginRight="$2"
+                borderRadius={16}
+                backgroundColor="$color4"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <MessageCircle size={18} color={primaryColor} />
+              </View>
+              <View
+                backgroundColor="$color2"
+                borderRadius="$4"
+                padding="$2"
+                borderWidth={1}
+                borderColor="$color5"
+              >
+                <XStack gap="$1">
+                  <View width={8} height={8} borderRadius={4} backgroundColor="$primary" />
+                  <View width={8} height={8} borderRadius={4} backgroundColor="$primary" />
+                  <View width={8} height={8} borderRadius={4} backgroundColor="$primary" />
+                </XStack>
+              </View>
+            </XStack>
+          )}
+
+          {messages.length === 1 && (
+            <YStack marginTop="$3">
+              <Text fontSize="$3" fontWeight="600" color="$color12" marginBottom="$2">
+                您可能想问：
+              </Text>
+              <YStack gap="$2">
+                {quickQuestions.map((question, index) => (
+                  <Pressable key={index} onPress={() => handleQuickQuestion(question)}>
+                    <XStack
+                      backgroundColor="$color2"
+                      borderRadius="$3"
+                      padding="$2"
+                      borderWidth={1}
+                      borderColor="$color5"
+                      alignItems="center"
+                      gap="$2"
+                    >
+                      <HelpCircle size={18} color={primaryColor} />
+                      <Text fontSize="$3" color="$color12">{question}</Text>
+                    </XStack>
+                  </Pressable>
+                ))}
+              </YStack>
+            </YStack>
+          )}
+        </ScrollView>
+
+        {/* Input Area */}
+        <View
+          backgroundColor="$color2"
+          borderTopWidth={1}
+          borderTopColor="$color5"
+          paddingHorizontal="$2.5"
+          paddingVertical="$2"
+          paddingBottom={insets.bottom + 8}
+        >
+          <XStack
+            backgroundColor="$color4"
+            borderRadius="$10"
+            paddingHorizontal="$2.5"
+            paddingVertical="$1.5"
+            alignItems="flex-end"
+          >
+            <TextInput
+              style={{
+                flex: 1,
+                fontSize: 14,
+                color: theme.color12?.val,
+                maxHeight: 100,
+                paddingVertical: 8,
+              }}
+              placeholder="输入您的法律问题..."
+              placeholderTextColor={theme.color10?.val}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={500}
+            />
+            <Pressable onPress={handleSend}>
+              <View
+                width={36}
+                height={36}
+                borderRadius={18}
+                backgroundColor="$primary"
+                justifyContent="center"
+                alignItems="center"
+                marginLeft="$2"
+              >
+                <Send size={18} color="white" />
+              </View>
+            </Pressable>
+          </XStack>
+
+          <XStack marginTop="$2" gap="$3">
+            <Pressable onPress={() => navigation.navigate('LawyerList' as never)}>
+              <XStack alignItems="center" gap="$0.5">
+                <Users size={16} color={primaryColor} />
+                <Text fontSize="$2" color="$primary">咨询律师</Text>
+              </XStack>
+            </Pressable>
+
+            <Pressable onPress={() => navigation.navigate('CaseLibrary' as never)}>
+              <XStack alignItems="center" gap="$0.5">
+                <FileText size={16} color={primaryColor} />
+                <Text fontSize="$2" color="$primary">查看案例</Text>
+              </XStack>
+            </Pressable>
+          </XStack>
         </View>
       </View>
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e6f7ff',
-    padding: 12,
-  },
-  headerText: {
-    flex: 1,
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 8,
-    lineHeight: 16,
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    padding: 16,
-  },
-  messageContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'flex-end',
-  },
-  userMessage: {
-    justifyContent: 'flex-end',
-  },
-  assistantMessage: {
-    justifyContent: 'flex-start',
-  },
-  avatarContainer: {
-    width: 32,
-    height: 32,
-    marginHorizontal: 8,
-  },
-  messageBubble: {
-    maxWidth: '75%',
-    borderRadius: 12,
-    padding: 12,
-  },
-  userBubble: {
-    backgroundColor: '#1890ff',
-  },
-  assistantBubble: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  messageText: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
-  userMessageText: {
-    color: '#fff',
-  },
-  relatedCasesContainer: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  relatedCasesTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  caseCard: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 8,
-  },
-  caseTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  caseSummary: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-    lineHeight: 16,
-  },
-  caseSimilarity: {
-    fontSize: 11,
-    color: '#1890ff',
-  },
-  suggestionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 12,
-    gap: 8,
-  },
-  suggestionButton: {
-    backgroundColor: '#e6f7ff',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  suggestionText: {
-    fontSize: 12,
-    color: '#1890ff',
-  },
-  typingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#1890ff',
-  },
-  quickQuestionsContainer: {
-    marginTop: 20,
-  },
-  quickQuestionsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  quickQuestionsList: {},
-  quickQuestionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  quickQuestionText: {
-    fontSize: 14,
-    color: '#333',
-    marginLeft: 8,
-  },
-  inputContainer: {
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e8e8e8',
-    padding: 12,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    color: '#333',
-    maxHeight: 100,
-  },
-  sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#1890ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
-  inputActions: {
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  actionButtonText: {
-    fontSize: 13,
-    color: '#1890ff',
-    marginLeft: 4,
-  },
-});
 
 export default AILegalAssistantScreen;

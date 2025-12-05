@@ -4,10 +4,9 @@
  */
 
 import React from 'react';
-import { View, Text, YStack, XStack, Card } from 'tamagui';
+import { View, Text, YStack, XStack, useTheme } from 'tamagui';
 import { Pressable, ScrollView } from 'react-native';
 import { Star, Award, MessageCircle } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 export interface ExpertProfile {
   id: string;
@@ -32,85 +31,87 @@ interface ExpertCardProps {
 }
 
 const ExpertCardItem: React.FC<ExpertCardProps> = ({ expert, onPress }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const warningColor = theme.warning?.val;
+  const color10 = theme.color10?.val;
+
   return (
     <Pressable
       onPress={() => onPress(expert.targetScreen, expert.targetParams)}
       style={{ width: 260, marginRight: 12 }}
     >
-      <Card
-        bordered
-        padding="$4"
-        backgroundColor="$surface"
-        shadowColor="$shadow"
-        shadowOffset={{ width: 0, height: 2 }}
-        shadowOpacity={0.08}
-        shadowRadius={4}
-        elevation={2}
+      <View
+        padding="$2"
+        backgroundColor="$color2"
+        borderRadius="$5"
+        borderWidth={1}
+        borderColor="$color5"
         height={280}
       >
-        <YStack space="$3" flex={1}>
+        <YStack gap="$2" flex={1}>
           {/* 头像和基本信息 */}
-          <XStack alignItems="flex-start" space="$3">
+          <XStack alignItems="flex-start" gap="$2">
             {/* 头像 */}
             <View
-              width={64}
-              height={64}
-              borderRadius={32}
-              backgroundColor="$background"
+              width="$6"
+              height="$6"
+              borderRadius="$12"
+              backgroundColor="$color3"
               justifyContent="center"
               alignItems="center"
               borderWidth={2}
-              borderColor={COLORS.primary}
+              borderColor="$primary"
             >
-              <Text fontSize={36}>{expert.avatar}</Text>
+              <Text fontSize="$8">{expert.avatar}</Text>
             </View>
 
             {/* 姓名和职称 */}
             <YStack flex={1}>
-              <XStack alignItems="center" space="$2">
-                <Text fontSize="$4" fontWeight="700" color="$text">
+              <XStack alignItems="center" gap="$1.5">
+                <Text fontSize="$4" fontWeight="700" color="$color12">
                   {expert.name}
                 </Text>
                 {expert.badge && (
                   <View
-                    backgroundColor={`${COLORS.warning}20`}
+                    backgroundColor={`${warningColor}20`}
                     paddingHorizontal="$1"
-                    paddingVertical={2}
+                    paddingVertical="$0.25"
                     borderRadius="$1"
                   >
-                    <Text fontSize="$1" color={COLORS.warning} fontWeight="600">
+                    <Text fontSize="$1" color="$warning" fontWeight="600">
                       {expert.badge}
                     </Text>
                   </View>
                 )}
               </XStack>
-              <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+              <Text fontSize="$2" color="$color10" marginTop="$0.5">
                 {expert.title}
               </Text>
-              <Text fontSize="$2" color={COLORS.primary} marginTop="$1" fontWeight="600">
+              <Text fontSize="$2" color="$primary" marginTop="$0.5" fontWeight="600">
                 {expert.categoryLabel}
               </Text>
             </YStack>
           </XStack>
 
           {/* 评分和咨询次数 */}
-          <XStack space="$3">
-            <XStack alignItems="center" space="$1">
-              <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-              <Text fontSize="$2" color="$text" fontWeight="600">
+          <XStack gap="$2">
+            <XStack alignItems="center" gap="$0.5">
+              <Star size={14} color={warningColor} fill={warningColor} />
+              <Text fontSize="$2" color="$color12" fontWeight="600">
                 {expert.rating.toFixed(1)}
               </Text>
             </XStack>
-            <XStack alignItems="center" space="$1">
-              <MessageCircle size={14} color={COLORS.textSecondary} />
-              <Text fontSize="$2" color="$textSecondary">
+            <XStack alignItems="center" gap="$0.5">
+              <MessageCircle size={14} color={color10} />
+              <Text fontSize="$2" color="$color10">
                 {expert.consultationCount}次咨询
               </Text>
             </XStack>
             {expert.yearsOfExperience && (
-              <XStack alignItems="center" space="$1">
-                <Award size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack alignItems="center" gap="$0.5">
+                <Award size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   {expert.yearsOfExperience}年经验
                 </Text>
               </XStack>
@@ -118,32 +119,31 @@ const ExpertCardItem: React.FC<ExpertCardProps> = ({ expert, onPress }) => {
           </XStack>
 
           {/* 专业领域 */}
-          <YStack space="$1" flex={1}>
-            <Text fontSize="$2" color="$textSecondary">
+          <YStack gap="$0.5" flex={1}>
+            <Text fontSize="$2" color="$color10">
               擅长领域：
             </Text>
-            <Text fontSize="$3" color="$text" lineHeight={20} numberOfLines={2}>
+            <Text fontSize="$3" color="$color12" numberOfLines={2}>
               {expert.expertise.join(' · ')}
             </Text>
           </YStack>
 
           {/* 资质认证 */}
           <View
-            backgroundColor="$background"
-            padding="$2"
-            borderRadius="$2"
-            flexWrap="wrap"
+            backgroundColor="$color3"
+            padding="$1.5"
+            borderRadius="$3"
           >
-            <XStack flexWrap="wrap" gap={4}>
+            <XStack flexWrap="wrap" gap="$1">
               {expert.credentials.slice(0, 2).map((credential, index) => (
                 <View
                   key={index}
-                  backgroundColor={`${COLORS.primary}15`}
-                  paddingHorizontal="$2"
-                  paddingVertical={2}
-                  borderRadius="$1"
+                  backgroundColor={`${primaryColor}15`}
+                  paddingHorizontal="$1.5"
+                  paddingVertical="$0.5"
+                  borderRadius="$2"
                 >
-                  <Text fontSize="$1" color={COLORS.primary}>
+                  <Text fontSize="$1" color="$primary">
                     {credential}
                   </Text>
                 </View>
@@ -153,9 +153,9 @@ const ExpertCardItem: React.FC<ExpertCardProps> = ({ expert, onPress }) => {
 
           {/* 预约按钮 */}
           <View
-            backgroundColor={COLORS.primary}
-            paddingVertical="$2"
-            borderRadius="$3"
+            backgroundColor="$primary"
+            paddingVertical="$1.5"
+            borderRadius="$10"
             alignItems="center"
             marginTop="auto"
           >
@@ -164,7 +164,7 @@ const ExpertCardItem: React.FC<ExpertCardProps> = ({ expert, onPress }) => {
             </Text>
           </View>
         </YStack>
-      </Card>
+      </View>
     </Pressable>
   );
 };
@@ -179,14 +179,14 @@ export const ExpertTeamList: React.FC<ExpertTeamListProps> = ({
   onExpertPress,
 }) => {
   return (
-    <View marginBottom={16}>
-      <YStack space="$3">
+    <View marginBottom="$2">
+      <YStack gap="$2">
         {/* 标题 */}
-        <View paddingHorizontal="$4">
-          <Text fontSize="$5" fontWeight="600" color="$text">
+        <View paddingHorizontal="$2.5">
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             专家团队
           </Text>
-          <Text fontSize="$3" color="$textSecondary" marginTop="$1">
+          <Text fontSize="$3" color="$color10" marginTop="$0.5">
             专业资质认证，值得信赖
           </Text>
         </View>

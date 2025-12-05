@@ -1,14 +1,17 @@
+/**
+ * CommunityFeedCard 社区Feed卡片组件
+ * 支持多种内容类型的混合展示
+ * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
+ */
 import React from 'react';
-import { YStack, XStack, Text, View } from 'tamagui';
+import { YStack, XStack, Text, View, useTheme } from 'tamagui';
 import { TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { Heart, MessageCircle, MapPin, Clock, Tag } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
+import { Heart, MessageCircle, MapPin } from 'lucide-react-native';
 import {
   ServiceJob,
   SecondHandItem,
   CommunityPost,
   Expert,
-  ExpertLevel,
   ItemCondition,
 } from '@/types/community';
 
@@ -24,72 +27,83 @@ interface CommunityFeedCardProps {
 }
 
 /**
- * 社区Feed卡片组件（小红书风格）
- * 支持多种内容类型的混合展示
+ * 社区Feed卡片组件
+ * 不同类型自适应高度
  */
-// 统一卡片高度常量
-const CARD_HEIGHT = 380;
-
 export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
   feedItem,
   onPress,
 }) => {
-  // 渲染服务需求卡片
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const warningColor = theme.warning?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+
+  // 渲染状态徽章（符合 CLAUDE.md 规范）
+  const renderBadge = (
+    text: string,
+    color: string | undefined,
+    position: 'left' | 'right' = 'left',
+    bottom?: boolean
+  ) => (
+    <View
+      position="absolute"
+      top={bottom ? undefined : 8}
+      bottom={bottom ? 8 : undefined}
+      left={position === 'left' ? 8 : undefined}
+      right={position === 'right' ? 8 : undefined}
+      backgroundColor={color}
+      paddingHorizontal="$2"
+      paddingVertical="$0.5"
+      borderRadius="$10"
+    >
+      <Text fontSize={10} color="white" fontWeight="500">
+        {text}
+      </Text>
+    </View>
+  );
+
+  // 渲染服务需求卡片（邻里帮）
   const renderJobCard = (job: ServiceJob) => {
     const jobWithDistance = job as ServiceJob & { distance?: string };
+    const hasImage = job.images && job.images.length > 0;
+
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
         <View
-          backgroundColor="white"
-          borderRadius="$4"
+          backgroundColor="$color2"
+          borderRadius="$5"
           overflow="hidden"
-          marginBottom="$3"
+          marginBottom="$2"
           borderWidth={1}
-          borderColor="$borderColor"
-          height={CARD_HEIGHT}
+          borderColor="$color5"
         >
           {/* 封面图 */}
-          {job.images && job.images.length > 0 && (
-            <View style={{ width: '100%', height: 200 }}>
+          {hasImage && (
+            <View style={{ width: '100%', height: 160 }}>
               <Image
-                source={{ uri: job.images[0] }}
+                source={{ uri: job.images![0] }}
                 style={styles.coverImage}
                 resizeMode="cover"
               />
               {/* 紧急标签 */}
-              {job.isUrgent && (
-                <View style={styles.urgentBadge}>
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    紧急
-                  </Text>
-                </View>
-              )}
+              {job.isUrgent && renderBadge('紧急', errorColor, 'left')}
               {/* 高佣金标签 */}
-              {job.isHighReward && (
-                <View style={[styles.urgentBadge, { backgroundColor: COLORS.warning, right: 8 }]}>
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    高佣金
-                  </Text>
-                </View>
-              )}
+              {job.isHighReward && renderBadge('高佣金', warningColor, 'right')}
               {/* 距离标签 */}
-              {jobWithDistance.distance && (
-                <View style={[styles.urgentBadge, { backgroundColor: COLORS.primary, right: 8, top: 'auto', bottom: 8 }]}>
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    {jobWithDistance.distance}km
-                  </Text>
-                </View>
-              )}
+              {jobWithDistance.distance && renderBadge(`${jobWithDistance.distance}km`, primaryColor, 'right', true)}
             </View>
           )}
 
-          <View padding="$3">
+          <View padding="$2">
             {/* 标题 */}
             <Text
               fontSize="$4"
               fontWeight="600"
-              color="$text"
-              marginBottom="$2"
+              color="$color12"
+              marginBottom="$1.5"
               numberOfLines={2}
             >
               {job.title}
@@ -98,8 +112,8 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
             {/* 描述 */}
             <Text
               fontSize="$3"
-              color="$textSecondary"
-              marginBottom="$3"
+              color="$color10"
+              marginBottom="$2"
               numberOfLines={2}
               lineHeight={20}
             >
@@ -108,21 +122,21 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
 
             {/* 底部信息 */}
             <XStack justifyContent="space-between" alignItems="center">
-              <XStack space="$2" alignItems="center">
-                <Text fontSize={18}>{job.employerAvatar || '👤'}</Text>
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack gap="$2" alignItems="center">
+                <Text fontSize={16}>{job.employerAvatar || '👤'}</Text>
+                <Text fontSize="$2" color="$color10">
                   {job.employerName}
                 </Text>
               </XStack>
 
-              <XStack space="$3" alignItems="center">
-                <XStack space="$1" alignItems="center">
-                  <MapPin size={14} color={COLORS.textSecondary} />
-                  <Text fontSize="$2" color="$textSecondary">
+              <XStack gap="$2" alignItems="center">
+                <XStack gap="$1" alignItems="center">
+                  <MapPin size={14} color={color10} />
+                  <Text fontSize="$2" color="$color10">
                     {job.location.district}
                   </Text>
                 </XStack>
-                <Text fontSize="$3" fontWeight="600" color={COLORS.error}>
+                <Text fontSize="$3" fontWeight="600" color={errorColor}>
                   ¥{job.budget.min}-{job.budget.max}
                 </Text>
               </XStack>
@@ -130,16 +144,16 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
 
             {/* 健康标签 */}
             {job.healthTags && job.healthTags.length > 0 && (
-              <XStack flexWrap="wrap" gap="$2" marginTop="$2">
+              <XStack flexWrap="wrap" gap="$1.5" marginTop="$2">
                 {job.healthTags.slice(0, 3).map((tag, index) => (
                   <View
                     key={index}
-                    backgroundColor={`${COLORS.primary}15`}
+                    backgroundColor="$color4"
                     paddingHorizontal="$2"
-                    paddingVertical="$1"
-                    borderRadius="$2"
+                    paddingVertical="$0.5"
+                    borderRadius="$10"
                   >
-                    <Text fontSize="$1" color={COLORS.primary}>
+                    <Text fontSize={10} color="$color12" fontWeight="500">
                       {tag}
                     </Text>
                   </View>
@@ -152,89 +166,78 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     );
   };
 
-  // 渲染二手商品卡片
+  // 渲染二手商品卡片（邻里闲物）
   const renderItemCard = (item: SecondHandItem) => {
     const itemWithDistance = item as SecondHandItem & { distance?: string };
+    const hasImage = item.images && item.images.length > 0;
+
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
         <View
-          backgroundColor="white"
-          borderRadius="$4"
+          backgroundColor="$color2"
+          borderRadius="$5"
           overflow="hidden"
-          marginBottom="$3"
+          marginBottom="$2"
           borderWidth={1}
-          borderColor="$borderColor"
-          height={CARD_HEIGHT}
+          borderColor="$color5"
         >
           {/* 封面图 */}
-          {item.images && item.images.length > 0 && (
-            <View style={{ width: '100%', height: 200 }}>
+          {hasImage && (
+            <View style={{ width: '100%', height: 180 }}>
               <Image
-                source={{ uri: item.images[0] }}
+                source={{ uri: item.images![0] }}
                 style={styles.coverImage}
                 resizeMode="cover"
               />
               {/* 免费角标 */}
-              {item.isFree && (
-                <View style={[styles.urgentBadge, { backgroundColor: COLORS.success }]}>
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    免费
-                  </Text>
-                </View>
-              )}
+              {item.isFree && renderBadge('免费', successColor, 'left')}
               {/* 距离标签 */}
-              {itemWithDistance.distance && (
-                <View style={[styles.urgentBadge, { backgroundColor: COLORS.primary, right: 8, top: 'auto', bottom: 8 }]}>
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    {itemWithDistance.distance}km
-                  </Text>
-                </View>
-              )}
+              {itemWithDistance.distance && renderBadge(`${itemWithDistance.distance}km`, primaryColor, 'right', true)}
             </View>
           )}
 
-          <View padding="$3">
+          <View padding="$2">
             {/* 标题 */}
             <Text
               fontSize="$4"
               fontWeight="600"
-              color="$text"
-              marginBottom="$2"
+              color="$color12"
+              marginBottom="$1.5"
               numberOfLines={2}
             >
               {item.title}
             </Text>
 
-            {/* 底部信息 */}
+            {/* 价格和互动 */}
             <XStack justifyContent="space-between" alignItems="center">
-              <Text fontSize="$5" fontWeight="700" color={COLORS.error}>
+              <Text fontSize="$5" fontWeight="700" color={errorColor}>
                 {item.isFree ? '免费赠送' : `¥${item.currentPrice}`}
               </Text>
 
-              <XStack space="$2" alignItems="center">
-                <Text fontSize={16}>{item.sellerAvatar || '👤'}</Text>
-                <Heart size={16} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack gap="$2" alignItems="center">
+                <Text fontSize={14}>{item.sellerAvatar || '👤'}</Text>
+                <Heart size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   {item.favorites}
                 </Text>
               </XStack>
             </XStack>
 
             {/* 位置和成色 */}
-            <XStack space="$3" alignItems="center" marginTop="$2">
-              <XStack space="$1" alignItems="center">
-                <MapPin size={14} color={COLORS.textSecondary} />
-                <Text fontSize="$2" color="$textSecondary">
+            <XStack gap="$2" alignItems="center" marginTop="$1.5">
+              <XStack gap="$1" alignItems="center">
+                <MapPin size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">
                   {item.location.district}
                 </Text>
               </XStack>
               <View
-                backgroundColor={`${COLORS.success}20`}
+                backgroundColor="$color4"
                 paddingHorizontal="$2"
-                paddingVertical="$1"
-                borderRadius="$2"
+                paddingVertical="$0.5"
+                borderRadius="$10"
               >
-                <Text fontSize="$1" color={COLORS.success}>
+                <Text fontSize={10} color="$color12" fontWeight="500">
                   {getConditionText(item.condition)}
                 </Text>
               </View>
@@ -245,46 +248,40 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     );
   };
 
-  // 渲染内容帖子卡片
+  // 渲染内容帖子卡片（分享）
   const renderPostCard = (post: CommunityPost) => {
     const postWithDistance = post as CommunityPost & { distance?: string };
+
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
         <View
-          backgroundColor="white"
-          borderRadius="$4"
+          backgroundColor="$color2"
+          borderRadius="$5"
           overflow="hidden"
-          marginBottom="$3"
+          marginBottom="$2"
           borderWidth={1}
-          borderColor="$borderColor"
-          height={CARD_HEIGHT}
+          borderColor="$color5"
         >
           {/* 封面图 */}
           {post.coverImage && (
-            <View style={{ width: '100%', height: 200 }}>
+            <View style={{ width: '100%', height: 160 }}>
               <Image
                 source={{ uri: post.coverImage }}
                 style={styles.coverImage}
                 resizeMode="cover"
               />
               {/* 距离标签 */}
-              {postWithDistance.distance && (
-                <View style={[styles.urgentBadge, { backgroundColor: COLORS.primary, right: 8, bottom: 8, top: 'auto' }]}>
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    {postWithDistance.distance}km
-                  </Text>
-                </View>
-              )}
+              {postWithDistance.distance && renderBadge(`${postWithDistance.distance}km`, primaryColor, 'right', true)}
             </View>
           )}
 
-          <View padding="$3">
+          <View padding="$2">
             {/* 标题 */}
             <Text
               fontSize="$4"
               fontWeight="600"
-              color="$text"
-              marginBottom="$2"
+              color="$color12"
+              marginBottom="$1.5"
               numberOfLines={2}
             >
               {post.title}
@@ -294,8 +291,8 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
             {post.summary && (
               <Text
                 fontSize="$3"
-                color="$textSecondary"
-                marginBottom="$3"
+                color="$color10"
+                marginBottom="$2"
                 numberOfLines={2}
                 lineHeight={20}
               >
@@ -305,9 +302,9 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
 
             {/* 作者信息 */}
             <XStack justifyContent="space-between" alignItems="center">
-              <XStack space="$2" alignItems="center">
-                <Text fontSize={18}>{post.authorAvatar || '👤'}</Text>
-                <Text fontSize="$2" color="$textSecondary">
+              <XStack gap="$2" alignItems="center">
+                <Text fontSize={16}>{post.authorAvatar || '👤'}</Text>
+                <Text fontSize="$2" color="$color10">
                   {post.authorName}
                 </Text>
                 {post.authorVerified && (
@@ -315,27 +312,27 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
                     width={14}
                     height={14}
                     borderRadius={7}
-                    backgroundColor={COLORS.primary}
+                    backgroundColor={primaryColor}
                     justifyContent="center"
                     alignItems="center"
                   >
-                    <Text fontSize={10} color="white">
+                    <Text fontSize={8} color="white">
                       ✓
                     </Text>
                   </View>
                 )}
               </XStack>
 
-              <XStack space="$4" alignItems="center">
-                <XStack space="$1" alignItems="center">
-                  <Heart size={14} color={COLORS.textSecondary} />
-                  <Text fontSize="$2" color="$textSecondary">
+              <XStack gap="$3" alignItems="center">
+                <XStack gap="$1" alignItems="center">
+                  <Heart size={14} color={color10} />
+                  <Text fontSize="$2" color="$color10">
                     {post.likes}
                   </Text>
                 </XStack>
-                <XStack space="$1" alignItems="center">
-                  <MessageCircle size={14} color={COLORS.textSecondary} />
-                  <Text fontSize="$2" color="$textSecondary">
+                <XStack gap="$1" alignItems="center">
+                  <MessageCircle size={14} color={color10} />
+                  <Text fontSize="$2" color="$color10">
                     {post.comments}
                   </Text>
                 </XStack>
@@ -344,16 +341,16 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
 
             {/* 标签 */}
             {post.tags && post.tags.length > 0 && (
-              <XStack flexWrap="wrap" gap="$2" marginTop="$2">
+              <XStack flexWrap="wrap" gap="$1.5" marginTop="$2">
                 {post.tags.slice(0, 3).map((tag, index) => (
                   <View
                     key={index}
-                    backgroundColor="$background"
+                    backgroundColor="$color4"
                     paddingHorizontal="$2"
-                    paddingVertical="$1"
-                    borderRadius="$2"
+                    paddingVertical="$0.5"
+                    borderRadius="$10"
                   >
-                    <Text fontSize="$1" color="$textSecondary">
+                    <Text fontSize={10} color="$color10" fontWeight="500">
                       #{tag}
                     </Text>
                   </View>
@@ -366,72 +363,70 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     );
   };
 
-  // 渲染达人卡片
+  // 渲染达人卡片（附近服务）
   const renderExpertCard = (expert: Expert) => {
     const expertWithDistance = expert as Expert & { distance?: string };
+
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
         <View
-          backgroundColor="white"
-          borderRadius="$4"
+          backgroundColor="$color2"
+          borderRadius="$5"
           overflow="hidden"
-          marginBottom="$3"
+          marginBottom="$2"
           borderWidth={1}
-          borderColor="$borderColor"
-          padding="$4"
-          height={CARD_HEIGHT}
+          borderColor="$color5"
+          padding="$2"
         >
-          <XStack space="$3" alignItems="center" marginBottom="$3">
+          <XStack gap="$2" alignItems="center" marginBottom="$2">
             {/* 头像 */}
             <View
-              width={56}
-              height={56}
-              borderRadius={28}
-              backgroundColor="$background"
+              width={48}
+              height={48}
+              borderRadius={24}
+              backgroundColor="$color4"
               justifyContent="center"
               alignItems="center"
             >
-              <Text fontSize={32}>{expert.avatar || '👤'}</Text>
+              <Text fontSize={28}>{expert.avatar || '👤'}</Text>
             </View>
 
             {/* 达人信息 */}
-            <YStack flex={1} space="$1">
-              <XStack space="$2" alignItems="center">
-                <Text fontSize="$5" fontWeight="600" color="$text">
+            <YStack flex={1} gap="$0.5">
+              <XStack gap="$2" alignItems="center">
+                <Text fontSize="$4" fontWeight="600" color="$color12">
                   {expert.name}
                 </Text>
                 {expert.realNameVerified && (
-                  <Text fontSize="$4">
-                    🏅
-                  </Text>
+                  <Text fontSize="$3">🏅</Text>
                 )}
                 {expertWithDistance.distance && (
                   <View
-                    backgroundColor={COLORS.primary}
+                    backgroundColor={primaryColor}
                     paddingHorizontal="$2"
                     paddingVertical="$0.5"
-                    borderRadius="$2"
+                    borderRadius="$10"
                   >
-                    <Text fontSize="$1" color="white" fontWeight="600">
+                    <Text fontSize={10} color="white" fontWeight="500">
                       {expertWithDistance.distance}km
                     </Text>
                   </View>
                 )}
               </XStack>
 
-              <Text fontSize="$3" color="$textSecondary" numberOfLines={2}>
+              <Text fontSize="$2" color="$color10" numberOfLines={1}>
                 {expert.introduction}
               </Text>
 
               {/* 评分和订单数 */}
-              <XStack space="$4" marginTop="$1">
-                <Text fontSize="$2" color={COLORS.warning}>
+              <XStack gap="$3" marginTop="$0.5">
+                <Text fontSize="$2" color={warningColor}>
                   ⭐ {expert.rating.toFixed(1)}
                 </Text>
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   {expert.completedOrders}单
                 </Text>
-                <Text fontSize="$2" color="$textSecondary">
+                <Text fontSize="$2" color="$color10">
                   好评{expert.goodReviewRate}%
                 </Text>
               </XStack>
@@ -440,15 +435,15 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
 
           {/* 服务展示图 */}
           {expert.showcaseImages && expert.showcaseImages.length > 0 && (
-            <XStack space="$2">
+            <XStack gap="$1.5">
               {expert.showcaseImages.slice(0, 3).map((image, index) => (
                 <View
                   key={index}
                   flex={1}
-                  aspectRatio={1}
-                  borderRadius="$2"
+                  height={80}
+                  borderRadius="$4"
                   overflow="hidden"
-                  backgroundColor="$background"
+                  backgroundColor="$color4"
                 >
                   <Image
                     source={{ uri: image }}
@@ -462,16 +457,16 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
 
           {/* 服务标签 */}
           {expert.badges && expert.badges.length > 0 && (
-            <XStack flexWrap="wrap" gap="$2" marginTop="$3">
+            <XStack flexWrap="wrap" gap="$1.5" marginTop="$2">
               {expert.badges.slice(0, 3).map((badge, index) => (
                 <View
                   key={index}
-                  backgroundColor={`${COLORS.primary}15`}
+                  backgroundColor="$color4"
                   paddingHorizontal="$2"
-                  paddingVertical="$1"
-                  borderRadius="$2"
+                  paddingVertical="$0.5"
+                  borderRadius="$10"
                 >
-                  <Text fontSize="$1" color={COLORS.primary}>
+                  <Text fontSize={10} color="$color12" fontWeight="500">
                     {badge}
                   </Text>
                 </View>
@@ -515,14 +510,5 @@ const styles = StyleSheet.create({
   coverImage: {
     width: '100%',
     height: '100%',
-  },
-  urgentBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: COLORS.error,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
   },
 });

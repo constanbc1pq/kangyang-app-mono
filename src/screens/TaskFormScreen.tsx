@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Pressable, TouchableOpacity, ScrollView as RNScrollView, Alert, Platform } from 'react-native';
-import { View, Text, YStack, XStack, Card, Theme, H2, Input, TextArea, Switch } from 'tamagui';
+import { TouchableOpacity, ScrollView as RNScrollView, Alert, Platform } from 'react-native';
+import { View, Text, YStack, XStack, Card, Theme, Input, TextArea, Switch, useTheme } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useToastController } from '@tamagui/toast';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
-  ArrowLeft,
   Activity,
   Utensils,
   Pill,
@@ -15,10 +14,10 @@ import {
   Calendar,
   Bell,
 } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 import { useNavigation } from '@react-navigation/native';
 import { getTaskById, createTask, updateTask } from '@/services/userDataService';
 import { HealthTask } from '@/types/userData';
+import { TitleBar } from '@/components/TitleBar';
 
 interface TaskFormScreenProps {
   route?: {
@@ -42,15 +41,15 @@ const TASK_TYPES: Array<{
   { category: 'lifestyle', label: '生活习惯', icon: 'Sunrise', color: '#8b5cf6' },
 ];
 
-// 优先级配置
+// 优先级配置 - 颜色在组件内动态获取
 const PRIORITIES: Array<{
   value: HealthTask['priority'];
   label: string;
-  color: string;
+  colorKey: 'textSecondary' | 'warning' | 'error';
 }> = [
-  { value: 'low', label: '低', color: COLORS.textSecondary },
-  { value: 'medium', label: '中', color: COLORS.warning },
-  { value: 'high', label: '高', color: COLORS.error },
+  { value: 'low', label: '低', colorKey: 'textSecondary' },
+  { value: 'medium', label: '中', colorKey: 'warning' },
+  { value: 'high', label: '高', colorKey: 'error' },
 ];
 
 // 重复频率配置
@@ -70,8 +69,29 @@ const REMINDER_TIMES = [5, 15, 30, 60];
 export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
   const navigation = useNavigation();
   const toast = useToastController();
+  const theme = useTheme();
   const isEdit = !!route?.params?.taskId;
   const [loading, setLoading] = useState(false);
+
+  // 主题色值
+  const primaryColor = theme.primary?.val || '#6366F1';
+  const successColor = theme.success?.val || '#10B981';
+  const warningColor = theme.warning?.val || '#F59E0B';
+  const errorColor = theme.error?.val || '#EF4444';
+  const textColor = theme.color12?.val || '#1F2937';
+  const textSecondaryColor = theme.color10?.val || '#6B7280';
+
+  // 获取优先级颜色
+  const getPriorityColor = (colorKey: 'textSecondary' | 'warning' | 'error') => {
+    switch (colorKey) {
+      case 'textSecondary':
+        return textSecondaryColor;
+      case 'warning':
+        return warningColor;
+      case 'error':
+        return errorColor;
+    }
+  };
 
   // Form state
   const [title, setTitle] = useState('');
@@ -160,7 +180,7 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
         category,
         priority,
         icon: selectedType?.icon || 'CheckCircle',
-        color: selectedType?.color || COLORS.primary,
+        color: selectedType?.color || primaryColor,
         startTime: formatTime(startTime),
         endTime: formatTime(endTime),
         repeatFrequency,
@@ -223,27 +243,13 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
         {/* Header */}
-        <XStack
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          alignItems="center"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="white"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <ArrowLeft size={24} color={COLORS.text} />
-          </Pressable>
-          <H2 fontSize="$7" fontWeight="bold" color="$text" marginLeft="$3" flex={1}>
-            {isEdit ? '编辑任务' : '创建任务'}
-          </H2>
-        </XStack>
+        <TitleBar title={isEdit ? '编辑任务' : '创建任务'} />
 
         <RNScrollView showsVerticalScrollIndicator={false}>
-          <YStack padding="$4" space="$4">
+          <YStack padding="$2.5" gap="$2">
             {/* Task Title */}
-            <Card padding="$4" borderRadius="$4" backgroundColor="$surface">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 任务标题 *
               </Text>
               <Input
@@ -252,19 +258,19 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                 placeholder="例如：每日饮水目标"
                 fontSize="$4"
                 borderWidth={1}
-                borderColor="$borderColor"
-                backgroundColor="$background"
-                placeholderTextColor={COLORS.textSecondary}
+                borderColor="$color5"
+                backgroundColor="white"
+                placeholderTextColor={textSecondaryColor}
               />
             </Card>
 
             {/* Task Type */}
-            <Card padding="$4" borderRadius="$4" backgroundColor="$surface">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 任务类型 *
               </Text>
-              <YStack space="$2">
-                <XStack space="$2">
+              <YStack gap="$2">
+                <XStack gap="$2">
                   {TASK_TYPES.slice(0, 3).map(type => (
                     <TouchableOpacity
                       key={type.category}
@@ -272,11 +278,11 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                       onPress={() => setCategory(type.category)}
                     >
                       <View
-                        padding="$3"
-                        borderRadius="$3"
-                        backgroundColor={category === type.category ? `${type.color}20` : '$background'}
+                        padding="$2"
+                        borderRadius="$5"
+                        backgroundColor={category === type.category ? `${type.color}20` : 'white'}
                         borderWidth={2}
-                        borderColor={category === type.category ? type.color : '$borderColor'}
+                        borderColor={category === type.category ? type.color : '$color5'}
                         alignItems="center"
                         height={80}
                         justifyContent="center"
@@ -284,7 +290,7 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                         <Text fontSize="$6" marginBottom="$2">{type.icon === 'Activity' ? '🏃' : type.icon === 'Utensils' ? '🍎' : '💊'}</Text>
                         <Text
                           fontSize="$3"
-                          color={category === type.category ? type.color : '$text'}
+                          color={category === type.category ? type.color : '$color12'}
                           fontWeight={category === type.category ? '600' : 'normal'}
                         >
                           {type.label}
@@ -293,7 +299,7 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                     </TouchableOpacity>
                   ))}
                 </XStack>
-                <XStack space="$2">
+                <XStack gap="$2">
                   {TASK_TYPES.slice(3, 5).map(type => (
                     <TouchableOpacity
                       key={type.category}
@@ -301,11 +307,11 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                       onPress={() => setCategory(type.category)}
                     >
                       <View
-                        padding="$3"
-                        borderRadius="$3"
-                        backgroundColor={category === type.category ? `${type.color}20` : '$background'}
+                        padding="$2"
+                        borderRadius="$5"
+                        backgroundColor={category === type.category ? `${type.color}20` : 'white'}
                         borderWidth={2}
-                        borderColor={category === type.category ? type.color : '$borderColor'}
+                        borderColor={category === type.category ? type.color : '$color5'}
                         alignItems="center"
                         height={80}
                         justifyContent="center"
@@ -313,7 +319,7 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                         <Text fontSize="$6" marginBottom="$2">{type.icon === 'Heart' ? '❤️' : '🌅'}</Text>
                         <Text
                           fontSize="$3"
-                          color={category === type.category ? type.color : '$text'}
+                          color={category === type.category ? type.color : '$color12'}
                           fontWeight={category === type.category ? '600' : 'normal'}
                         >
                           {type.label}
@@ -326,8 +332,8 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
             </Card>
 
             {/* Description */}
-            <Card padding="$4" borderRadius="$4" backgroundColor="$surface">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 任务描述
               </Text>
               <TextArea
@@ -336,67 +342,70 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                 placeholder="详细描述任务内容..."
                 fontSize="$4"
                 borderWidth={1}
-                borderColor="$borderColor"
-                backgroundColor="$background"
-                placeholderTextColor={COLORS.textSecondary}
+                borderColor="$color5"
+                backgroundColor="white"
+                placeholderTextColor={textSecondaryColor}
                 numberOfLines={4}
                 height={100}
               />
             </Card>
 
             {/* Priority */}
-            <Card padding="$4" borderRadius="$4" backgroundColor="$surface">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 优先级
               </Text>
-              <XStack space="$2">
-                {PRIORITIES.map(p => (
-                  <TouchableOpacity
-                    key={p.value}
-                    style={{ flex: 1 }}
-                    onPress={() => setPriority(p.value)}
-                  >
-                    <View
-                      padding="$3"
-                      borderRadius="$3"
-                      backgroundColor={priority === p.value ? `${p.color}20` : '$background'}
-                      borderWidth={2}
-                      borderColor={priority === p.value ? p.color : '$borderColor'}
-                      alignItems="center"
+              <XStack gap="$2">
+                {PRIORITIES.map(p => {
+                  const pColor = getPriorityColor(p.colorKey);
+                  return (
+                    <TouchableOpacity
+                      key={p.value}
+                      style={{ flex: 1 }}
+                      onPress={() => setPriority(p.value)}
                     >
-                      <Text
-                        fontSize="$4"
-                        color={priority === p.value ? p.color : '$text'}
-                        fontWeight={priority === p.value ? '600' : 'normal'}
+                      <View
+                        padding="$2"
+                        borderRadius="$5"
+                        backgroundColor={priority === p.value ? `${pColor}20` : 'white'}
+                        borderWidth={2}
+                        borderColor={priority === p.value ? pColor : '$color5'}
+                        alignItems="center"
                       >
-                        {p.label}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                        <Text
+                          fontSize="$4"
+                          color={priority === p.value ? pColor : '$color12'}
+                          fontWeight={priority === p.value ? '600' : 'normal'}
+                        >
+                          {p.label}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </XStack>
             </Card>
 
             {/* Time Settings */}
-            <Card padding="$4" borderRadius="$4" backgroundColor="$surface">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 时间设置
               </Text>
 
-              <YStack space="$3">
+              <YStack gap="$2">
                 {/* Start Time */}
-                <YStack space="$2">
-                  <Text fontSize="$3" color="$textSecondary">开始时间 *</Text>
+                <YStack gap="$1">
+                  <Text fontSize="$3" color="$color10">开始时间 *</Text>
                   {Platform.OS === 'web' ? (
                     <View
-                      padding="$3"
-                      borderRadius="$3"
+                      padding="$2"
+                      borderRadius="$5"
                       borderWidth={1}
-                      borderColor="$borderColor"
-                      backgroundColor="$background"
+                      borderColor="$color5"
+                      backgroundColor="white"
                     >
-                      <XStack space="$2" alignItems="center">
-                        <Clock size={20} color={COLORS.primary} />
+                      <XStack gap="$2" alignItems="center">
+                        <Clock size={20} color={primaryColor} />
                         <input
                           type="time"
                           value={startTime ? formatTime(startTime) : ''}
@@ -419,15 +428,15 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                   ) : (
                     <TouchableOpacity onPress={() => setShowStartTimePicker(true)}>
                       <View
-                        padding="$3"
-                        borderRadius="$3"
+                        padding="$2"
+                        borderRadius="$5"
                         borderWidth={1}
-                        borderColor="$borderColor"
-                        backgroundColor="$background"
+                        borderColor="$color5"
+                        backgroundColor="white"
                       >
-                        <XStack space="$2" alignItems="center">
-                          <Clock size={20} color={COLORS.primary} />
-                          <Text fontSize="$4" color="$text">
+                        <XStack gap="$2" alignItems="center">
+                          <Clock size={20} color={primaryColor} />
+                          <Text fontSize="$4" color="$color12">
                             {startTime ? formatTime(startTime) : '选择时间'}
                           </Text>
                         </XStack>
@@ -437,18 +446,18 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                 </YStack>
 
                 {/* End Time */}
-                <YStack space="$2">
-                  <Text fontSize="$3" color="$textSecondary">结束时间（可选）</Text>
+                <YStack gap="$1">
+                  <Text fontSize="$3" color="$color10">结束时间（可选）</Text>
                   {Platform.OS === 'web' ? (
                     <View
-                      padding="$3"
-                      borderRadius="$3"
+                      padding="$2"
+                      borderRadius="$5"
                       borderWidth={1}
-                      borderColor="$borderColor"
-                      backgroundColor="$background"
+                      borderColor="$color5"
+                      backgroundColor="white"
                     >
-                      <XStack space="$2" alignItems="center">
-                        <Clock size={20} color={COLORS.textSecondary} />
+                      <XStack gap="$2" alignItems="center">
+                        <Clock size={20} color={textSecondaryColor} />
                         <input
                           type="time"
                           value={endTime ? formatTime(endTime) : ''}
@@ -475,15 +484,15 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                   ) : (
                     <TouchableOpacity onPress={() => setShowEndTimePicker(true)}>
                       <View
-                        padding="$3"
-                        borderRadius="$3"
+                        padding="$2"
+                        borderRadius="$5"
                         borderWidth={1}
-                        borderColor="$borderColor"
-                        backgroundColor="$background"
+                        borderColor="$color5"
+                        backgroundColor="white"
                       >
-                        <XStack space="$2" alignItems="center">
-                          <Clock size={20} color={COLORS.textSecondary} />
-                          <Text fontSize="$4" color="$text">
+                        <XStack gap="$2" alignItems="center">
+                          <Clock size={20} color={textSecondaryColor} />
+                          <Text fontSize="$4" color="$color12">
                             {endTime ? formatTime(endTime) : '选择时间'}
                           </Text>
                         </XStack>
@@ -495,29 +504,29 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
             </Card>
 
             {/* Repeat Frequency */}
-            <Card padding="$4" borderRadius="$4" backgroundColor="$surface">
-              <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$3">
+            <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+              <Text fontSize="$4" fontWeight="600" color="$color12" marginBottom="$2">
                 重复频率
               </Text>
-              <XStack space="$2" flexWrap="wrap">
+              <XStack gap="$2" flexWrap="wrap">
                 {REPEAT_OPTIONS.map(option => (
                   <TouchableOpacity
                     key={option.value}
                     onPress={() => setRepeatFrequency(option.value)}
                   >
                     <View
-                      paddingHorizontal="$4"
+                      paddingHorizontal="$3"
                       paddingVertical="$2"
-                      borderRadius="$3"
-                      backgroundColor={repeatFrequency === option.value ? COLORS.primary : '$background'}
-                      borderWidth={2}
-                      borderColor={repeatFrequency === option.value ? COLORS.primary : '$borderColor'}
-                      marginBottom="$2"
+                      borderRadius="$10"
+                      backgroundColor={repeatFrequency === option.value ? '$primary' : 'white'}
+                      borderWidth={1}
+                      borderColor={repeatFrequency === option.value ? '$primary' : '$color5'}
+                      marginBottom="$1"
                     >
                       <Text
                         fontSize="$3"
-                        color={repeatFrequency === option.value ? 'white' : '$text'}
-                        fontWeight={repeatFrequency === option.value ? '600' : 'normal'}
+                        color={repeatFrequency === option.value ? 'white' : '$color12'}
+                        fontWeight={repeatFrequency === option.value ? '500' : 'normal'}
                       >
                         {option.label}
                       </Text>
@@ -528,11 +537,11 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
             </Card>
 
             {/* Reminder */}
-            <Card padding="$4" borderRadius="$4" backgroundColor="$surface">
-              <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-                <XStack space="$2" alignItems="center">
-                  <Bell size={20} color={COLORS.primary} />
-                  <Text fontSize="$4" fontWeight="600" color="$text">
+            <Card padding="$2" borderRadius="$6" backgroundColor="$color2" borderWidth={1} borderColor="$color5">
+              <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                <XStack gap="$2" alignItems="center">
+                  <Bell size={20} color={primaryColor} />
+                  <Text fontSize="$4" fontWeight="600" color="$color12">
                     提醒设置
                   </Text>
                 </XStack>
@@ -546,9 +555,9 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
               </XStack>
 
               {reminder && (
-                <YStack space="$2">
-                  <Text fontSize="$3" color="$textSecondary">提前提醒</Text>
-                  <XStack space="$2">
+                <YStack gap="$2">
+                  <Text fontSize="$3" color="$color10">提前提醒</Text>
+                  <XStack gap="$2">
                     {REMINDER_TIMES.map(time => (
                       <TouchableOpacity
                         key={time}
@@ -557,15 +566,15 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
                         <View
                           paddingHorizontal="$3"
                           paddingVertical="$2"
-                          borderRadius="$3"
-                          backgroundColor={reminderTime === time ? COLORS.primaryLight : '$background'}
-                          borderWidth={2}
-                          borderColor={reminderTime === time ? COLORS.primary : '$borderColor'}
+                          borderRadius="$10"
+                          backgroundColor={reminderTime === time ? `${primaryColor}15` : 'white'}
+                          borderWidth={1}
+                          borderColor={reminderTime === time ? '$primary' : '$color5'}
                         >
                           <Text
                             fontSize="$3"
-                            color={reminderTime === time ? COLORS.primary : '$text'}
-                            fontWeight={reminderTime === time ? '600' : 'normal'}
+                            color={reminderTime === time ? '$primary' : '$color12'}
+                            fontWeight={reminderTime === time ? '500' : 'normal'}
                           >
                             {time}分钟
                           </Text>
@@ -578,15 +587,15 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
             </Card>
 
             {/* Action Buttons */}
-            <YStack space="$3">
+            <YStack gap="$2">
               <TouchableOpacity onPress={handleSave} disabled={loading}>
                 <View
-                  padding="$4"
-                  borderRadius="$4"
-                  backgroundColor={loading ? COLORS.textSecondary : COLORS.success}
+                  padding="$2"
+                  borderRadius="$10"
+                  backgroundColor={loading ? textSecondaryColor : successColor}
                   alignItems="center"
                 >
-                  <Text fontSize="$5" fontWeight="bold" color="white">
+                  <Text fontSize="$4" fontWeight="600" color="white">
                     {loading ? '保存中...' : isEdit ? '保存修改' : '创建任务'}
                   </Text>
                 </View>
@@ -594,14 +603,14 @@ export const TaskFormScreen: React.FC<TaskFormScreenProps> = ({ route }) => {
 
               <TouchableOpacity onPress={() => navigation.goBack()}>
                 <View
-                  padding="$4"
-                  borderRadius="$4"
-                  backgroundColor="$surface"
+                  padding="$2"
+                  borderRadius="$10"
+                  backgroundColor="$color2"
                   borderWidth={1}
-                  borderColor="$borderColor"
+                  borderColor="$color5"
                   alignItems="center"
                 >
-                  <Text fontSize="$5" fontWeight="600" color="$text">
+                  <Text fontSize="$4" fontWeight="500" color="$color12">
                     取消
                   </Text>
                 </View>

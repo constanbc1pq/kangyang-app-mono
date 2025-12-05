@@ -3,20 +3,27 @@
  * 帮助用户记录和管理所有资产和负债
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Alert, RefreshControl, Pressable } from 'react-native';
+import { YStack, XStack, Text, View, ScrollView, Input, TextArea, useTheme } from 'tamagui';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  Modal,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { ArrowLeft } from 'lucide-react-native';
+  ArrowLeft,
+  Home,
+  CreditCard,
+  TrendingUp,
+  TrendingDown,
+  Shield,
+  Gem,
+  Palette,
+  Car,
+  MoreHorizontal,
+  FileText,
+  MapPin,
+  Trash2,
+  Plus,
+  Calendar,
+} from 'lucide-react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Asset, Liability } from '../types/legalService';
 import {
@@ -24,19 +31,30 @@ import {
   createPropertyInventory,
   updatePropertyInventory,
 } from '../services/legalService';
-import { COLORS } from '@/constants/app';
+import { BottomSheet } from '@/components/BottomSheet';
+
+const GOLD_COLOR = '#D4AF37';
 
 type AssetCategory = Asset['category'];
 type LiabilityType = Liability['type'];
 
 const PropertyInventoryScreen: React.FC = () => {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const errorColor = theme.error?.val;
+  const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
+
   const [activeTab, setActiveTab] = useState<'assets' | 'liabilities'>('assets');
   const [assets, setAssets] = useState<Asset[]>([]);
   const [liabilities, setLiabilities] = useState<Liability[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // 添加资产/负债的表单
   const [assetForm, setAssetForm] = useState<Partial<Asset>>({
     category: 'real_estate',
     name: '',
@@ -71,6 +89,12 @@ const PropertyInventoryScreen: React.FC = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadPropertyData();
+    setRefreshing(false);
+  };
+
   const handleAddAsset = async () => {
     if (!assetForm.name || !assetForm.estimatedValue) {
       Alert.alert('提示', '请填写资产名称和估值');
@@ -92,7 +116,6 @@ const PropertyInventoryScreen: React.FC = () => {
     setAssets(newAssets);
     await saveInventory(newAssets, liabilities);
 
-    // 重置表单
     setAssetForm({
       category: 'real_estate',
       name: '',
@@ -123,7 +146,6 @@ const PropertyInventoryScreen: React.FC = () => {
     setLiabilities(newLiabilities);
     await saveInventory(assets, newLiabilities);
 
-    // 重置表单
     setLiabilityForm({
       type: 'mortgage',
       creditor: '',
@@ -138,10 +160,7 @@ const PropertyInventoryScreen: React.FC = () => {
     try {
       const inventories = await getPropertyInventories();
       const totalAssetValue = assetsList.reduce((sum, asset) => sum + asset.estimatedValue, 0);
-      const totalLiabilityValue = liabilitiesList.reduce(
-        (sum, liability) => sum + liability.amount,
-        0
-      );
+      const totalLiabilityValue = liabilitiesList.reduce((sum, liability) => sum + liability.amount, 0);
 
       if (inventories.length > 0) {
         await updatePropertyInventory(inventories[0].id, {
@@ -223,18 +242,18 @@ const PropertyInventoryScreen: React.FC = () => {
     return labels[type] || '未知';
   };
 
-  const getCategoryIcon = (category: AssetCategory): string => {
-    const icons: Record<AssetCategory, string> = {
-      real_estate: 'home-outline',
-      bank_deposit: 'card-outline',
-      securities: 'trending-up-outline',
-      insurance: 'shield-checkmark-outline',
-      jewelry: 'diamond-outline',
-      antique: 'color-palette-outline',
-      vehicle: 'car-outline',
-      other: 'ellipsis-horizontal-outline',
-    };
-    return icons[category] || 'document-outline';
+  const getCategoryIcon = (category: AssetCategory) => {
+    const iconProps = { size: 20, color: primaryColor };
+    switch (category) {
+      case 'real_estate': return <Home {...iconProps} />;
+      case 'bank_deposit': return <CreditCard {...iconProps} />;
+      case 'securities': return <TrendingUp {...iconProps} />;
+      case 'insurance': return <Shield {...iconProps} />;
+      case 'jewelry': return <Gem {...iconProps} />;
+      case 'antique': return <Palette {...iconProps} />;
+      case 'vehicle': return <Car {...iconProps} />;
+      default: return <MoreHorizontal {...iconProps} />;
+    }
   };
 
   const getTotalAssetValue = (): number => {
@@ -259,734 +278,566 @@ const PropertyInventoryScreen: React.FC = () => {
     }, {} as Record<AssetCategory, Asset[]>);
   };
 
-  // 渲染资产标签页
+  const assetCategories: AssetCategory[] = [
+    'real_estate', 'bank_deposit', 'securities', 'insurance',
+    'jewelry', 'antique', 'vehicle', 'other',
+  ];
+
+  const liabilityTypes: LiabilityType[] = [
+    'mortgage', 'car_loan', 'personal_loan', 'credit_card', 'guarantee', 'other',
+  ];
+
+  const renderEmptyState = (type: 'assets' | 'liabilities') => (
+    <YStack alignItems="center" justifyContent="center" padding="$6">
+      <FileText size={64} color={theme.color5?.val} />
+      <Text fontSize="$4" fontWeight="600" color="$color12" marginTop="$2">
+        还没有{type === 'assets' ? '资产' : '负债'}记录
+      </Text>
+      <Text fontSize="$3" color="$color10" textAlign="center" marginTop="$1">
+        记录您的{type === 'assets' ? '资产' : '负债'}有助于{type === 'assets' ? '财产规划和遗嘱订立' : '全面了解财务状况'}
+      </Text>
+    </YStack>
+  );
+
+  const renderTypeChip = (
+    label: string,
+    isSelected: boolean,
+    onPress: () => void
+  ) => (
+    <Pressable onPress={onPress} key={label}>
+      <View
+        paddingHorizontal="$2"
+        paddingVertical="$1.5"
+        borderRadius="$10"
+        backgroundColor={isSelected ? '$primary' : '$color4'}
+        marginRight="$2"
+        marginBottom="$2"
+      >
+        <Text
+          fontSize="$3"
+          color={isSelected ? 'white' : '$color12'}
+          fontWeight={isSelected ? '600' : '400'}
+        >
+          {label}
+        </Text>
+      </View>
+    </Pressable>
+  );
+
   const renderAssetsTab = () => {
     const assetsByCategory = getAssetsByCategory();
     const categories = Object.keys(assetsByCategory) as AssetCategory[];
 
+    if (assets.length === 0) {
+      return renderEmptyState('assets');
+    }
+
     return (
-      <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-        {assets.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="document-outline" size={64} color="#d9d9d9" />
-            <Text style={styles.emptyText}>还没有资产记录</Text>
-            <Text style={styles.emptyDescription}>
-              记录您的资产有助于财产规划和遗嘱订立
-            </Text>
+      <YStack padding="$2.5" gap="$3">
+        {categories.map(category => (
+          <YStack key={category} gap="$2">
+            <XStack alignItems="center" gap="$1.5">
+              {getCategoryIcon(category)}
+              <Text fontSize="$4" fontWeight="600" color="$color12" flex={1}>
+                {getCategoryLabel(category)}
+              </Text>
+              <Text fontSize="$2" color="$color10">
+                {assetsByCategory[category].length} 项
+              </Text>
+            </XStack>
+
+            {assetsByCategory[category].map(asset => (
+              <View
+                key={asset.id}
+                backgroundColor="$color2"
+                borderRadius="$4"
+                padding="$2"
+                borderWidth={1}
+                borderColor="$color5"
+              >
+                <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$1">
+                  <Text fontSize="$3" fontWeight="600" color="$color12" flex={1}>
+                    {asset.name}
+                  </Text>
+                  <Text fontSize="$4" fontWeight="600" color="$success">
+                    ¥{asset.estimatedValue.toLocaleString()}
+                  </Text>
+                </XStack>
+
+                {asset.description && (
+                  <Text fontSize="$2" color="$color10" marginBottom="$1" lineHeight={18}>
+                    {asset.description}
+                  </Text>
+                )}
+
+                {asset.location && (
+                  <XStack alignItems="center" gap="$1" marginBottom="$1">
+                    <MapPin size={14} color={color10} />
+                    <Text fontSize="$2" color="$color10">{asset.location}</Text>
+                  </XStack>
+                )}
+
+                {asset.certificateNumber && (
+                  <XStack alignItems="center" gap="$1" marginBottom="$1">
+                    <FileText size={14} color={color10} />
+                    <Text fontSize="$2" color="$color10">证件号：{asset.certificateNumber}</Text>
+                  </XStack>
+                )}
+
+                <Pressable onPress={() => handleDeleteAsset(asset.id)}>
+                  <XStack alignItems="center" gap="$0.5" alignSelf="flex-end" marginTop="$1">
+                    <Trash2 size={14} color={errorColor} />
+                    <Text fontSize="$2" color="$error">删除</Text>
+                  </XStack>
+                </Pressable>
+              </View>
+            ))}
+          </YStack>
+        ))}
+      </YStack>
+    );
+  };
+
+  const renderLiabilitiesTab = () => {
+    if (liabilities.length === 0) {
+      return renderEmptyState('liabilities');
+    }
+
+    return (
+      <YStack padding="$2.5" gap="$2">
+        {liabilities.map(liability => (
+          <View
+            key={liability.id}
+            backgroundColor="$color2"
+            borderRadius="$4"
+            padding="$2"
+            borderWidth={1}
+            borderColor="$color5"
+          >
+            <XStack justifyContent="space-between" alignItems="flex-start" marginBottom="$1">
+              <YStack flex={1}>
+                <Text fontSize="$3" fontWeight="600" color="$color12">
+                  {getLiabilityTypeLabel(liability.type)}
+                </Text>
+                <Text fontSize="$2" color="$color10">债权人：{liability.creditor}</Text>
+              </YStack>
+              <Text fontSize="$4" fontWeight="600" color="$error">
+                -¥{liability.amount.toLocaleString()}
+              </Text>
+            </XStack>
+
+            {liability.description && (
+              <Text fontSize="$2" color="$color10" marginBottom="$1" lineHeight={18}>
+                {liability.description}
+              </Text>
+            )}
+
+            {liability.interestRate > 0 && (
+              <XStack alignItems="center" gap="$1" marginBottom="$1">
+                <TrendingUp size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">利率：{liability.interestRate}%</Text>
+              </XStack>
+            )}
+
+            {liability.dueDate && (
+              <XStack alignItems="center" gap="$1" marginBottom="$1">
+                <Calendar size={14} color={color10} />
+                <Text fontSize="$2" color="$color10">
+                  到期日：{new Date(liability.dueDate).toLocaleDateString()}
+                </Text>
+              </XStack>
+            )}
+
+            <Pressable onPress={() => handleDeleteLiability(liability.id)}>
+              <XStack alignItems="center" gap="$0.5" alignSelf="flex-end" marginTop="$1">
+                <Trash2 size={14} color={errorColor} />
+                <Text fontSize="$2" color="$error">删除</Text>
+              </XStack>
+            </Pressable>
           </View>
+        ))}
+      </YStack>
+    );
+  };
+
+  const renderAddModal = () => (
+    <BottomSheet
+      visible={showAddModal}
+      onClose={() => setShowAddModal(false)}
+      title={`添加${activeTab === 'assets' ? '资产' : '负债'}`}
+      variant="form"
+      avoidKeyboard
+      footer={
+        <XStack gap="$2">
+          <Pressable style={{ flex: 1 }} onPress={() => setShowAddModal(false)}>
+            <View
+              backgroundColor="$color4"
+              borderRadius="$10"
+              paddingVertical="$2"
+              alignItems="center"
+            >
+              <Text fontSize="$3" color="$color12">取消</Text>
+            </View>
+          </Pressable>
+          <Pressable
+            style={{ flex: 2 }}
+            onPress={activeTab === 'assets' ? handleAddAsset : handleAddLiability}
+          >
+            <View
+              backgroundColor="$primary"
+              borderRadius="$10"
+              paddingVertical="$2"
+              alignItems="center"
+            >
+              <Text fontSize="$3" fontWeight="600" color="white">添加</Text>
+            </View>
+          </Pressable>
+        </XStack>
+      }
+    >
+      <YStack gap="$3">
+        {activeTab === 'assets' ? (
+          <>
+            <YStack gap="$1.5">
+              <Text fontSize="$3" fontWeight="600" color="$color12">资产类型</Text>
+              <XStack flexWrap="wrap">
+                {assetCategories.map(category =>
+                  renderTypeChip(
+                    getCategoryLabel(category),
+                    assetForm.category === category,
+                    () => setAssetForm({ ...assetForm, category })
+                  )
+                )}
+              </XStack>
+            </YStack>
+
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">
+                资产名称 <Text color="$error">*</Text>
+              </Text>
+              <Input
+                value={assetForm.name}
+                onChangeText={text => setAssetForm({ ...assetForm, name: text })}
+                placeholder="例如：北京朝阳区xx小区住宅"
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                height={44}
+              />
+            </YStack>
+
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">描述</Text>
+              <TextArea
+                value={assetForm.description}
+                onChangeText={text => setAssetForm({ ...assetForm, description: text })}
+                placeholder="详细描述"
+                minHeight={80}
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                paddingVertical="$2"
+              />
+            </YStack>
+
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">
+                估值（元）<Text color="$error">*</Text>
+              </Text>
+              <Input
+                value={assetForm.estimatedValue ? assetForm.estimatedValue.toString() : ''}
+                onChangeText={text =>
+                  setAssetForm({ ...assetForm, estimatedValue: parseFloat(text) || 0 })
+                }
+                placeholder="请输入估值"
+                keyboardType="numeric"
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                height={44}
+              />
+            </YStack>
+
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">位置/账号</Text>
+              <Input
+                value={assetForm.location}
+                onChangeText={text => setAssetForm({ ...assetForm, location: text })}
+                placeholder="例如：地址、银行账号等"
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                height={44}
+              />
+            </YStack>
+
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">证件号码</Text>
+              <Input
+                value={assetForm.certificateNumber}
+                onChangeText={text => setAssetForm({ ...assetForm, certificateNumber: text })}
+                placeholder="例如：房产证号、股票账号等"
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                height={44}
+              />
+            </YStack>
+          </>
         ) : (
           <>
-            {categories.map(category => (
-              <View key={category} style={styles.categorySection}>
-                <View style={styles.categoryHeader}>
-                  <Ionicons
-                    name={getCategoryIcon(category) as any}
-                    size={20}
-                    color={COLORS.primary}
-                  />
-                  <Text style={styles.categoryTitle}>{getCategoryLabel(category)}</Text>
-                  <Text style={styles.categoryCount}>
-                    {assetsByCategory[category].length} 项
-                  </Text>
-                </View>
+            <YStack gap="$1.5">
+              <Text fontSize="$3" fontWeight="600" color="$color12">负债类型</Text>
+              <XStack flexWrap="wrap">
+                {liabilityTypes.map(type =>
+                  renderTypeChip(
+                    getLiabilityTypeLabel(type),
+                    liabilityForm.type === type,
+                    () => setLiabilityForm({ ...liabilityForm, type })
+                  )
+                )}
+              </XStack>
+            </YStack>
 
-                {assetsByCategory[category].map(asset => (
-                  <View key={asset.id} style={styles.itemCard}>
-                    <View style={styles.itemHeader}>
-                      <Text style={styles.itemName}>{asset.name}</Text>
-                      <Text style={styles.itemValue}>
-                        ¥{asset.estimatedValue.toLocaleString()}
-                      </Text>
-                    </View>
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">
+                债权人 <Text color="$error">*</Text>
+              </Text>
+              <Input
+                value={liabilityForm.creditor}
+                onChangeText={text => setLiabilityForm({ ...liabilityForm, creditor: text })}
+                placeholder="例如：中国银行、信用卡公司等"
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                height={44}
+              />
+            </YStack>
 
-                    {asset.description && (
-                      <Text style={styles.itemDescription}>{asset.description}</Text>
-                    )}
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">
+                金额（元）<Text color="$error">*</Text>
+              </Text>
+              <Input
+                value={liabilityForm.amount ? liabilityForm.amount.toString() : ''}
+                onChangeText={text =>
+                  setLiabilityForm({ ...liabilityForm, amount: parseFloat(text) || 0 })
+                }
+                placeholder="请输入负债金额"
+                keyboardType="numeric"
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                height={44}
+              />
+            </YStack>
 
-                    {asset.location && (
-                      <View style={styles.itemDetail}>
-                        <Ionicons name="location-outline" size={14} color="#999" />
-                        <Text style={styles.itemDetailText}>{asset.location}</Text>
-                      </View>
-                    )}
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">利率（%）</Text>
+              <Input
+                value={liabilityForm.interestRate ? liabilityForm.interestRate.toString() : ''}
+                onChangeText={text =>
+                  setLiabilityForm({
+                    ...liabilityForm,
+                    interestRate: parseFloat(text) || 0,
+                  })
+                }
+                placeholder="例如：5.5"
+                keyboardType="numeric"
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                height={44}
+              />
+            </YStack>
 
-                    {asset.certificateNumber && (
-                      <View style={styles.itemDetail}>
-                        <Ionicons name="document-text-outline" size={14} color="#999" />
-                        <Text style={styles.itemDetailText}>
-                          证件号：{asset.certificateNumber}
-                        </Text>
-                      </View>
-                    )}
-
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteAsset(asset.id)}
-                    >
-                      <Ionicons name="trash-outline" size={16} color="#ff4d4f" />
-                      <Text style={styles.deleteButtonText}>删除</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            ))}
+            <YStack gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$color12">描述</Text>
+              <TextArea
+                value={liabilityForm.description}
+                onChangeText={text => setLiabilityForm({ ...liabilityForm, description: text })}
+                placeholder="详细描述"
+                minHeight={80}
+                backgroundColor="$color2"
+                borderWidth={1}
+                borderColor="$color5"
+                borderRadius="$3"
+                fontSize="$4"
+                paddingHorizontal="$2"
+                paddingVertical="$2"
+              />
+            </YStack>
           </>
         )}
-      </ScrollView>
-    );
-  };
-
-  // 渲染负债标签页
-  const renderLiabilitiesTab = () => {
-    return (
-      <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-        {liabilities.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="document-outline" size={64} color="#d9d9d9" />
-            <Text style={styles.emptyText}>还没有负债记录</Text>
-            <Text style={styles.emptyDescription}>
-              记录负债情况有助于全面了解财务状况
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.liabilitiesList}>
-            {liabilities.map(liability => (
-              <View key={liability.id} style={styles.itemCard}>
-                <View style={styles.itemHeader}>
-                  <View>
-                    <Text style={styles.itemName}>{getLiabilityTypeLabel(liability.type)}</Text>
-                    <Text style={styles.itemSubtitle}>债权人：{liability.creditor}</Text>
-                  </View>
-                  <Text style={[styles.itemValue, { color: '#ff4d4f' }]}>
-                    -¥{liability.amount.toLocaleString()}
-                  </Text>
-                </View>
-
-                {liability.description && (
-                  <Text style={styles.itemDescription}>{liability.description}</Text>
-                )}
-
-                {liability.interestRate > 0 && (
-                  <View style={styles.itemDetail}>
-                    <Ionicons name="trending-up-outline" size={14} color="#999" />
-                    <Text style={styles.itemDetailText}>
-                      利率：{liability.interestRate}%
-                    </Text>
-                  </View>
-                )}
-
-                {liability.dueDate && (
-                  <View style={styles.itemDetail}>
-                    <Ionicons name="calendar-outline" size={14} color="#999" />
-                    <Text style={styles.itemDetailText}>
-                      到期日：{new Date(liability.dueDate).toLocaleDateString()}
-                    </Text>
-                  </View>
-                )}
-
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleDeleteLiability(liability.id)}
-                >
-                  <Ionicons name="trash-outline" size={16} color="#ff4d4f" />
-                  <Text style={styles.deleteButtonText}>删除</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-    );
-  };
-
-  // 渲染添加模态框
-  const renderAddModal = () => {
-    return (
-      <Modal
-        visible={showAddModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowAddModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                添加{activeTab === 'assets' ? '资产' : '负债'}
-              </Text>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-              {activeTab === 'assets' ? (
-                <>
-                  <Text style={styles.formLabel}>资产类型</Text>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.categorySelector}
-                  >
-                    {(
-                      [
-                        'real_estate',
-                        'bank_deposit',
-                        'securities',
-                        'insurance',
-                        'jewelry',
-                        'antique',
-                        'vehicle',
-                        'other',
-                      ] as AssetCategory[]
-                    ).map(category => (
-                      <TouchableOpacity
-                        key={category}
-                        style={[
-                          styles.categoryButton,
-                          assetForm.category === category && styles.categoryButtonActive,
-                        ]}
-                        onPress={() => setAssetForm({ ...assetForm, category })}
-                      >
-                        <Text
-                          style={[
-                            styles.categoryButtonText,
-                            assetForm.category === category && styles.categoryButtonTextActive,
-                          ]}
-                        >
-                          {getCategoryLabel(category)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-
-                  <Text style={styles.formLabel}>资产名称 *</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="例如：北京朝阳区xx小区住宅"
-                    value={assetForm.name}
-                    onChangeText={text => setAssetForm({ ...assetForm, name: text })}
-                  />
-
-                  <Text style={styles.formLabel}>描述</Text>
-                  <TextInput
-                    style={[styles.formInput, styles.formTextArea]}
-                    placeholder="详细描述"
-                    value={assetForm.description}
-                    onChangeText={text => setAssetForm({ ...assetForm, description: text })}
-                    multiline
-                    numberOfLines={3}
-                  />
-
-                  <Text style={styles.formLabel}>估值（元）*</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="请输入估值"
-                    value={
-                      assetForm.estimatedValue ? assetForm.estimatedValue.toString() : ''
-                    }
-                    onChangeText={text =>
-                      setAssetForm({ ...assetForm, estimatedValue: parseFloat(text) || 0 })
-                    }
-                    keyboardType="numeric"
-                  />
-
-                  <Text style={styles.formLabel}>位置/账号</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="例如：地址、银行账号等"
-                    value={assetForm.location}
-                    onChangeText={text => setAssetForm({ ...assetForm, location: text })}
-                  />
-
-                  <Text style={styles.formLabel}>证件号码</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="例如：房产证号、股票账号等"
-                    value={assetForm.certificateNumber}
-                    onChangeText={text =>
-                      setAssetForm({ ...assetForm, certificateNumber: text })
-                    }
-                  />
-                </>
-              ) : (
-                <>
-                  <Text style={styles.formLabel}>负债类型</Text>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.categorySelector}
-                  >
-                    {(
-                      ['mortgage', 'car_loan', 'personal_loan', 'credit_card', 'guarantee', 'other'] as LiabilityType[]
-                    ).map(type => (
-                      <TouchableOpacity
-                        key={type}
-                        style={[
-                          styles.categoryButton,
-                          liabilityForm.type === type && styles.categoryButtonActive,
-                        ]}
-                        onPress={() => setLiabilityForm({ ...liabilityForm, type })}
-                      >
-                        <Text
-                          style={[
-                            styles.categoryButtonText,
-                            liabilityForm.type === type && styles.categoryButtonTextActive,
-                          ]}
-                        >
-                          {getLiabilityTypeLabel(type)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-
-                  <Text style={styles.formLabel}>债权人 *</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="例如：中国银行、信用卡公司等"
-                    value={liabilityForm.creditor}
-                    onChangeText={text => setLiabilityForm({ ...liabilityForm, creditor: text })}
-                  />
-
-                  <Text style={styles.formLabel}>金额（元）*</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="请输入负债金额"
-                    value={liabilityForm.amount ? liabilityForm.amount.toString() : ''}
-                    onChangeText={text =>
-                      setLiabilityForm({ ...liabilityForm, amount: parseFloat(text) || 0 })
-                    }
-                    keyboardType="numeric"
-                  />
-
-                  <Text style={styles.formLabel}>利率（%）</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="例如：5.5"
-                    value={
-                      liabilityForm.interestRate ? liabilityForm.interestRate.toString() : ''
-                    }
-                    onChangeText={text =>
-                      setLiabilityForm({
-                        ...liabilityForm,
-                        interestRate: parseFloat(text) || 0,
-                      })
-                    }
-                    keyboardType="numeric"
-                  />
-
-                  <Text style={styles.formLabel}>描述</Text>
-                  <TextInput
-                    style={[styles.formInput, styles.formTextArea]}
-                    placeholder="详细描述"
-                    value={liabilityForm.description}
-                    onChangeText={text =>
-                      setLiabilityForm({ ...liabilityForm, description: text })
-                    }
-                    multiline
-                    numberOfLines={3}
-                  />
-                </>
-              )}
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => setShowAddModal(false)}
-              >
-                <Text style={styles.modalCancelButtonText}>取消</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalSubmitButton}
-                onPress={activeTab === 'assets' ? handleAddAsset : handleAddLiability}
-              >
-                <Text style={styles.modalSubmitButtonText}>添加</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
+      </YStack>
+    </BottomSheet>
+  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Title Bar */}
-      <View style={styles.titleBar}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </TouchableOpacity>
-        <Text style={styles.titleText}>财产清单</Text>
-        <View style={styles.placeholder} />
+    <View flex={1} backgroundColor="$background">
+      {/* TitleBar */}
+      <View
+        paddingTop={insets.top}
+        backgroundColor="$color2"
+        borderBottomWidth={1}
+        borderBottomColor="$color5"
+      >
+        <XStack
+          height={56}
+          paddingHorizontal="$2.5"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Pressable onPress={() => navigation.goBack()}>
+            <View
+              width={40}
+              height={40}
+              borderRadius={20}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <ArrowLeft size={24} color={color12} />
+            </View>
+          </Pressable>
+          <Text fontSize="$5" fontWeight="600" color="$color12">
+            财产清单
+          </Text>
+          <View width={40} />
+        </XStack>
       </View>
 
-      {/* 顶部统计卡片 */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>总资产</Text>
-          <Text style={[styles.statValue, { color: '#52c41a' }]}>
-            ¥{getTotalAssetValue().toLocaleString()}
-          </Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>总负债</Text>
-          <Text style={[styles.statValue, { color: '#ff4d4f' }]}>
-            ¥{getTotalLiabilityValue().toLocaleString()}
-          </Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statLabel}>净资产</Text>
-          <Text style={[styles.statValue, { color: COLORS.primary }]}>
-            ¥{getNetWorth().toLocaleString()}
-          </Text>
-        </View>
+      {/* Stats */}
+      <View backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
+        <XStack paddingVertical="$2" paddingHorizontal="$2.5">
+          <YStack flex={1} alignItems="center">
+            <Text fontSize="$2" color="$color10" marginBottom="$0.5">总资产</Text>
+            <Text fontSize="$5" fontWeight="600" color="$success">
+              ¥{getTotalAssetValue().toLocaleString()}
+            </Text>
+          </YStack>
+          <YStack flex={1} alignItems="center">
+            <Text fontSize="$2" color="$color10" marginBottom="$0.5">总负债</Text>
+            <Text fontSize="$5" fontWeight="600" color="$error">
+              ¥{getTotalLiabilityValue().toLocaleString()}
+            </Text>
+          </YStack>
+          <YStack flex={1} alignItems="center">
+            <Text fontSize="$2" color="$color10" marginBottom="$0.5">净资产</Text>
+            <Text fontSize="$5" fontWeight="600" color="$primary">
+              ¥{getNetWorth().toLocaleString()}
+            </Text>
+          </YStack>
+        </XStack>
       </View>
 
-      {/* 标签页切换 */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'assets' && styles.tabActive]}
-          onPress={() => setActiveTab('assets')}
-        >
-          <Ionicons
-            name="trending-up-outline"
-            size={20}
-            color={activeTab === 'assets' ? COLORS.primary : '#999'}
-          />
-          <Text style={[styles.tabText, activeTab === 'assets' && styles.tabTextActive]}>
-            资产 ({assets.length})
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'liabilities' && styles.tabActive]}
-          onPress={() => setActiveTab('liabilities')}
-        >
-          <Ionicons
-            name="trending-down-outline"
-            size={20}
-            color={activeTab === 'liabilities' ? COLORS.primary : '#999'}
-          />
-          <Text
-            style={[styles.tabText, activeTab === 'liabilities' && styles.tabTextActive]}
+      {/* Tabs */}
+      <XStack backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
+        <Pressable style={{ flex: 1 }} onPress={() => setActiveTab('assets')}>
+          <XStack
+            alignItems="center"
+            justifyContent="center"
+            paddingVertical="$2"
+            borderBottomWidth={2}
+            borderBottomColor={activeTab === 'assets' ? '$primary' : 'transparent'}
+            gap="$1"
           >
-            负债 ({liabilities.length})
-          </Text>
-        </TouchableOpacity>
+            <TrendingUp size={18} color={activeTab === 'assets' ? primaryColor : color10} />
+            <Text
+              fontSize="$3"
+              color={activeTab === 'assets' ? '$primary' : '$color10'}
+              fontWeight={activeTab === 'assets' ? '600' : '400'}
+            >
+              资产 ({assets.length})
+            </Text>
+          </XStack>
+        </Pressable>
+
+        <Pressable style={{ flex: 1 }} onPress={() => setActiveTab('liabilities')}>
+          <XStack
+            alignItems="center"
+            justifyContent="center"
+            paddingVertical="$2"
+            borderBottomWidth={2}
+            borderBottomColor={activeTab === 'liabilities' ? '$primary' : 'transparent'}
+            gap="$1"
+          >
+            <TrendingDown size={18} color={activeTab === 'liabilities' ? primaryColor : color10} />
+            <Text
+              fontSize="$3"
+              color={activeTab === 'liabilities' ? '$primary' : '$color10'}
+              fontWeight={activeTab === 'liabilities' ? '600' : '400'}
+            >
+              负债 ({liabilities.length})
+            </Text>
+          </XStack>
+        </Pressable>
+      </XStack>
+
+      {/* Content */}
+      <ScrollView
+        flex={1}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
+        {activeTab === 'assets' ? renderAssetsTab() : renderLiabilitiesTab()}
+        <View height={100} />
+      </ScrollView>
+
+      {/* Add Button */}
+      <View
+        paddingHorizontal="$2.5"
+        paddingVertical="$2"
+        paddingBottom={insets.bottom + 16}
+        backgroundColor="$color2"
+        borderTopWidth={1}
+        borderTopColor="$color5"
+      >
+        <Pressable onPress={() => setShowAddModal(true)}>
+          <XStack
+            backgroundColor="$primary"
+            borderRadius="$10"
+            paddingVertical="$2"
+            alignItems="center"
+            justifyContent="center"
+            gap="$1"
+          >
+            <Plus size={20} color="white" />
+            <Text fontSize="$4" fontWeight="600" color="white">
+              添加{activeTab === 'assets' ? '资产' : '负债'}
+            </Text>
+          </XStack>
+        </Pressable>
       </View>
 
-      {/* 标签页内容 */}
-      {activeTab === 'assets' ? renderAssetsTab() : renderLiabilitiesTab()}
-
-      {/* 添加按钮 */}
-      <View style={styles.addButtonContainer}>
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
-          <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>
-            添加{activeTab === 'assets' ? '资产' : '负债'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 添加模态框 */}
       {renderAddModal()}
-    </SafeAreaView>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  titleBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e8e8',
-  },
-  backButton: {
-    padding: 4,
-  },
-  titleText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  placeholder: {
-    width: 32,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e8e8',
-  },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e8e8',
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: COLORS.primary,
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#999',
-    marginLeft: 4,
-  },
-  tabTextActive: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  tabContent: {
-    flex: 1,
-    padding: 16,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 80,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 16,
-  },
-  emptyDescription: {
-    fontSize: 13,
-    color: '#ccc',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  categorySection: {
-    marginBottom: 24,
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  categoryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 8,
-    flex: 1,
-  },
-  categoryCount: {
-    fontSize: 12,
-    color: '#999',
-  },
-  liabilitiesList: {},
-  itemCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  itemName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-  },
-  itemSubtitle: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-  },
-  itemValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#52c41a',
-  },
-  itemDescription: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 8,
-    lineHeight: 18,
-  },
-  itemDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  itemDetailText: {
-    fontSize: 12,
-    color: '#999',
-    marginLeft: 4,
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-end',
-    marginTop: 8,
-  },
-  deleteButtonText: {
-    fontSize: 12,
-    color: '#ff4d4f',
-    marginLeft: 4,
-  },
-  addButtonContainer: {
-    padding: 16,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e8e8e8',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
-    borderRadius: 8,
-    gap: 8,
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e8e8e8',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  modalBody: {
-    padding: 16,
-  },
-  formLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  formInput: {
-    borderWidth: 1,
-    borderColor: '#d9d9d9',
-    borderRadius: 4,
-    padding: 12,
-    fontSize: 14,
-    backgroundColor: '#fff',
-  },
-  formTextArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  categorySelector: {
-    marginBottom: 8,
-  },
-  categoryButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: '#f5f5f5',
-    marginRight: 8,
-  },
-  categoryButtonActive: {
-    backgroundColor: '#f3e5f5',
-  },
-  categoryButtonText: {
-    fontSize: 13,
-    color: '#666',
-  },
-  categoryButtonTextActive: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e8e8e8',
-  },
-  modalCancelButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#d9d9d9',
-    borderRadius: 4,
-    padding: 14,
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  modalCancelButtonText: {
-    fontSize: 15,
-    color: '#666',
-  },
-  modalSubmitButton: {
-    flex: 2,
-    backgroundColor: COLORS.primary,
-    borderRadius: 4,
-    padding: 14,
-    alignItems: 'center',
-  },
-  modalSubmitButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-  },
-});
 
 export default PropertyInventoryScreen;

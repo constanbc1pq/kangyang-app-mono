@@ -4,10 +4,9 @@
  */
 
 import React from 'react';
-import { View, Text, YStack, XStack, Card } from 'tamagui';
+import { View, Text, YStack, XStack, useTheme } from 'tamagui';
 import { Pressable, ScrollView } from 'react-native';
 import { CheckCircle, TrendingDown } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 export interface ComboPackageItem {
   id: string;
@@ -40,37 +39,39 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
   onPurchase,
   onCustomize,
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const successColor = theme.success?.val;
+  const errorColor = theme.error?.val;
+
   const discountPercentage = Math.round((pkg.savings / pkg.originalPrice) * 100);
 
   return (
-    <Card
-      bordered
-      padding="$4"
-      backgroundColor="$surface"
-      shadowColor="$shadow"
-      shadowOffset={{ width: 0, height: 2 }}
-      shadowOpacity={0.1}
-      shadowRadius={6}
-      elevation={3}
-      marginBottom={16}
+    <View
+      backgroundColor="$color2"
+      borderRadius="$5"
+      padding="$2"
+      borderWidth={1}
+      borderColor="$color5"
+      marginBottom="$2"
     >
-      <YStack space="$3">
+      <YStack gap="$3">
         {/* 顶部：标题和徽章 */}
         <XStack justifyContent="space-between" alignItems="flex-start">
-          <XStack alignItems="center" space="$2" flex={1}>
+          <XStack alignItems="center" gap="$2" flex={1}>
             <Text fontSize={28}>{pkg.icon}</Text>
             <YStack flex={1}>
-              <Text fontSize="$5" fontWeight="700" color="$text">
+              <Text fontSize="$5" fontWeight="700" color="$color12">
                 {pkg.name}
               </Text>
-              <Text fontSize="$2" color="$textSecondary" marginTop="$1">
+              <Text fontSize="$2" color="$color10" marginTop="$1">
                 {pkg.description}
               </Text>
             </YStack>
           </XStack>
           {pkg.badge && (
             <View
-              backgroundColor={pkg.isFree ? COLORS.success : COLORS.error}
+              backgroundColor={pkg.isFree ? successColor : errorColor}
               paddingHorizontal="$2"
               paddingVertical="$1"
               borderRadius="$2"
@@ -84,20 +85,20 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
 
         {/* 包含的服务列表 */}
         <View
-          backgroundColor="$background"
+          backgroundColor="$color3"
           padding="$3"
           borderRadius="$3"
           borderWidth={1}
-          borderColor="$borderColor"
+          borderColor="$color5"
         >
-          <Text fontSize="$2" color="$textSecondary" marginBottom="$2">
+          <Text fontSize="$2" color="$color10" marginBottom="$2">
             套餐包含：
           </Text>
-          <YStack space="$2">
+          <YStack gap="$2">
             {pkg.services.map((service, index) => (
-              <XStack key={index} alignItems="center" space="$2">
-                <CheckCircle size={16} color={COLORS.primary} />
-                <Text fontSize="$3" color="$text" fontWeight="500">
+              <XStack key={index} alignItems="center" gap="$2">
+                <CheckCircle size={16} color={primaryColor} />
+                <Text fontSize="$3" color="$color12" fontWeight="500">
                   {service}
                 </Text>
               </XStack>
@@ -109,21 +110,21 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
         {!pkg.isFree ? (
           <XStack justifyContent="space-between" alignItems="flex-end">
             <YStack>
-              <XStack alignItems="baseline" space="$1">
-                <Text fontSize="$2" color={COLORS.error}>
+              <XStack alignItems="baseline" gap="$1">
+                <Text fontSize="$2" color="$error">
                   ¥
                 </Text>
-                <Text fontSize="$7" fontWeight="700" color={COLORS.error}>
+                <Text fontSize="$7" fontWeight="700" color="$error">
                   {pkg.packagePrice}
                 </Text>
-                <Text fontSize="$3" color="$textSecondary">
+                <Text fontSize="$3" color="$color10">
                   /月起
                 </Text>
               </XStack>
-              <XStack alignItems="center" space="$1" marginTop="$1">
+              <XStack alignItems="center" gap="$1" marginTop="$1">
                 <Text
                   fontSize="$3"
-                  color="$textSecondary"
+                  color="$color10"
                   textDecorationLine="line-through"
                 >
                   原价¥{pkg.originalPrice}
@@ -133,31 +134,31 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
 
             {/* 节省金额标签 */}
             <View
-              backgroundColor={`${COLORS.error}15`}
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-              borderRadius="$3"
+              backgroundColor={`${errorColor}15`}
+              paddingHorizontal="$2"
+              paddingVertical="$1.5"
+              borderRadius="$4"
               flexDirection="row"
               alignItems="center"
-              space="$1"
+              gap="$1"
             >
-              <TrendingDown size={16} color={COLORS.error} />
-              <Text fontSize="$3" color={COLORS.error} fontWeight="600">
+              <TrendingDown size={16} color={errorColor} />
+              <Text fontSize="$3" color="$error" fontWeight="600">
                 优惠¥{pkg.savings}
               </Text>
             </View>
           </XStack>
         ) : (
           <View
-            backgroundColor={`${COLORS.success}15`}
-            padding="$3"
-            borderRadius="$3"
+            backgroundColor={`${successColor}15`}
+            padding="$2"
+            borderRadius="$4"
             alignItems="center"
           >
-            <Text fontSize="$5" color={COLORS.success} fontWeight="700">
+            <Text fontSize="$5" color="$success" fontWeight="700">
               专业咨询服务
             </Text>
-            <Text fontSize="$2" color={COLORS.success} marginTop="$1">
+            <Text fontSize="$2" color="$success" marginTop="$0.5">
               资深顾问一对一服务，为您定制方案
             </Text>
           </View>
@@ -165,12 +166,12 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
 
         {/* 社交证明 */}
         <View
-          backgroundColor="$background"
+          backgroundColor="$color3"
           padding="$2"
           borderRadius="$2"
           alignItems="center"
         >
-          <Text fontSize="$2" color="$textSecondary">
+          <Text fontSize="$2" color="$color10">
             {pkg.subscriberCount
               ? `已有${pkg.subscriberCount}人订阅`
               : pkg.familyCount
@@ -180,7 +181,7 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
         </View>
 
         {/* 双CTA按钮 */}
-        <XStack space="$2" marginTop="$2">
+        <XStack gap="$2" marginTop="$1.5">
           {pkg.secondaryCTA && onCustomize && (
             <Pressable
               onPress={() =>
@@ -189,13 +190,13 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
               style={{ flex: 1 }}
             >
               <View
-                paddingVertical="$3"
-                borderRadius="$3"
+                paddingVertical="$2"
+                borderRadius="$10"
                 borderWidth={1}
-                borderColor={COLORS.primary}
+                borderColor="$primary"
                 alignItems="center"
               >
-                <Text color={COLORS.primary} fontSize="$3" fontWeight="600">
+                <Text color="$primary" fontSize="$3" fontWeight="600">
                   {pkg.secondaryCTA}
                 </Text>
               </View>
@@ -207,9 +208,9 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
             style={{ flex: 1 }}
           >
             <View
-              paddingVertical="$3"
-              borderRadius="$3"
-              backgroundColor={COLORS.primary}
+              paddingVertical="$2"
+              borderRadius="$10"
+              backgroundColor="$primary"
               alignItems="center"
             >
               <Text color="white" fontSize="$3" fontWeight="600">
@@ -219,7 +220,7 @@ const ComboPackageCardItem: React.FC<ComboPackageCardProps> = ({
           </Pressable>
         </XStack>
       </YStack>
-    </Card>
+    </View>
   );
 };
 
@@ -235,20 +236,20 @@ export const ComboPackageList: React.FC<ComboPackageListProps> = ({
   onCustomize,
 }) => {
   return (
-    <View marginBottom={16}>
-      <YStack space="$3">
+    <View marginBottom="$2">
+      <YStack gap="$3">
         {/* 标题 */}
-        <View paddingHorizontal="$4">
-          <Text fontSize="$5" fontWeight="600" color="$text">
+        <View paddingHorizontal="$2.5">
+          <Text fontSize="$5" fontWeight="600" color="$color12">
             超值组合套餐
           </Text>
-          <Text fontSize="$3" color="$textSecondary" marginTop="$1">
+          <Text fontSize="$3" color="$color10" marginTop="$1">
             多服务组合，更省心更划算
           </Text>
         </View>
 
         {/* 套餐列表 */}
-        <View paddingHorizontal="$4">
+        <View paddingHorizontal="$2.5">
           <YStack>
             {packages.map((pkg) => (
               <ComboPackageCardItem
@@ -341,7 +342,7 @@ export const mockComboPackages: ComboPackageItem[] = [
     description: '子女不在身边也安心',
     icon: '🏡',
     services: [
-      '送餐上门服务（营养三餐配送）',
+      '闪送到家服务（营养三餐配送）',
       '居家养老服务（每日探访陪伴）',
       '紧急呼叫服务（24小时响应）',
     ],

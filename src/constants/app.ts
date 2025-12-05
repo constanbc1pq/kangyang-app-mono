@@ -42,6 +42,7 @@ export const COLORS = {
   warning: '#f59e0b', // 警告橙色
   success: '#10b981', // 成功绿色 (薄荷色系)
   info: '#3b82f6', // 信息蓝色
+  gold: '#D4AF37', // 金黄色 - VIP/专属服务/高端标识
 
   // 边框和分割
   border: '#e2e8f0', // 主要边框
@@ -340,6 +341,7 @@ export const ORDER_TYPE_CONFIGS = [
   { id: ORDER_ITEM_TYPES.ELDERLY_SERVICE, label: '养老服务' },
   { id: ORDER_ITEM_TYPES.PRODUCT, label: '商品类' },
   { id: ORDER_ITEM_TYPES.PRIVATE_DOCTOR, label: '私人医生' },
+  { id: 'community', label: '社区' },
 ];
 
 /**

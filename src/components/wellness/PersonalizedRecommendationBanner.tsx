@@ -4,11 +4,10 @@
  */
 
 import React from 'react';
-import { View, Text, YStack, XStack } from 'tamagui';
+import { View, Text, YStack, XStack, useTheme } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable } from 'react-native';
 import { Sparkles, ArrowRight } from 'lucide-react-native';
-import { COLORS } from '@/constants/app';
 
 interface RecommendationData {
   id: string;
@@ -30,69 +29,75 @@ export const PersonalizedRecommendationBanner: React.FC<PersonalizedRecommendati
   recommendation,
   onPress,
 }) => {
+  const theme = useTheme();
+  const primaryColor = theme.primary?.val;
+  const accentColor = theme.accent?.val;
+  const gradientColors = [primaryColor, accentColor] as [string, string];
+
   return (
-    <View marginBottom={16}>
+    <View marginBottom="$2">
       <Pressable
         onPress={() => onPress(recommendation.targetScreen, recommendation.targetParams)}
-        style={{ borderRadius: 12, overflow: 'hidden' }}
       >
-        <LinearGradient
-          colors={['#667eea', '#764ba2']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ padding: 20, minHeight: 140 }}
-        >
-          <YStack space="$3">
-            {/* 顶部标签和图标 */}
-            <XStack justifyContent="space-between" alignItems="center">
-              <XStack alignItems="center" space="$2">
-                <Sparkles size={20} color="white" />
-                <Text fontSize="$3" color="white" fontWeight="600">
-                  为您推荐
-                </Text>
-              </XStack>
-              {recommendation.badge && (
-                <View
-                  backgroundColor="rgba(255,255,255,0.25)"
-                  paddingHorizontal="$2"
-                  paddingVertical="$1"
-                  borderRadius="$2"
-                >
-                  <Text fontSize="$2" color="white" fontWeight="600">
-                    {recommendation.badge}
+        <View borderRadius="$5" overflow="hidden">
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ padding: 16, minHeight: 140 }}
+          >
+            <YStack gap="$2">
+              {/* 顶部标签和图标 */}
+              <XStack justifyContent="space-between" alignItems="center">
+                <XStack alignItems="center" gap="$1.5">
+                  <Sparkles size={20} color="white" />
+                  <Text fontSize="$3" color="white" fontWeight="600">
+                    为您推荐
                   </Text>
-                </View>
-              )}
-            </XStack>
+                </XStack>
+                {recommendation.badge && (
+                  <View
+                    backgroundColor="rgba(255,255,255,0.25)"
+                    paddingHorizontal="$2"
+                    paddingVertical="$1"
+                    borderRadius="$2"
+                  >
+                    <Text fontSize="$2" color="white" fontWeight="600">
+                      {recommendation.badge}
+                    </Text>
+                  </View>
+                )}
+              </XStack>
 
-            {/* 标题 */}
-            <Text fontSize="$6" fontWeight="700" color="white" lineHeight={28}>
-              {recommendation.title}
-            </Text>
-
-            {/* 描述 */}
-            <Text fontSize="$3" color="rgba(255,255,255,0.9)" lineHeight={20}>
-              {recommendation.description}
-            </Text>
-
-            {/* CTA按钮 */}
-            <XStack
-              backgroundColor="white"
-              alignSelf="flex-start"
-              paddingHorizontal="$4"
-              paddingVertical="$2"
-              borderRadius="$6"
-              alignItems="center"
-              space="$2"
-              marginTop="$2"
-            >
-              <Text color={COLORS.primary} fontWeight="600" fontSize="$3">
-                {recommendation.ctaText}
+              {/* 标题 */}
+              <Text fontSize="$6" fontWeight="700" color="white">
+                {recommendation.title}
               </Text>
-              <ArrowRight size={16} color={COLORS.primary} />
-            </XStack>
-          </YStack>
-        </LinearGradient>
+
+              {/* 描述 */}
+              <Text fontSize="$3" color="rgba(255,255,255,0.9)">
+                {recommendation.description}
+              </Text>
+
+              {/* CTA按钮 */}
+              <XStack
+                backgroundColor="white"
+                alignSelf="flex-start"
+                paddingHorizontal="$2"
+                paddingVertical="$1.5"
+                borderRadius="$10"
+                alignItems="center"
+                gap="$1.5"
+                marginTop="$1"
+              >
+                <Text color="$primary" fontWeight="600" fontSize="$3">
+                  {recommendation.ctaText}
+                </Text>
+                <ArrowRight size={16} color={primaryColor} />
+              </XStack>
+            </YStack>
+          </LinearGradient>
+        </View>
       </Pressable>
     </View>
   );
@@ -128,7 +133,7 @@ export const generateRecommendation = (userProfile: {
   if (age && age >= 50 && age <= 60 && healthScore && healthScore >= 75) {
     return {
       id: 'nutrition_50_60',
-      title: '营养配餐 + 送餐上门',
+      title: '营养配餐 + 闪送到家',
       description: '营养师定制方案，每日新鲜配送，首周特惠',
       ctaText: '查看套餐',
       icon: '🍱',
@@ -137,7 +142,7 @@ export const generateRecommendation = (userProfile: {
     };
   }
 
-  // 60-70岁 + 独居：推荐送餐上门
+  // 60-70岁 + 独居：推荐闪送到家
   if (age && age >= 60 && age <= 70 && livingAlone) {
     return {
       id: 'meal_delivery_senior',

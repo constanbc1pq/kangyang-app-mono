@@ -5,28 +5,21 @@ import {
   Text,
   Card,
   View,
-  H1,
-  H2,
-  H3,
-  Theme,
+  H4,
   ScrollView,
-  Progress,
+  useTheme,
+  Paragraph,
 } from 'tamagui';
-import { Pressable, TouchableOpacity } from 'react-native';
+import { Pressable, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Heart,
   Activity,
   Moon,
   Scale,
-  Plus,
-  TrendingUp,
   CheckCircle,
   Settings,
-  Bell,
   Droplets,
-  Zap,
   Clock,
   ChevronRight,
 } from 'lucide-react-native';
@@ -35,7 +28,6 @@ import { HealthMetricCard } from '@/components/HealthMetricCard';
 import { AIInsights, AIInsight } from '@/components/AIInsights';
 import { HealthTrends } from '@/components/HealthTrends';
 import { DeviceStatusOverview } from '@/components/DeviceStatusOverview';
-import { COLORS } from '@/constants/app';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import {
   getTodayTasks,
@@ -50,6 +42,7 @@ import { HealthTask, MemberHealthProfile, FamilyMember as FamilyMemberType, Heal
 import * as Icons from 'lucide-react-native';
 
 export const HealthScreen: React.FC = () => {
+  const theme = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [todayTasks, setTodayTasks] = useState<HealthTask[]>([]);
   const [currentMemberId, setCurrentMemberId] = useState<string>('self'); // 当前查看的家庭成员
@@ -147,11 +140,51 @@ export const HealthScreen: React.FC = () => {
     return IconComponent || Icons.CheckCircle;
   };
 
-  // 从设备获取健康指标数据
+  // 获取任务颜色 - 使用主题功能色替代原有饱和色
+  const getTaskThemeColor = (taskColor?: string, taskType?: string) => {
+    // 根据任务类型或颜色映射到主题色
+    // primary (accent9) - 主要任务
+    // success (accent10) - 完成/健康相关
+    // secondary (accent7) - 次要任务
+    // warning (color9) - 提醒类任务
+    if (!taskColor && !taskType) return theme.primary?.val;
+
+    // 根据原有颜色关键字映射
+    const colorLower = taskColor?.toLowerCase() || '';
+    if (colorLower.includes('green') || colorLower.includes('10b981') || colorLower.includes('success')) {
+      return theme.success?.val; // 深紫
+    }
+    if (colorLower.includes('blue') || colorLower.includes('3b82f6') || colorLower.includes('info')) {
+      return theme.info?.val; // 主紫
+    }
+    if (colorLower.includes('yellow') || colorLower.includes('f59e0b') || colorLower.includes('orange') || colorLower.includes('warning')) {
+      return theme.warning?.val; // 中灰
+    }
+    if (colorLower.includes('red') || colorLower.includes('ef4444') || colorLower.includes('error') || colorLower.includes('pink')) {
+      return theme.error?.val; // 灰红（仅严重情况）
+    }
+    if (colorLower.includes('purple') || colorLower.includes('violet') || colorLower.includes('8b5cf6')) {
+      return theme.primary?.val; // 主紫
+    }
+
+    // 默认使用主紫色
+    return theme.primary?.val;
+  };
+
+  // 从设备获取健康指标数据 - 使用主题色
   const getHealthMetricsFromDevices = () => {
     if (!currentMemberProfile || !currentMemberProfile.devices) {
       return [];
     }
+
+    // 主题色配置
+    const themeColors = {
+      success: theme.success?.val || '#10B981',
+      primary: theme.primary?.val || '#6366F1',
+      warning: theme.warning?.val || '#F59E0B',
+      accent: theme.accent?.val || '#8B5CF6',
+      error: theme.error?.val || '#EC4899',
+    };
 
     // 将设备数据转换为健康指标卡片格式
     const metrics: any[] = [];
@@ -165,10 +198,10 @@ export const HealthScreen: React.FC = () => {
           value: latestEvent.value,
           unit: latestEvent.unit || "kg",
           change: latestEvent.status === 'normal' ? '正常' : '需关注',
+          status: latestEvent.status === 'normal' ? 'normal' : 'warning',
           trend: latestEvent.status === 'normal' ? 'stable' : 'warning',
           icon: "Scale",
-          color: "#10B981",
-          bgColor: "rgba(16, 185, 129, 0.1)",
+          colorKey: "primary",
           device: {
             id: device.id.toString(),
             name: device.name,
@@ -186,10 +219,10 @@ export const HealthScreen: React.FC = () => {
           value: latestEvent.value,
           unit: latestEvent.unit || "mmHg",
           change: latestEvent.status === 'normal' ? '正常' : '需关注',
+          status: latestEvent.status === 'normal' ? 'normal' : 'warning',
           trend: latestEvent.status === 'normal' ? 'stable' : 'warning',
           icon: "Heart",
-          color: "#6366F1",
-          bgColor: "rgba(99, 102, 241, 0.1)",
+          colorKey: "primary",
           device: {
             id: device.id.toString(),
             name: device.name,
@@ -209,10 +242,10 @@ export const HealthScreen: React.FC = () => {
               value: event.value,
               unit: event.unit || "bpm",
               change: event.status === 'normal' ? '正常' : '需关注',
+              status: event.status === 'normal' ? 'normal' : 'warning',
               trend: event.status === 'normal' ? 'stable' : 'warning',
               icon: "Activity",
-              color: "#F59E0B",
-              bgColor: "rgba(245, 158, 11, 0.1)",
+              colorKey: "primary",
               device: {
                 id: device.id.toString(),
                 name: device.name,
@@ -227,10 +260,10 @@ export const HealthScreen: React.FC = () => {
               value: event.value,
               unit: event.unit || "小时",
               change: event.status === 'normal' ? '优质' : '需改善',
+              status: event.status === 'normal' ? 'normal' : 'warning',
               trend: event.status === 'normal' ? 'stable' : 'warning',
               icon: "Moon",
-              color: "#8B5CF6",
-              bgColor: "rgba(139, 92, 246, 0.1)",
+              colorKey: "primary",
               device: {
                 id: device.id.toString(),
                 name: device.name,
@@ -250,10 +283,10 @@ export const HealthScreen: React.FC = () => {
           value: latestEvent.value,
           unit: latestEvent.unit || "mmol/L",
           change: latestEvent.status === 'normal' ? '正常' : '需关注',
+          status: latestEvent.status === 'normal' ? 'normal' : 'warning',
           trend: latestEvent.status === 'normal' ? 'stable' : 'warning',
           icon: "Droplets",
-          color: "#EC4899",
-          bgColor: "rgba(236, 72, 153, 0.1)",
+          colorKey: "primary",
           device: {
             id: device.id.toString(),
             name: device.name,
@@ -299,38 +332,51 @@ export const HealthScreen: React.FC = () => {
   };
 
 
+  // 渐变背景颜色：左上浅绿 -> 右下暗紫
+  const gradientColors = ['#d6dece', '#e8e6eb', theme.primary?.val || '#5B4A8C'] as const;
+
   // 显示加载状态
   if (isLoading) {
     return (
-      <Theme name="light">
-        <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
           <View flex={1} justifyContent="center" alignItems="center">
-            <Text fontSize="$5" color="$textSecondary">加载中...</Text>
+            <Paragraph size="$5" color="$color10">加载中...</Paragraph>
           </View>
         </SafeAreaView>
-      </Theme>
+      </LinearGradient>
     );
   }
 
   return (
-    <Theme name="light">
-      <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
+    <LinearGradient
+      colors={gradientColors}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={StyleSheet.absoluteFill}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           flex={1}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20 }}
         >
-          <YStack padding="$4" space="$4">
+          <YStack padding="$2.5" gap="$2">
             {/* 开发调试：重置数据按钮（仅在数据异常时显示） */}
             {(!currentMember || !currentMemberProfile || familyMembers.length === 0) && (
-              <Card padding="$3" borderRadius="$4" backgroundColor="$orange2" borderWidth={1} borderColor="$orange8">
-                <YStack space="$2">
+              <Card padding="$2" borderRadius="$5" backgroundColor="$orange2" borderWidth={1} borderColor="$orange8">
+                <YStack gap="$2">
                   <Text fontSize="$3" fontWeight="600" color="$orange11">
                     ⚠️ 检测到数据异常
                   </Text>
-                  <Text fontSize="$2" color="$orange11">
+                  <Paragraph size="$2" color="$orange11">
                     可能是旧版本数据，点击下方按钮重置数据
-                  </Text>
+                  </Paragraph>
                   <Pressable
                     onPress={async () => {
                       await clearUserData();
@@ -341,11 +387,12 @@ export const HealthScreen: React.FC = () => {
                   >
                     <View
                       backgroundColor="$orange9"
-                      padding="$2"
-                      borderRadius="$3"
+                      paddingVertical="$2"
+                      paddingHorizontal="$2"
+                      borderRadius="$10"
                       alignItems="center"
                     >
-                      <Text fontSize="$3" fontWeight="600" color="white">
+                      <Text fontSize="$3" fontWeight="500" color="white">
                         重置并重新加载数据
                       </Text>
                     </View>
@@ -375,78 +422,51 @@ export const HealthScreen: React.FC = () => {
 
             {/* 健康指标卡片（带设备标签） */}
             <Card
-              padding="$4"
-              borderRadius="$4"
-              backgroundColor="$surface"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
+              padding="$2"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$color5"
+              shadowColor="$shadowColor"
+              shadowOffset={{ width: 0, height: 4 }}
+              shadowOpacity={0.08}
               shadowRadius={8}
-              elevation={4}
+              elevation={2}
             >
-              {/* 标题和设备管理入口 */}
-              <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-                <H3 fontSize="$6" color="$text" fontWeight="600">
+              {/* 标题 */}
+              <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                <H4 color="$color12">
                   健康数据
-                </H3>
-                <Pressable onPress={() => navigation.navigate('DeviceManagement')}>
-                  <XStack space="$2" alignItems="center">
-                    <Settings size={16} color={COLORS.primary} />
-                    <Text fontSize="$3" color="$primary" fontWeight="600">
-                      管理设备
-                    </Text>
-                  </XStack>
-                </Pressable>
+                </H4>
               </XStack>
 
               {healthMetrics.length > 0 ? (
-                <YStack space="$3">
-                  {/* First row - 2 metrics */}
-                  <XStack space="$3">
-                    {healthMetrics.slice(0, 2).map((metric, index) => (
-                      <HealthMetricCard
-                        key={index}
-                        title={metric.title}
-                        value={metric.value}
-                        unit={metric.unit}
-                        change={metric.change}
-                        trend={metric.trend}
-                        icon={metric.icon as any}
-                        color={metric.color}
-                        bgColor={metric.bgColor}
-                        device={metric.device}
-                        onDevicePress={() => navigation.navigate('DeviceManagement', { deviceId: metric.device.id })}
-                      />
-                    ))}
-                  </XStack>
-
-                  {/* Second row - 2 metrics */}
-                  {healthMetrics.length > 2 && (
-                    <XStack space="$3">
-                      {healthMetrics.slice(2, 4).map((metric, index) => (
+                <YStack gap="$2">
+                  {/* 3列布局 - 固定3列，不随屏幕变化 */}
+                  <XStack gap="$1.5" flexWrap="wrap">
+                    {healthMetrics.map((metric, index) => (
+                      <View key={index} flexBasis="31%" flexGrow={1} flexShrink={0} maxWidth="33%" marginBottom="$1.5">
                         <HealthMetricCard
-                          key={index + 2}
                           title={metric.title}
                           value={metric.value}
                           unit={metric.unit}
                           change={metric.change}
+                          status={metric.status as any}
                           trend={metric.trend}
                           icon={metric.icon as any}
-                          color={metric.color}
-                          bgColor={metric.bgColor}
+                          colorKey={metric.colorKey}
                           device={metric.device}
                           onDevicePress={() => navigation.navigate('DeviceManagement', { deviceId: metric.device.id })}
                         />
-                      ))}
-                    </XStack>
-                  )}
+                      </View>
+                    ))}
+                  </XStack>
                 </YStack>
               ) : (
-                <View paddingVertical="$4" alignItems="center">
-                  <Settings size={48} color={COLORS.textSecondary} />
-                  <Text fontSize="$4" color="$textSecondary" marginTop="$2">
+                <View paddingVertical="$2" alignItems="center">
+                  <Settings size={48} color={theme.color9?.val} />
+                  <Paragraph size="$4" color="$color10" marginTop="$2">
                     暂无健康数据，请添加设备
-                  </Text>
+                  </Paragraph>
                 </View>
               )}
             </Card>
@@ -471,112 +491,6 @@ export const HealthScreen: React.FC = () => {
               onPeriodChange={setSelectedPeriod}
             />
 
-            {/* Quick Actions */}
-            <Card
-              padding="$4"
-              borderRadius="$4"
-              backgroundColor="$surface"
-              shadowColor="$shadow"
-              shadowOffset={{ width: 0, height: 2 }}
-              shadowOpacity={0.1}
-              shadowRadius={8}
-              elevation={4}
-            >
-              <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-                <H3 fontSize="$6" color="$text" fontWeight="600">
-                  快捷功能
-                </H3>
-                <Pressable>
-                  <View paddingHorizontal="$3" paddingVertical="$2">
-                    <XStack space="$1" alignItems="center">
-                      <Plus size={16} color={COLORS.primary} />
-                      <Text fontSize="$3" color="$primary">添加</Text>
-                    </XStack>
-                  </View>
-                </Pressable>
-              </XStack>
-              <XStack space="$3">
-                <XStack flex={1} space="$3">
-                  <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => navigation.navigate('DeviceManagement')}
-                  >
-                    <View
-                      flex={1}
-                      height={70}
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                      backgroundColor="transparent"
-                      borderRadius="$4"
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Settings size={20} color={COLORS.primary} />
-                      <Text fontSize="$2" color="$text" marginTop="$1">设备管理</Text>
-                    </View>
-                  </Pressable>
-                  <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => navigation.navigate('HealthReport')}
-                  >
-                    <View
-                      flex={1}
-                      height={70}
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                      backgroundColor="transparent"
-                      borderRadius="$4"
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <TrendingUp size={20} color={COLORS.secondary} />
-                      <Text fontSize="$2" color="$text" marginTop="$1">健康报告</Text>
-                    </View>
-                  </Pressable>
-                </XStack>
-              </XStack>
-              <XStack space="$3" marginTop="$3">
-                <XStack flex={1} space="$3">
-                  <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => navigation.navigate('AIConsultation')}
-                  >
-                    <View
-                      flex={1}
-                      height={70}
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                      backgroundColor="transparent"
-                      borderRadius="$4"
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Heart size={20} color={COLORS.error} />
-                      <Text fontSize="$2" color="$text" marginTop="$1">AI问诊</Text>
-                    </View>
-                  </Pressable>
-                  <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => navigation.navigate('MedicationReminder')}
-                  >
-                    <View
-                      flex={1}
-                      height={70}
-                      borderWidth={1}
-                      borderColor="$borderColor"
-                      backgroundColor="transparent"
-                      borderRadius="$4"
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Bell size={20} color={COLORS.warning} />
-                      <Text fontSize="$2" color="$text" marginTop="$1">用药提醒</Text>
-                    </View>
-                  </Pressable>
-                </XStack>
-              </XStack>
-            </Card>
-
             {/* Today's Tasks - 仅在查看本人时显示 */}
             {currentMemberId === 'self' && (
               <TouchableOpacity
@@ -584,66 +498,70 @@ export const HealthScreen: React.FC = () => {
                 activeOpacity={0.9}
               >
                 <Card
-                  padding="$4"
-                  borderRadius="$4"
-                  backgroundColor="$surface"
-                  shadowColor="$shadow"
-                  shadowOffset={{ width: 0, height: 2 }}
-                  shadowOpacity={0.1}
-                  shadowRadius={8}
+                  padding="$2"
+                  borderRadius="$6"
+                  borderWidth={1}
+                  borderColor="$color5"
+                  shadowColor="$shadowColor"
+                  shadowOffset={{ width: 0, height: 8 }}
+                  shadowOpacity={0.12}
+                  shadowRadius={16}
                   elevation={4}
                 >
-                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$4">
-                    <H3 fontSize="$6" color="$text" fontWeight="600">
+                  <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                    <H4 color="$color12">
                       今日任务
-                    </H3>
-                    <XStack space="$2" alignItems="center">
-                      <Text fontSize="$3" color="$primary">查看全部</Text>
-                      <ChevronRight size={16} color={COLORS.primary} />
+                    </H4>
+                    <XStack gap="$0.5" alignItems="center">
+                      <Text fontSize="$3" color="$primary" fontWeight="500">查看全部</Text>
+                      <ChevronRight size={14} color={theme.primary?.val} />
                     </XStack>
                   </XStack>
 
                   {todayTasks.length > 0 ? (
-                    <YStack space="$3">
+                    <YStack gap="$2">
                       {todayTasks.map((task) => {
                         const TaskIcon = getTaskIcon(task.icon);
+                        const taskThemeColor = getTaskThemeColor(task.color);
                         return (
                           <TouchableOpacity
                             key={task.id}
                             onPress={() => navigation.navigate('TaskDetail', { taskId: task.id })}
                           >
                             <View
-                              padding="$3"
-                              borderRadius="$3"
-                              backgroundColor="$background"
+                              padding="$2"
+                              borderRadius="$4"
+                              backgroundColor="$color2"
+                              borderWidth={1}
+                              borderColor="$color5"
                               borderLeftWidth={3}
-                              borderLeftColor={task.color}
+                              borderLeftColor={taskThemeColor}
                             >
-                              <XStack space="$3" alignItems="center">
+                              <XStack gap="$2" alignItems="center">
                                 <View
                                   width={36}
                                   height={36}
-                                  borderRadius={18}
-                                  backgroundColor={`${task.color}20`}
+                                  borderRadius="$12"
+                                  backgroundColor={`${taskThemeColor}20`}
                                   justifyContent="center"
                                   alignItems="center"
                                 >
-                                  <TaskIcon size={18} color={task.color} />
+                                  <TaskIcon size={18} color={taskThemeColor} />
                                 </View>
-                                <YStack flex={1}>
-                                  <Text fontSize="$4" fontWeight="600" color="$text" marginBottom="$1">
+                                <YStack flex={1} gap="$1">
+                                  <Text fontSize="$4" fontWeight="600" color="$color12">
                                     {task.title}
                                   </Text>
                                   {task.startTime && (
-                                    <XStack space="$1" alignItems="center">
-                                      <Clock size={12} color={COLORS.textSecondary} />
-                                      <Text fontSize="$2" color="$textSecondary">
+                                    <XStack gap="$1" alignItems="center">
+                                      <Clock size={12} color={theme.color9?.val} />
+                                      <Paragraph size="$2" color="$color10">
                                         {task.startTime}
-                                      </Text>
+                                      </Paragraph>
                                     </XStack>
                                   )}
                                 </YStack>
-                                <ChevronRight size={18} color={COLORS.textSecondary} />
+                                <ChevronRight size={18} color={theme.color9?.val} />
                               </XStack>
                             </View>
                           </TouchableOpacity>
@@ -651,11 +569,11 @@ export const HealthScreen: React.FC = () => {
                       })}
                     </YStack>
                   ) : (
-                    <View paddingVertical="$4" alignItems="center">
-                      <CheckCircle size={48} color={COLORS.success} />
-                      <Text fontSize="$4" color="$textSecondary" marginTop="$2">
+                    <View paddingVertical="$2" alignItems="center">
+                      <CheckCircle size={48} color={theme.success?.val} />
+                      <Paragraph size="$4" color="$color10" marginTop="$2">
                         今日任务已全部完成！
-                      </Text>
+                      </Paragraph>
                     </View>
                   )}
                 </Card>
@@ -667,6 +585,6 @@ export const HealthScreen: React.FC = () => {
           </YStack>
         </ScrollView>
       </SafeAreaView>
-    </Theme>
+    </LinearGradient>
   );
 };
