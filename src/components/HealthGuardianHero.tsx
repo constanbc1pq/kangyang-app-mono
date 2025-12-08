@@ -6,12 +6,21 @@ import {
   View,
   useTheme,
   Paragraph,
+  Image,
 } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MessageCircle, TrendingUp, ChevronDown, Users, CheckCircle } from 'lucide-react-native';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, ImageSourcePropType } from 'react-native';
 // import { Video, ResizeMode } from 'expo-av';
 import { BottomSheet } from './BottomSheet';
+
+// 健康状态图标（从低到高：1-4）
+const HEALTH_ICONS = {
+  1: require('../../assets/images/kang/kangyang-icon-1.png'),
+  2: require('../../assets/images/kang/kangyang-icon-2.png'),
+  3: require('../../assets/images/kang/kangyang-icon-3.png'),
+  4: require('../../assets/images/kang/kangyang-icon-4.png'),
+};
 
 export interface FamilyMember {
   id: string;
@@ -52,25 +61,31 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
   const theme = useTheme();
   const [showFamilySelector, setShowFamilySelector] = useState(false);
 
-  // 根据健康评分确定状态和表情 - 使用主题色
+  // 根据健康评分确定状态和图标 - 使用主题色
   const getHealthStatus = (score: number) => {
-    if (score >= 85) {
+    if (score >= 88) {
       return {
-        emoji: '😊',
+        iconLevel: 4,
         status: '优秀',
         colorKey: 'success' as const,
       };
     } else if (score >= 70) {
       return {
-        emoji: '🙂',
+        iconLevel: 3,
         status: '良好',
         colorKey: 'primary' as const,
       };
+    } else if (score >= 60) {
+      return {
+        iconLevel: 2,
+        status: '一般',
+        colorKey: 'warning' as const,
+      };
     } else {
       return {
-        emoji: '😐',
+        iconLevel: 1,
         status: '需关注',
-        colorKey: 'warning' as const,
+        colorKey: 'error' as const,
       };
     }
   };
@@ -106,10 +121,10 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
   const currentMember = familyMembers.find(m => m.id === currentMemberId);
   const hasFamilyMembers = familyMembers.length > 0;
 
-  // 获取渐变色 - 使用主题色
+  // 获取渐变色 - 上浅下深（主色调12色阶的偏浅色到主色）
   const gradientColors = [
-    theme.primary?.val,
-    theme.accent?.val,
+    theme.color9?.val,  // 偏浅色
+    theme.primary?.val, // 主色
   ] as [string, string];
 
   return (
@@ -117,8 +132,8 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
       <View borderRadius="$7" overflow="hidden" marginBottom="$4">
         <LinearGradient
           colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
           style={{
             padding: 24,
           }}
@@ -207,18 +222,31 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
 
           {/* AI虚拟形象和健康评分 */}
           <YStack alignItems="center" gap="$3" marginBottom="$4">
-            {/* AI表情头像 */}
+            {/* AI健康状态图标 */}
             <View
               width={80}
               height={80}
-              borderRadius="$12"
-              backgroundColor={`${statusColor}25`}
               justifyContent="center"
               alignItems="center"
-              borderWidth={3}
-              borderColor="rgba(255,255,255,0.3)"
             >
-              <Text fontSize={40}>{healthStatus.emoji}</Text>
+              {/* 背景圆圈 */}
+              <View
+                position="absolute"
+                width={80}
+                height={80}
+                borderRadius="$12"
+                backgroundColor={`${statusColor}25`}
+                borderWidth={3}
+                borderColor="rgba(255,255,255,0.3)"
+              />
+              {/* 图标在上层 */}
+              <Image
+                source={HEALTH_ICONS[healthStatus.iconLevel as keyof typeof HEALTH_ICONS]}
+                width={100}
+                height={100}
+                resizeMode="contain"
+                zIndex={1}
+              />
             </View>
 
             {/* 健康状态提示 - 胶囊形状 */}

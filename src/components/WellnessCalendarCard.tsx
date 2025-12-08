@@ -115,9 +115,14 @@ export const WellnessCalendarCard: React.FC<WellnessCalendarCardProps> = ({
             {/* 农历日期 */}
             <XStack gap="$1.5" alignItems="center">
               <Calendar size={14} color={primaryColor} />
-              <Text fontSize="$3" color="$color12" fontWeight="500">
-                {lunar.monthStr}{lunar.dayStr}
-              </Text>
+              <YStack>
+                <Text fontSize="$2" color="$color12" fontWeight="500">
+                  {lunar.monthStr}
+                </Text>
+                <Text fontSize="$2" color="$color10">
+                  {lunar.dayStr}
+                </Text>
+              </YStack>
               <View
                 backgroundColor={`${warningColor}15`}
                 paddingHorizontal="$1.5"
@@ -136,12 +141,14 @@ export const WellnessCalendarCard: React.FC<WellnessCalendarCardProps> = ({
               <Text fontSize="$3" color="$color12" fontWeight="500">
                 {currentTime}
               </Text>
-              <Text fontSize="$2" color="$color10">
-                {chineseHour.name}
-              </Text>
-              <Text fontSize="$2" color="$color10">
-                ({chineseHour.organ}经当令)
-              </Text>
+              <YStack>
+                <Text fontSize="$2" color="$color12" fontWeight="500">
+                  {chineseHour.name}
+                </Text>
+                <Text fontSize="$2" color="$color10">
+                  {chineseHour.organ}经当令
+                </Text>
+              </YStack>
             </XStack>
 
             {/* 养生建议 */}

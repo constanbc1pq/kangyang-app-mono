@@ -130,7 +130,7 @@ export const HealthMetricCard: React.FC<HealthMetricCardProps> = ({
           {change && (
             <View
               backgroundColor={statusColor}
-              paddingHorizontal="$2"
+              paddingHorizontal={5}
               paddingVertical="$0.5"
               borderRadius="$10"
             >
@@ -141,20 +141,20 @@ export const HealthMetricCard: React.FC<HealthMetricCardProps> = ({
           )}
         </XStack>
 
-        {/* 指标名称 */}
-        <Text fontSize="$2" color="$color10" marginBottom="$0.5">
-          {title}
-        </Text>
-
-        {/* 指标数值 - 紧凑 */}
-        <XStack alignItems="baseline" gap="$0.5" marginBottom="$2">
-          <Text fontSize="$5" fontWeight="700" color="$color12">
-            {value}
+        {/* 指标名称和单位 */}
+        <YStack>
+          <Text fontSize="$2" color="$color10">
+            {title}
           </Text>
           <Text fontSize="$1" color="$color10">
             {unit}
           </Text>
-        </XStack>
+        </YStack>
+
+        {/* 指标数值 */}
+        <Text fontSize="$5" fontWeight="700" color="$color12" marginBottom="$2">
+          {value}
+        </Text>
 
         {/* 设备来源信息 - 图标和设备名换行显示 */}
         {device && (
