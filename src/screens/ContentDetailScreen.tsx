@@ -28,9 +28,19 @@ import {
   Star,
   ArrowLeft,
 } from 'lucide-react-native';
-import { getContentById } from '@/services/columnService';
-import { ColumnContent } from '@/types/column';
+import { getContentById, getColumnById } from '@/services/columnService';
+import { ColumnContent, RelatedProduct, Column } from '@/types/column';
 import { getAvatarSource } from '@/constants/avatars';
+
+// 6大频道的专属推荐区域名称
+const COLUMN_RECOMMENDATION_TITLES: Record<string, string> = {
+  'seasonal-wellness': '时令好物',      // 时令养生
+  'famous-doctor': '健康装备',          // 名医说
+  'dining-hall': '厨房好物',            // 膳食堂
+  'care-academy': '照护必备',           // 照护学堂
+  'worry-free': '安心服务',             // 晚年无忧
+  'silver-life': '生活好物',            // 银发生活家
+};
 
 type ContentDetailRouteParams = {
   ContentDetail: {
@@ -46,11 +56,13 @@ export const ContentDetailScreen: React.FC = () => {
   const theme = useTheme();
 
   const [content, setContent] = useState<ColumnContent | null>(null);
+  const [column, setColumn] = useState<Column | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const primaryColor = theme.primary?.val;
   const errorColor = theme.error?.val;
+  const warningColor = theme.warning?.val;
 
   // 加载内容数据
   useEffect(() => {
@@ -61,6 +73,12 @@ export const ContentDetailScreen: React.FC = () => {
 
         const contentData = await getContentById(contentId);
         setContent(contentData);
+
+        // 加载栏目信息以获取专属推荐标题
+        if (contentData?.columnId) {
+          const columnData = await getColumnById(contentData.columnId);
+          setColumn(columnData);
+        }
       } catch (error) {
         console.error('加载内容数据失败:', error);
       } finally {
@@ -70,6 +88,38 @@ export const ContentDetailScreen: React.FC = () => {
 
     loadData();
   }, [route.params?.contentId]);
+
+  // 获取推荐区域标题
+  const getRecommendationTitle = () => {
+    if (!content?.columnId) return '养生好物';
+    return COLUMN_RECOMMENDATION_TITLES[content.columnId] || '养生好物';
+  };
+
+  // 处理商品点击
+  const handleProductPress = (product: RelatedProduct) => {
+    if (product.isInternal && product.internalId) {
+      // 内部商品，跳转到对应页面
+      switch (product.internalType) {
+        case 'product':
+          navigation.navigate('ProductDetail' as never, { productId: product.internalId } as never);
+          break;
+        case 'meal_plan':
+          navigation.navigate('NutritionService' as never, { selectedMealPlanId: product.internalId } as never);
+          break;
+        case 'service':
+          // 根据服务类型跳转
+          if (product.internalId.includes('doctor')) {
+            navigation.navigate('PrivateDoctorList' as never);
+          } else if (product.internalId.includes('legal')) {
+            navigation.navigate('LegalServiceHome' as never);
+          } else if (product.internalId.includes('care')) {
+            navigation.navigate('ElderlyService' as never);
+          }
+          break;
+      }
+    }
+    // 外部商品不跳转
+  };
 
   // 格式化数字
   const formatCount = (count: number) => {
@@ -324,155 +374,89 @@ export const ContentDetailScreen: React.FC = () => {
             )}
           </YStack>
 
-          {/* 养生好物 - 相关商品/服务推荐 */}
-          <View marginTop="$4">
-            <XStack alignItems="center" marginBottom="$2">
-              <XStack gap="$1.5" alignItems="center">
-                <Sparkles size={18} color={primaryColor} />
-                <Text fontSize="$4" fontWeight="600" color="$color12">
-                  养生好物
-                </Text>
+          {/* 相关商品/服务推荐 - 根据频道显示不同标题 */}
+          {content.relatedProducts && content.relatedProducts.length > 0 && (
+            <View marginTop="$4">
+              <XStack alignItems="center" marginBottom="$2">
+                <XStack gap="$1.5" alignItems="center">
+                  <Sparkles size={18} color={primaryColor} />
+                  <Text fontSize="$4" fontWeight="600" color="$color12">
+                    {getRecommendationTitle()}
+                  </Text>
+                </XStack>
               </XStack>
-            </XStack>
 
-            {/* 推荐商品列表 */}
-            <YStack gap="$2">
-              {/* 商品卡片1 */}
-              <Pressable onPress={() => {}}>
-                <View
-                  backgroundColor="$color2"
-                  borderRadius="$4"
-                  borderWidth={1}
-                  borderColor="$color5"
-                  padding="$2"
-                >
-                  <XStack gap="$2">
-                    <Image
-                      source={{ uri: 'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=200' }}
-                      width={80}
-                      height={80}
-                      borderRadius={8}
-                    />
-                    <YStack flex={1} justifyContent="space-between">
-                      <YStack gap="$0.5">
-                        <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={2}>
-                          内蒙古羔羊肉卷 · 冬季滋补首选
-                        </Text>
-                        <XStack gap="$1" alignItems="center">
-                          <Star size={12} color={theme.warning?.val} fill={theme.warning?.val} />
-                          <Text fontSize="$2" color="$color10">4.9 · 已售1280份</Text>
-                        </XStack>
-                      </YStack>
-                      <XStack justifyContent="space-between" alignItems="center">
-                        <XStack gap="$1" alignItems="baseline">
-                          <Text fontSize="$4" fontWeight="700" color="$error">¥68</Text>
-                          <Text fontSize="$2" color="$color10" textDecorationLine="line-through">¥88</Text>
-                        </XStack>
-                        <View
-                          backgroundColor="$primary"
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$10"
-                        >
-                          <Text fontSize="$2" color="white" fontWeight="500">立即购买</Text>
-                        </View>
+              {/* 推荐商品列表 */}
+              <YStack gap="$2">
+                {content.relatedProducts.map((product) => (
+                  <Pressable
+                    key={product.id}
+                    onPress={() => handleProductPress(product)}
+                    disabled={!product.isInternal}
+                  >
+                    <View
+                      backgroundColor="$color2"
+                      borderRadius="$4"
+                      borderWidth={1}
+                      borderColor="$color5"
+                      padding="$2"
+                    >
+                      <XStack gap="$2">
+                        <Image
+                          source={{ uri: product.image }}
+                          width={80}
+                          height={80}
+                          borderRadius={8}
+                        />
+                        <YStack flex={1} justifyContent="space-between">
+                          <YStack gap="$0.5">
+                            <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={2}>
+                              {product.name}
+                            </Text>
+                            <XStack gap="$1" alignItems="center">
+                              {product.rating && (
+                                <>
+                                  <Star size={12} color={warningColor} fill={warningColor} />
+                                  <Text fontSize="$2" color="$color10">
+                                    {product.rating}
+                                    {product.salesCount && ` · 已售${product.salesCount > 1000 ? `${(product.salesCount / 1000).toFixed(1)}k` : product.salesCount}${product.unit}`}
+                                  </Text>
+                                </>
+                              )}
+                            </XStack>
+                          </YStack>
+                          <XStack justifyContent="space-between" alignItems="center">
+                            <XStack gap="$1" alignItems="baseline">
+                              <Text fontSize="$4" fontWeight="700" color="$error">
+                                {product.price === 0 ? '免费' : `¥${product.price}`}
+                              </Text>
+                              {product.originalPrice && (
+                                <Text fontSize="$2" color="$color10" textDecorationLine="line-through">
+                                  ¥{product.originalPrice}
+                                </Text>
+                              )}
+                            </XStack>
+                            {product.isInternal && (
+                              <View
+                                backgroundColor="$primary"
+                                paddingHorizontal="$2"
+                                paddingVertical="$1"
+                                borderRadius="$10"
+                              >
+                                <Text fontSize="$2" color="white" fontWeight="500">
+                                  {product.internalType === 'service' ? '立即预约' : (product.price === 0 ? '免费领取' : '立即购买')}
+                                </Text>
+                              </View>
+                            )}
+                          </XStack>
+                        </YStack>
                       </XStack>
-                    </YStack>
-                  </XStack>
-                </View>
-              </Pressable>
-
-              {/* 商品卡片2 */}
-              <Pressable onPress={() => {}}>
-                <View
-                  backgroundColor="$color2"
-                  borderRadius="$4"
-                  borderWidth={1}
-                  borderColor="$color5"
-                  padding="$2"
-                >
-                  <XStack gap="$2">
-                    <Image
-                      source={{ uri: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=200' }}
-                      width={80}
-                      height={80}
-                      borderRadius={8}
-                    />
-                    <YStack flex={1} justifyContent="space-between">
-                      <YStack gap="$0.5">
-                        <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={2}>
-                          宁夏中宁枸杞 · 大颗粒头茬优选
-                        </Text>
-                        <XStack gap="$1" alignItems="center">
-                          <Star size={12} color={theme.warning?.val} fill={theme.warning?.val} />
-                          <Text fontSize="$2" color="$color10">4.8 · 已售986罐</Text>
-                        </XStack>
-                      </YStack>
-                      <XStack justifyContent="space-between" alignItems="center">
-                        <XStack gap="$1" alignItems="baseline">
-                          <Text fontSize="$4" fontWeight="700" color="$error">¥39</Text>
-                          <Text fontSize="$2" color="$color10" textDecorationLine="line-through">¥49</Text>
-                        </XStack>
-                        <View
-                          backgroundColor="$primary"
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$10"
-                        >
-                          <Text fontSize="$2" color="white" fontWeight="500">立即购买</Text>
-                        </View>
-                      </XStack>
-                    </YStack>
-                  </XStack>
-                </View>
-              </Pressable>
-
-              {/* 服务卡片 */}
-              <Pressable onPress={() => {}}>
-                <View
-                  backgroundColor="$color2"
-                  borderRadius="$4"
-                  borderWidth={1}
-                  borderColor="$color5"
-                  padding="$2"
-                >
-                  <XStack gap="$2">
-                    <Image
-                      source={{ uri: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200' }}
-                      width={80}
-                      height={80}
-                      borderRadius={8}
-                    />
-                    <YStack flex={1} justifyContent="space-between">
-                      <YStack gap="$0.5">
-                        <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={2}>
-                          悦养堂 · 冬季养生调理套餐
-                        </Text>
-                        <XStack gap="$1" alignItems="center">
-                          <Star size={12} color={theme.warning?.val} fill={theme.warning?.val} />
-                          <Text fontSize="$2" color="$color10">4.9 · 850m · 环境好</Text>
-                        </XStack>
-                      </YStack>
-                      <XStack justifyContent="space-between" alignItems="center">
-                        <XStack gap="$1" alignItems="baseline">
-                          <Text fontSize="$4" fontWeight="700" color="$error">¥158</Text>
-                          <Text fontSize="$2" color="$color10">起</Text>
-                        </XStack>
-                        <View
-                          backgroundColor="$primary"
-                          paddingHorizontal="$2"
-                          paddingVertical="$1"
-                          borderRadius="$10"
-                        >
-                          <Text fontSize="$2" color="white" fontWeight="500">立即预约</Text>
-                        </View>
-                      </XStack>
-                    </YStack>
-                  </XStack>
-                </View>
-              </Pressable>
-            </YStack>
-          </View>
+                    </View>
+                  </Pressable>
+                ))}
+              </YStack>
+            </View>
+          )}
 
           {/* 底部安全区域 */}
           <View height="$8" />

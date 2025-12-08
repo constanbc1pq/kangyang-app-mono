@@ -376,8 +376,15 @@ export const WellnessScreen: React.FC = () => {
                 <ThemeBanner
                   theme={currentTheme}
                   onPress={(themeData) => {
-                    // TODO: 跳转主题详情页
-                    toast.show(`进入「${themeData.title}」专题`, { duration: 2000 });
+                    // 跳转到主题对应的第一篇文章详情页
+                    // 大雪养生专题对应 content_001（大雪节气的身体密码）
+                    if (themeData.id === 'theme_daxue') {
+                      navigation.navigate('ContentDetail' as never, { contentId: 'content_001' } as never);
+                    } else if (themeData.id === 'theme_winter_bp') {
+                      navigation.navigate('ContentDetail' as never, { contentId: 'content_003' } as never);
+                    } else {
+                      toast.show(`进入「${themeData.title}」专题`, { duration: 2000 });
+                    }
                   }}
                 />
               </View>
@@ -613,6 +620,8 @@ export const WellnessScreen: React.FC = () => {
                         height={44}
                         borderRadius={22}
                         backgroundColor={`${color}15`}
+                        borderWidth={2}
+                        borderColor={`${color}40`}
                         justifyContent="center"
                         alignItems="center"
                         marginBottom="$1.5"
@@ -656,6 +665,8 @@ export const WellnessScreen: React.FC = () => {
                         height={44}
                         borderRadius={22}
                         backgroundColor={`${color}15`}
+                        borderWidth={2}
+                        borderColor={`${color}40`}
                         justifyContent="center"
                         alignItems="center"
                         marginBottom="$1.5"

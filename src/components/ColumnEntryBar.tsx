@@ -97,8 +97,8 @@ export const ColumnEntryBar: React.FC<ColumnEntryBarProps> = ({
                     backgroundColor={`${color}15`}
                     justifyContent="center"
                     alignItems="center"
-                    borderWidth={1}
-                    borderColor={`${color}30`}
+                    borderWidth={2}
+                    borderColor={color}
                   >
                     <IconComponent size={22} color={color} />
                   </View>

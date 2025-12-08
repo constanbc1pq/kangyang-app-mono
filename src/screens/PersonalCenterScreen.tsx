@@ -218,22 +218,25 @@ export const PersonalCenterScreen: React.FC = () => {
     }, [])
   );
 
+  // 订单分类配置
+  const ORDER_CATEGORIES = [
+    { type: 'membership', label: '会员订单', icon: Crown, emoji: '👑' },
+    { type: 'meal_plan', label: '营养套餐', icon: ShoppingBag, emoji: '🍱' },
+    { type: 'consultation', label: '咨询预约', icon: MessageSquare, emoji: '💬' },
+    { type: 'elderly_service', label: '养老服务', icon: Heart, emoji: '🏥' },
+    { type: 'private_doctor', label: '私人医生', icon: User, emoji: '👨‍⚕️' },
+    { type: 'legal_membership', label: '法律服务', icon: Shield, emoji: '⚖️' },
+    { type: 'product', label: '商品订单', icon: Package, emoji: '📦' },
+  ];
+
   // 获取订单图标
-  const getOrderIcon = (type: ItemType) => {
-    switch (type) {
-      case 'meal_plan':
-        return <ShoppingBag size={18} color={primaryColor} />;
-      case 'consultation':
-        return <MessageSquare size={18} color={primaryColor} />;
-      case 'elderly_service':
-        return <Heart size={18} color={primaryColor} />;
-      case 'product':
-        return <Package size={18} color={primaryColor} />;
-      case 'private_doctor':
-        return <User size={18} color={primaryColor} />;
-      default:
-        return <Package size={18} color={primaryColor} />;
+  const getOrderIcon = (type: ItemType | string) => {
+    const category = ORDER_CATEGORIES.find(c => c.type === type);
+    if (category) {
+      const IconComponent = category.icon;
+      return <IconComponent size={18} color={primaryColor} />;
     }
+    return <Package size={18} color={primaryColor} />;
   };
 
   // 状态颜色
@@ -249,10 +252,10 @@ export const PersonalCenterScreen: React.FC = () => {
   // 会员等级颜色
   const levelColors = MEMBERSHIP_LEVEL_COLORS[membershipLevel];
 
-  // 按类型分类订单
-  const serviceOrders = orders.filter(o => o.itemType === 'meal_plan' || o.itemType === 'service').slice(0, 3);
-  const consultationOrders = orders.filter(o => o.itemType === 'consultation').slice(0, 3);
-  const productOrders = orders.filter(o => o.itemType === 'product').slice(0, 3);
+  // 按类型分组订单
+  const getOrdersByType = (type: string) => {
+    return orders.filter(o => o.itemType === type).slice(0, 2);
+  };
 
   // 渲染订单卡片
   const renderOrderCard = (order: Order) => (
@@ -454,33 +457,40 @@ export const PersonalCenterScreen: React.FC = () => {
                   </Pressable>
                 </XStack>
 
-                {orders.length > 0 ? (
-                  <YStack gap="$2">
-                    {serviceOrders.length > 0 && (
-                      <YStack gap="$1">
-                        <Text fontSize="$3" fontWeight="500" color="$color10">服务订单</Text>
-                        {serviceOrders.map(renderOrderCard)}
+                <YStack gap="$2">
+                  {ORDER_CATEGORIES.map((category) => {
+                    const categoryOrders = getOrdersByType(category.type);
+                    const IconComponent = category.icon;
+                    return (
+                      <YStack key={category.type} gap="$1">
+                        {/* 分类标题 */}
+                        <XStack gap="$1.5" alignItems="center">
+                          <IconComponent size={16} color={primaryColor} />
+                          <Text fontSize="$3" fontWeight="500" color="$color10">{category.label}</Text>
+                          <Text fontSize="$2" color="$color10">({categoryOrders.length})</Text>
+                        </XStack>
+
+                        {categoryOrders.length > 0 ? (
+                          categoryOrders.map(renderOrderCard)
+                        ) : (
+                          <View
+                            padding="$2"
+                            backgroundColor="$color2"
+                            borderRadius="$4"
+                            borderWidth={1}
+                            borderColor="$color5"
+                            borderStyle="dashed"
+                          >
+                            <XStack gap="$2" alignItems="center" justifyContent="center">
+                              <Text fontSize="$5">{category.emoji}</Text>
+                              <Text fontSize="$3" color="$color10">暂无{category.label}</Text>
+                            </XStack>
+                          </View>
+                        )}
                       </YStack>
-                    )}
-                    {consultationOrders.length > 0 && (
-                      <YStack gap="$1">
-                        <Text fontSize="$3" fontWeight="500" color="$color10">咨询订单</Text>
-                        {consultationOrders.map(renderOrderCard)}
-                      </YStack>
-                    )}
-                    {productOrders.length > 0 && (
-                      <YStack gap="$1">
-                        <Text fontSize="$3" fontWeight="500" color="$color10">商品订单</Text>
-                        {productOrders.map(renderOrderCard)}
-                      </YStack>
-                    )}
-                  </YStack>
-                ) : (
-                  <View paddingVertical="$4" alignItems="center">
-                    <Package size={48} color={theme.color10?.val} />
-                    <Text fontSize="$3" color="$color10" marginTop="$2">暂无订单</Text>
-                  </View>
-                )}
+                    );
+                  })}
+                </YStack>
               </YStack>
             )}
 

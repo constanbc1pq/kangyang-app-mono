@@ -84,6 +84,11 @@ export interface RelatedProduct {
   price: number;
   originalPrice?: number;
   unit: string;
+  rating?: number;        // 评分
+  salesCount?: number;    // 销量
+  isInternal: boolean;    // 是否为本app内商品（可跳转购买）
+  internalType?: 'product' | 'meal_plan' | 'service';  // 内部商品类型
+  internalId?: string;    // 内部商品ID，用于跳转
 }
 
 // 内容系列
