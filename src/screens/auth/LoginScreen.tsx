@@ -1,6 +1,7 @@
 /**
  * LoginScreen 登录页
  * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
+ * 开发测试版本 - 无需登录直接体验
  */
 
 import React, { useState } from 'react';
@@ -8,10 +9,7 @@ import {
   YStack,
   XStack,
   Text,
-  Button,
-  Input,
   View,
-  Separator,
   Theme,
   useTheme,
 } from 'tamagui';
@@ -19,8 +17,8 @@ import { ToastViewport, useToastController } from '@tamagui/toast';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Heart, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
-import { Pressable, Alert } from 'react-native';
+import { Heart, Info } from 'lucide-react-native';
+import { Pressable } from 'react-native';
 
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '@/store/slices/authSlice';
@@ -28,9 +26,6 @@ import { setCurrentUser } from '@/store/slices/userSlice';
 
 export const LoginScreen: React.FC = () => {
   const theme = useTheme();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const toast = useToastController();
@@ -38,60 +33,48 @@ export const LoginScreen: React.FC = () => {
   // 主题色
   const primaryColor = theme.primary?.val;
   const accentColor = theme.accent?.val;
-  const color10 = theme.color10?.val;
+  const warningColor = theme.warning?.val;
 
   // 渐变色
   const gradientColors = [primaryColor, accentColor] as [string, string];
 
-  // 模拟登录处理
-  const handleLogin = async () => {
-    // 验证输入
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('提示', '请输入邮箱和密码');
-      return;
-    }
+  // 直接进入体验
+  const handleEnter = async () => {
+    if (isLoading) return;
 
     setIsLoading(true);
 
-    // 模拟API延迟
+    // 模拟短暂加载
     setTimeout(() => {
-      // 测试账号验证
-      if (email === 'test01@gmail.com' && password === '123456') {
-        // 登录成功
-        dispatch(loginSuccess({
-          token: 'test-jwt-token-' + Date.now(),
-          refreshToken: 'test-refresh-token-' + Date.now(),
-        }));
+      // 直接登录成功
+      dispatch(loginSuccess({
+        token: 'demo-token-' + Date.now(),
+        refreshToken: 'demo-refresh-token-' + Date.now(),
+      }));
 
-        // 保存用户信息
-        dispatch(setCurrentUser({
-          id: 'test-user-01',
-          email: 'test01@gmail.com',
-          name: '测试用户',
-          avatar: undefined,
-          phone: '13800000001',
-          gender: 'male',
-          birthDate: '1995-01-01',
-          height: 175,
-          weight: 70,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }));
+      // 设置测试用户信息
+      dispatch(setCurrentUser({
+        id: 'demo-user-01',
+        email: 'demo@kangyang.com',
+        name: '体验用户',
+        avatar: undefined,
+        phone: '138****8888',
+        gender: 'male',
+        birthDate: '1980-01-01',
+        height: 170,
+        weight: 65,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
 
-        toast.show('登录成功，欢迎回来！', {
-          duration: 2000,
-          burntOptions: {
-            preset: 'done',
-            haptic: 'success',
-          },
-        });
-        // Navigation will be handled by AppNavigator based on auth state
-      } else {
-        // 登录失败
-        Alert.alert('登录失败', '邮箱或密码错误\n\n测试账号：\n邮箱：test01@gmail.com\n密码：123456');
-      }
-      setIsLoading(false);
-    }, 1000);
+      toast.show('欢迎体验九紫康养！', {
+        duration: 2000,
+        burntOptions: {
+          preset: 'done',
+          haptic: 'success',
+        },
+      });
+    }, 800);
   };
 
   return (
@@ -111,7 +94,7 @@ export const LoginScreen: React.FC = () => {
               maxWidth={400}
               backgroundColor="$color2"
               borderRadius="$5"
-              padding="$2"
+              padding="$2.5"
               borderWidth={1}
               borderColor="$color5"
             >
@@ -119,14 +102,14 @@ export const LoginScreen: React.FC = () => {
                 {/* Logo区域 */}
                 <YStack gap="$2" alignItems="center" marginBottom="$2">
                   <View
-                    width={72}
-                    height={72}
+                    width={80}
+                    height={80}
                     backgroundColor={`${primaryColor}15`}
                     borderRadius="$12"
                     justifyContent="center"
                     alignItems="center"
                   >
-                    <Heart size={32} color={primaryColor} />
+                    <Heart size={36} color={primaryColor} />
                   </View>
                   <Text fontSize="$7" fontWeight="700" color="$primary" textAlign="center">
                     九紫康养
@@ -136,93 +119,34 @@ export const LoginScreen: React.FC = () => {
                   </Text>
                 </YStack>
 
-                {/* 登录表单 */}
-                <YStack gap="$2">
-                  {/* 邮箱输入 */}
-                  <YStack gap="$1">
-                    <Text fontSize="$3" color="$color12" fontWeight="500">
-                      邮箱地址
-                    </Text>
-                    <XStack
-                      borderWidth={1}
-                      borderColor="$color5"
-                      borderRadius="$4"
-                      backgroundColor="$color1"
-                      alignItems="center"
-                      paddingHorizontal="$2"
-                      height={44}
-                    >
-                      <Mail size={18} color={color10} />
-                      <Input
-                        flex={1}
-                        borderWidth={0}
-                        backgroundColor="transparent"
-                        placeholder="请输入邮箱地址"
-                        placeholderTextColor={color10}
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        fontSize="$3"
-                        paddingLeft="$1.5"
-                      />
-                    </XStack>
-                  </YStack>
-
-                  {/* 密码输入 */}
-                  <YStack gap="$1">
-                    <Text fontSize="$3" color="$color12" fontWeight="500">
-                      密码
-                    </Text>
-                    <XStack
-                      borderWidth={1}
-                      borderColor="$color5"
-                      borderRadius="$4"
-                      backgroundColor="$color1"
-                      alignItems="center"
-                      paddingHorizontal="$2"
-                      height={44}
-                    >
-                      <Lock size={18} color={color10} />
-                      <Input
-                        flex={1}
-                        borderWidth={0}
-                        backgroundColor="transparent"
-                        placeholder="请输入密码"
-                        placeholderTextColor={color10}
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry={!showPassword}
-                        fontSize="$3"
-                        paddingLeft="$1.5"
-                      />
-                      <Pressable onPress={() => setShowPassword(!showPassword)}>
-                        <View padding="$1">
-                          {showPassword ? (
-                            <EyeOff size={18} color={color10} />
-                          ) : (
-                            <Eye size={18} color={color10} />
-                          )}
-                        </View>
-                      </Pressable>
-                    </XStack>
-                  </YStack>
-
-                  {/* 辅助链接 */}
-                  <XStack justifyContent="space-between" alignItems="center">
-                    <Pressable>
-                      <Text fontSize="$2" color="$color10">记住密码</Text>
-                    </Pressable>
-                    <Pressable>
-                      <Text fontSize="$2" color="$primary">忘记密码？</Text>
-                    </Pressable>
+                {/* 开发版本提示 */}
+                <View
+                  backgroundColor={`${warningColor}10`}
+                  borderRadius="$4"
+                  padding="$2"
+                  borderWidth={1}
+                  borderColor={`${warningColor}30`}
+                >
+                  <XStack gap="$2" alignItems="flex-start">
+                    <Info size={18} color={warningColor} style={{ marginTop: 2 }} />
+                    <YStack flex={1} gap="$1.5">
+                      <Text fontSize="$3" fontWeight="600" color="$color12">
+                        开发测试版本
+                      </Text>
+                      <Text fontSize="$2" color="$color10" lineHeight={18}>
+                        当前为 2025 年 12 月开发版本，应用正在持续完善中。部分数据为测试数据，您也可以自由填写任意数据进行体验。
+                      </Text>
+                      <Text fontSize="$2" color="$color10" lineHeight={18}>
+                        欢迎体验！如遇到任何问题或有改进建议，请随时与我们联系。感谢您的包涵与指正！
+                      </Text>
+                    </YStack>
                   </XStack>
-                </YStack>
+                </View>
 
-                {/* 登录按钮 */}
+                {/* 体验按钮 */}
                 <YStack gap="$2" marginTop="$2">
                   <Pressable
-                    onPress={handleLogin}
+                    onPress={handleEnter}
                     disabled={isLoading}
                     style={({ pressed }) => ({
                       transform: [{ scale: pressed ? 0.98 : 1 }],
@@ -232,63 +156,20 @@ export const LoginScreen: React.FC = () => {
                     <View
                       backgroundColor="$primary"
                       borderRadius="$10"
-                      paddingVertical="$2"
+                      paddingVertical="$3"
                       alignItems="center"
                     >
-                      <Text fontSize="$4" fontWeight="600" color="white">
-                        {isLoading ? '登录中...' : '登录'}
-                      </Text>
-                    </View>
-                  </Pressable>
-
-                  <Pressable>
-                    <View
-                      borderWidth={1}
-                      borderColor="$primary"
-                      backgroundColor="transparent"
-                      borderRadius="$10"
-                      paddingVertical="$2"
-                      alignItems="center"
-                    >
-                      <Text fontSize="$4" fontWeight="500" color="$primary">
-                        注册新账号
+                      <Text fontSize="$5" fontWeight="600" color="white">
+                        {isLoading ? '正在进入...' : '立即体验'}
                       </Text>
                     </View>
                   </Pressable>
                 </YStack>
 
-                <Separator marginVertical="$2" borderColor="$color5" />
-
-                {/* 第三方登录 */}
-                <YStack gap="$2" alignItems="center">
-                  <Text fontSize="$2" color="$color10">
-                    其他登录方式
-                  </Text>
-                  <XStack gap="$2">
-                    <Pressable>
-                      <View
-                        borderWidth={1}
-                        borderColor="$primary"
-                        borderRadius="$10"
-                        paddingVertical="$1.5"
-                        paddingHorizontal="$4"
-                      >
-                        <Text color="$primary" fontSize="$3" fontWeight="500">Gmail</Text>
-                      </View>
-                    </Pressable>
-                    <Pressable>
-                      <View
-                        borderWidth={1}
-                        borderColor="$success"
-                        borderRadius="$10"
-                        paddingVertical="$1.5"
-                        paddingHorizontal="$4"
-                      >
-                        <Text color="$success" fontSize="$3" fontWeight="500">微信</Text>
-                      </View>
-                    </Pressable>
-                  </XStack>
-                </YStack>
+                {/* 版本信息 */}
+                <Text fontSize="$2" color="$color10" textAlign="center" marginTop="$2">
+                  Version 1.0.0 (Dev Build)
+                </Text>
               </YStack>
             </View>
           </View>

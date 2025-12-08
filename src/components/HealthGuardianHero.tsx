@@ -9,7 +9,8 @@ import {
 } from 'tamagui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MessageCircle, TrendingUp, ChevronDown, Users, CheckCircle } from 'lucide-react-native';
-import { Pressable } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+// import { Video, ResizeMode } from 'expo-av';
 import { BottomSheet } from './BottomSheet';
 
 export interface FamilyMember {
@@ -122,6 +123,15 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
             padding: 24,
           }}
         >
+          {/* 视频背景层 - 已注释，移至 AIConsultationScreen */}
+          {/* <Video
+            source={require('../../assets/welcome.mp4')}
+            style={styles.backgroundVideo}
+            resizeMode={ResizeMode.COVER}
+            shouldPlay
+            isLooping
+            isMuted
+          /> */}
           {/* 问候语和家人切换 */}
           <YStack gap="$1" marginBottom="$4">
             <XStack justifyContent="space-between" alignItems="center">
@@ -386,3 +396,14 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
     </>
   );
 };
+
+// 视频样式已移至 AIConsultationScreen
+// const styles = StyleSheet.create({
+//   backgroundVideo: {
+//     position: 'absolute',
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     bottom: 0,
+//   },
+// });
