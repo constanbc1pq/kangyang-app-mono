@@ -3,7 +3,6 @@ import { ScrollView, Pressable, RefreshControl } from 'react-native';
 import { View, Text, XStack, YStack } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import {
-  ArrowLeft,
   FileText,
   Clock,
   CheckCircle,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TitleBar } from '@/components/TitleBar';
 
 interface ClaimRecord {
   id: string;
@@ -343,23 +343,7 @@ const ClaimHistoryScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          理赔记录
-        </Text>
-        <View width={24} />
-      </XStack>
+      <TitleBar title="理赔记录" onBack={() => navigation.goBack()} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

@@ -15,12 +15,12 @@ import {
   Image,
 } from 'react-native';
 import {
-  ArrowLeft,
   Star,
   Camera,
   X,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 import { submitServiceReview } from '@/services/communityDataService';
 
 interface ServiceReviewScreenProps {
@@ -176,34 +176,7 @@ export const ServiceReviewScreen: React.FC<ServiceReviewScreenProps> = ({
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* 顶部导航栏 */}
-      <View
-        backgroundColor="white"
-        paddingTop="$3"
-        paddingHorizontal="$4"
-        paddingBottom="$3"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <XStack justifyContent="space-between" alignItems="center">
-          <TouchableOpacity onPress={handleBack}>
-            <View
-              width={32}
-              height={32}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={COLORS.text} />
-            </View>
-          </TouchableOpacity>
-
-          <Text fontSize="$5" fontWeight="600" color="$text">
-            评价服务
-          </Text>
-
-          <View width={32} />
-        </XStack>
-      </View>
+      <TitleBar title="评价服务" onBack={handleBack} />
 
       <ScrollView
         flex={1}

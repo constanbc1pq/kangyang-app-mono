@@ -15,7 +15,6 @@ import { Alert, Dimensions, Pressable, ActivityIndicator } from 'react-native';
 import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Trophy,
   ShoppingCart,
   Library,
@@ -38,6 +37,7 @@ import {
   Crown,
   Check,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { calculateDiscountedPrice } from '@/services/benefitService';
@@ -159,7 +159,6 @@ const LegalMembershipScreen: React.FC<any> = ({ navigation }) => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [userMembership, setUserMembership] = useState<UserMembership | null>(null);
   const [selectedTab, setSelectedTab] = useState<MembershipTier>('basic');
@@ -472,16 +471,8 @@ const LegalMembershipScreen: React.FC<any> = ({ navigation }) => {
   if (!userMembership) {
     return (
       <View flex={1} backgroundColor="$background">
-        <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-            <Pressable onPress={() => navigation.goBack()}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">法律尊享计划</Text>
-            <View width={40} />
-          </XStack>
+        <View paddingTop={insets.top} backgroundColor="white">
+          <TitleBar title="法律尊享计划" />
         </View>
         <YStack flex={1} justifyContent="center" alignItems="center">
           <ActivityIndicator size="large" color={primaryColor} />
@@ -502,28 +493,8 @@ const LegalMembershipScreen: React.FC<any> = ({ navigation }) => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            法律尊享计划
-          </Text>
-          <View width={40} />
-        </XStack>
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar title="法律尊享计划" />
       </View>
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>

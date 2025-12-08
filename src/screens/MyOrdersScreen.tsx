@@ -14,7 +14,6 @@ import {
   RefreshControl,
 } from 'react-native';
 import {
-  ArrowLeft,
   Calendar,
   MapPin,
   DollarSign,
@@ -23,6 +22,7 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 import { OrderStatus } from '@/types/community';
 import { getOrders } from '@/services/communityDataService';
 
@@ -302,34 +302,7 @@ export const MyOrdersScreen: React.FC<MyOrdersScreenProps> = ({ navigation }) =>
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* 顶部导航栏 */}
-      <View
-        backgroundColor="white"
-        paddingTop="$3"
-        paddingHorizontal="$4"
-        paddingBottom="$3"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <XStack justifyContent="space-between" alignItems="center">
-          <TouchableOpacity onPress={handleBack}>
-            <View
-              width={32}
-              height={32}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={COLORS.text} />
-            </View>
-          </TouchableOpacity>
-
-          <Text fontSize="$5" fontWeight="600" color="$text">
-            我的订单
-          </Text>
-
-          <View width={32} />
-        </XStack>
-      </View>
+      <TitleBar title="我的订单" onBack={handleBack} />
 
       {/* 角色切换 */}
       <View

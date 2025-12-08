@@ -3,7 +3,6 @@ import { ScrollView, Pressable, RefreshControl } from 'react-native';
 import { View, Text, XStack, YStack } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import {
-  ArrowLeft,
   Activity,
   Heart,
   AlertCircle,
@@ -16,6 +15,7 @@ import {
   FileText,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 
 // 案例分类
 type CaseCategory = 'all' | 'medical' | 'critical_illness' | 'accident' | 'life';
@@ -332,23 +332,7 @@ const ClaimCaseLibraryScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          理赔案例库
-        </Text>
-        <View width={24} />
-      </XStack>
+      <TitleBar title="理赔案例库" onBack={() => navigation.goBack()} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

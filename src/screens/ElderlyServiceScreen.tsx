@@ -10,7 +10,6 @@ import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Heart,
   ChevronDown,
   ChevronUp,
@@ -27,6 +26,7 @@ import {
   Building2,
   FileCheck,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import {
   servicePackages,
   qualificationDetails,
@@ -113,38 +113,9 @@ const ElderlyServiceScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* TitleBar - 按照CLAUDE.md规范 */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <YStack flex={1} marginLeft="$2">
-            <Text fontSize="$5" fontWeight="600" color="$color12">
-              养老服务
-            </Text>
-            <Text fontSize="$2" color="$color10">
-              专业照护 · 温暖陪伴
-            </Text>
-          </YStack>
-        </XStack>
+      {/* TitleBar */}
+      <View paddingTop={insets.top}>
+        <TitleBar title="养老服务" subtitle="专业照护 · 温暖陪伴" />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>

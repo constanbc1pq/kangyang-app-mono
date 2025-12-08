@@ -18,7 +18,6 @@ import { Pressable, Alert, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
-  ArrowLeft,
   MapPin,
   DollarSign,
   Tag,
@@ -37,6 +36,7 @@ import {
 } from '@/types/community';
 import { createItem } from '@/services/communityDataService';
 import { usePublishLimit } from '@/hooks/useMembershipBenefit';
+import { TitleBar } from '@/components/TitleBar';
 
 interface SecondHandPublishScreenProps {
   navigation: any;
@@ -260,27 +260,9 @@ export const SecondHandPublishScreen: React.FC<SecondHandPublishScreenProps> = (
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* 标准 TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-        >
-          <Pressable onPress={handleBack}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12" flex={1} textAlign="center" marginRight={40}>
-            发布闲置物品
-          </Text>
-        </XStack>
+      {/* 标题栏 */}
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar title="发布闲置物品" />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>

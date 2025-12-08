@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, ActivityIndicator, Dimensions } from 'react-native';
 import { View, Text, XStack, YStack } from 'tamagui';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { ArrowLeft, CheckCircle, XCircle, Minus } from 'lucide-react-native';
+import { CheckCircle, XCircle, Minus } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 import { INSURANCE_CATEGORY_LABELS, MAX_COMPARISON_PRODUCTS } from '@/constants/insurance';
 import { getProductById } from '@/services/insuranceProductService';
 import { InsuranceProduct } from '@/types/insurance';
+import { TitleBar } from '@/components/TitleBar';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 3;
@@ -214,22 +215,7 @@ const ProductComparisonScreen: React.FC = () => {
   if (products.length === 0) {
     return (
       <View flex={1} backgroundColor="$background">
-        <XStack
-          height={56}
-          alignItems="center"
-          paddingHorizontal="$4"
-          backgroundColor="$surface"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <ArrowLeft size={24} color={COLORS.text} />
-          </Pressable>
-          <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-            产品对比
-          </Text>
-          <View width={24} />
-        </XStack>
+        <TitleBar title="产品对比" onBack={() => navigation.goBack()} />
         <View flex={1} justifyContent="center" alignItems="center" padding="$4">
           <Text fontSize="$4" color="$textSecondary" textAlign="center">
             暂无产品数据
@@ -243,23 +229,7 @@ const ProductComparisonScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          产品对比 ({products.length}款)
-        </Text>
-        <View width={24} />
-      </XStack>
+      <TitleBar title={`产品对比 (${products.length}款)`} onBack={() => navigation.goBack()} />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View>

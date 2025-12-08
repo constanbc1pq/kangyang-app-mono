@@ -21,7 +21,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Send,
   Bot,
   User,
@@ -45,6 +44,7 @@ import { PackageSelectCard } from '@/components/PackageSelectCard';
 import { BottomSheet } from '@/components/BottomSheet';
 import { getCaregiversByServiceType, servicePackages, getCaregiverById, getPackageById } from '@/services/elderlyService';
 import type { Caregiver, ServicePackage, ServiceType } from '@/types/elderly';
+import { TitleBar } from '@/components/TitleBar';
 
 // 服务类型中文标签映射
 const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
@@ -777,84 +777,48 @@ export const AIConsultationScreen: React.FC = () => {
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
-        {/* 顶部导航栏 - 按照CLAUDE.md规范 */}
+        {/* 顶部导航栏 */}
         <View
-          backgroundColor="$color2"
+          backgroundColor="white"
           borderBottomWidth={1}
           borderBottomColor="$color5"
         >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-              {/* 返回按钮 */}
-              <Pressable onPress={() => navigation.goBack()}>
-                <ArrowLeft size={24} color={textColor} />
-              </Pressable>
-
-              {/* 标题和状态 */}
-              <XStack alignItems="center" flex={1} marginHorizontal="$2" gap="$2">
+          <TitleBar
+            title="AI健康咨询"
+            subtitle={getCurrentModel().name}
+            titleIcon={
+              <View
+                width={32}
+                height={32}
+                backgroundColor="$primary"
+                borderRadius="$12"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Bot size={16} color="white" />
+              </View>
+            }
+            badge={
+              <XStack gap="$1" alignItems="center">
                 <View
-                  width={32}
-                  height={32}
-                  backgroundColor="$primary"
-                  borderRadius="$12"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Bot size={16} color="white" />
-                </View>
-                <YStack flex={1}>
-                  <Text fontSize="$4" fontWeight="500" color="$color12" numberOfLines={1}>
-                    AI健康咨询
-                  </Text>
-                  <XStack gap="$2" alignItems="center">
-                    <View
-                      backgroundColor={getCurrentModel().isRecommended ? '$primary' : '$color2'}
-                      paddingHorizontal="$2"
-                      paddingVertical="$0.5"
-                      borderRadius="$10"
-                    >
-                      <Text
-                        fontSize="$1"
-                        color={getCurrentModel().isRecommended ? "white" : "$color12"}
-                        fontWeight="500"
-                        numberOfLines={1}
-                      >
-                        {getCurrentModel().name}
-                      </Text>
-                    </View>
-                    <XStack gap="$1" alignItems="center">
-                      <View
-                        width={6}
-                        height={6}
-                        backgroundColor="$success"
-                        borderRadius={3}
-                      />
-                      <Text fontSize="$1" color="$color10">
-                        在线
-                      </Text>
-                    </XStack>
-                  </XStack>
-                </YStack>
+                  width={6}
+                  height={6}
+                  backgroundColor="$success"
+                  borderRadius={3}
+                />
+                <Text fontSize="$1" color="$color10">
+                  在线
+                </Text>
               </XStack>
-
-              {/* 模型选择 */}
-              <TouchableOpacity onPress={() => setShowModelSelector(!showModelSelector)}>
-                <View
-                  width={40}
-                  height={40}
-                  borderRadius="$12"
-                  justifyContent="center"
-                  alignItems="center"
-                  backgroundColor="$color4"
-                >
-                  <Cpu size={20} color={textColor} />
-                </View>
-              </TouchableOpacity>
-          </XStack>
+            }
+            actions={[
+              {
+                icon: Cpu,
+                onPress: () => setShowModelSelector(!showModelSelector),
+                variant: 'icon',
+              },
+            ]}
+          />
         </View>
 
         <View style={{ flex: 1 }}>

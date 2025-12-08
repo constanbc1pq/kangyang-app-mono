@@ -335,7 +335,7 @@ export const WellnessScreen: React.FC = () => {
       end={{ x: 1, y: 1 }}
       style={StyleSheet.absoluteFill}
     >
-      <Theme name="light">
+      <Theme name="neutral_light">
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
           <ScrollView flex={1} showsVerticalScrollIndicator={false}>
             <YStack>
@@ -586,9 +586,9 @@ export const WellnessScreen: React.FC = () => {
           variant="picker"
         >
           <YStack gap="$3">
-            {/* 2x3 服务网格 */}
-            <XStack flexWrap="wrap" gap="$2">
-              {services.map((service) => {
+            {/* 2x3 服务网格 - 强制一行3个 */}
+            <XStack gap="$2">
+              {services.slice(0, 3).map((service) => {
                 const IconComponent = service.icon;
                 const color = getServiceColor(service.colorKey);
                 return (
@@ -598,7 +598,7 @@ export const WellnessScreen: React.FC = () => {
                       setShowServiceModal(false);
                       handleServiceClick(service.id);
                     }}
-                    style={{ width: '31%' }}
+                    style={{ flex: 1 }}
                   >
                     <View
                       alignItems="center"
@@ -619,10 +619,53 @@ export const WellnessScreen: React.FC = () => {
                       >
                         <IconComponent size={22} color={color} />
                       </View>
-                      <Text fontSize="$3" fontWeight="500" color="$color12">
+                      <Text fontSize="$3" fontWeight="500" color="$color12" textAlign="center">
                         {service.title}
                       </Text>
-                      <Text fontSize="$1" color="$color10" marginTop="$0.5">
+                      <Text fontSize="$1" color="$color10" marginTop="$0.5" textAlign="center">
+                        {service.description}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </XStack>
+            <XStack gap="$2">
+              {services.slice(3, 6).map((service) => {
+                const IconComponent = service.icon;
+                const color = getServiceColor(service.colorKey);
+                return (
+                  <Pressable
+                    key={service.id}
+                    onPress={() => {
+                      setShowServiceModal(false);
+                      handleServiceClick(service.id);
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    <View
+                      alignItems="center"
+                      paddingVertical="$2"
+                      borderRadius="$4"
+                      backgroundColor="$color2"
+                      borderWidth={1}
+                      borderColor="$color5"
+                    >
+                      <View
+                        width={44}
+                        height={44}
+                        borderRadius={22}
+                        backgroundColor={`${color}15`}
+                        justifyContent="center"
+                        alignItems="center"
+                        marginBottom="$1.5"
+                      >
+                        <IconComponent size={22} color={color} />
+                      </View>
+                      <Text fontSize="$3" fontWeight="500" color="$color12" textAlign="center">
+                        {service.title}
+                      </Text>
+                      <Text fontSize="$1" color="$color10" marginTop="$0.5" textAlign="center">
                         {service.description}
                       </Text>
                     </View>

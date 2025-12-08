@@ -3,7 +3,6 @@ import { Pressable, FlatList, Alert, StatusBar } from 'react-native';
 import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   ChevronRight,
   PlayCircle,
   Bookmark,
@@ -23,6 +22,7 @@ import {
   File,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TitleBar } from '@/components/TitleBar';
 
 /**
  * Phase 36.1: 视频课堂 - Legal Video Classroom Screen
@@ -128,7 +128,6 @@ const LegalVideoScreen: React.FC<any> = ({ navigation }) => {
   const successColor = theme.success?.val;
   const color9 = theme.color9?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [currentStep, setCurrentStep] = useState<ScreenStep>('categories');
   const [selectedCategory, setSelectedCategory] = useState<VideoCategory | null>(null);
@@ -707,17 +706,7 @@ const LegalVideoScreen: React.FC<any> = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={handleBackPress}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">法律视频课堂</Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title="法律视频课堂" onBack={handleBackPress} />
 
       {/* Content */}
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
@@ -785,17 +774,7 @@ const LegalVideoScreen: React.FC<any> = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={handleBackPress}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">{selectedCategory?.name}</Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title={selectedCategory?.name || ''} onBack={handleBackPress} />
 
       {/* Category Info */}
       {selectedCategory && (

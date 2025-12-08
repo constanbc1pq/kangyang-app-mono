@@ -28,7 +28,6 @@ import {
   FlatList,
 } from 'react-native';
 import {
-  ArrowLeft,
   Filter,
   MessageCircle,
   Video,
@@ -48,6 +47,7 @@ import {
 } from '@/types/privateDoctor';
 import { privateDoctorService } from '@/services/privateDoctorService';
 import { useFocusEffect } from '@react-navigation/native';
+import { TitleBar } from '@/components/TitleBar';
 
 interface ConsultationListScreenProps {
   navigation: any;
@@ -333,41 +333,27 @@ export const ConsultationListScreen: React.FC<
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        {/* Header */}
-        <XStack
-          height={56}
-          alignItems="center"
-          paddingHorizontal="$4"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="$background"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <XStack space="$2" alignItems="center">
-              <ArrowLeft size={24} color={COLORS.text} />
-              <Text fontSize="$5" color="$text" fontWeight="600">
-                咨询记录
-              </Text>
-            </XStack>
-          </Pressable>
-
-          <Pressable onPress={handleExportRecords}>
-            <XStack
-              space="$1"
-              alignItems="center"
-              paddingHorizontal="$2"
-              paddingVertical="$1"
-              borderRadius="$2"
-              backgroundColor="$surface"
-            >
-              <Download size={16} color={COLORS.text} />
-              <Text fontSize="$3" color="$text">
-                导出
-              </Text>
-            </XStack>
-          </Pressable>
-        </XStack>
+        <TitleBar
+          title="咨询记录"
+          onBack={() => navigation.goBack()}
+          rightContent={
+            <Pressable onPress={handleExportRecords}>
+              <XStack
+                space="$1"
+                alignItems="center"
+                paddingHorizontal="$2"
+                paddingVertical="$1"
+                borderRadius="$2"
+                backgroundColor="$surface"
+              >
+                <Download size={16} color={COLORS.text} />
+                <Text fontSize="$3" color="$text">
+                  导出
+                </Text>
+              </XStack>
+            </Pressable>
+          }
+        />
 
         <YStack flex={1}>
           {/* 类型筛选 */}

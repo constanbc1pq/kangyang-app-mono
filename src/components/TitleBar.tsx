@@ -45,7 +45,7 @@ export interface TitleBarProps {
 /**
  * 统一顶部标题栏组件
  * 遵循 CLAUDE.md 规范：
- * - 容器: paddingHorizontal=$2.5, paddingVertical=$2, backgroundColor=white
+ * - 容器: paddingHorizontal=$2.5, paddingVertical=$0.75 (8px), backgroundColor=white
  * - 边框: borderBottomWidth=1, borderBottomColor=$color5
  * - 标题: fontSize=$5, fontWeight=600, color=$color12, 居中
  * - 副标题: fontSize=$3, color=$color10
@@ -154,7 +154,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
     <View
       backgroundColor="white"
       paddingHorizontal="$2.5"
-      paddingVertical="$2"
+      paddingVertical="$0.75"
       borderBottomWidth={1}
       borderBottomColor="$color5"
     >

@@ -21,8 +21,6 @@ import {
   View,
   ScrollView,
   useTheme,
-  Accordion,
-  Square,
 } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -57,7 +55,6 @@ import {
   BenefitKey,
   SERVICE_DISCOUNT_RATES,
   EXPERT_CERT_PRICES,
-  PaymentCycle,
 } from '@/types/membership';
 import { getMembershipDisplayInfo } from '@/services/membershipService';
 import { getPoints } from '@/services/userDataService';
@@ -124,7 +121,7 @@ const FAQ_DATA = [
   },
   {
     question: '如何升级会员？',
-    answer: '您可以在会员中心选择想要开通的会员等级，支持月付、季付、年付三种方式。年付可享受8折优惠。',
+    answer: '您可以在会员中心选择想要开通的会员等级，完成支付即可立即生效。',
   },
   {
     question: '会员到期后数据会丢失吗？',
@@ -192,7 +189,7 @@ export const MembershipCenterScreen: React.FC = () => {
   const [points, setPoints] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState<MembershipLevel>(MembershipLevel.GOLD);
-  const [selectedCycle, setSelectedCycle] = useState<PaymentCycle>('yearly');
+  const [expandedFAQs, setExpandedFAQs] = useState<number[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -233,17 +230,16 @@ export const MembershipCenterScreen: React.FC = () => {
   const handlePurchase = () => {
     if (selectedLevel === MembershipLevel.FREE) return;
 
-    const price = MEMBERSHIP_PRICES[selectedLevel][selectedCycle];
-    const cycleLabel = selectedCycle === 'monthly' ? '月付' : selectedCycle === 'quarterly' ? '季付' : '年付';
+    const price = MEMBERSHIP_PRICES[selectedLevel].yearly;
 
     navigation.navigate('Checkout' as never, {
       itemType: 'membership',
       itemId: selectedLevel,
-      itemName: `${MEMBERSHIP_LEVEL_LABELS[selectedLevel]}（${cycleLabel}）`,
+      itemName: MEMBERSHIP_LEVEL_LABELS[selectedLevel],
       price,
       metadata: {
-        level: selectedLevel,
-        cycle: selectedCycle,
+        membershipLevel: selectedLevel,
+        cycle: 'yearly',
       },
     } as never);
   };
@@ -254,9 +250,8 @@ export const MembershipCenterScreen: React.FC = () => {
     if (selectedLevel === membershipInfo.level) {
       return membershipInfo.isExpired ? '续费会员' : '续费会员';
     }
-    const price = MEMBERSHIP_PRICES[selectedLevel][selectedCycle];
-    const cycleLabel = selectedCycle === 'monthly' ? '/月' : selectedCycle === 'quarterly' ? '/季' : '/年';
-    return `开通${MEMBERSHIP_LEVEL_LABELS[selectedLevel]} ¥${price}${cycleLabel}`;
+    const price = MEMBERSHIP_PRICES[selectedLevel].yearly;
+    return `开通${MEMBERSHIP_LEVEL_LABELS[selectedLevel]} ¥${price}`;
   };
 
   if (loading || !membershipInfo) {
@@ -361,7 +356,7 @@ export const MembershipCenterScreen: React.FC = () => {
               <Text fontSize="$4" fontWeight="600" color="$color12">康养会员体系</Text>
             </XStack>
             <Text fontSize="$3" color="$color10" lineHeight={20}>
-              康养APP提供4级会员体系，免费用户可体验基础功能，付费会员逐步解锁更多权益。支持月付、季付、年付，年付享8折优惠。白金/钻石会员购买私人医生、法律服务可享专属折扣。
+              康养APP提供4级会员体系，免费用户可体验基础功能，付费会员逐步解锁更多权益。白金/钻石会员购买私人医生、法律服务可享专属折扣。
             </Text>
           </View>
 
@@ -437,18 +432,12 @@ export const MembershipCenterScreen: React.FC = () => {
                               免费
                             </Text>
                           ) : (
-                            <>
-                              <XStack alignItems="baseline">
-                                <Text fontSize="$2" color={colors.primary}>¥</Text>
-                                <Text fontSize="$5" fontWeight="700" color={colors.primary}>
-                                  {price.yearly}
-                                </Text>
-                                <Text fontSize="$2" color="$color10">/年</Text>
-                              </XStack>
-                              <Text fontSize={10} color="$color10">
-                                月付¥{price.monthly}
+                            <XStack alignItems="baseline">
+                              <Text fontSize="$2" color={colors.primary}>¥</Text>
+                              <Text fontSize="$5" fontWeight="700" color={colors.primary}>
+                                {price.yearly}
                               </Text>
-                            </>
+                            </XStack>
                           )}
                         </YStack>
 
@@ -471,65 +460,6 @@ export const MembershipCenterScreen: React.FC = () => {
               })}
             </YStack>
 
-            {/* 付费周期选择 */}
-            {selectedLevel !== MembershipLevel.FREE && (
-              <View marginTop="$2">
-                <Text fontSize="$3" fontWeight="500" color="$color12" marginBottom="$1.5">
-                  选择付费周期
-                </Text>
-                <XStack gap="$2">
-                  {(['monthly', 'quarterly', 'yearly'] as PaymentCycle[]).map((cycle) => {
-                    const isActive = selectedCycle === cycle;
-                    const price = MEMBERSHIP_PRICES[selectedLevel][cycle];
-                    const label = cycle === 'monthly' ? '月付' : cycle === 'quarterly' ? '季付' : '年付';
-                    const discount = cycle === 'quarterly' ? '省10%' : cycle === 'yearly' ? '省20%' : '';
-
-                    return (
-                      <Pressable
-                        key={cycle}
-                        style={{ flex: 1 }}
-                        onPress={() => setSelectedCycle(cycle)}
-                      >
-                        <View
-                          padding="$2"
-                          borderRadius="$4"
-                          borderWidth={1}
-                          borderColor={isActive ? primaryColor : '$color5'}
-                          backgroundColor={isActive ? `${primaryColor}10` : '$color2'}
-                          alignItems="center"
-                        >
-                          <Text
-                            fontSize="$3"
-                            fontWeight={isActive ? '600' : '400'}
-                            color={isActive ? '$primary' : '$color12'}
-                          >
-                            {label}
-                          </Text>
-                          <Text
-                            fontSize="$4"
-                            fontWeight="700"
-                            color={isActive ? '$primary' : '$color12'}
-                          >
-                            ¥{price}
-                          </Text>
-                          {discount && (
-                            <View
-                              backgroundColor={warningColor}
-                              paddingHorizontal="$1"
-                              paddingVertical="$0.5"
-                              borderRadius="$2"
-                              marginTop="$0.5"
-                            >
-                              <Text fontSize={10} color="white" fontWeight="500">{discount}</Text>
-                            </View>
-                          )}
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </XStack>
-              </View>
-            )}
           </View>
 
           {/* 权益对比 */}
@@ -733,41 +663,55 @@ export const MembershipCenterScreen: React.FC = () => {
               </Text>
             </XStack>
 
-            <Accordion type="multiple">
-              {FAQ_DATA.map((faq, index) => (
-                <Accordion.Item key={index} value={`faq-${index}`}>
-                  <Accordion.Trigger
-                    flexDirection="row"
-                    justifyContent="space-between"
-                    paddingVertical="$2"
+            <YStack>
+              {FAQ_DATA.map((faq, index) => {
+                const isExpanded = expandedFAQs.includes(index);
+                const toggleFAQ = () => {
+                  setExpandedFAQs(prev =>
+                    prev.includes(index)
+                      ? prev.filter(i => i !== index)
+                      : [...prev, index]
+                  );
+                };
+
+                return (
+                  <View
+                    key={index}
                     borderBottomWidth={index < FAQ_DATA.length - 1 ? 1 : 0}
                     borderBottomColor="$color5"
-                    unstyled
                   >
-                    {({ open }: { open: boolean }) => (
-                      <>
+                    <Pressable onPress={toggleFAQ}>
+                      <XStack
+                        paddingVertical="$2"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
                         <Text fontSize="$3" fontWeight="500" color="$color12" flex={1}>
                           {faq.question}
                         </Text>
-                        <Square animation="quick" rotate={open ? '180deg' : '0deg'}>
+                        <View
+                          style={{
+                            transform: [{ rotate: isExpanded ? '180deg' : '0deg' }],
+                          }}
+                        >
                           <ChevronDown size={16} color={color10} />
-                        </Square>
-                      </>
+                        </View>
+                      </XStack>
+                    </Pressable>
+                    {isExpanded && (
+                      <Text
+                        fontSize="$2"
+                        color="$color10"
+                        lineHeight={18}
+                        paddingBottom="$2"
+                      >
+                        {faq.answer}
+                      </Text>
                     )}
-                  </Accordion.Trigger>
-                  <Accordion.Content>
-                    <Text
-                      fontSize="$2"
-                      color="$color10"
-                      lineHeight={18}
-                      paddingBottom="$2"
-                    >
-                      {faq.answer}
-                    </Text>
-                  </Accordion.Content>
-                </Accordion.Item>
-              ))}
-            </Accordion>
+                  </View>
+                );
+              })}
+            </YStack>
           </View>
         </YStack>
       </ScrollView>

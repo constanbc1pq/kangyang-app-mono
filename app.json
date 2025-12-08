@@ -35,7 +35,19 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single",
+      "themeColor": "#8B5CF6",
+      "backgroundColor": "#ffffff",
+      "display": "standalone",
+      "orientation": "portrait",
+      "preferRelatedApplications": false,
+      "startUrl": "/",
+      "scope": "/",
+      "name": "九紫康养",
+      "shortName": "康养",
+      "description": "AI驱动的健康管理平台"
     }
   }
 }

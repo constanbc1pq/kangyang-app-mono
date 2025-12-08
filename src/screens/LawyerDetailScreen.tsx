@@ -13,7 +13,6 @@ import { Alert, ActivityIndicator, Image as RNImage, Pressable } from 'react-nat
 import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Share,
   User,
   CreditCard,
@@ -37,6 +36,7 @@ import {
   Sparkles,
   TrendingUp,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LawyerProfile, LawyerSpecialty } from '../types/legalService';
@@ -134,7 +134,6 @@ const LawyerDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const { lawyerId } = route.params;
 
@@ -897,16 +896,8 @@ const LawyerDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   if (loading) {
     return (
       <View flex={1} backgroundColor="$background">
-        <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-            <Pressable onPress={() => navigation.goBack()}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">律师详情</Text>
-            <View width={40} />
-          </XStack>
+        <View paddingTop={insets.top} backgroundColor="white">
+          <TitleBar title="律师详情" />
         </View>
         <YStack flex={1} justifyContent="center" alignItems="center">
           <ActivityIndicator size="large" color={primaryColor} />
@@ -921,20 +912,16 @@ const LawyerDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* TitleBar */}
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">律师详情</Text>
-          <Pressable>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <Share size={22} color={color12} />
-            </View>
-          </Pressable>
-        </XStack>
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar
+          title="律师详情"
+          actions={[
+            {
+              icon: Share,
+              onPress: () => {},
+            },
+          ]}
+        />
       </View>
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>

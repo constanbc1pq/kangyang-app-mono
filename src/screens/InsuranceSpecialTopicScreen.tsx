@@ -4,7 +4,6 @@ import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   BookOpen,
   Play,
   Package,
@@ -16,6 +15,7 @@ import {
   Clock,
   Eye,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 // 专题类型
 interface SpecialTopic {
@@ -64,7 +64,6 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
   const successColor = theme.success?.val;
   const warningColor = theme.warning?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [topics, setTopics] = useState<SpecialTopic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<SpecialTopic | null>(null);
@@ -702,30 +701,7 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
   if (selectedTopic) {
     return (
       <View flex={1} backgroundColor="$background">
-        {/* Header */}
-        <View
-          paddingTop={insets.top}
-          backgroundColor="$color2"
-          borderBottomWidth={1}
-          borderBottomColor="$color5"
-        >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Pressable onPress={handleBackToList}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">
-              专题详情
-            </Text>
-            <View width={40} />
-          </XStack>
-        </View>
+        <TitleBar title="专题详情" onBack={handleBackToList} />
 
         {renderTopicDetail(selectedTopic)}
       </View>
@@ -735,30 +711,7 @@ const InsuranceSpecialTopicScreen: React.FC = () => {
   // 显示专题列表
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            专题策划
-          </Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title="专题策划" onBack={() => navigation.goBack()} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

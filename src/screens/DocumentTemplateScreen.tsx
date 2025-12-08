@@ -3,7 +3,6 @@ import { Pressable, Alert, KeyboardAvoidingView, Platform, StatusBar } from 'rea
 import { YStack, XStack, Text, View, ScrollView, Input, TextArea, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   ChevronRight,
   Clock,
   Download,
@@ -18,6 +17,7 @@ import {
   Folder,
   File,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 /**
  * Phase 36.4: 文书模板库 - Legal Document Template Screen
@@ -139,7 +139,6 @@ const DocumentTemplateScreen: React.FC<any> = ({ navigation }) => {
   const errorColor = theme.error?.val;
   const color9 = theme.color9?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [currentStep, setCurrentStep] = useState<ScreenStep>('categories');
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | null>(null);
@@ -614,17 +613,7 @@ const DocumentTemplateScreen: React.FC<any> = ({ navigation }) => {
     <View flex={1} backgroundColor="$background">
       <StatusBar barStyle="dark-content" />
 
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={handleBackPress}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">文书模板库</Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title="文书模板库" onBack={handleBackPress} />
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         <View backgroundColor="$color2" margin="$2.5" borderRadius="$4" padding="$4" alignItems="center">
@@ -650,17 +639,7 @@ const DocumentTemplateScreen: React.FC<any> = ({ navigation }) => {
     <View flex={1} backgroundColor="$background">
       <StatusBar barStyle="dark-content" />
 
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={handleBackPress}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">{selectedCategory?.name}</Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title={selectedCategory?.name || ''} onBack={handleBackPress} />
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         <YStack paddingHorizontal="$2.5" paddingTop="$2">
@@ -678,17 +657,7 @@ const DocumentTemplateScreen: React.FC<any> = ({ navigation }) => {
       <View flex={1} backgroundColor="$background">
         <StatusBar barStyle="dark-content" />
 
-        <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-            <Pressable onPress={handleBackPress}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">模板预览</Text>
-            <View width={40} />
-          </XStack>
-        </View>
+        <TitleBar title="模板预览" onBack={handleBackPress} />
 
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
           <View backgroundColor="$color2" padding="$2.5" marginBottom="$2">
@@ -771,17 +740,7 @@ const DocumentTemplateScreen: React.FC<any> = ({ navigation }) => {
       <View flex={1} backgroundColor="$background">
         <StatusBar barStyle="dark-content" />
 
-        <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-            <Pressable onPress={handleBackPress}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">填写文书</Text>
-            <View width={40} />
-          </XStack>
-        </View>
+        <TitleBar title="填写文书" onBack={handleBackPress} />
 
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView flex={1} showsVerticalScrollIndicator={false}>
@@ -820,17 +779,7 @@ const DocumentTemplateScreen: React.FC<any> = ({ navigation }) => {
     <View flex={1} backgroundColor="$background">
       <StatusBar barStyle="dark-content" />
 
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={handleBackPress}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">生成的文书</Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title="生成的文书" onBack={handleBackPress} />
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         <View backgroundColor="$color2" margin="$2.5" padding="$2.5" borderRadius="$4">

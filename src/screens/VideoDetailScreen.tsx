@@ -11,7 +11,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, ActivityIndicator, Dimensions, Image } from 'react-native';
 import {
-  ArrowLeft,
   Heart,
   MessageCircle,
   Share2,
@@ -20,6 +19,7 @@ import {
   CheckCircle,
   Eye,
   MoreHorizontal,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 import { Video } from '@/types/community';

@@ -10,7 +10,6 @@ import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
-  ArrowLeft,
   Stethoscope,
   Scale,
   Check,
@@ -20,6 +19,7 @@ import {
   Clock,
   MessageCircle,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 // 服务配置
 const VIP_SERVICES = [
@@ -76,23 +76,7 @@ export const VIPServiceIntroScreen: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
       {/* 标题栏 */}
-      <XStack
-        paddingHorizontal="$2.5"
-        paddingVertical="$2"
-        alignItems="center"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <View width={40} height={40} justifyContent="center" alignItems="flex-start">
-            <ArrowLeft size={24} color={theme.color12?.val} />
-          </View>
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$color12">
-          专属服务
-        </Text>
-        <View width={40} />
-      </XStack>
+      <TitleBar title="专属服务" />
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         <YStack padding="$2.5" gap="$2">

@@ -25,7 +25,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable, Dimensions, FlatList, Image as RNImage } from 'react-native';
 import {
-  ArrowLeft,
   FileText,
   MessageCircle,
   ClipboardCheck,
@@ -43,6 +42,7 @@ import {
   ChevronRight,
   Crown,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { getLawyers } from '@/services/legalService';
@@ -111,7 +111,6 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
   const errorColor = theme.error?.val;
   const warningColor = theme.warning?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [selectedTab, setSelectedTab] = useState<KnowledgeTab>('articles');
   const [lawyers, setLawyers] = useState<any[]>([]);
@@ -339,23 +338,8 @@ const LegalServiceHomeScreen: React.FC<LegalServiceHomeScreenProps> = ({ navigat
   return (
     <View flex={1} backgroundColor="$background">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            遗嘱及法律服务
-          </Text>
-          <View width={40} />
-        </XStack>
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar title="遗嘱及法律服务" />
       </View>
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>

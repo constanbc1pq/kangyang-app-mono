@@ -4,7 +4,6 @@ import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   ArrowRight,
   User,
   Heart,
@@ -14,6 +13,7 @@ import {
   TrendingUp,
   Cpu,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 interface PlannerData {
   // Step 1: 基本信息
@@ -826,24 +826,8 @@ const AIPlannerWizardScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={handlePrevious}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
+      <TitleBar
+        title={
           <YStack alignItems="center">
             <Text fontSize="$5" fontWeight="600" color="$color12">
               AI保险规划
@@ -852,9 +836,9 @@ const AIPlannerWizardScreen: React.FC = () => {
               第{currentStep}/{totalSteps}步
             </Text>
           </YStack>
-          <View width={40} />
-        </XStack>
-      </View>
+        }
+        onBack={handlePrevious}
+      />
 
       {/* Progress Bar */}
       {renderProgressBar()}

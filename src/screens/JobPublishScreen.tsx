@@ -17,7 +17,6 @@ import { Pressable, Alert, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
-  ArrowLeft,
   MapPin,
   Calendar,
   Clock,
@@ -31,6 +30,7 @@ import {
   ChevronUp,
   Check,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import {
   ServiceJob,
   JobType,
@@ -60,7 +60,6 @@ export const JobPublishScreen: React.FC<JobPublishScreenProps> = ({
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   // 基本信息
   const [title, setTitle] = useState('');
@@ -433,28 +432,8 @@ export const JobPublishScreen: React.FC<JobPublishScreenProps> = ({
   return (
     <View flex={1} backgroundColor="$background">
         {/* 标准 TitleBar */}
-        <View
-          paddingTop={insets.top}
-          backgroundColor="$color2"
-          borderBottomWidth={1}
-          borderBottomColor="$color5"
-        >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Pressable onPress={() => navigation.goBack()}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">
-              发布服务需求
-            </Text>
-            <View width={40} />
-          </XStack>
+        <View paddingTop={insets.top} backgroundColor="white">
+          <TitleBar title="发布服务需求" />
         </View>
 
         <ScrollView

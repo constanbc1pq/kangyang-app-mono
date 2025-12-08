@@ -3,7 +3,6 @@ import { Pressable, FlatList, StatusBar } from 'react-native';
 import { YStack, XStack, Text, View, ScrollView, Input, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Search,
   XCircle,
   Building,
@@ -16,6 +15,7 @@ import {
   Shield,
   FileText,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 /**
  * Phase 36.3: 案例库 - Legal Case Library Screen
@@ -98,7 +98,6 @@ const CaseLibraryScreen: React.FC<any> = ({ navigation }) => {
   const errorColor = theme.error?.val;
   const color9 = theme.color9?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [currentStep, setCurrentStep] = useState<ScreenStep>('caseList');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -629,17 +628,7 @@ const CaseLibraryScreen: React.FC<any> = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={handleBackPress}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">法律案例库</Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title="法律案例库" onBack={handleBackPress} />
 
       {/* Search Bar */}
       <XStack
@@ -730,17 +719,7 @@ const CaseLibraryScreen: React.FC<any> = ({ navigation }) => {
         <StatusBar barStyle="dark-content" />
 
         {/* Header */}
-        <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-            <Pressable onPress={handleBackPress}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">案例详情</Text>
-            <View width={40} />
-          </XStack>
-        </View>
+        <TitleBar title="案例详情" onBack={handleBackPress} />
 
         <ScrollView flex={1} backgroundColor="$color2" showsVerticalScrollIndicator={false}>
           {/* Title and Category */}

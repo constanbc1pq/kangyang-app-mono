@@ -10,7 +10,6 @@ import {
   Platform,
 } from 'react-native';
 import {
-  ArrowLeft,
   Share2,
   Heart,
   MessageCircle,
@@ -20,6 +19,7 @@ import {
   Eye,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 import { CommunityPost, PostCategory } from '@/types/community';
 import { getPostById, likePost, favoritePost, commentPost } from '@/services/communityDataService';
 
@@ -197,31 +197,10 @@ export const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* 顶部导航栏 */}
-      <View
-        backgroundColor="white"
-        paddingTop="$3"
-        paddingHorizontal="$4"
-        paddingBottom="$3"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <XStack justifyContent="space-between" alignItems="center">
-          <TouchableOpacity onPress={handleBack}>
-            <View
-              width={32}
-              height={32}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={COLORS.text} />
-            </View>
-          </TouchableOpacity>
-
-          <Text fontSize="$5" fontWeight="600" color="$text">
-            详情
-          </Text>
-
+      <TitleBar
+        title="详情"
+        onBack={handleBack}
+        rightElement={
           <TouchableOpacity onPress={handleShare}>
             <View
               width={32}
@@ -232,8 +211,8 @@ export const PostDetailScreen: React.FC<PostDetailScreenProps> = ({
               <Share2 size={20} color={COLORS.text} />
             </View>
           </TouchableOpacity>
-        </XStack>
-      </View>
+        }
+      />
 
       <KeyboardAvoidingView
         flex={1}

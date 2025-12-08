@@ -69,21 +69,24 @@ export const getAvatarSource = (
     return { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=200` };
   }
 
-  // 检查是否是本地图片标识
+  // 提取 ID（支持 'local:doctor_001' 和 'doctor_001' 两种格式）
+  let id = avatar;
   if (avatar.startsWith('local:')) {
-    const id = avatar.substring(6); // 去掉 'local:' 前缀
+    id = avatar.substring(6); // 去掉 'local:' 前缀
+  }
 
-    // 检查是否是医生头像
-    if (id.startsWith('doctor_') && DOCTOR_AVATARS[id]) {
-      return DOCTOR_AVATARS[id];
-    }
+  // 检查是否是医生头像
+  if (id.startsWith('doctor_') && DOCTOR_AVATARS[id]) {
+    return DOCTOR_AVATARS[id];
+  }
 
-    // 检查是否是律师头像
-    if (id.startsWith('lawyer_') && LAWYER_AVATARS[id]) {
-      return LAWYER_AVATARS[id];
-    }
+  // 检查是否是律师头像
+  if (id.startsWith('lawyer_') && LAWYER_AVATARS[id]) {
+    return LAWYER_AVATARS[id];
+  }
 
-    // 未找到对应的本地图片，返回默认头像
+  // 如果是以 'local:' 开头但没找到对应图片，返回默认头像
+  if (avatar.startsWith('local:')) {
     const name = fallbackName || '用户';
     return { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=200` };
   }

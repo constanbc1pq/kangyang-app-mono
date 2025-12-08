@@ -15,7 +15,6 @@ import { Alert, ActivityIndicator, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, ScrollView, View, useTheme } from 'tamagui';
 import {
-  ArrowLeft,
   PlusCircle,
   User,
   Calendar,
@@ -32,6 +31,7 @@ import {
   CheckCircle,
 } from 'lucide-react-native';
 import { CaseStatus } from '../types/legalService';
+import { TitleBar } from '@/components/TitleBar';
 
 interface Props {
   navigation: any;
@@ -86,7 +86,6 @@ const MyCasesScreen: React.FC<Props> = ({ navigation }) => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   // 状态管理
   const [loading, setLoading] = useState(true);
@@ -334,26 +333,10 @@ const MyCasesScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <View flex={1} backgroundColor="$color4">
         {/* 详情头部 */}
-        <View
-          paddingTop={insets.top}
-          backgroundColor="$color2"
-          borderBottomWidth={1}
-          borderBottomColor="$color5"
-        >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Pressable onPress={() => setShowDetail(false)}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">
-              案件详情
-            </Text>
+        <TitleBar
+          title="案件详情"
+          onBack={() => setShowDetail(false)}
+          rightElement={
             <Pressable
               onPress={() => {
                 navigation.navigate('TextConsultation', { lawyerId: selectedCase.lawyerId });
@@ -363,8 +346,8 @@ const MyCasesScreen: React.FC<Props> = ({ navigation }) => {
                 <MessageCircle size={22} color={primaryColor} />
               </View>
             </Pressable>
-          </XStack>
-        </View>
+          }
+        />
 
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
           {/* 基本信息 */}
@@ -632,33 +615,17 @@ const MyCasesScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View flex={1} backgroundColor="$color4">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            我的案件
-          </Text>
+      <TitleBar
+        title="我的案件"
+        onBack={() => navigation.goBack()}
+        rightElement={
           <Pressable onPress={() => navigation.navigate('CaseDelegation')}>
             <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
               <PlusCircle size={24} color={primaryColor} />
             </View>
           </Pressable>
-        </XStack>
-      </View>
+        }
+      />
 
       {/* Tab切换 */}
       <View backgroundColor="$background" borderBottomWidth={1} borderBottomColor="$color5">

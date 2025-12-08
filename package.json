@@ -19,6 +19,7 @@
     "build:web": "expo build:web"
   },
   "dependencies": {
+    "@expo-google-fonts/noto-color-emoji": "^0.4.3",
     "@expo/metro-runtime": "~4.0.1",
     "@hookform/resolvers": "^3.9.0",
     "@react-native-async-storage/async-storage": "2.1.0",

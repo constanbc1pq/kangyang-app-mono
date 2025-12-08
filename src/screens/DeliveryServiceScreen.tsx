@@ -18,7 +18,6 @@ import { View, Text, YStack, XStack, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  ArrowLeft,
   Search,
   MapPin,
   ChevronRight,
@@ -32,6 +31,7 @@ import {
   Navigation,
   Trash2,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { groceryCartService } from '@/services/groceryCartService';
 import { BottomSheet } from '@/components/BottomSheet';
@@ -86,7 +86,6 @@ export const DeliveryServiceScreen: React.FC = () => {
   const primaryColor = theme.primary?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
   const bannerScrollRef = useRef<RNScrollView>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -254,46 +253,22 @@ export const DeliveryServiceScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* TitleBar - 按照CLAUDE.md规范 */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            闪送到家
-          </Text>
-
-          {/* 地址选择 */}
-          <Pressable onPress={() => setShowCityModal(true)}>
-            <XStack alignItems="center" gap="$1">
-              <MapPin size={16} color={primaryColor} />
-              <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={1} maxWidth={80}>
-                {selectedCity}
-              </Text>
-              <ChevronRight size={14} color={color10} />
-            </XStack>
-          </Pressable>
-        </XStack>
+      {/* TitleBar */}
+      <View paddingTop={insets.top}>
+        <TitleBar
+          title="闪送到家"
+          renderRight={() => (
+            <Pressable onPress={() => setShowCityModal(true)}>
+              <XStack alignItems="center" gap="$1">
+                <MapPin size={16} color={primaryColor} />
+                <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={1} maxWidth={80}>
+                  {selectedCity}
+                </Text>
+                <ChevronRight size={14} color={color10} />
+              </XStack>
+            </Pressable>
+          )}
+        />
       </View>
 
       <RNScrollView showsVerticalScrollIndicator={false}>
@@ -316,7 +291,7 @@ export const DeliveryServiceScreen: React.FC = () => {
                 flex: 1,
                 fontSize: 14,
                 padding: 0,
-                color: color12,
+                color: theme.color12?.val,
               }}
               placeholderTextColor={color10}
             />
@@ -564,7 +539,7 @@ export const DeliveryServiceScreen: React.FC = () => {
                 borderColor="$color5"
                 borderRadius="$3"
               >
-                <SlidersHorizontal size={16} color={color12} />
+                <SlidersHorizontal size={16} color={theme.color12?.val} />
                 <Text fontSize="$3" color="$color12">排序</Text>
               </XStack>
             </TouchableOpacity>

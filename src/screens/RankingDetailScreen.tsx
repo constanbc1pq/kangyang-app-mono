@@ -8,7 +8,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { SafeAreaView, ScrollView, Pressable, Image, StyleSheet } from 'react-native';
 import { YStack, XStack, Text, View, useTheme } from 'tamagui';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { ArrowLeft, ChevronRight, Clock, Users, Star, MapPin, Flame } from 'lucide-react-native';
+import { ChevronRight, Clock, Users, Star, MapPin, Flame } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import {
   RankingType,
   RankingList,
@@ -536,33 +537,11 @@ export const RankingDetailScreen: React.FC = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.color1?.val }}>
       {/* 标题栏 */}
-      <XStack
-        paddingHorizontal="$2.5"
-        paddingVertical="$2"
-        alignItems="center"
-        backgroundColor="white"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <View padding="$1">
-            <ArrowLeft size={24} color={theme.color12?.val} />
-          </View>
-        </Pressable>
-        <YStack flex={1} alignItems="center">
-          <XStack alignItems="center" gap="$1">
-            <Flame size={20} color={errorColor} />
-            <Text fontSize="$5" fontWeight="600" color="$color12">
-              排行榜
-            </Text>
-          </XStack>
-          {ranking?.updateTime && (
-            <Text fontSize="$2" color="$color10">
-              {getUpdateTimeText()}
-            </Text>
-          )}
-        </YStack>
-        {/* 占位保持标题居中 */}
-        <View width={32} />
-      </XStack>
+      <TitleBar
+        title="排行榜"
+        titleIcon={<Flame size={20} color={errorColor} />}
+        subtitle={ranking?.updateTime ? getUpdateTimeText() : undefined}
+      />
 
       {/* Tab切换栏 */}
       <XStack

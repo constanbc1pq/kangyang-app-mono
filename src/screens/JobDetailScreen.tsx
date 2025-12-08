@@ -21,7 +21,6 @@ import {
   Users,
   AlertCircle,
   MessageCircle,
-  ArrowLeft,
   Activity,
   Shield,
 } from 'lucide-react-native';
@@ -29,6 +28,7 @@ import { ServiceJob, ServiceType, Expert, ConversationRelatedType } from '@/type
 import { getJobById, getExperts, createConversation } from '@/services/communityDataService';
 import { getMemberHealthProfile, getFamilyMemberById } from '@/services/userDataService';
 import { QuoteFormModal } from '@/components/QuoteFormModal';
+import { TitleBar } from '@/components/TitleBar';
 
 interface JobDetailScreenProps {
   route: {
@@ -244,30 +244,10 @@ export const JobDetailScreen: React.FC<JobDetailScreenProps> = ({ route, navigat
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* 标准居中 TitleBar */}
-        <View
-          paddingTop={insets.top}
-          backgroundColor="$color2"
-          borderBottomWidth={1}
-          borderBottomColor="$color5"
-        >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Pressable onPress={() => navigation.goBack()}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">
-              需求详情
-            </Text>
-            <View width={40} />
-          </XStack>
-        </View>
+      {/* 标题栏 */}
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar title="需求详情" />
+      </View>
 
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
           {/* 服务类型头部 */}

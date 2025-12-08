@@ -4,7 +4,6 @@ import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Search,
   Plus,
   TrendingUp,
@@ -16,6 +15,7 @@ import {
   AlertCircle,
   HelpCircle,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 // 问题分类
 type QuestionCategory = 'all' | 'product' | 'claim' | 'underwriting';
@@ -379,34 +379,15 @@ const InsuranceQAScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            保险问答
-          </Text>
-          <Pressable onPress={handleAskQuestion}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <Plus size={24} color={primaryColor} />
-            </View>
-          </Pressable>
-        </XStack>
-      </View>
+      <TitleBar
+        title="保险问答"
+        onBack={() => navigation.goBack()}
+        rightAction={{
+          icon: Plus,
+          onPress: handleAskQuestion,
+          color: primaryColor,
+        }}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

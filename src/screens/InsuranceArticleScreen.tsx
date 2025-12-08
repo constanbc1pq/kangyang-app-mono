@@ -4,7 +4,6 @@ import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Search,
   BookOpen,
   TrendingUp,
@@ -15,6 +14,7 @@ import {
   Heart,
   Share2,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 // 文章分类
 type ArticleCategory = 'all' | 'basics' | 'product_analysis' | 'claim_guide' | 'pitfall_prevention';
@@ -330,30 +330,10 @@ const InsuranceArticleScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            保险知识文章
-          </Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar
+        title="保险知识文章"
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

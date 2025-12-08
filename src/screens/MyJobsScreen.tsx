@@ -15,7 +15,6 @@ import {
 import { RefreshControl, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   FileText,
   MessageCircle,
   Trash2,
@@ -29,6 +28,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { ServiceJob, ServiceType, JobStatus } from '@/types/community';
 import { getJobs, deleteJob } from '@/services/communityDataService';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { TitleBar } from '@/components/TitleBar';
 
 interface MyJobsScreenProps {
   navigation: any;
@@ -47,7 +47,6 @@ export const MyJobsScreen: React.FC<MyJobsScreenProps> = ({ navigation }) => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [activeTab, setActiveTab] = useState<TabType>('published');
   const [publishedJobs, setPublishedJobs] = useState<ServiceJob[]>([]);
@@ -376,28 +375,8 @@ export const MyJobsScreen: React.FC<MyJobsScreenProps> = ({ navigation }) => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* 标准 TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={handleBack}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            我的需求
-          </Text>
-          <View width={40} />
-        </XStack>
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar title="我的需求" />
       </View>
 
       {/* Tab 切换 */}

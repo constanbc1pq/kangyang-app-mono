@@ -17,7 +17,6 @@ import { RefreshControl, Pressable, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Search,
-  ArrowLeft,
   PlusCircle,
   User,
   X,
@@ -34,6 +33,7 @@ import {
 import { SecondHandCard } from '@/components/SecondHandCard';
 import { BottomSheet } from '@/components/BottomSheet';
 import { useFocusEffect } from '@react-navigation/native';
+import { TitleBar } from '@/components/TitleBar';
 
 const STORAGE_KEY_ITEM_SEARCH_HISTORY = '@kangyang_item_search_history';
 
@@ -435,33 +435,18 @@ export const SecondHandListScreen: React.FC<SecondHandListScreenProps> = ({ navi
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* 标准居中 TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={handleBack}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            邻里闲物
-          </Text>
-          <Pressable onPress={handleMyItems}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <User size={22} color={color12} />
-            </View>
-          </Pressable>
-        </XStack>
+      {/* 标题栏 */}
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar
+          title="邻里闲物"
+          actions={[
+            {
+              icon: User,
+              onPress: handleMyItems,
+              variant: 'icon',
+            },
+          ]}
+        />
       </View>
 
       {/* 搜索栏 */}

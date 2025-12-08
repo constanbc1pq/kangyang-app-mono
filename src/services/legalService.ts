@@ -520,17 +520,31 @@ const DEFAULT_LAWYERS: LawyerProfile[] = [
   },
 ];
 
+// 数据版本号 - 用于强制更新头像字段
+const LAWYER_DATA_VERSION = '2.0';
+const LAWYER_DATA_VERSION_KEY = '@kangyang_lawyers_version';
+
 // 初始化律师数据
 export const initializeLawyers = async (): Promise<void> => {
   try {
+    // 检查数据版本，如果版本过旧则强制重新初始化
+    const currentVersion = await AsyncStorage.getItem(LAWYER_DATA_VERSION_KEY);
     const existing = await AsyncStorage.getItem(LEGAL_SERVICE_STORAGE_KEYS.LAWYERS);
-    if (existing) {
-      console.log('律师数据已存在，跳过初始化');
+
+    if (existing && currentVersion === LAWYER_DATA_VERSION) {
+      console.log('律师数据已是最新版本，跳过初始化');
       return;
     }
 
+    // 如果版本不匹配，清除旧数据
+    if (existing && currentVersion !== LAWYER_DATA_VERSION) {
+      console.log('律师数据版本过旧，重新初始化...');
+      await AsyncStorage.removeItem(LEGAL_SERVICE_STORAGE_KEYS.LAWYERS);
+    }
+
     await AsyncStorage.setItem(LEGAL_SERVICE_STORAGE_KEYS.LAWYERS, JSON.stringify(DEFAULT_LAWYERS));
-    console.log('成功初始化10位律师数据');
+    await AsyncStorage.setItem(LAWYER_DATA_VERSION_KEY, LAWYER_DATA_VERSION);
+    console.log('成功初始化10位律师数据，版本:', LAWYER_DATA_VERSION);
   } catch (error) {
     console.error('初始化律师数据失败:', error);
   }

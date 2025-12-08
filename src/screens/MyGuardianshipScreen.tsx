@@ -8,7 +8,6 @@ import { Alert, RefreshControl, Pressable } from 'react-native';
 import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   ShieldCheck,
   User,
   Users,
@@ -27,6 +26,7 @@ import {
   getGuardianshipAgreements,
   updateGuardianshipAgreement,
 } from '../services/legalService';
+import { TitleBar } from '@/components/TitleBar';
 
 const GOLD_COLOR = '#D4AF37';
 
@@ -42,7 +42,6 @@ const MyGuardianshipScreen: React.FC = () => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [agreements, setAgreements] = useState<GuardianshipAgreement[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -376,34 +375,8 @@ const MyGuardianshipScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            我的监护
-          </Text>
-          <View width={40} />
-        </XStack>
+      <View paddingTop={insets.top}>
+        <TitleBar title="我的监护" />
       </View>
 
       {/* Header Card */}

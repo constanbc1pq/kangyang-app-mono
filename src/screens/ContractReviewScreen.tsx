@@ -15,7 +15,6 @@ import { Alert, ActivityIndicator, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, ScrollView, View, useTheme } from 'tamagui';
 import {
-  ArrowLeft,
   Home,
   DollarSign,
   Heart,
@@ -31,6 +30,7 @@ import {
   AlertTriangle,
   Lightbulb,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 interface Props {
   navigation: any;
@@ -106,7 +106,6 @@ const ContractReviewScreen: React.FC<Props> = ({ navigation }) => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   // 状态管理
   const [currentStep, setCurrentStep] = useState<ReviewStep>('select_type');
@@ -726,35 +725,10 @@ const ContractReviewScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={handleBack}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            合同审查
-          </Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar
+        title="合同审查"
+        onBack={handleBack}
+      />
 
       {/* 内容区域 */}
       {currentStep === 'select_type' && renderTypeSelection()}

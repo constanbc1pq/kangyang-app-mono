@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import {
-  ArrowLeft,
   Heart,
   Share2,
   Star,
@@ -30,6 +29,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Caregiver, CaregiverReview } from '@/types/elderly';
 import { getCaregiverById, getCaregiverReviews } from '@/services/caregiverService';
+import { TitleBar } from '@/components/TitleBar';
 
 type RootStackParamList = {
   CaregiverDetail: { caregiverId: string };
@@ -50,7 +50,6 @@ const CaregiverDetailScreen: React.FC = () => {
 
   const primaryColor = theme.primary?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
   const successColor = theme.success?.val;
 
   const [caregiver, setCaregiver] = useState<Caregiver | null>(null);
@@ -138,63 +137,21 @@ const CaregiverDetailScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* TitleBar - 按照CLAUDE.md规范 */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            护理人员详情
-          </Text>
-
-          <XStack gap="$2">
-            <Pressable onPress={() => setIsFavorite(!isFavorite)}>
-              <View
-                width={40}
-                height={40}
-                borderRadius={20}
-                justifyContent="center"
-                alignItems="center"
-              >
-                <Heart
-                  size={20}
-                  color={isFavorite ? '#EF4444' : color12}
-                  fill={isFavorite ? '#EF4444' : 'none'}
-                />
-              </View>
-            </Pressable>
-            <Pressable onPress={handleShare}>
-              <View
-                width={40}
-                height={40}
-                borderRadius={20}
-                justifyContent="center"
-                alignItems="center"
-              >
-                <Share2 size={20} color={color12} />
-              </View>
-            </Pressable>
-          </XStack>
-        </XStack>
+      <View paddingTop={insets.top}>
+        <TitleBar
+          title="护理人员详情"
+          actions={[
+            {
+              icon: Heart,
+              onPress: () => setIsFavorite(!isFavorite),
+              color: isFavorite ? '#EF4444' : undefined,
+            },
+            {
+              icon: Share2,
+              onPress: handleShare,
+            },
+          ]}
+        />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>

@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Plus, FileText, Package, Briefcase, ChevronRight } from 'lucide-react-native';
 import { Pressable, FlatList, RefreshControl, NativeSyntheticEvent, NativeScrollEvent, StyleSheet } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { BottomSheet, BottomSheetItem } from '@/components/BottomSheet';
 import { BannerSlider, BannerItem } from '@/components/BannerSlider';
 import {
@@ -60,7 +61,16 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   const [page, setPage] = useState(1);
   const [showPublishMenu, setShowPublishMenu] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [scrollKey, setScrollKey] = useState(0); // 用于强制刷新ScrollView
   const PAGE_SIZE = 10;
+
+  // 页面重新获得焦点时，强制刷新ScrollView以修复滚动问题
+  useFocusEffect(
+    React.useCallback(() => {
+      // 增加key值，强制ScrollView重新渲染
+      setScrollKey(prev => prev + 1);
+    }, [])
+  );
 
   // 加载Banner数据
   useEffect(() => {
@@ -352,6 +362,7 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     >
       <View flex={1}>
         <ScrollView
+          key={`community-scroll-${scrollKey}`}
           flex={1}
           showsVerticalScrollIndicator={false}
           onScroll={handleScroll}

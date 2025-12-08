@@ -1015,6 +1015,11 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.57.1.tgz#de633db3ec2ef6a3c89e2f19038063e8a122e2c2"
   integrity sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==
 
+"@expo-google-fonts/noto-color-emoji@^0.4.3":
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/@expo-google-fonts/noto-color-emoji/-/noto-color-emoji-0.4.3.tgz#59ff7ab6ea6977b666b02664b7416e869502b249"
+  integrity sha512-CZT/CLDeQlxGd0unKzmLweFfAMIEv7zF9sDoEPIOPAbE4+71ypzEUChz/txFLK0w4Jip4gJLYKfgeJ2SgXx4DA==
+
 "@expo/bunyan@^4.0.0":
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/@expo/bunyan/-/bunyan-4.0.1.tgz#ab9e17e36c71c704a0ce72168378a487368da736"

@@ -18,12 +18,12 @@ import {
   useTheme,
 } from 'tamagui';
 import {
-  ArrowLeft,
   ChefHat,
   Star,
   ShoppingCart,
   CheckCircle2,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 interface MealPlan {
   id: string;
@@ -75,7 +75,6 @@ const NutritionServiceScreen: React.FC = () => {
   const primaryColor = theme.primary?.val;
   const successColor = theme.success?.val;
   const warningColor = theme.warning?.val;
-  const color12 = theme.color12?.val;
 
   const [selectedPlanId, setSelectedPlanId] = useState<string>('balanced');
   const [activeTab, setActiveTab] = useState<'intro' | 'reviews' | 'faq'>('intro');
@@ -264,35 +263,9 @@ const NutritionServiceScreen: React.FC = () => {
 
   return (
     <YStack flex={1} backgroundColor="$background">
-      {/* TitleBar - 按照CLAUDE.md规范 */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            营养配餐
-          </Text>
-          <View width={40} />
-        </XStack>
+      {/* TitleBar - 使用全局组件 */}
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar title="营养配餐" />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -375,13 +348,73 @@ const NutritionServiceScreen: React.FC = () => {
             <Text fontSize="$5" fontWeight="600" color="$color12">
               选择您的套餐
             </Text>
-            <XStack gap="$2" flexWrap="wrap">
-              {mealPlans.map((plan) => {
+            {/* 第一行2个套餐 */}
+            <XStack gap="$2">
+              {mealPlans.slice(0, 2).map((plan) => {
                 const isSelected = selectedPlanId === plan.id;
                 return (
                   <Pressable
                     key={plan.id}
-                    style={{ width: '48%', marginBottom: 8 }}
+                    style={{ flex: 1 }}
+                    onPress={() => handleSelectPlan(plan.id)}
+                  >
+                    <View
+                      borderWidth={2}
+                      borderColor={isSelected ? '$primary' : '$color5'}
+                      borderRadius="$5"
+                      overflow="hidden"
+                    >
+                      {/* 图片区域 - 真实食物照片 */}
+                      <View height={80} position="relative">
+                        <Image
+                          source={{ uri: plan.image }}
+                          style={{ width: '100%', height: '100%' }}
+                          resizeMode="cover"
+                        />
+                        {/* 选中标记 */}
+                        {isSelected && (
+                          <View
+                            position="absolute"
+                            bottom={4}
+                            right={4}
+                            backgroundColor="$primary"
+                            width={22}
+                            height={22}
+                            borderRadius={11}
+                            justifyContent="center"
+                            alignItems="center"
+                          >
+                            <CheckCircle2 size={14} color="white" />
+                          </View>
+                        )}
+                      </View>
+                      {/* 信息区域 */}
+                      <YStack padding="$2" gap="$1" minHeight={72} backgroundColor="$color2">
+                        <Text fontSize="$4" fontWeight="bold" color="$color12" numberOfLines={1}>
+                          {plan.name}
+                        </Text>
+                        <XStack alignItems="baseline" gap="$1">
+                          <Text fontSize="$6" fontWeight="bold" color="$primary">
+                            ¥{plan.price}
+                          </Text>
+                          <Text fontSize="$2" color="$color10" textDecorationLine="line-through">
+                            ¥{plan.originalPrice}
+                          </Text>
+                        </XStack>
+                      </YStack>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </XStack>
+            {/* 第二行2个套餐 */}
+            <XStack gap="$2">
+              {mealPlans.slice(2, 4).map((plan) => {
+                const isSelected = selectedPlanId === plan.id;
+                return (
+                  <Pressable
+                    key={plan.id}
+                    style={{ flex: 1 }}
                     onPress={() => handleSelectPlan(plan.id)}
                   >
                     <View

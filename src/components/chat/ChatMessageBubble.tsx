@@ -547,18 +547,22 @@ export const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
       paddingHorizontal="$2.5"
       paddingVertical="$1.5"
       alignItems={isCurrentUser ? 'flex-end' : 'flex-start'}
+      width="100%"
     >
       <XStack
         gap="$2"
-        maxWidth="80%"
+        maxWidth="85%"
         flexDirection={isCurrentUser ? 'row-reverse' : 'row'}
+        alignItems="flex-start"
       >
-        {/* 头像 */}
-        {!isCurrentUser && renderAvatar()}
+        {/* 头像 - 左侧或右侧 */}
+        <View flexShrink={0}>
+          {renderAvatar()}
+        </View>
 
         {/* 消息内容 */}
         <YStack
-          flex={1}
+          flexShrink={1}
           gap="$0.5"
           alignItems={isCurrentUser ? 'flex-end' : 'flex-start'}
         >

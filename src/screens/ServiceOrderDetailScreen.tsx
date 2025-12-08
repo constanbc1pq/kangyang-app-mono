@@ -14,7 +14,6 @@ import {
   Alert,
 } from 'react-native';
 import {
-  ArrowLeft,
   Clock,
   MapPin,
   Phone,
@@ -24,6 +23,7 @@ import {
   DollarSign,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 import { OrderStatus } from '@/types/community';
 import {
   getOrderById,
@@ -384,34 +384,7 @@ export const ServiceOrderDetailScreen: React.FC<ServiceOrderDetailScreenProps> =
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* 顶部导航栏 */}
-      <View
-        backgroundColor="white"
-        paddingTop="$3"
-        paddingHorizontal="$4"
-        paddingBottom="$3"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <XStack justifyContent="space-between" alignItems="center">
-          <TouchableOpacity onPress={handleBack}>
-            <View
-              width={32}
-              height={32}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={COLORS.text} />
-            </View>
-          </TouchableOpacity>
-
-          <Text fontSize="$5" fontWeight="600" color="$text">
-            订单详情
-          </Text>
-
-          <View width={32} />
-        </XStack>
-      </View>
+      <TitleBar title="订单详情" onBack={handleBack} />
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         <View padding="$4">

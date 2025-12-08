@@ -6,6 +6,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Order, OrderStatus, OrderItem, DeliveryAddress, PaymentMethod } from '@/types/commerce';
 import { CartItem } from '@/types/commerce';
+import { MembershipLevel, MembershipPurchaseRecord } from '@/types/membership';
+import { getUserData, saveUserData } from './userDataService';
 
 const ORDERS_STORAGE_KEY = '@kangyang_orders';
 
@@ -271,16 +273,80 @@ export const payOrder = async (
       return false;
     }
 
+    const order = orders[orderIndex];
     const now = new Date().toISOString();
     orders[orderIndex].paymentMethod = paymentMethod;
     orders[orderIndex].paymentTime = now;
     orders[orderIndex].transactionId = transactionId;
 
     // 更新状态为已支付
-    return await updateOrderStatus(orderId, 'paid', '支付成功');
+    const statusUpdated = await updateOrderStatus(orderId, 'paid', '支付成功');
+
+    // 如果是会员订单，更新用户会员信息
+    if (statusUpdated && order.itemType === 'membership') {
+      await handleMembershipPurchase(order, paymentMethod, transactionId);
+    }
+
+    return statusUpdated;
   } catch (error) {
     console.error('支付订单失败:', error);
     return false;
+  }
+};
+
+/**
+ * 处理会员购买 - 更新用户会员等级
+ */
+const handleMembershipPurchase = async (
+  order: Order,
+  paymentMethod: PaymentMethod,
+  transactionId?: string
+): Promise<void> => {
+  try {
+    const userData = await getUserData();
+    const now = new Date();
+    const nowISO = now.toISOString();
+
+    // 从订单元数据中获取会员等级
+    const metadata = order.metadata || order.items[0]?.metadata || {};
+    const membershipLevel = metadata.membershipLevel as MembershipLevel;
+
+    if (!membershipLevel) {
+      console.warn('订单中未找到会员等级信息');
+      return;
+    }
+
+    // 计算会员有效期（1年）
+    const endDate = new Date(now);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
+    // 创建购买记录
+    const purchaseRecord: MembershipPurchaseRecord = {
+      id: `purchase_${Date.now()}`,
+      date: nowISO,
+      type: userData.membership.level === MembershipLevel.FREE ? 'purchase' : 'upgrade',
+      fromLevel: userData.membership.level,
+      toLevel: membershipLevel,
+      cycle: 'yearly',
+      amount: order.totalAmount,
+      paymentMethod: paymentMethod,
+      transactionId: transactionId,
+    };
+
+    // 更新用户会员信息
+    userData.membership = {
+      ...userData.membership,
+      level: membershipLevel,
+      startDate: nowISO,
+      endDate: endDate.toISOString(),
+      paymentCycle: 'yearly',
+      purchaseHistory: [purchaseRecord, ...userData.membership.purchaseHistory],
+    };
+
+    await saveUserData(userData);
+    console.log(`✅ 会员升级成功: ${membershipLevel}`);
+  } catch (error) {
+    console.error('处理会员购买失败:', error);
   }
 };
 

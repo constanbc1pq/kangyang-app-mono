@@ -9,7 +9,8 @@ import { ScrollView, Pressable, Alert, TextInput, Image } from 'react-native';
 import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, MapPin, Edit, Package } from 'lucide-react-native';
+import { MapPin, Edit, Package } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import { getDefaultAddress } from '@/services/addressService';
 import { createOrder } from '@/services/orderService';
 import { groceryCartService } from '@/services/groceryCartService';
@@ -39,7 +40,6 @@ const GroceryCheckoutScreen: React.FC = () => {
 
   const primaryColor = theme.primary?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [address, setAddress] = useState<Address | null>(null);
@@ -132,35 +132,9 @@ const GroceryCheckoutScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* TitleBar - 按照CLAUDE.md规范 */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            确认订单
-          </Text>
-          <View width={40} />
-        </XStack>
+      {/* TitleBar */}
+      <View paddingTop={insets.top}>
+        <TitleBar title="确认订单" />
       </View>
 
       <ScrollView>
@@ -270,7 +244,7 @@ const GroceryCheckoutScreen: React.FC = () => {
                 style={{
                   padding: 12,
                   fontSize: 14,
-                  color: color12,
+                  color: theme.color12?.val,
                   minHeight: 72,
                   textAlignVertical: 'top',
                 }}

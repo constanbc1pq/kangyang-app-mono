@@ -17,7 +17,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Filter,
   Search,
-  ArrowLeft,
   Zap,
   ChevronRight,
   PlusCircle,
@@ -27,6 +26,7 @@ import {
   Clock,
   TrendingUp,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ServiceJob, ServiceType, JobStatus } from '@/types/community';
 import {
@@ -59,7 +59,6 @@ export const JobListScreen: React.FC<JobListScreenProps> = ({ navigation }) => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [jobs, setJobs] = useState<ServiceJob[]>([]);
   const [urgentJobs, setUrgentJobs] = useState<ServiceJob[]>([]);
@@ -638,32 +637,16 @@ export const JobListScreen: React.FC<JobListScreenProps> = ({ navigation }) => {
   return (
     <View flex={1} backgroundColor="$background">
         {/* 标准居中 TitleBar */}
-        <View
-          paddingTop={insets.top}
-          backgroundColor="$color2"
-          borderBottomWidth={1}
-          borderBottomColor="$color5"
-        >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Pressable onPress={handleBack}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">
-              邻里帮
-            </Text>
-            <Pressable onPress={handleMyJobs}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <User size={22} color={color12} />
-              </View>
-            </Pressable>
-          </XStack>
+        <View paddingTop={insets.top} backgroundColor="white">
+          <TitleBar
+            title="邻里帮"
+            actions={[
+              {
+                icon: User,
+                onPress: handleMyJobs,
+              },
+            ]}
+          />
         </View>
 
         {/* 滚动内容 */}

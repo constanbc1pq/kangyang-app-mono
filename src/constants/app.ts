@@ -20,56 +20,57 @@ export const APP_CONFIG = {
 };
 
 export const COLORS = {
-  // AzurePop 主题色 - 基于偏蓝紫色到 #89fffd 渐变
-  primary: '#c855f0', // 主蓝紫色 (偏蓝的紫色)
-  primaryLight: '#f461e0', // 浅洋红色 - Tab选中状态
-  primaryDark: '#b146e8', // 深蓝紫色
-  secondary: '#89fffd', // 主薄荷青色 (AzurePop终点)
-  secondaryLight: '#a6ffff', // 浅薄荷色
-  secondaryDark: '#5ce6e3', // 深薄荷色
-  accent: '#7b6ef6', // 中间紫色 (渐变中点)
+  // Neutral 主题色 - 与 neutralTheme.ts 保持一致
+  // 主色调 - 暗紫色 (hsl 256)
+  primary: '#6B5B95', // accent9: hsla(256, 30%, 48%)
+  primaryLight: '#D8D0E8', // accent3: hsla(256, 50%, 90%)
+  primaryDark: '#554878', // accent10: hsla(256, 28%, 42%)
+  secondary: '#7E6EA8', // accent7: hsla(256, 35%, 62%)
+  secondaryLight: '#EBE6F4', // accent2: hsla(256, 60%, 94%)
+  secondaryDark: '#6B5B95', // accent8
+  accent: '#6B5B95', // 与 primary 相同
 
-  // 中性色调 - 基于AzurePop主题优化
-  background: '#fafcff', // 极浅蓝白背景
-  surface: '#ffffff', // 纯白表面
-  surfaceSecondary: '#f8fafc', // 次要表面
-  text: '#1a1d29', // 深蓝灰文字
-  textSecondary: '#64748b', // 次要文字
-  textTertiary: '#94a3b8', // 三级文字
+  // 中性色调
+  background: '#FCFCFC', // color1
+  surface: '#F7F7F7', // color2
+  surfaceSecondary: '#F0F0F0', // color3
+  text: '#0D0D0D', // color12
+  textSecondary: '#666666', // color10
+  textTertiary: '#808080', // color9
 
-  // 功能色调 - 与主题协调
-  error: '#ef4444', // 错误红色
-  warning: '#f59e0b', // 警告橙色
-  success: '#10b981', // 成功绿色 (薄荷色系)
-  info: '#3b82f6', // 信息蓝色
+  // 功能色调 - 单色系方案
+  error: '#996666', // 灰红 red9: hsla(0, 35%, 50%)
+  warning: '#808080', // 中灰 color9
+  success: '#554878', // 深紫 accent10
+  info: '#6B5B95', // 主紫 accent9
   gold: '#D4AF37', // 金黄色 - VIP/专属服务/高端标识
 
   // 边框和分割
-  border: '#e2e8f0', // 主要边框
-  borderLight: '#f1f5f9', // 浅色边框
-  borderDark: '#cbd5e1', // 深色边框
+  border: '#CCCCCC', // color6
+  borderLight: '#D9D9D9', // color5
+  borderDark: '#B8B8B8', // color7
 
-  // 健康数据专用颜色 - AzurePop风格
-  heartRate: '#c855f0', // 心率 - 主蓝紫色
-  bloodPressure: '#b946db', // 血压 - 紫洋红
-  bloodSugar: '#7b6ef6', // 血糖 - 中间紫
-  weight: '#4dabf7', // 体重 - 蓝青
-  sleep: '#89fffd', // 睡眠 - 主薄荷青
-  steps: '#5ce6e3', // 步数 - 深薄荷
-  temperature: '#f093fb', // 体温 - 浅紫粉
-  oxygen: '#4ecdc4', // 血氧 - 青绿
+  // 健康数据专用颜色 - 使用主题紫色系
+  heartRate: '#6B5B95', // 心率 - 主紫
+  bloodPressure: '#7E6EA8', // 血压 - 次紫
+  bloodSugar: '#554878', // 血糖 - 深紫
+  weight: '#8B7CB5', // 体重 - 浅紫
+  sleep: '#7E6EA8', // 睡眠 - 次紫
+  steps: '#6B5B95', // 步数 - 主紫
+  temperature: '#A99BC8', // 体温 - 更浅紫
+  oxygen: '#554878', // 血氧 - 深紫
 
-  // 渐变色组合 - AzurePop系列
-  gradientPrimary: ['#c855f0', '#f461e0'], // 蓝紫到洋红渐变
-  gradientSecondary: ['#5ce6e3', '#89fffd'], // 薄荷渐变
-  gradientAccent: ['#c855f0', '#89fffd'], // 主题渐变 (AzurePop新版)
-  gradientReverse: ['#89fffd', '#c855f0'], // 反向主题渐变
-  gradientSubtle: ['#f8fafc', '#ffffff'], // 微妙渐变
+  // 渐变色组合 - 紫色系
+  gradientPrimary: ['#6B5B95', '#7E6EA8'], // 主紫渐变
+  gradientSecondary: ['#7E6EA8', '#A99BC8'], // 浅紫渐变
+  gradientAccent: ['#554878', '#6B5B95'], // 深紫渐变
+  gradientReverse: ['#A99BC8', '#6B5B95'], // 反向渐变
+  gradientSubtle: ['#F7F7F7', '#FCFCFC'], // 微妙渐变
 
   // 阴影色调
-  shadow: 'rgba(200, 85, 240, 0.1)', // 主题色阴影 (蓝紫色)
-  shadowSecondary: 'rgba(137, 255, 253, 0.1)', // 次要阴影
-  shadowNeutral: 'rgba(148, 163, 184, 0.1)', // 中性阴影
+  shadow: 'rgba(107, 91, 149, 0.1)', // 主题色阴影
+  shadowSecondary: 'rgba(126, 110, 168, 0.1)', // 次要阴影
+  shadowNeutral: 'rgba(0, 0, 0, 0.08)', // 中性阴影
 };
 
 export const FONTS = {

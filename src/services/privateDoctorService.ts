@@ -27,6 +27,10 @@ import {
 } from '@/types/privateDoctor';
 import { createPrivateDoctorOrder, getOrders } from './orderService';
 
+// 数据版本号 - 用于强制更新头像字段
+const DATA_VERSION = '2.0';
+const DATA_VERSION_KEY = '@kangyang_private_doctors_version';
+
 // ==================== 数据初始化 ====================
 
 /**
@@ -34,10 +38,19 @@ import { createPrivateDoctorOrder, getOrders } from './orderService';
  */
 export const initializePrivateDoctors = async (): Promise<void> => {
   try {
+    // 检查数据版本，如果版本过旧则强制重新初始化
+    const currentVersion = await AsyncStorage.getItem(DATA_VERSION_KEY);
     const existing = await AsyncStorage.getItem(PRIVATE_DOCTOR_STORAGE_KEYS.DOCTORS);
-    if (existing) {
-      console.log('私人医生数据已存在，跳过初始化');
+
+    if (existing && currentVersion === DATA_VERSION) {
+      console.log('私人医生数据已是最新版本，跳过初始化');
       return;
+    }
+
+    // 如果版本不匹配，清除旧数据
+    if (existing && currentVersion !== DATA_VERSION) {
+      console.log('私人医生数据版本过旧，重新初始化...');
+      await AsyncStorage.removeItem(PRIVATE_DOCTOR_STORAGE_KEYS.DOCTORS);
     }
 
     const doctors: PrivateDoctor[] = [
@@ -756,7 +769,9 @@ export const initializePrivateDoctors = async (): Promise<void> => {
     });
 
     await AsyncStorage.setItem(PRIVATE_DOCTOR_STORAGE_KEYS.DOCTORS, JSON.stringify(doctors));
-    console.log('成功初始化15位私人医生数据');
+    // 保存数据版本号
+    await AsyncStorage.setItem(DATA_VERSION_KEY, DATA_VERSION);
+    console.log('成功初始化15位私人医生数据，版本:', DATA_VERSION);
   } catch (error) {
     console.error('初始化私人医生数据失败:', error);
   }

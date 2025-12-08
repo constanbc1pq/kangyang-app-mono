@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, XStack, YStack, Text } from 'tamagui';
+import { View, XStack, YStack, Text, useTheme } from 'tamagui';
 import { Pressable } from 'react-native';
 import {
   Users,
@@ -32,6 +32,8 @@ export const CircleNavigation: React.FC<CircleNavigationProps> = ({
   items,
   onItemPress,
 }) => {
+  const theme = useTheme();
+
   // 确保最多显示6个项目
   const displayItems = items.slice(0, 6);
 
@@ -76,7 +78,7 @@ export const CircleNavigation: React.FC<CircleNavigationProps> = ({
                     minWidth={18}
                     height={18}
                     borderRadius={9}
-                    backgroundColor={COLORS.error}
+                    backgroundColor={theme.error?.val}
                     justifyContent="center"
                     alignItems="center"
                     paddingHorizontal={4}

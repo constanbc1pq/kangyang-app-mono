@@ -9,14 +9,15 @@ import { ScrollView, Pressable, Alert, TextInput } from 'react-native';
 import { View, Text, XStack, YStack, useTheme, Image } from 'tamagui';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, MapPin, Clock, Edit, Star } from 'lucide-react-native';
+import { MapPin, Clock, Edit, Star } from 'lucide-react-native';
 import { createOrder } from '@/services/orderService';
 import { CartItem, DeliveryAddress } from '@/types/commerce';
 import { getCaregiverById, getPackageById } from '@/services/elderlyService';
 import type { Caregiver, ServicePackage } from '@/types/elderly';
+import { TitleBar } from '@/components/TitleBar';
 
 interface RouteParams {
-  itemType: 'meal_plan' | 'consultation' | 'elderly_service' | 'legal_membership';
+  itemType: 'meal_plan' | 'consultation' | 'elderly_service' | 'legal_membership' | 'membership' | 'legal_consultation' | 'expert_consultation' | 'international_referral' | 'product';
   itemId: string;
   itemName: string;
   itemImage?: string;
@@ -36,6 +37,32 @@ interface RouteParams {
   serviceTime?: string;
   metadata?: Record<string, any>;
 }
+
+// 根据商品类型返回默认图标
+const getDefaultIcon = (itemType: string): string => {
+  switch (itemType) {
+    case 'meal_plan':
+      return '🍱';
+    case 'consultation':
+      return '👨‍⚕️';
+    case 'elderly_service':
+      return '🏥';
+    case 'legal_membership':
+      return '⚖️';
+    case 'membership':
+      return '👑';
+    case 'legal_consultation':
+      return '📜';
+    case 'expert_consultation':
+      return '💬';
+    case 'international_referral':
+      return '🌍';
+    case 'product':
+      return '🛒';
+    default:
+      return '📦';
+  }
+};
 
 const CYCLE_OPTIONS = [
   { days: 7, label: '7天', discount: 1 },
@@ -62,8 +89,8 @@ const CheckoutScreen: React.FC = () => {
   const theme = useTheme();
 
   const primaryColor = theme.primary?.val;
-  const color12 = theme.color12?.val;
   const color10 = theme.color10?.val;
+  const color12 = theme.color12?.val;
 
   const GOLD_COLOR = '#D4AF37';
 
@@ -109,6 +136,7 @@ const CheckoutScreen: React.FC = () => {
   const isConsultation = params.itemType === 'consultation';
   const isElderlyService = params.itemType === 'elderly_service';
   const isLegalMembership = params.itemType === 'legal_membership';
+  const isMembership = params.itemType === 'membership';
 
   const getElderlyServicePrice = (): number => {
     if (!packageData || !caregiverData) return params.price;
@@ -119,7 +147,7 @@ const CheckoutScreen: React.FC = () => {
 
   const cycleOption = CYCLE_OPTIONS.find(opt => opt.days === selectedCycle) || CYCLE_OPTIONS[0];
 
-  const subtotal = isConsultation || isLegalMembership
+  const subtotal = isConsultation || isLegalMembership || isMembership
     ? params.price
     : isElderlyService && packageData
     ? getElderlyServicePrice()
@@ -159,7 +187,7 @@ const CheckoutScreen: React.FC = () => {
         itemImage: params.itemImage || params.packageImage || params.packageIcon,
         price: isElderlyService && packageData ? getElderlyServicePrice() : params.price,
         quantity: 1,
-        unit: isElderlyService && packageData ? packageData.prices[0].unit : (isMealPlan ? '天' : (isLegalMembership ? '年' : '次')),
+        unit: isElderlyService && packageData ? packageData.prices[0].unit : (isMealPlan ? '天' : ((isLegalMembership || isMembership) ? '年' : '次')),
         cycle: isMealPlan ? selectedCycle : undefined,
         cycleDiscount: isMealPlan ? cycleOption.discount : undefined,
         deliveryTimeSlots: isMealPlan ? selectedTimeSlots.map(slotId => {
@@ -174,7 +202,7 @@ const CheckoutScreen: React.FC = () => {
         serviceTime: isElderlyService ? serviceTime : (isConsultation ? params.appointmentTime : undefined),
         providerId: isElderlyService ? params.caregiverId : params.providerId,
         providerName: isElderlyService && caregiverData ? caregiverData.name : params.providerName,
-        metadata: isLegalMembership ? params.metadata : (isElderlyService ? {
+        metadata: isLegalMembership || isMembership ? params.metadata : (isElderlyService ? {
           caregiverId: params.caregiverId,
           caregiverName: caregiverData?.name,
           qualification: caregiverData?.qualificationBadge,
@@ -212,36 +240,10 @@ const CheckoutScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            确认订单
-          </Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar
+        title="确认订单"
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack padding="$2.5" gap="$2">
@@ -271,7 +273,7 @@ const CheckoutScreen: React.FC = () => {
                     resizeMode="cover"
                   />
                 ) : (
-                  <Text fontSize={32}>{params.packageIcon || params.itemImage || '🍱'}</Text>
+                  <Text fontSize={32}>{params.packageIcon || params.itemImage || getDefaultIcon(params.itemType)}</Text>
                 )}
               </View>
               <YStack flex={1} gap="$0.5">

@@ -3,7 +3,6 @@ import { Pressable, Alert, Share, FlatList, StatusBar } from 'react-native';
 import { YStack, XStack, Text, View, Input, ScrollView, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Search,
   XCircle,
   Library,
@@ -25,6 +24,7 @@ import {
   Users,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TitleBar } from '@/components/TitleBar';
 
 /**
  * Phase 36.2: 法律文章库 - Legal Article Library Screen
@@ -123,7 +123,6 @@ const LegalArticleScreen: React.FC<any> = ({ navigation }) => {
   const successColor = theme.success?.val;
   const color9 = theme.color9?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [currentStep, setCurrentStep] = useState<ScreenStep>('categories');
   const [selectedCategory, setSelectedCategory] = useState<ArticleCategory | null>(null);
@@ -818,17 +817,7 @@ const LegalArticleScreen: React.FC<any> = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={handleBackPress}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">法律文章库</Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title="法律文章库" onBack={handleBackPress} />
 
       {/* Search Bar */}
       <XStack
@@ -939,17 +928,7 @@ const LegalArticleScreen: React.FC<any> = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={handleBackPress}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">{selectedCategory?.name}</Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar title={selectedCategory?.name || ''} onBack={handleBackPress} />
 
       {/* Category Info */}
       {selectedCategory && (
@@ -996,14 +975,10 @@ const LegalArticleScreen: React.FC<any> = ({ navigation }) => {
         <StatusBar barStyle="dark-content" />
 
         {/* Header */}
-        <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-            <Pressable onPress={handleBackPress}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">文章详情</Text>
+        <TitleBar
+          title="文章详情"
+          onBack={handleBackPress}
+          rightActions={
             <XStack alignItems="center" gap="$2">
               <Pressable onPress={() => toggleBookmark(selectedArticle.id)}>
                 <Bookmark
@@ -1016,8 +991,8 @@ const LegalArticleScreen: React.FC<any> = ({ navigation }) => {
                 <Share2 size={24} color={color10} />
               </Pressable>
             </XStack>
-          </XStack>
-        </View>
+          }
+        />
 
         <ScrollView flex={1} backgroundColor="$color2" showsVerticalScrollIndicator={false}>
           {/* Title */}

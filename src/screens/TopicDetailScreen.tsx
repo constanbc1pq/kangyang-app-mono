@@ -15,7 +15,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, ActivityIndicator } from 'react-native';
 import {
-  ArrowLeft,
   TrendingUp,
   TrendingDown,
   Users,
@@ -27,6 +26,7 @@ import {
   Check,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 import { Topic } from '@/types/community';
 import { topicService } from '@/services/topicService';
 import { useFocusEffect } from '@react-navigation/native';
@@ -146,25 +146,7 @@ export const TopicDetailScreen: React.FC<TopicDetailScreenProps> = ({ route, nav
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        {/* Header */}
-        <XStack
-          height={56}
-          alignItems="center"
-          justifyContent="space-between"
-          paddingHorizontal="$4"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="$background"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <XStack space="$2" alignItems="center">
-              <ArrowLeft size={24} color={COLORS.text} />
-              <Text fontSize="$4" color="$text" fontWeight="500">
-                返回
-              </Text>
-            </XStack>
-          </Pressable>
-        </XStack>
+        <TitleBar title="返回" onBack={() => navigation.goBack()} />
 
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
           <YStack padding="$4" space="$4">

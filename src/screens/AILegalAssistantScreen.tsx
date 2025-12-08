@@ -13,7 +13,6 @@ import {
 import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   MessageCircle,
   User,
   Send,
@@ -23,6 +22,7 @@ import {
   Info,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { TitleBar } from '@/components/TitleBar';
 
 const GOLD_COLOR = '#D4AF37';
 
@@ -58,7 +58,6 @@ const AILegalAssistantScreen: React.FC = () => {
 
   const primaryColor = theme.primary?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -310,35 +309,7 @@ const AILegalAssistantScreen: React.FC = () => {
     >
       <View flex={1} backgroundColor="$background">
         {/* TitleBar */}
-        <View
-          paddingTop={insets.top}
-          backgroundColor="$color2"
-          borderBottomWidth={1}
-          borderBottomColor="$color5"
-        >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Pressable onPress={() => navigation.goBack()}>
-              <View
-                width={40}
-                height={40}
-                borderRadius={20}
-                justifyContent="center"
-                alignItems="center"
-              >
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12">
-              AI法律助手
-            </Text>
-            <View width={40} />
-          </XStack>
-        </View>
+        <TitleBar title="AI法律助手" onBack={() => navigation.goBack()} />
 
         {/* Header Tip */}
         <XStack

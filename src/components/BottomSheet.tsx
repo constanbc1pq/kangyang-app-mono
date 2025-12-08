@@ -21,7 +21,7 @@ import {
 import { View, Text, XStack, YStack, ScrollView, useTheme, H4 } from 'tamagui';
 import { X } from 'lucide-react-native';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('screen');
 
 export type BottomSheetVariant = 'default' | 'picker' | 'form' | 'filter';
 
@@ -90,7 +90,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   subtitle,
   children,
   variant = 'default',
-  maxHeight = '80%',
+  maxHeight: maxHeightProp = '80%',
   closeOnOverlayPress = true,
   showHandle = true,
   showHeader,
@@ -101,6 +101,11 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
 }) => {
   const theme = useTheme();
   const textColor = theme.color12?.val;
+
+  // 计算实际最大高度 - Android 使用具体数值
+  const maxHeight = Platform.OS === 'android'
+    ? SCREEN_HEIGHT * 0.8
+    : maxHeightProp;
 
   // 动画值
   const overlayOpacity = useRef(new Animated.Value(0)).current;

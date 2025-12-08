@@ -10,13 +10,13 @@ import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   CreditCard,
   Wallet,
   Smartphone,
   Award,
   CheckCircle2,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import { payOrder } from '@/services/orderService';
 import { PaymentMethod } from '@/types/commerce';
 
@@ -60,8 +60,6 @@ const PaymentScreen: React.FC = () => {
   const theme = useTheme();
 
   const primaryColor = theme.primary?.val;
-  const color12 = theme.color12?.val;
-  const color10 = theme.color10?.val;
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('wechat');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -183,34 +181,8 @@ const PaymentScreen: React.FC = () => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            收银台
-          </Text>
-          <View width={40} />
-        </XStack>
+      <View paddingTop={insets.top}>
+        <TitleBar title="收银台" />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>

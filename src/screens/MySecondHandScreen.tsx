@@ -15,7 +15,6 @@ import {
 import { RefreshControl, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Package,
   Heart,
   Trash2,
@@ -27,6 +26,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SecondHandItem, ItemCondition, ItemStatus } from '@/types/community';
 import { getSecondHandItems, deleteItem } from '@/services/communityDataService';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { TitleBar } from '@/components/TitleBar';
 
 interface MySecondHandScreenProps {
   navigation: any;
@@ -44,7 +44,6 @@ export const MySecondHandScreen: React.FC<MySecondHandScreenProps> = ({ navigati
   const successColor = theme.success?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [activeTab, setActiveTab] = useState<TabType>('published');
   const [publishedItems, setPublishedItems] = useState<SecondHandItem[]>([]);
@@ -370,28 +369,8 @@ export const MySecondHandScreen: React.FC<MySecondHandScreenProps> = ({ navigati
   return (
     <View flex={1} backgroundColor="$background">
       {/* 标准 TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={handleBack}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            我的闲物
-          </Text>
-          <View width={40} />
-        </XStack>
+      <View paddingTop={insets.top} backgroundColor="white">
+        <TitleBar title="我的闲物" />
       </View>
 
       {/* Tab 切换 */}

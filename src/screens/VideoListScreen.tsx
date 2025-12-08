@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, ActivityIndicator, Dimensions, Image } from 'react-native';
 import {
-  ArrowLeft,
   Search,
   Play,
   Eye,
@@ -28,6 +27,7 @@ import { COLORS } from '@/constants/app';
 import { Video } from '@/types/community';
 import { videoService } from '@/services/videoService';
 import { useFocusEffect } from '@react-navigation/native';
+import { TitleBar } from '@/components/TitleBar';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 56) / 2; // 2列布局: 总宽度 - (左右padding 32 + 中间gap 12) / 2列
@@ -76,24 +76,7 @@ export const VideoListScreen: React.FC<VideoListScreenProps> = ({ navigation }) 
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        {/* Header */}
-        <XStack
-          height={56}
-          alignItems="center"
-          paddingHorizontal="$4"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="$background"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <XStack space="$2" alignItems="center">
-              <ArrowLeft size={24} color={COLORS.text} />
-              <Text fontSize="$5" color="$text" fontWeight="600">
-                视频分享
-              </Text>
-            </XStack>
-          </Pressable>
-        </XStack>
+        <TitleBar title="视频分享" onBack={() => navigation.goBack()} />
 
         <YStack flex={1}>
           {/* 搜索栏 */}

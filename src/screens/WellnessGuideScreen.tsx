@@ -6,10 +6,9 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable } from 'react-native';
 import { YStack, XStack, Text, View, useTheme } from 'tamagui';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
-  ArrowLeft,
   Sun,
   Clock,
   Utensils,
@@ -18,6 +17,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { getCalendarInfo, CalendarInfo } from '@/services/lunarCalendarService';
+import { TitleBar } from '@/components/TitleBar';
 
 // 养生知识分类
 const WELLNESS_CATEGORIES = [
@@ -75,7 +75,6 @@ const DAILY_TIPS = [
 
 const WellnessGuideScreen: React.FC = () => {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const theme = useTheme();
 
   const [calendarInfo, setCalendarInfo] = useState<CalendarInfo | null>(null);
@@ -84,7 +83,6 @@ const WellnessGuideScreen: React.FC = () => {
   const successColor = theme.success?.val;
   const warningColor = theme.warning?.val;
   const accentColor = theme.accent?.val;
-  const color12 = theme.color12?.val;
 
   const colorMap = {
     primary: primaryColor,
@@ -99,40 +97,8 @@ const WellnessGuideScreen: React.FC = () => {
   }, []);
 
   return (
-    <YStack flex={1} backgroundColor="$background">
-      {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$background"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$4"
-          alignItems="center"
-          justifyContent="center"
-          position="relative"
-        >
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={{ position: 'absolute', left: 16 }}
-          >
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$6" fontWeight="600" color="$color12">
-            养生科普
-          </Text>
-        </XStack>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
+      <TitleBar title="养生科普" onBack={() => navigation.goBack()} />
 
       <ScrollView>
         <YStack padding="$2.5" gap="$3">
@@ -296,7 +262,7 @@ const WellnessGuideScreen: React.FC = () => {
           <View height="$4" />
         </YStack>
       </ScrollView>
-    </YStack>
+    </SafeAreaView>
   );
 };
 

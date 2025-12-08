@@ -29,6 +29,7 @@ import {
   Beneficiary,
 } from '../types/legalService';
 import { createWill } from '../services/legalService';
+import { TitleBar } from '@/components/TitleBar';
 
 interface WillFormData {
   willType: WillType | null;
@@ -53,7 +54,6 @@ const WillCreatorScreen: React.FC = () => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<WillFormData>({
@@ -443,22 +443,30 @@ const WillCreatorScreen: React.FC = () => {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View flex={1} backgroundColor="$background">
         {/* Header */}
-        <View paddingTop={insets.top} backgroundColor="$color2" borderBottomWidth={1} borderBottomColor="$color5">
-          <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-            <Pressable onPress={() => navigation.goBack()}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <X size={24} color={color12} />
-              </View>
-            </Pressable>
-            <YStack flex={1} alignItems="center" marginHorizontal="$2">
-              <Text fontSize="$2" color="$color10">{currentStep} / {totalSteps}</Text>
-              <View width="100%" height={4} borderRadius={2} backgroundColor="$color5" marginVertical="$0.5">
-                <View height={4} borderRadius={2} backgroundColor="$primary" width={`${(currentStep / totalSteps) * 100}%`} />
-              </View>
-              <Text fontSize="$3" fontWeight="600" color="$color12">{stepTitles[currentStep - 1]}</Text>
-            </YStack>
-            <View width={40} />
-          </XStack>
+        <View paddingTop={insets.top}>
+          <TitleBar
+            title={stepTitles[currentStep - 1]}
+            subtitle={`${currentStep} / ${totalSteps}`}
+            showBack={true}
+            onBack={() => navigation.goBack()}
+            renderRight={() => (
+              <YStack flex={1} alignItems="center">
+                <View
+                  width="100%"
+                  height={4}
+                  backgroundColor="$color5"
+                  borderRadius={2}
+                >
+                  <View
+                    height={4}
+                    backgroundColor="$primary"
+                    borderRadius={2}
+                    width={`${(currentStep / totalSteps) * 100}%`}
+                  />
+                </View>
+              </YStack>
+            )}
+          />
         </View>
 
         {/* Content */}

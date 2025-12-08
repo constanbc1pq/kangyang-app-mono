@@ -16,7 +16,6 @@ import {
   useTheme,
 } from 'tamagui';
 import {
-  ArrowLeft,
   Star,
   Award,
   Users,
@@ -28,6 +27,7 @@ import {
   Video,
   Phone,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 import AppointmentCalendar from '@/components/AppointmentCalendar';
 import { getNutritionistById, Nutritionist as NutritionistType } from '@/services/nutritionistService';
 
@@ -46,7 +46,6 @@ const NutritionistDetailScreen: React.FC = () => {
   const primaryColor = theme.primary?.val;
   const successColor = theme.success?.val;
   const warningColor = theme.warning?.val;
-  const color12 = theme.color12?.val;
   const color10 = theme.color10?.val;
 
   const [activeTab, setActiveTab] = useState<'intro' | 'services' | 'reviews'>('intro');
@@ -124,44 +123,16 @@ const NutritionistDetailScreen: React.FC = () => {
   return (
     <YStack flex={1} backgroundColor="$background">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            营养师详情
-          </Text>
-          <Pressable onPress={handleShare}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Share2 size={20} color={color10} />
-            </View>
-          </Pressable>
-        </XStack>
+      <View paddingTop={insets.top}>
+        <TitleBar
+          title="营养师详情"
+          actions={[
+            {
+              icon: Share2,
+              onPress: handleShare,
+            },
+          ]}
+        />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>

@@ -15,7 +15,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, ActivityIndicator } from 'react-native';
 import {
-  ArrowLeft,
   Users,
   MessageCircle,
   Share2,
@@ -27,6 +26,7 @@ import {
   Shield,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 import { Circle, CirclePost, CircleMember } from '@/types/community';
 import { circleService } from '@/services/circleService';
 import { useFocusEffect } from '@react-navigation/native';
@@ -120,35 +120,22 @@ export const CircleDetailScreen: React.FC<CircleDetailScreenProps> = ({ route, n
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        {/* Header */}
-        <XStack
-          height={56}
-          alignItems="center"
-          justifyContent="space-between"
-          paddingHorizontal="$4"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="$background"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <XStack space="$2" alignItems="center">
-              <ArrowLeft size={24} color={COLORS.text} />
-              <Text fontSize="$4" color="$text" fontWeight="500">
-                返回
-              </Text>
-            </XStack>
-          </Pressable>
-          <XStack space="$3">
-            <Pressable>
-              <Share2 size={24} color={COLORS.textSecondary} />
-            </Pressable>
-            {isJoined && (
+        <TitleBar
+          title="返回"
+          onBack={() => navigation.goBack()}
+          rightElement={
+            <XStack space="$3">
               <Pressable>
-                <Settings size={24} color={COLORS.textSecondary} />
+                <Share2 size={24} color={COLORS.textSecondary} />
               </Pressable>
-            )}
-          </XStack>
-        </XStack>
+              {isJoined && (
+                <Pressable>
+                  <Settings size={24} color={COLORS.textSecondary} />
+                </Pressable>
+              )}
+            </XStack>
+          }
+        />
 
         <ScrollView flex={1} showsVerticalScrollIndicator={false}>
           <YStack>

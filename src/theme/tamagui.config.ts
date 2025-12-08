@@ -125,15 +125,15 @@ const azurePopThemes = {
     color11: '#3C4050',
     color12: '#1A1D29',
 
-    // 语义化颜色
+    // 语义化颜色 - 使用 COLORS 常量（现在是 neutral 紫色系）
     primary: COLORS.primary,
-    primaryHover: '#D66EF5',
-    primaryPress: '#B545E0',
-    primaryLight: '#A78BFA',
-    primaryDark: '#6D28D9',
+    primaryHover: COLORS.secondary, // 次紫色
+    primaryPress: COLORS.primaryDark, // 深紫色
+    primaryLight: COLORS.primaryLight, // 浅紫色
+    primaryDark: COLORS.primaryDark, // 深紫色
     secondary: COLORS.secondary,
-    secondaryHover: '#9AFFFF',
-    secondaryLight: '#67E8F9',
+    secondaryHover: COLORS.secondaryLight,
+    secondaryLight: COLORS.secondaryLight,
     accent: COLORS.accent,
     success: COLORS.success,
     successLight: '#D1FAE5',

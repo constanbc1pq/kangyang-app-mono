@@ -18,6 +18,8 @@ import {
   Pressable,
   Dimensions,
   FlatList,
+  View as RNView,
+  StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -41,6 +43,7 @@ import {
   createConversation,
 } from '@/services/communityDataService';
 import { SecondHandCard } from '@/components/SecondHandCard';
+import { TitleBar } from '@/components/TitleBar';
 
 interface SecondHandDetailScreenProps {
   navigation: any;
@@ -52,7 +55,7 @@ interface SecondHandDetailScreenProps {
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const IMAGE_HEIGHT = SCREEN_WIDTH; // 1:1 aspect ratio
+const IMAGE_HEIGHT = 280; // 固定高度
 
 /**
  * 二手商品详情页
@@ -211,9 +214,9 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
                 {!imageErrors[index] ? (
                   <Image
                     source={{ uri: imageUrl }}
-                    width={SCREEN_WIDTH}
+                    width="100%"
                     height={IMAGE_HEIGHT}
-                    resizeMode="cover"
+                    resizeMode="contain"
                     onError={() => handleImageError(index)}
                   />
                 ) : (
@@ -312,26 +315,8 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
   if (loading || !item) {
     return (
       <View flex={1} backgroundColor="$background">
-        <View
-          paddingTop={insets.top}
-          backgroundColor="$color2"
-          borderBottomWidth={1}
-          borderBottomColor="$color5"
-        >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            alignItems="center"
-          >
-            <Pressable onPress={handleBack}>
-              <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-            <Text fontSize="$5" fontWeight="600" color="$color12" marginLeft="$2">
-              商品详情
-            </Text>
-          </XStack>
+        <View paddingTop={insets.top} backgroundColor="white">
+          <TitleBar title="商品详情" />
         </View>
         <View flex={1} justifyContent="center" alignItems="center">
           <Text fontSize="$4" color="$color10">
@@ -343,8 +328,8 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
   }
 
   return (
-    <View flex={1} backgroundColor="$background">
-      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+    <RNView style={styles.container}>
+      <ScrollView flex={1} showsVerticalScrollIndicator={false} backgroundColor="$background">
         {/* 图片轮播 */}
         {renderImageCarousel()}
 
@@ -611,22 +596,8 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
         <View height={80 + insets.bottom} />
       </ScrollView>
 
-      {/* 底部操作栏 */}
-      <View
-        position="absolute"
-        bottom={0}
-        left={0}
-        right={0}
-        backgroundColor="$color2"
-        borderTopWidth={1}
-        borderTopColor="$color5"
-        paddingHorizontal="$2.5"
-        paddingTop="$2"
-        paddingBottom={insets.bottom > 0 ? insets.bottom : 14}
-        shadowOffset={{ width: 0, height: -2 }}
-        shadowOpacity={0.08}
-        elevation={8}
-      >
+      {/* 底部操作栏 - 使用 RNView 确保固定定位 */}
+      <RNView style={[styles.bottomBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 14 }]}>
         <XStack gap="$2" alignItems="center">
           {/* 收藏按钮 */}
           <Pressable onPress={handleToggleFavorite}>
@@ -681,7 +652,30 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
             </View>
           </Pressable>
         </XStack>
-      </View>
-    </View>
+      </RNView>
+    </RNView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FCFCFC',
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#F7F7F7',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+});

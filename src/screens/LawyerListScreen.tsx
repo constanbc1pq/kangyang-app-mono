@@ -18,7 +18,6 @@ import { Alert, Image as RNImage, ActivityIndicator, Pressable } from 'react-nat
 import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   MessageSquare,
   List,
   FileText,
@@ -38,6 +37,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { LawyerProfile, LawyerSpecialty } from '../types/legalService';
 import { getLawyers } from '../services/legalService';
 import { getAvatarSource } from '@/constants/avatars';
+import { TitleBar } from '@/components/TitleBar';
 
 const GOLD_COLOR = '#D4AF37';
 
@@ -88,7 +88,6 @@ const LawyerListScreen: React.FC<Props> = ({ navigation }) => {
   const successColor = theme.success?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [lawyers, setLawyers] = useState<LawyerProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -411,25 +410,16 @@ const LawyerListScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View flex={1} backgroundColor="$background">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack height={56} paddingHorizontal="$2.5" alignItems="center" justifyContent="space-between">
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">专业律师</Text>
-          <Pressable onPress={() => navigation.navigate('AILegalAssistant')}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <MessageSquare size={22} color={primaryColor} />
-            </View>
-          </Pressable>
-        </XStack>
+      <View paddingTop={insets.top}>
+        <TitleBar
+          title="专业律师"
+          actions={[
+            {
+              icon: MessageSquare,
+              onPress: () => navigation.navigate('AILegalAssistant'),
+            },
+          ]}
+        />
       </View>
 
       {loading ? (

@@ -20,7 +20,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import {
-  ArrowLeft,
   Plus,
   Clock,
   Pill,
@@ -32,6 +31,7 @@ import {
   Calendar,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 
 interface Medication {
   id: number;
@@ -166,28 +166,11 @@ export const MedicationReminderScreen: React.FC = () => {
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-        {/* 标题栏 */}
-        <View
-          backgroundColor="$cardBg"
-          paddingHorizontal="$4"
-          paddingVertical="$3"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-        >
-          <XStack justifyContent="space-between" alignItems="center">
-            <XStack space="$3" alignItems="center">
-              <Pressable onPress={() => navigation.goBack()}>
-                <ArrowLeft size={24} color={COLORS.text} />
-              </Pressable>
-              <YStack>
-                <H2 fontSize="$6" fontWeight="600" color="$text">
-                  用药提醒
-                </H2>
-                <Text fontSize="$2" color="$textSecondary">
-                  {upcomingMeds.length} 个待服用 · {takenMeds.length} 个已完成
-                </Text>
-              </YStack>
-            </XStack>
+        <TitleBar
+          title="用药提醒"
+          subtitle={`${upcomingMeds.length} 个待服用 · ${takenMeds.length} 个已完成`}
+          onBack={() => navigation.goBack()}
+          rightElement={
             <TouchableOpacity onPress={() => setIsAddDialogOpen(true)}>
               <View
                 backgroundColor={COLORS.primary}
@@ -203,8 +186,8 @@ export const MedicationReminderScreen: React.FC = () => {
                 </XStack>
               </View>
             </TouchableOpacity>
-          </XStack>
-        </View>
+          }
+        />
 
         <ScrollView
           flex={1}

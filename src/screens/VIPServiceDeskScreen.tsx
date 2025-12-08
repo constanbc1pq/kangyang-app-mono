@@ -10,7 +10,6 @@ import { Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
-  ArrowLeft,
   Crown,
   Stethoscope,
   Scale,
@@ -26,6 +25,7 @@ import {
   getActiveSubscriptions,
   ActiveSubscription,
 } from '@/services/userDataService';
+import { TitleBar } from '@/components/TitleBar';
 
 export const VIPServiceDeskScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -217,24 +217,7 @@ export const VIPServiceDeskScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }} edges={['top']}>
-      {/* 标题栏 */}
-      <XStack
-        paddingHorizontal="$2.5"
-        paddingVertical="$2"
-        alignItems="center"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <View width={40} height={40} justifyContent="center" alignItems="flex-start">
-            <ArrowLeft size={24} color={theme.color12?.val} />
-          </View>
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$color12">
-          专属服务台
-        </Text>
-        <View width={40} />
-      </XStack>
+      <TitleBar title="专属服务台" onBack={() => navigation.goBack()} />
 
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
         <YStack padding="$2.5" gap="$2">

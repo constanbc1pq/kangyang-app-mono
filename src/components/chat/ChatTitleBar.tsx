@@ -45,7 +45,7 @@ export const ChatTitleBar: React.FC<ChatTitleBarProps> = ({
       borderBottomColor="$color5"
     >
       <XStack
-        height={56}
+        paddingVertical="$0.75"
         paddingHorizontal="$2.5"
         alignItems="center"
         justifyContent="space-between"

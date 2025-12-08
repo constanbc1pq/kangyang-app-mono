@@ -3,7 +3,6 @@ import { ScrollView, Pressable, Dimensions } from 'react-native';
 import { View, Text, XStack, YStack } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import {
-  ArrowLeft,
   TrendingUp,
   Home,
   GraduationCap,
@@ -15,6 +14,7 @@ import {
   FileText,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 
 const { width } = Dimensions.get('window');
 
@@ -589,23 +589,7 @@ const CoverageGapAnalysisScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          保障缺口分析
-        </Text>
-        <View width={24} />
-      </XStack>
+      <TitleBar title="保障缺口分析" onBack={() => navigation.goBack()} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Radar Chart */}

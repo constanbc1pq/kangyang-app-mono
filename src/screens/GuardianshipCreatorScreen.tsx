@@ -15,7 +15,6 @@ import {
 import { YStack, XStack, Text, View, ScrollView, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -27,6 +26,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Guardian, GuardianDuty } from '../types/legalService';
 import { createGuardianshipAgreement } from '../services/legalService';
+import { TitleBar } from '@/components/TitleBar';
 
 const GOLD_COLOR = '#D4AF37';
 
@@ -66,7 +66,6 @@ const GuardianshipCreatorScreen: React.FC = () => {
   const primaryColor = theme.primary?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<GuardianshipFormData>({
@@ -745,55 +744,28 @@ const GuardianshipCreatorScreen: React.FC = () => {
     >
       <View flex={1} backgroundColor="$background">
         {/* TitleBar with Progress */}
-        <View
-          paddingTop={insets.top}
-          backgroundColor="$color2"
-          borderBottomWidth={1}
-          borderBottomColor="$color5"
-        >
-          <XStack
-            height={56}
-            paddingHorizontal="$2.5"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Pressable onPress={() => navigation.goBack()}>
-              <View
-                width={40}
-                height={40}
-                borderRadius={20}
-                justifyContent="center"
-                alignItems="center"
-              >
-                <ArrowLeft size={24} color={color12} />
-              </View>
-            </Pressable>
-
-            <YStack flex={1} marginHorizontal="$2" alignItems="center">
-              <Text fontSize="$2" color="$color10" marginBottom="$0.5">
-                {currentStep} / {totalSteps}
-              </Text>
-              <View
-                width="100%"
-                height={4}
-                backgroundColor="$color5"
-                borderRadius={2}
-                marginBottom="$0.5"
-              >
+        <View paddingTop={insets.top}>
+          <TitleBar
+            title={stepTitles[currentStep - 1]}
+            subtitle={`${currentStep} / ${totalSteps}`}
+            renderRight={() => (
+              <YStack flex={1} alignItems="center">
                 <View
+                  width="100%"
                   height={4}
-                  backgroundColor="$primary"
+                  backgroundColor="$color5"
                   borderRadius={2}
-                  width={`${(currentStep / totalSteps) * 100}%`}
-                />
-              </View>
-              <Text fontSize="$3" fontWeight="600" color="$color12">
-                {stepTitles[currentStep - 1]}
-              </Text>
-            </YStack>
-
-            <View width={40} />
-          </XStack>
+                >
+                  <View
+                    height={4}
+                    backgroundColor="$primary"
+                    borderRadius={2}
+                    width={`${(currentStep / totalSteps) * 100}%`}
+                  />
+                </View>
+              </YStack>
+            )}
+          />
         </View>
 
         {/* Step Content */}

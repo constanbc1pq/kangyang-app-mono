@@ -3,7 +3,6 @@ import { ScrollView, Pressable, Alert } from 'react-native';
 import { View, Text, XStack, YStack } from 'tamagui';
 import { useNavigation } from '@react-navigation/native';
 import {
-  ArrowLeft,
   FileCheck,
   AlertCircle,
   CheckCircle,
@@ -13,6 +12,7 @@ import {
   MessageCircle,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 
 interface HealthQuestion {
   id: string;
@@ -699,24 +699,7 @@ const SmartUnderwritingScreen: React.FC = () => {
   if (result) {
     return (
       <View flex={1} backgroundColor="$background">
-        {/* Header */}
-        <XStack
-          height={56}
-          alignItems="center"
-          paddingHorizontal="$4"
-          backgroundColor="$surface"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <ArrowLeft size={24} color={COLORS.text} />
-          </Pressable>
-          <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-            智能核保结果
-          </Text>
-          <View width={24} />
-        </XStack>
-
+        <TitleBar title="智能核保结果" onBack={() => navigation.goBack()} />
         {renderResult()}
       </View>
     );
@@ -724,23 +707,7 @@ const SmartUnderwritingScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          智能核保
-        </Text>
-        <View width={24} />
-      </XStack>
+      <TitleBar title="智能核保" onBack={() => navigation.goBack()} />
 
       {/* Progress Bar */}
       <View padding="$4" backgroundColor="$surface" borderBottomWidth={1} borderBottomColor="$borderColor">

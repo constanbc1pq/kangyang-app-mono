@@ -4,7 +4,6 @@ import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   FileText,
   Download,
   DollarSign,
@@ -15,6 +14,7 @@ import {
   Edit,
   MessageCircle,
 } from 'lucide-react-native';
+import { TitleBar } from '@/components/TitleBar';
 
 interface PolicyDetail {
   id: string;
@@ -84,7 +84,6 @@ const InsurancePolicyDetailScreen: React.FC = () => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [policy, setPolicy] = useState<PolicyDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -249,34 +248,15 @@ const InsurancePolicyDetailScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            保单详情
-          </Text>
-          <Pressable onPress={handleDownloadPolicy}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <Download size={22} color={primaryColor} />
-            </View>
-          </Pressable>
-        </XStack>
-      </View>
+      <TitleBar
+        title="保单详情"
+        onBack={() => navigation.goBack()}
+        rightAction={{
+          icon: Download,
+          onPress: handleDownloadPolicy,
+          color: primaryColor,
+        }}
+      />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Policy Header */}

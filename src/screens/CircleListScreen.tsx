@@ -14,13 +14,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Pressable, ActivityIndicator } from 'react-native';
 import {
-  ArrowLeft,
   Search,
   Users,
   MessageCircle,
   CheckCircle,
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
+import { TitleBar } from '@/components/TitleBar';
 import { Circle } from '@/types/community';
 import { circleService } from '@/services/circleService';
 import { useFocusEffect } from '@react-navigation/native';
@@ -80,24 +80,7 @@ export const CircleListScreen: React.FC<CircleListScreenProps> = ({ navigation }
   return (
     <Theme name="light">
       <SafeAreaView style={{ flex: 1, backgroundColor: '$background' }}>
-        {/* Header */}
-        <XStack
-          height={56}
-          alignItems="center"
-          paddingHorizontal="$4"
-          borderBottomWidth={1}
-          borderBottomColor="$borderColor"
-          backgroundColor="$background"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <XStack space="$2" alignItems="center">
-              <ArrowLeft size={24} color={COLORS.text} />
-              <Text fontSize="$5" color="$text" fontWeight="600">
-                健康圈子
-              </Text>
-            </XStack>
-          </Pressable>
-        </XStack>
+        <TitleBar title="健康圈子" onBack={() => navigation.goBack()} />
 
         <YStack flex={1}>
           {/* 搜索栏 */}

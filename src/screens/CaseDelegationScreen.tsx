@@ -16,7 +16,6 @@ import { Alert, ActivityIndicator, Pressable, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, ScrollView, View, useTheme } from 'tamagui';
 import {
-  ArrowLeft,
   Banknote,
   FileText,
   Home,
@@ -38,6 +37,7 @@ import {
 } from 'lucide-react-native';
 import { LawyerProfile, LawyerSpecialty } from '../types/legalService';
 import { getLawyers } from '../services/legalService';
+import { TitleBar } from '@/components/TitleBar';
 
 interface Props {
   navigation: any;
@@ -126,7 +126,6 @@ const CaseDelegationScreen: React.FC<Props> = ({ navigation }) => {
   const warningColor = theme.warning?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   // 状态管理
   const [currentStep, setCurrentStep] = useState<DelegationStep>('type');
@@ -1084,35 +1083,10 @@ const CaseDelegationScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View flex={1} backgroundColor="$color4">
       {/* TitleBar */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={handleBack}>
-            <View
-              width={40}
-              height={40}
-              borderRadius={20}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            案件委托
-          </Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar
+        title="案件委托"
+        onBack={handleBack}
+      />
 
       {/* 步骤指示器 */}
       {renderStepIndicator()}

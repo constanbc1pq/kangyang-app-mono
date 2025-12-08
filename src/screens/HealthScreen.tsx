@@ -440,27 +440,25 @@ export const HealthScreen: React.FC = () => {
               </XStack>
 
               {healthMetrics.length > 0 ? (
-                <YStack gap="$2">
-                  {/* 3列布局 - 固定3列，不随屏幕变化 */}
-                  <XStack gap="$1.5" flexWrap="wrap">
-                    {healthMetrics.map((metric, index) => (
-                      <View key={index} flexBasis="31%" flexGrow={1} flexShrink={0} maxWidth="33%" marginBottom="$1.5">
-                        <HealthMetricCard
-                          title={metric.title}
-                          value={metric.value}
-                          unit={metric.unit}
-                          change={metric.change}
-                          status={metric.status as any}
-                          trend={metric.trend}
-                          icon={metric.icon as any}
-                          colorKey={metric.colorKey}
-                          device={metric.device}
-                          onDevicePress={() => navigation.navigate('DeviceManagement', { deviceId: metric.device.id })}
-                        />
-                      </View>
-                    ))}
-                  </XStack>
-                </YStack>
+                <XStack gap="$1.5">
+                  {/* 固定一行3个，每个卡片平分宽度 */}
+                  {healthMetrics.slice(0, 3).map((metric, index) => (
+                    <View key={index} flex={1} minWidth={0}>
+                      <HealthMetricCard
+                        title={metric.title}
+                        value={metric.value}
+                        unit={metric.unit}
+                        change={metric.change}
+                        status={metric.status as any}
+                        trend={metric.trend}
+                        icon={metric.icon as any}
+                        colorKey={metric.colorKey}
+                        device={metric.device}
+                        onDevicePress={() => navigation.navigate('DeviceManagement', { deviceId: metric.device.id })}
+                      />
+                    </View>
+                  ))}
+                </XStack>
               ) : (
                 <View paddingVertical="$2" alignItems="center">
                   <Settings size={48} color={theme.color9?.val} />

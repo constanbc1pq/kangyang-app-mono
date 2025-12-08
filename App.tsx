@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, Appearance, ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { Toast, ToastProvider, ToastViewport, useToastState } from '@tamagui/toast';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import { useFonts } from 'expo-font';
+import { NotoColorEmoji_400Regular } from '@expo-google-fonts/noto-color-emoji';
 import { store, persistor } from './src/store/index';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { DeviceProvider } from './src/contexts/DeviceContext';
@@ -23,11 +25,86 @@ import { neutralThemes } from './src/theme/neutralTheme';
 const CURRENT_THEME = 'neutral_light'; // <-- 修改这里切换主题
 
 /**
- * Web 端强制覆盖 prefers-color-scheme 媒体查询的影响
+ * 移动端浏览器尝试隐藏地址栏 + 禁止缩放
+ */
+const useMobileFullscreen = () => {
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      // 检测移动端
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+      // 禁止页面缩放 - 修改 viewport meta 标签
+      const existingViewport = document.querySelector('meta[name="viewport"]');
+      if (existingViewport) {
+        existingViewport.setAttribute(
+          'content',
+          'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover'
+        );
+      } else {
+        const viewport = document.createElement('meta');
+        viewport.name = 'viewport';
+        viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover';
+        document.head.appendChild(viewport);
+      }
+
+      // 添加禁止缩放的 CSS
+      const noZoomStyle = document.createElement('style');
+      noZoomStyle.id = 'no-zoom-style';
+      noZoomStyle.textContent = `
+        html, body {
+          touch-action: manipulation;
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          overscroll-behavior: none;
+        }
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+        input, textarea {
+          -webkit-user-select: text;
+          -moz-user-select: text;
+          -ms-user-select: text;
+          user-select: text;
+        }
+      `;
+      const existingNoZoom = document.getElementById('no-zoom-style');
+      if (!existingNoZoom) {
+        document.head.appendChild(noZoomStyle);
+      }
+
+      if (isMobile) {
+        // 滚动隐藏地址栏
+        setTimeout(() => window.scrollTo(0, 1), 100);
+
+        // 监听 resize，防止软键盘弹出时触发
+        let lastHeight = window.innerHeight;
+        window.addEventListener('resize', () => {
+          if (window.innerHeight > lastHeight) {
+            window.scrollTo(0, 1);
+          }
+          lastHeight = window.innerHeight;
+        });
+      }
+    }
+  }, []);
+};
+
+/**
+ * 强制覆盖系统主题的影响
  * 确保主题颜色完全由 CURRENT_THEME 控制
  */
-const useForceThemeOnWeb = () => {
+const useForceTheme = () => {
   useEffect(() => {
+    // Android/iOS: 强制设置外观模式为浅色
+    if (Platform.OS !== 'web') {
+      Appearance.setColorScheme('light');
+      return;
+    }
+
+    // Web 端强制覆盖 prefers-color-scheme 媒体查询
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       // 获取当前主题的颜色值
       const themeColors = CURRENT_THEME.includes('neutral')
@@ -116,8 +193,25 @@ const CurrentToast = () => {
 };
 
 export default function App() {
-  // Web 端强制覆盖系统暗色模式对主题的影响
-  useForceThemeOnWeb();
+  // 强制覆盖系统暗色模式对主题的影响 (Web/Android/iOS)
+  useForceTheme();
+
+  // 移动端浏览器尝试隐藏地址栏
+  useMobileFullscreen();
+
+  // 加载 emoji 字体 (主要用于 Android)
+  const [fontsLoaded] = useFonts({
+    NotoColorEmoji: NotoColorEmoji_400Regular,
+  });
+
+  // 字体加载中显示加载指示器
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+        <ActivityIndicator size="large" color="#8B5CF6" />
+      </View>
+    );
+  }
 
   return (
     <Provider store={store}>

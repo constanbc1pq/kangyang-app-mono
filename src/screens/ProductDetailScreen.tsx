@@ -15,7 +15,6 @@ import {
 import { View, Text, YStack, XStack, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ArrowLeft,
   Share2,
   Heart,
   Star,
@@ -24,6 +23,7 @@ import {
   Truck,
   RotateCcw,
   ThumbsUp,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { groceryCartService } from '@/services/groceryCartService';
@@ -52,7 +52,6 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
   const errorColor = theme.error?.val;
   const goldColor = theme.gold?.val;
   const color10 = theme.color10?.val;
-  const color12 = theme.color12?.val;
 
   const [activeTab, setActiveTab] = useState<TabType>('detail');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

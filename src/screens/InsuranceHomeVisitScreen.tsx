@@ -3,8 +3,9 @@ import { ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { View, Text, XStack, YStack, useTheme } from 'tamagui';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Home, Calendar, Clock, MapPin, Send } from 'lucide-react-native';
+import { Home, Calendar, Clock, MapPin, Send } from 'lucide-react-native';
 import { bookHomeVisit } from '@/services/insuranceAdvisorService';
+import { TitleBar } from '@/components/TitleBar';
 
 type RouteParams = {
   InsuranceHomeVisit: {
@@ -132,30 +133,10 @@ const InsuranceHomeVisitScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <View
-        paddingTop={insets.top}
-        backgroundColor="$color2"
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        <XStack
-          height={56}
-          paddingHorizontal="$2.5"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          <Pressable onPress={() => navigation.goBack()}>
-            <View width={40} height={40} borderRadius={20} justifyContent="center" alignItems="center">
-              <ArrowLeft size={24} color={color12} />
-            </View>
-          </Pressable>
-          <Text fontSize="$5" fontWeight="600" color="$color12">
-            上门服务预约
-          </Text>
-          <View width={40} />
-        </XStack>
-      </View>
+      <TitleBar
+        title="上门服务预约"
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* 顾问信息 */}

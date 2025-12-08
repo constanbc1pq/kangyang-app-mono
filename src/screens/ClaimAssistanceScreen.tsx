@@ -3,7 +3,6 @@ import { ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { View, Text, XStack, YStack } from 'tamagui';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import {
-  ArrowLeft,
   FileText,
   Camera,
   Upload,
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react-native';
 import { COLORS } from '@/constants/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TitleBar } from '@/components/TitleBar';
 
 type RouteParams = {
   ClaimAssistance: {
@@ -236,23 +236,7 @@ const ClaimAssistanceScreen: React.FC = () => {
 
   return (
     <View flex={1} backgroundColor="$background">
-      {/* Header */}
-      <XStack
-        height={56}
-        alignItems="center"
-        paddingHorizontal="$4"
-        backgroundColor="$surface"
-        borderBottomWidth={1}
-        borderBottomColor="$borderColor"
-      >
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color={COLORS.text} />
-        </Pressable>
-        <Text flex={1} textAlign="center" fontSize="$5" fontWeight="600" color="$text">
-          理赔申请
-        </Text>
-        <View width={24} />
-      </XStack>
+      <TitleBar title="理赔申请" onBack={() => navigation.goBack()} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Info Banner */}
