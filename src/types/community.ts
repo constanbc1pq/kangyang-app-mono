@@ -449,8 +449,11 @@ export interface ChatMessage {
     price: number;
     currency: string;
     message: string;
+    serviceTime: string; // 服务时间
     estimatedDuration: string;
     status: QuoteStatus;
+    expertName?: string; // 报价人姓名
+    employerName?: string; // 雇主名称
   };
 
   // 订单卡片数据（当type为ORDER时）

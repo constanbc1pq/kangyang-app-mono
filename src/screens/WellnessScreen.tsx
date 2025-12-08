@@ -256,17 +256,35 @@ export const WellnessScreen: React.FC = () => {
 
   const handleRankingItemPress = (item: RankingItem) => {
     if (isHotSalesItem(item)) {
-      navigation.navigate('ProductDetail' as never, { productId: item.id } as never);
-    } else if (isPopularExpertItem(item)) {
-      navigation.navigate('ExpertDetail' as never, { expertId: item.id } as never);
-    } else if (isHotTopicItem(item)) {
-      if (item.type === 'theme') {
-        navigation.navigate('ThemeDetail' as never, { themeId: item.id } as never);
-      } else if (item.type === 'article') {
-        navigation.navigate('ArticleDetail' as never, { articleId: item.id } as never);
+      // 根据商品ID前缀跳转到对应的服务页面
+      const itemId = item.id;
+      if (itemId.startsWith('prod_')) {
+        // 闪送到家商品 - 直接跳转到商品详情页
+        const numericId = parseInt(itemId.replace('prod_', ''), 10);
+        navigation.navigate('ProductDetail' as never, { productId: numericId } as never);
+      } else if (itemId.startsWith('meal_')) {
+        // 营养配餐套餐
+        navigation.navigate('NutritionService' as never, { planId: itemId } as never);
+      } else if (itemId.startsWith('service_doctor')) {
+        // 私人医生服务
+        navigation.navigate('PrivateDoctorList' as never);
+      } else if (itemId.startsWith('service_care') || itemId.startsWith('service_respite')) {
+        // 养老服务
+        navigation.navigate('ElderlyService' as never, { serviceId: itemId } as never);
+      } else if (itemId.startsWith('service_legal')) {
+        // 法律服务
+        navigation.navigate('LegalServiceHome' as never, { serviceId: itemId } as never);
       } else {
-        navigation.navigate('ColumnList' as never, { columnId: item.id } as never);
+        toast.show('功能开发中', { duration: 1500 });
       }
+    } else if (isPopularExpertItem(item)) {
+      // 跳转到私人医生详情页
+      navigation.navigate('PrivateDoctorDetail' as never, { doctorId: item.id } as never);
+    } else if (isHotTopicItem(item)) {
+      // 跳转到栏目文章详情页
+      navigation.navigate('ContentDetail' as never, { contentId: item.id } as never);
+    } else {
+      toast.show('功能开发中', { duration: 1500 });
     }
   };
 
@@ -621,7 +639,7 @@ export const WellnessScreen: React.FC = () => {
                         borderRadius={22}
                         backgroundColor={`${color}15`}
                         borderWidth={2}
-                        borderColor={`${color}40`}
+                        borderColor={color}
                         justifyContent="center"
                         alignItems="center"
                         marginBottom="$1.5"
@@ -666,7 +684,7 @@ export const WellnessScreen: React.FC = () => {
                         borderRadius={22}
                         backgroundColor={`${color}15`}
                         borderWidth={2}
-                        borderColor={`${color}40`}
+                        borderColor={color}
                         justifyContent="center"
                         alignItems="center"
                         marginBottom="$1.5"

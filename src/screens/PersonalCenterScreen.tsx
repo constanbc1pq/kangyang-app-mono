@@ -249,6 +249,17 @@ export const PersonalCenterScreen: React.FC = () => {
     return ORDER_STATUS_LABELS[status as keyof typeof ORDER_STATUS_LABELS] || status;
   };
 
+  // 格式化日期时间
+  const formatDateTime = (dateString: string): string => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  };
+
   // 会员等级颜色
   const levelColors = MEMBERSHIP_LEVEL_COLORS[membershipLevel];
 
@@ -278,7 +289,7 @@ export const PersonalCenterScreen: React.FC = () => {
               {order.itemName}
             </Text>
             <Text fontSize="$2" color="$color10">
-              {order.createdAt}
+              {formatDateTime(order.createdAt)}
             </Text>
           </YStack>
           <YStack alignItems="flex-end" gap="$1">

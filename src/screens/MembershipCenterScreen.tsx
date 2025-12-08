@@ -45,6 +45,7 @@ import {
   Users,
 } from 'lucide-react-native';
 import { TitleBar } from '@/components/TitleBar';
+import { MembershipConfirmModal, PurchaseType } from '@/components/MembershipConfirmModal';
 import {
   MembershipLevel,
   MEMBERSHIP_LEVEL_LABELS,
@@ -55,8 +56,9 @@ import {
   BenefitKey,
   SERVICE_DISCOUNT_RATES,
   EXPERT_CERT_PRICES,
+  PaymentCycle,
 } from '@/types/membership';
-import { getMembershipDisplayInfo } from '@/services/membershipService';
+import { getMembershipDisplayInfo, getPurchaseInfo } from '@/services/membershipService';
 import { getPoints } from '@/services/userDataService';
 
 // 会员等级图标映射
@@ -183,13 +185,33 @@ export const MembershipCenterScreen: React.FC = () => {
   const [membershipInfo, setMembershipInfo] = useState<{
     level: MembershipLevel;
     label: string;
+    startDate?: string;
     endDate?: string;
+    daysRemaining: number | null;
     isExpired: boolean;
+    autoRenew: boolean;
+    pendingMembership?: {
+      level: MembershipLevel;
+      label: string;
+      startDate: string;
+      endDate: string;
+    };
   } | null>(null);
   const [points, setPoints] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState<MembershipLevel>(MembershipLevel.GOLD);
   const [expandedFAQs, setExpandedFAQs] = useState<number[]>([]);
+
+  // 确认弹窗相关状态
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [purchaseInfo, setPurchaseInfo] = useState<{
+    purchaseType: PurchaseType;
+    currentLevel: MembershipLevel;
+    currentEndDate?: string;
+    newEndDate: string;
+    price: number;
+  } | null>(null);
+  const selectedCycle: PaymentCycle = 'yearly'; // 当前只支持年付
 
   useFocusEffect(
     useCallback(() => {
@@ -227,19 +249,34 @@ export const MembershipCenterScreen: React.FC = () => {
     return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
   };
 
-  const handlePurchase = () => {
+  // 点击购买按钮 - 显示确认弹窗
+  const handlePurchase = async () => {
     if (selectedLevel === MembershipLevel.FREE) return;
 
-    const price = MEMBERSHIP_PRICES[selectedLevel].yearly;
+    try {
+      const info = await getPurchaseInfo(selectedLevel, selectedCycle);
+      setPurchaseInfo(info);
+      setShowConfirmModal(true);
+    } catch (error) {
+      console.error('获取购买信息失败:', error);
+    }
+  };
+
+  // 确认购买 - 跳转到结算页面
+  const handleConfirmPurchase = () => {
+    if (!purchaseInfo) return;
+
+    setShowConfirmModal(false);
 
     navigation.navigate('Checkout' as never, {
       itemType: 'membership',
       itemId: selectedLevel,
       itemName: MEMBERSHIP_LEVEL_LABELS[selectedLevel],
-      price,
+      price: purchaseInfo.price,
       metadata: {
         membershipLevel: selectedLevel,
-        cycle: 'yearly',
+        cycle: selectedCycle,
+        purchaseType: purchaseInfo.purchaseType,
       },
     } as never);
   };
@@ -309,7 +346,11 @@ export const MembershipCenterScreen: React.FC = () => {
                   </Text>
                   {!isFree && (
                     <Text fontSize="$3" color="rgba(255,255,255,0.8)">
-                      {membershipInfo.isExpired ? '已过期' : `有效期至 ${formatDate(membershipInfo.endDate)}`}
+                      {membershipInfo.isExpired
+                        ? '已过期'
+                        : membershipInfo.endDate
+                          ? `有效期至 ${formatDate(membershipInfo.endDate)}${membershipInfo.daysRemaining !== null ? ` (${membershipInfo.daysRemaining}天)` : ''}`
+                          : '永久有效'}
                     </Text>
                   )}
                   <XStack alignItems="center" gap="$1" marginTop="$1">
@@ -337,6 +378,21 @@ export const MembershipCenterScreen: React.FC = () => {
                 >
                   <Text fontSize="$2" color="white">
                     专属折扣：购买私人医生/法律服务享 {Math.round(SERVICE_DISCOUNT_RATES[membershipInfo.level] * 100)}% OFF
+                  </Text>
+                </View>
+              )}
+
+              {/* 预约的会员提示 */}
+              {membershipInfo.pendingMembership && (
+                <View
+                  backgroundColor="rgba(255,255,255,0.15)"
+                  paddingHorizontal="$2"
+                  paddingVertical="$1.5"
+                  borderRadius="$3"
+                  marginTop="$2"
+                >
+                  <Text fontSize="$2" color="white">
+                    已预约{membershipInfo.pendingMembership.label}，将于 {formatDate(membershipInfo.pendingMembership.startDate)} 生效
                   </Text>
                 </View>
               )}
@@ -749,6 +805,22 @@ export const MembershipCenterScreen: React.FC = () => {
           </View>
         </Pressable>
       </View>
+
+      {/* 会员购买确认弹窗 */}
+      {purchaseInfo && (
+        <MembershipConfirmModal
+          visible={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={handleConfirmPurchase}
+          purchaseType={purchaseInfo.purchaseType}
+          currentLevel={purchaseInfo.currentLevel}
+          targetLevel={selectedLevel}
+          currentEndDate={purchaseInfo.currentEndDate}
+          newEndDate={purchaseInfo.newEndDate}
+          cycle={selectedCycle}
+          price={purchaseInfo.price}
+        />
+      )}
     </View>
   );
 };

@@ -110,9 +110,10 @@ export interface QuoteData {
   duration: string;
   message: string;
   status: QuoteStatus;
-  expertId: string;
-  expertName: string;
-  createdAt: Date;
+  expertId?: string;
+  expertName?: string;
+  employerName?: string; // 雇主名称
+  createdAt?: Date;
 }
 
 /**

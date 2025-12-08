@@ -24,8 +24,17 @@ import {
   markAsRead,
   createOrder,
 } from '@/services/communityDataService';
+import { getUserData } from '@/services/userDataService';
 import { QuoteFormModal } from '@/components/QuoteFormModal';
 import { QuoteStatus } from '@/types/chat';
+
+interface PendingQuote {
+  jobId: string;
+  quotedPrice: number;
+  serviceTime: string;
+  duration: string;
+  message: string;
+}
 
 interface ChatScreenProps {
   navigation: any;
@@ -35,6 +44,7 @@ interface ChatScreenProps {
       expertName?: string;
       expertAvatar?: string;
       expertId?: string;
+      pendingQuote?: PendingQuote;
     };
   };
 }
@@ -43,7 +53,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   navigation,
   route,
 }) => {
-  const { conversationId, expertName, expertAvatar, expertId } = route.params;
+  const { conversationId, expertName, expertAvatar, expertId, pendingQuote } = route.params;
   const theme = useTheme();
   const primaryColor = theme.primary?.val;
   const successColor = theme.success?.val;
@@ -53,12 +63,41 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [loading, setLoading] = useState(true);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [config, setConfig] = useState<ChatPageConfig | null>(null);
+  const [currentUserName, setCurrentUserName] = useState<string>('我');
+  // 使用 useRef 来跟踪是否已处理 pendingQuote，避免在依赖变化时重复触发
+  const pendingQuoteProcessedRef = React.useRef(false);
 
   const currentUserId = 'current-user-id';
+
+  // 加载当前用户信息
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userData = await getUserData();
+        if (userData?.name) {
+          setCurrentUserName(userData.name);
+        }
+      } catch (error) {
+        console.error('加载用户数据失败:', error);
+      }
+    };
+    loadUserData();
+  }, []);
 
   useEffect(() => {
     loadConversation();
   }, [conversationId]);
+
+  // 处理待发送的报价（从需求详情页跳转过来时）
+  useEffect(() => {
+    if (pendingQuote && conversation && !pendingQuoteProcessedRef.current && !loading) {
+      pendingQuoteProcessedRef.current = true;
+      // 使用 setTimeout 确保在渲染完成后再发送，避免状态竞争
+      setTimeout(() => {
+        sendPendingQuote(pendingQuote);
+      }, 500);
+    }
+  }, [pendingQuote, conversation, loading]);
 
   const loadConversation = async () => {
     try {
@@ -73,7 +112,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         // 转换为 ChatMessage 格式
         const formattedMessages: ChatMessage[] = chatMessages.map(msg => ({
           id: msg.id,
-          type: msg.type === 'QUOTE' ? MessageType.QUOTE : MessageType.TEXT,
+          type: msg.type === MessageType.QUOTE || msg.type === 'quote' ? MessageType.QUOTE : MessageType.TEXT,
           sender: msg.senderId === currentUserId ? 'user' : 'recipient',
           senderId: msg.senderId,
           senderName: msg.senderName,
@@ -85,9 +124,12 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
             jobId: msg.quoteData.jobId,
             jobTitle: msg.quoteData.jobTitle,
             quotedPrice: msg.quoteData.price,
+            serviceTime: msg.quoteData.serviceTime,
             duration: msg.quoteData.estimatedDuration,
             message: msg.quoteData.message,
             status: msg.quoteData.status as QuoteStatus,
+            expertName: msg.quoteData.expertName || msg.senderName,
+            employerName: msg.quoteData.employerName,
           } : undefined,
         }));
 
@@ -104,8 +146,29 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     }
   };
 
+  // 判断当前用户角色
+  // 对于零工需求：participant1 是达人（发起咨询/报价的人），participant2 是雇主（发布需求的人）
+  // 对于二手商品：participant1 是买家（发起咨询的人），participant2 是卖家（发布商品的人）
   const isEmployer = conversation?.relatedType === ConversationRelatedType.JOB &&
                      conversation.participant1Id === currentUserId;
+  const isBuyer = conversation?.relatedType === ConversationRelatedType.ITEM &&
+                  conversation.participant1Id === currentUserId;
+
+  // 获取对方的角色标签
+  const getRecipientTitle = (): string => {
+    if (!conversation) return '用户';
+
+    switch (conversation.relatedType) {
+      case ConversationRelatedType.JOB:
+        // 零工需求：如果我是雇主，对方是达人；如果我是达人，对方是雇主
+        return isEmployer ? '达人' : '雇主';
+      case ConversationRelatedType.ITEM:
+        // 二手商品：如果我是买家，对方是卖家；如果我是卖家，对方是买家
+        return isBuyer ? '卖家' : '买家';
+      default:
+        return '用户';
+    }
+  };
 
   const handleImageUpload = () => {
     Alert.alert('上传图片', '选择图片', [
@@ -173,7 +236,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         show: true,
         name: expertName || recipientName || '用户',
         avatar: expertAvatar || recipientAvatar,
-        title: isEmployer ? '达人' : '雇主',
+        title: getRecipientTitle(),
       },
       message: {
         supportedTypes: [
@@ -202,7 +265,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     try {
       const sentMessage = await sendMessageService(conversationId, {
         senderId: currentUserId,
-        senderName: '当前用户',
+        senderName: currentUserName,
         type: 'TEXT',
         content,
       });
@@ -225,6 +288,45 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     return null;
   };
 
+  // 发送待处理的报价（从需求详情页跳转过来时自动调用，不触发 loadConversation）
+  const sendPendingQuote = async (quoteData: PendingQuote) => {
+    if (!conversation) return;
+
+    // 获取雇主名称（对方）
+    const employerName = conversation.participant1Id === currentUserId
+      ? conversation.participant2Name
+      : conversation.participant1Name;
+
+    try {
+      await sendQuoteService(
+        conversationId,
+        currentUserId,
+        currentUserName,
+        {
+          jobId: quoteData.jobId,
+          jobTitle: conversation.relatedTitle || '服务需求',
+          quotedPrice: quoteData.quotedPrice,
+          serviceTime: quoteData.serviceTime,
+          duration: quoteData.duration,
+          message: quoteData.message,
+          expertId: currentUserId,
+          expertName: currentUserName,
+          employerName: employerName || '雇主', // 添加雇主名称
+        }
+      );
+      // 发送成功后重新加载对话
+      loadConversation();
+      // 延迟2秒后再次加载，获取雇主的自动回复
+      setTimeout(() => {
+        loadConversation();
+      }, 2500);
+    } catch (error) {
+      console.error('发送报价失败:', error);
+      Alert.alert('发送失败', '报价发送失败，请稍后重试');
+    }
+  };
+
+  // 用户手动发送报价（从聊天页面的报价弹窗）
   const handleSendQuote = async (quoteData: {
     jobId: string;
     quotedPrice: number;
@@ -236,11 +338,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
     setShowQuoteModal(false);
 
+    // 获取雇主名称（对方）
+    const employerName = conversation.participant1Id === currentUserId
+      ? conversation.participant2Name
+      : conversation.participant1Name;
+
     try {
       await sendQuoteService(
         conversationId,
         currentUserId,
-        '当前用户',
+        currentUserName,
         {
           jobId: quoteData.jobId,
           jobTitle: conversation.relatedTitle || '服务需求',
@@ -249,11 +356,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           duration: quoteData.duration,
           message: quoteData.message,
           expertId: currentUserId,
-          expertName: '当前用户',
+          expertName: currentUserName,
+          employerName: employerName || '雇主', // 添加雇主名称
         }
       );
       // 重新加载对话以获取新消息
       loadConversation();
+      // 延迟2秒后再次加载，获取雇主的自动回复
+      setTimeout(() => {
+        loadConversation();
+      }, 2500);
     } catch (error) {
       console.error('发送报价失败:', error);
       Alert.alert('发送失败', '报价发送失败，请稍后重试');

@@ -118,6 +118,22 @@ export interface UserMembership {
   isFamilyPlan: boolean;         // 是否家庭版 (仅钻石)
   familyMembers?: number;        // 家庭成员数 (3-5)
   purchaseHistory: MembershipPurchaseRecord[];  // 购买记录
+
+  // 预约的会员（降级时使用，当前会员到期后生效）
+  pendingMembership?: {
+    level: MembershipLevel;
+    cycle: PaymentCycle;
+    startDate: string;           // 生效日期
+    endDate: string;             // 到期日期
+    purchaseDate: string;        // 购买日期
+    orderId: string;             // 订单ID
+  };
+
+  // 升级前的会员（升级时使用，高级会员到期后切换回）
+  previousMembership?: {
+    level: MembershipLevel;
+    endDate: string;             // 原会员到期日期
+  };
 }
 
 /**

@@ -216,9 +216,17 @@ export const getMembershipDisplayInfo = async (): Promise<{
   level: MembershipLevel;
   label: string;
   colors: { primary: string; background: string; gradient: string[] };
+  startDate?: string;
+  endDate?: string;
   daysRemaining: number | null;
   isExpired: boolean;
   autoRenew: boolean;
+  pendingMembership?: {
+    level: MembershipLevel;
+    label: string;
+    startDate: string;
+    endDate: string;
+  };
 }> => {
   const membership = await getMembership();
 
@@ -235,13 +243,27 @@ export const getMembershipDisplayInfo = async (): Promise<{
     isExpired = diffDays <= 0;
   }
 
+  // 处理预约的会员信息
+  let pendingMembership;
+  if (membership.pendingMembership) {
+    pendingMembership = {
+      level: membership.pendingMembership.level,
+      label: MEMBERSHIP_LEVEL_LABELS[membership.pendingMembership.level],
+      startDate: membership.pendingMembership.startDate,
+      endDate: membership.pendingMembership.endDate,
+    };
+  }
+
   return {
     level: membership.level,
     label: MEMBERSHIP_LEVEL_LABELS[membership.level],
     colors: MEMBERSHIP_LEVEL_COLORS[membership.level],
+    startDate: membership.startDate,
+    endDate: membership.endDate,
     daysRemaining,
     isExpired,
     autoRenew: membership.autoRenew,
+    pendingMembership,
   };
 };
 
@@ -365,4 +387,126 @@ export const isAtLeastLevel = async (level: MembershipLevel): Promise<boolean> =
 export const getMembershipLevelValue = (level: MembershipLevel): number => {
   const levels = [MembershipLevel.FREE, MembershipLevel.GOLD, MembershipLevel.PLATINUM, MembershipLevel.DIAMOND];
   return levels.indexOf(level);
+};
+
+// ==================== 购买类型判断 ====================
+
+export type PurchaseType = 'new' | 'renew' | 'upgrade' | 'downgrade';
+
+/**
+ * 判断购买类型
+ * - new: 新开通（当前免费用户或会员已过期）
+ * - renew: 续费（购买同等级会员）
+ * - upgrade: 升级（购买更高级会员）
+ * - downgrade: 降级预约（购买较低级会员，当前会员到期后生效）
+ */
+export const determinePurchaseType = async (
+  targetLevel: MembershipLevel
+): Promise<PurchaseType> => {
+  const membership = await getMembership();
+
+  // 免费用户 -> 新开通
+  if (membership.level === MembershipLevel.FREE) {
+    return 'new';
+  }
+
+  // 检查当前会员是否已过期
+  if (membership.endDate) {
+    const endDate = new Date(membership.endDate);
+    const now = new Date();
+    if (endDate <= now) {
+      return 'new'; // 会员已过期，视为新开通
+    }
+  }
+
+  const currentLevelValue = getMembershipLevelValue(membership.level);
+  const targetLevelValue = getMembershipLevelValue(targetLevel);
+
+  if (targetLevelValue === currentLevelValue) {
+    return 'renew'; // 同等级续费
+  } else if (targetLevelValue > currentLevelValue) {
+    return 'upgrade'; // 升级
+  } else {
+    return 'downgrade'; // 降级预约
+  }
+};
+
+/**
+ * 计算购买后的到期时间
+ * @param targetLevel 目标等级
+ * @param cycle 付费周期
+ * @param purchaseType 购买类型
+ */
+export const calculateNewEndDate = async (
+  targetLevel: MembershipLevel,
+  cycle: PaymentCycle,
+  purchaseType: PurchaseType
+): Promise<string> => {
+  const membership = await getMembership();
+  const now = new Date();
+
+  // 计算周期天数
+  const cycleDays = cycle === 'yearly' ? 365 : cycle === 'quarterly' ? 90 : 30;
+
+  let baseDate: Date;
+
+  switch (purchaseType) {
+    case 'new':
+    case 'upgrade':
+      // 新开通或升级：从现在开始计算
+      baseDate = now;
+      break;
+
+    case 'renew':
+      // 续费：从当前到期时间开始延长
+      if (membership.endDate) {
+        const currentEndDate = new Date(membership.endDate);
+        baseDate = currentEndDate > now ? currentEndDate : now;
+      } else {
+        baseDate = now;
+      }
+      break;
+
+    case 'downgrade':
+      // 降级预约：从当前会员到期时间开始
+      if (membership.endDate) {
+        baseDate = new Date(membership.endDate);
+      } else {
+        baseDate = now;
+      }
+      break;
+
+    default:
+      baseDate = now;
+  }
+
+  const newEndDate = new Date(baseDate.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+  return newEndDate.toISOString();
+};
+
+/**
+ * 获取完整的购买信息（用于确认弹窗）
+ */
+export const getPurchaseInfo = async (
+  targetLevel: MembershipLevel,
+  cycle: PaymentCycle
+): Promise<{
+  purchaseType: PurchaseType;
+  currentLevel: MembershipLevel;
+  currentEndDate?: string;
+  newEndDate: string;
+  price: number;
+}> => {
+  const membership = await getMembership();
+  const purchaseType = await determinePurchaseType(targetLevel);
+  const newEndDate = await calculateNewEndDate(targetLevel, cycle, purchaseType);
+  const price = calculateMembershipPrice(targetLevel, cycle);
+
+  return {
+    purchaseType,
+    currentLevel: membership.level,
+    currentEndDate: membership.endDate,
+    newEndDate,
+    price,
+  };
 };

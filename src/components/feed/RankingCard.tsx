@@ -95,46 +95,75 @@ export const RankingCard: React.FC<RankingCardProps> = ({
     return `${(meters / 1000).toFixed(1)}km`;
   };
 
+  // 获取商品类型徽章信息
+  const getItemTypeBadge = (itemType?: string) => {
+    switch (itemType) {
+      case 'meal_plan':
+        return { text: '套餐', color: successColor };
+      case 'service':
+        return { text: '服务', color: primaryColor };
+      case 'product':
+      default:
+        return { text: '商品', color: warningColor };
+    }
+  };
+
   // 渲染热销榜项（统一高度60px）
-  const renderHotSalesItem = (item: HotSalesItem) => (
-    <Pressable key={item.id} onPress={() => onItemPress(item)}>
-      <XStack
-        gap="$2"
-        alignItems="center"
-        height={60}
-        borderBottomWidth={1}
-        borderBottomColor="$color5"
-      >
-        {/* 排名徽章 */}
-        <RankBadge rank={item.rank} />
+  const renderHotSalesItem = (item: HotSalesItem) => {
+    const badge = getItemTypeBadge(item.itemType);
+    return (
+      <Pressable key={item.id} onPress={() => onItemPress(item)}>
+        <XStack
+          gap="$2"
+          alignItems="center"
+          height={60}
+          borderBottomWidth={1}
+          borderBottomColor="$color5"
+        >
+          {/* 排名徽章 */}
+          <RankBadge rank={item.rank} />
 
-        {/* 图片 */}
-        <Image source={{ uri: item.image }} style={styles.productImage} />
+          {/* 图片 */}
+          <Image source={{ uri: item.image }} style={styles.productImage} />
 
-        {/* 信息 */}
-        <YStack flex={1} gap="$0.5">
-          <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={1}>
-            {item.name}
-          </Text>
-          <XStack alignItems="baseline" gap="$1">
-            <Text fontSize="$3" fontWeight="600" color="$error">
-              ¥{item.price}
-            </Text>
-            {item.originalPrice && (
-              <Text fontSize="$2" color="$color10" textDecorationLine="line-through">
-                ¥{item.originalPrice}
+          {/* 信息 */}
+          <YStack flex={1} gap="$0.5">
+            <XStack gap="$1" alignItems="center">
+              <Text fontSize="$3" fontWeight="500" color="$color12" numberOfLines={1} flexShrink={1}>
+                {item.name}
               </Text>
-            )}
-          </XStack>
-        </YStack>
+              {/* 类型徽章 */}
+              <View
+                backgroundColor={`${badge.color}15`}
+                paddingHorizontal="$1"
+                paddingVertical={2}
+                borderRadius="$10"
+              >
+                <Text fontSize={9} color={badge.color} fontWeight="500">
+                  {badge.text}
+                </Text>
+              </View>
+            </XStack>
+            <XStack alignItems="baseline" gap="$1">
+              <Text fontSize="$3" fontWeight="600" color="$error">
+                ¥{item.price}
+              </Text>
+              {item.originalPrice && (
+                <Text fontSize="$2" color="$color10" textDecorationLine="line-through">
+                  ¥{item.originalPrice}
+                </Text>
+              )}
+            </XStack>
+          </YStack>
 
-        {/* 销量 */}
-        <Text fontSize="$2" color="$color10">
-          已售{item.salesCount}
-        </Text>
-      </XStack>
-    </Pressable>
-  );
+          {/* 销量 */}
+          <Text fontSize="$2" color="$color10">
+            已售{item.salesCount}
+          </Text>
+        </XStack>
+      </Pressable>
+    );
+  };
 
   // 渲染预约榜项（横滑，带排名徽章）
   const renderPopularExpertItem = (item: PopularExpertItem) => (

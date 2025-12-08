@@ -145,93 +145,135 @@ export const RankingDetailScreen: React.FC = () => {
   // 处理点击事件
   const handleItemPress = (item: RankingItem) => {
     if (isHotSalesItem(item)) {
-      navigation.navigate('ProductDetail' as never, { productId: item.id } as never);
-    } else if (isPopularExpertItem(item)) {
-      navigation.navigate('ExpertDetail' as never, { expertId: item.id } as never);
-    } else if (isHotTopicItem(item)) {
-      const targetItem = item as HotTopicItem;
-      if (targetItem.type === 'theme') {
-        // TODO: 跳转主题详情页
-        console.log('Navigate to theme:', targetItem.id);
-      } else if (targetItem.type === 'article') {
-        navigation.navigate('ArticleDetail' as never, { articleId: targetItem.id } as never);
-      } else if (targetItem.type === 'column') {
-        navigation.navigate('ColumnList' as never, { columnId: targetItem.id } as never);
+      // 根据商品ID前缀跳转到对应的服务页面
+      const itemId = item.id;
+      if (itemId.startsWith('prod_')) {
+        // 闪送到家商品 - 直接跳转到商品详情页
+        const numericId = parseInt(itemId.replace('prod_', ''), 10);
+        navigation.navigate('ProductDetail' as never, { productId: numericId } as never);
+      } else if (itemId.startsWith('meal_')) {
+        // 营养配餐套餐
+        navigation.navigate('NutritionService' as never, { planId: itemId } as never);
+      } else if (itemId.startsWith('service_doctor')) {
+        // 私人医生服务
+        navigation.navigate('PrivateDoctorList' as never);
+      } else if (itemId.startsWith('service_care') || itemId.startsWith('service_respite')) {
+        // 养老服务
+        navigation.navigate('ElderlyService' as never, { serviceId: itemId } as never);
+      } else if (itemId.startsWith('service_legal')) {
+        // 法律服务
+        navigation.navigate('LegalServiceHome' as never, { serviceId: itemId } as never);
       }
+    } else if (isPopularExpertItem(item)) {
+      // 跳转到私人医生详情页
+      navigation.navigate('PrivateDoctorDetail' as never, { doctorId: item.id } as never);
+    } else if (isHotTopicItem(item)) {
+      // 跳转到栏目文章详情页
+      navigation.navigate('ContentDetail' as never, { contentId: item.id } as never);
     } else if (isNearbyServiceItem(item)) {
-      navigation.navigate('ServiceProviderDetail' as never, { providerId: item.id } as never);
+      // 商家详情页暂时显示提示
+      console.log('商家详情页开发中', item.id);
+    }
+  };
+
+  // 获取商品类型徽章信息
+  const getItemTypeBadge = (itemType?: string) => {
+    switch (itemType) {
+      case 'meal_plan':
+        return { text: '套餐', color: successColor };
+      case 'service':
+        return { text: '服务', color: primaryColor };
+      case 'product':
+      default:
+        return { text: '商品', color: warningColor };
     }
   };
 
   // 渲染热销榜项
-  const renderHotSalesItem = (item: HotSalesItem) => (
-    <Pressable key={item.id} onPress={() => handleItemPress(item)}>
-      <XStack
-        gap="$2"
-        alignItems="center"
-        padding="$2"
-        backgroundColor="$color2"
-        borderRadius="$4"
-        borderWidth={1}
-        borderColor="$color5"
-        marginBottom="$2"
-      >
-        {/* 排名 */}
-        <View
-          width={28}
-          height={28}
-          borderRadius={14}
-          backgroundColor={item.rank <= 3 ? `${getRankColor(item.rank)}20` : '$color4'}
+  const renderHotSalesItem = (item: HotSalesItem) => {
+    const badge = getItemTypeBadge(item.itemType);
+    return (
+      <Pressable key={item.id} onPress={() => handleItemPress(item)}>
+        <XStack
+          gap="$2"
           alignItems="center"
-          justifyContent="center"
+          padding="$2"
+          backgroundColor="$color2"
+          borderRadius="$4"
+          borderWidth={1}
+          borderColor="$color5"
+          marginBottom="$2"
         >
-          <Text
-            fontSize="$4"
-            fontWeight="700"
-            color={getRankColor(item.rank)}
+          {/* 排名 */}
+          <View
+            width={28}
+            height={28}
+            borderRadius={14}
+            backgroundColor={item.rank <= 3 ? `${getRankColor(item.rank)}20` : '$color4'}
+            alignItems="center"
+            justifyContent="center"
           >
-            {item.rank}
-          </Text>
-        </View>
-
-        {/* 图片 */}
-        <Image source={{ uri: item.image }} style={styles.productImage} />
-
-        {/* 信息 */}
-        <YStack flex={1} gap="$0.5">
-          <Text fontSize="$4" fontWeight="600" color="$color12" numberOfLines={1}>
-            {item.name}
-          </Text>
-          <XStack alignItems="baseline" gap="$1">
-            <Text fontSize="$4" fontWeight="700" color="$error">
-              ¥{item.price}
+            <Text
+              fontSize="$4"
+              fontWeight="700"
+              color={getRankColor(item.rank)}
+            >
+              {item.rank}
             </Text>
-            {item.originalPrice && (
-              <Text
-                fontSize="$2"
-                color="$color10"
-                textDecorationLine="line-through"
-              >
-                ¥{item.originalPrice}
+          </View>
+
+          {/* 图片 */}
+          <Image source={{ uri: item.image }} style={styles.productImage} />
+
+          {/* 信息 */}
+          <YStack flex={1} gap="$0.5">
+            <XStack gap="$1" alignItems="center">
+              <Text fontSize="$4" fontWeight="600" color="$color12" numberOfLines={1} flexShrink={1}>
+                {item.name}
               </Text>
-            )}
-          </XStack>
-        </YStack>
+              {/* 类型徽章 */}
+              <View
+                backgroundColor={`${badge.color}15`}
+                paddingHorizontal="$1.5"
+                paddingVertical="$0.5"
+                borderRadius="$10"
+              >
+                <Text fontSize={10} color={badge.color} fontWeight="500">
+                  {badge.text}
+                </Text>
+              </View>
+            </XStack>
+            <XStack alignItems="baseline" gap="$1">
+              <Text fontSize="$4" fontWeight="700" color="$error">
+                ¥{item.price}
+              </Text>
+              {item.originalPrice && (
+                <Text
+                  fontSize="$2"
+                  color="$color10"
+                  textDecorationLine="line-through"
+                >
+                  ¥{item.originalPrice}
+                </Text>
+              )}
+            </XStack>
+          </YStack>
 
-        {/* 销量 */}
-        <YStack alignItems="flex-end">
-          <Text fontSize="$3" color="$color12" fontWeight="500">
-            已售{formatCount(item.salesCount)}
-          </Text>
-          <Text fontSize="$2" color="$color10">
-            {item.unit || '件'}
-          </Text>
-        </YStack>
+          {/* 销量 */}
+          <YStack alignItems="flex-end">
+            <Text fontSize="$3" color="$color12" fontWeight="500">
+              已售{formatCount(item.salesCount)}
+            </Text>
+            <Text fontSize="$2" color="$color10">
+              {item.unit || '件'}
+            </Text>
+          </YStack>
 
-        <ChevronRight size={16} color={theme.color10?.val} />
-      </XStack>
-    </Pressable>
-  );
+          <ChevronRight size={16} color={theme.color10?.val} />
+        </XStack>
+      </Pressable>
+    );
+  };
 
   // 渲染预约榜项
   const renderPopularExpertItem = (item: PopularExpertItem) => (
@@ -410,7 +452,7 @@ export const RankingDetailScreen: React.FC = () => {
     <Pressable key={item.id} onPress={() => handleItemPress(item)}>
       <XStack
         gap="$2"
-        alignItems="center"
+        alignItems="flex-start"
         padding="$2"
         backgroundColor="$color2"
         borderRadius="$4"
@@ -418,7 +460,7 @@ export const RankingDetailScreen: React.FC = () => {
         borderColor="$color5"
         marginBottom="$2"
       >
-        {/* 排名 */}
+        {/* col1: 排名 */}
         <View
           width={28}
           height={28}
@@ -436,7 +478,7 @@ export const RankingDetailScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* 商家图片 */}
+        {/* col2: 商家图片 */}
         <View position="relative">
           <Image
             source={{ uri: item.image }}
@@ -459,51 +501,52 @@ export const RankingDetailScreen: React.FC = () => {
           )}
         </View>
 
-        {/* 信息 */}
-        <YStack flex={1} gap="$0.5">
+        {/* col3: 商家信息 */}
+        <YStack flex={1} gap={2}>
+          {/* 商家名+类型徽章 */}
           <XStack gap="$1" alignItems="center">
             <Text fontSize="$4" fontWeight="600" color="$color12" numberOfLines={1}>
               {item.name}
             </Text>
             <View
               backgroundColor="$color4"
-              paddingHorizontal="$1"
+              paddingHorizontal="$1.5"
               paddingVertical="$0.25"
-              borderRadius="$2"
+              borderRadius="$10"
             >
               <Text fontSize={10} color="$color10">
                 {MERCHANT_TYPE_LABELS[item.merchantType] || item.merchantType}
               </Text>
             </View>
           </XStack>
-          <XStack gap="$2" alignItems="center">
-            <XStack gap="$0.5" alignItems="center">
-              <Star size={12} color={warningColor} fill={warningColor} />
-              <Text fontSize="$3" color="$color12" fontWeight="500">
-                {item.rating}
-              </Text>
-              <Text fontSize="$2" color="$color10">
-                ({item.reviewCount}评价)
-              </Text>
-            </XStack>
-            {item.priceRange && (
-              <Text fontSize="$2" color="$color10">
-                {item.priceRange}
-              </Text>
-            )}
+          {/* 评分评价 */}
+          <XStack gap="$0.5" alignItems="center">
+            <Star size={12} color={warningColor} fill={warningColor} />
+            <Text fontSize="$3" color="$color12" fontWeight="500">
+              {item.rating}
+            </Text>
+            <Text fontSize="$2" color="$color10">
+              ({item.reviewCount}评价)
+            </Text>
           </XStack>
-          {/* 标签 */}
+          {/* 价格区间 */}
+          {item.priceRange && (
+            <Text fontSize="$3" color="$color10">
+              {item.priceRange}
+            </Text>
+          )}
+          {/* 特色标签（徽章样式） */}
           {item.tags && item.tags.length > 0 && (
-            <XStack gap="$1" marginTop="$0.5">
+            <XStack gap="$1.5">
               {item.tags.slice(0, 2).map((tag, index) => (
                 <View
                   key={index}
-                  backgroundColor={`${primaryColor}10`}
-                  paddingHorizontal="$1"
-                  paddingVertical="$0.25"
-                  borderRadius="$2"
+                  backgroundColor={`${primaryColor}15`}
+                  paddingHorizontal="$2"
+                  paddingVertical="$0.5"
+                  borderRadius="$10"
                 >
-                  <Text fontSize={10} color="$primary">
+                  <Text fontSize={10} color="$primary" fontWeight="500">
                     {tag}
                   </Text>
                 </View>
@@ -512,15 +555,15 @@ export const RankingDetailScreen: React.FC = () => {
           )}
         </YStack>
 
-        {/* 距离 */}
-        <XStack gap="$0.5" alignItems="center">
-          <MapPin size={14} color={primaryColor} />
-          <Text fontSize="$3" color="$primary" fontWeight="500">
-            {formatDistance(item.distance)}
-          </Text>
-        </XStack>
-
-        <ChevronRight size={16} color={theme.color10?.val} />
+        {/* col4: 距离 */}
+        <YStack alignItems="flex-end">
+          <XStack gap="$0.5" alignItems="center">
+            <MapPin size={14} color={primaryColor} />
+            <Text fontSize="$3" color="$primary" fontWeight="500">
+              {formatDistance(item.distance)}
+            </Text>
+          </XStack>
+        </YStack>
       </XStack>
     </Pressable>
   );

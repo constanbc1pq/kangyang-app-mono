@@ -316,6 +316,7 @@ export const ORDER_ITEM_TYPES = {
   ELDERLY_SERVICE: 'elderly_service',
   PRIVATE_DOCTOR: 'private_doctor',
   LEGAL_MEMBERSHIP: 'legal_membership',
+  MEMBERSHIP: 'membership',
 } as const;
 
 /**
@@ -398,6 +399,7 @@ export const ORDER_ITEM_TYPE_LABELS = {
   [ORDER_ITEM_TYPES.COURSE]: '课程',
   [ORDER_ITEM_TYPES.PRIVATE_DOCTOR]: '私人医生',
   [ORDER_ITEM_TYPES.LEGAL_MEMBERSHIP]: '法律尊享计划',
+  [ORDER_ITEM_TYPES.MEMBERSHIP]: '会员服务',
 };
 
 /**

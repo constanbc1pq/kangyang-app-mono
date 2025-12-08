@@ -54,7 +54,7 @@ export interface RankingList {
 }
 
 /**
- * 排行榜项 - 热销商品
+ * 排行榜项 - 热销商品/服务
  */
 export interface HotSalesItem {
   rank: number;
@@ -65,6 +65,7 @@ export interface HotSalesItem {
   originalPrice?: number;
   salesCount: number;          // 销量
   unit?: string;               // 单位 "份" "罐" "袋"
+  itemType?: 'product' | 'meal_plan' | 'service';  // 商品类型：商品/套餐/服务
 }
 
 /**

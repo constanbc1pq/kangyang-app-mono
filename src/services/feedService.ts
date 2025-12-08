@@ -3,6 +3,7 @@
  *
  * 提供养页面Feed区域的数据
  * 包括：入口卡片、排行榜、限时活动
+ * 数据来源：从各个服务的 LocalStorage 动态读取
  */
 
 import {
@@ -14,6 +15,9 @@ import {
   NearbyServiceItem,
   Activity,
 } from '@/types/feed';
+import { getColumnData } from './columnService';
+import { getDoctors } from './privateDoctorService';
+import { groceryProducts, flashSaleProducts, GroceryProduct } from '@/data/groceryProducts';
 
 // ==================== Mock数据 ====================
 
@@ -88,121 +92,7 @@ const MOCK_FEED_ENTRIES: FeedEntry[] = [
   },
 ];
 
-/**
- * 热销榜Mock数据
- */
-const MOCK_HOT_SALES: HotSalesItem[] = [
-  {
-    rank: 1,
-    id: 'product-1',
-    name: '内蒙羊肉卷',
-    image: 'https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?w=200',
-    price: 68,
-    originalPrice: 88,
-    salesCount: 1280,
-    unit: '份',
-  },
-  {
-    rank: 2,
-    id: 'product-2',
-    name: '宁夏枸杞',
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=200',
-    price: 39,
-    originalPrice: 49,
-    salesCount: 986,
-    unit: '罐',
-  },
-  {
-    rank: 3,
-    id: 'product-3',
-    name: '新疆红枣',
-    image: 'https://images.unsplash.com/photo-1596591868231-a84990796c0b?w=200',
-    price: 29,
-    salesCount: 872,
-    unit: '袋',
-  },
-];
 
-/**
- * 预约榜Mock数据
- */
-const MOCK_POPULAR_EXPERTS: PopularExpertItem[] = [
-  {
-    rank: 1,
-    id: 'doctor-1',
-    name: '陈志华',
-    avatar: 'local:doctor_001',
-    title: '心内科主任',
-    hospital: '北京协和医院',
-    availableSlots: -1,
-    isOnline: false,
-  },
-  {
-    rank: 2,
-    id: 'doctor-2',
-    name: '林美华',
-    avatar: 'local:doctor_002',
-    title: '中医科主任',
-    hospital: '广东省中医院',
-    availableSlots: 3,
-    isOnline: true,
-  },
-  {
-    rank: 3,
-    id: 'nutritionist-1',
-    name: '张营养师',
-    avatar: 'local:doctor_003',
-    title: '注册营养师',
-    availableSlots: 8,
-    isOnline: true,
-  },
-];
-
-/**
- * 热门榜Mock数据
- */
-const MOCK_HOT_TOPICS: HotTopicItem[] = [
-  {
-    rank: 1,
-    id: 'topic-1',
-    name: '冬季血压管理',
-    author: '陈医生',
-    viewCount: 123000,
-    type: 'theme',
-  },
-  {
-    rank: 2,
-    id: 'topic-2',
-    name: '膏方怎么选',
-    author: '林医生',
-    viewCount: 87000,
-    type: 'article',
-  },
-  {
-    rank: 3,
-    id: 'topic-3',
-    name: '老人冬季防跌倒',
-    author: '张医生',
-    viewCount: 62000,
-    type: 'theme',
-  },
-  {
-    rank: 4,
-    id: 'topic-4',
-    name: '冬令进补原则',
-    author: '李医生',
-    viewCount: 45000,
-    type: 'column',
-  },
-  {
-    rank: 5,
-    id: 'topic-5',
-    name: '糖尿病冬季饮食',
-    author: '王营养师',
-    viewCount: 38000,
-    type: 'article',
-  },
-];
 
 /**
  * 附近商家榜Mock数据
@@ -351,14 +241,36 @@ export const getEntryCards = async (): Promise<FeedEntry[]> => {
 
 /**
  * 获取热销榜
+ * 从闪送到家的商品数据中读取，按销量排序
+ * 数据来源：groceryProducts.ts（实际存在的商品数据）
  */
 export const getHotSalesRanking = async (): Promise<RankingList> => {
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  // 合并常规商品和秒杀商品
+  const allProducts: GroceryProduct[] = [...groceryProducts, ...flashSaleProducts];
+
+  // 按销量排序，取前10个
+  const sortedProducts = allProducts
+    .sort((a, b) => (b.sales || 0) - (a.sales || 0))
+    .slice(0, 10);
+
+  // 转换为HotSalesItem格式
+  const hotSalesItems: HotSalesItem[] = sortedProducts.map((product, index) => ({
+    rank: index + 1,
+    id: `prod_${product.id}`,  // 添加prod_前缀以便路由识别
+    name: product.name,
+    image: product.image,
+    price: product.price,
+    originalPrice: product.originalPrice,
+    salesCount: product.sales || 0,
+    unit: product.unit,
+    itemType: 'product',
+  }));
+
   return {
     id: 'ranking-hot-sales',
     type: 'hotSales',
     title: '本周热销',
-    items: MOCK_HOT_SALES,
+    items: hotSalesItems,
     updateTime: new Date().toISOString(),
     moreLink: 'RankingDetail?type=hotSales',
   };
@@ -366,14 +278,41 @@ export const getHotSalesRanking = async (): Promise<RankingList> => {
 
 /**
  * 获取预约榜
+ * 从私人医生数据中读取，按会员数排序
  */
 export const getPopularExpertsRanking = async (): Promise<RankingList> => {
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  // 从 LocalStorage 获取医生数据
+  const doctors = await getDoctors();
+
+  // 按会员数排序，取前5个
+  const sortedDoctors = doctors
+    .sort((a, b) => (b.memberCount || 0) - (a.memberCount || 0))
+    .slice(0, 5);
+
+  // 职称映射
+  const titleLabels: Record<string, string> = {
+    chief_physician: '主任医师',
+    associate_chief: '副主任医师',
+    attending: '主治医师',
+  };
+
+  // 转换为 PopularExpertItem 格式
+  const expertItems: PopularExpertItem[] = sortedDoctors.map((doctor, index) => ({
+    rank: index + 1,
+    id: doctor.id,
+    name: doctor.name,
+    avatar: doctor.avatar,
+    title: titleLabels[doctor.title] || doctor.title,
+    hospital: doctor.hospital.name,
+    availableSlots: doctor.isOnline ? Math.floor(Math.random() * 10) + 1 : -1,
+    isOnline: doctor.isOnline,
+  }));
+
   return {
     id: 'ranking-popular-experts',
     type: 'popularExperts',
     title: '最受欢迎的专家',
-    items: MOCK_POPULAR_EXPERTS,
+    items: expertItems,
     updateTime: new Date().toISOString(),
     moreLink: 'RankingDetail?type=popularExperts',
   };
@@ -381,14 +320,32 @@ export const getPopularExpertsRanking = async (): Promise<RankingList> => {
 
 /**
  * 获取热门榜
+ * 从栏目文章中读取，按浏览量排序
  */
 export const getHotTopicsRanking = async (): Promise<RankingList> => {
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  // 从 LocalStorage 获取栏目文章数据
+  const columnData = await getColumnData();
+
+  // 按浏览量排序，取前5个
+  const sortedContents = columnData.contents
+    .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+    .slice(0, 5);
+
+  // 转换为 HotTopicItem 格式
+  const topicItems: HotTopicItem[] = sortedContents.map((content, index) => ({
+    rank: index + 1,
+    id: content.id,
+    name: content.title,
+    author: content.author.name,
+    viewCount: content.viewCount,
+    type: 'article' as const,  // 栏目内容都是文章类型
+  }));
+
   return {
     id: 'ranking-hot-topics',
     type: 'hotTopics',
     title: '大家都在看',
-    items: MOCK_HOT_TOPICS,
+    items: topicItems,
     updateTime: new Date().toISOString(),
     moreLink: 'RankingDetail?type=hotTopics',
   };

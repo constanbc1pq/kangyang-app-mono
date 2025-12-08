@@ -977,7 +977,7 @@ const initializeDefaultSeries = (): ContentSeries[] => {
 };
 
 // 当前数据版本 - 更新数据结构时需要递增此版本号
-const CURRENT_DATA_VERSION = '1.1.0';
+const CURRENT_DATA_VERSION = '1.2.0';
 
 /**
  * 初始化完整的栏目数据

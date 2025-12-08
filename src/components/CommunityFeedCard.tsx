@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { YStack, XStack, Text, View, useTheme } from 'tamagui';
-import { TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { Image, StyleSheet, Pressable } from 'react-native';
 import { Heart, MessageCircle, MapPin } from 'lucide-react-native';
 import {
   ServiceJob,
@@ -71,7 +71,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     const hasImage = job.images && job.images.length > 0;
 
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+      <Pressable onPress={onPress} delayLongPress={100}>
         <View
           backgroundColor="$color2"
           borderRadius="$5"
@@ -162,7 +162,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
             )}
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -172,7 +172,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     const hasImage = item.images && item.images.length > 0;
 
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+      <Pressable onPress={onPress} delayLongPress={100}>
         <View
           backgroundColor="$color2"
           borderRadius="$5"
@@ -244,7 +244,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
             </XStack>
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -253,7 +253,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     const postWithDistance = post as CommunityPost & { distance?: string };
 
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+      <Pressable onPress={onPress} delayLongPress={100}>
         <View
           backgroundColor="$color2"
           borderRadius="$5"
@@ -359,7 +359,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
             )}
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -368,7 +368,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     const expertWithDistance = expert as Expert & { distance?: string };
 
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+      <Pressable onPress={onPress} delayLongPress={100}>
         <View
           backgroundColor="$color2"
           borderRadius="$5"
@@ -474,7 +474,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
             </XStack>
           )}
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 

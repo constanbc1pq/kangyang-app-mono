@@ -142,22 +142,44 @@ export const ExpertDetailScreen: React.FC<ExpertDetailScreenProps> = ({
 
   const getServiceTypeLabel = (type: ServiceType): string => {
     const labels: { [key in ServiceType]: string } = {
-      [ServiceType.ACCOMPANY_DOCTOR]: '陪诊',
-      [ServiceType.ACCOMPANY_CARE]: '陪护',
-      [ServiceType.ACCOMPANY_CHAT]: '陪聊',
-      [ServiceType.HOUSEKEEPING]: '家政',
-      [ServiceType.MEAL_DELIVERY]: '配餐',
-      [ServiceType.SHOPPING]: '代购',
-      [ServiceType.TRANSPORT]: '接送',
-      [ServiceType.NURSING]: '护理',
-      [ServiceType.REHABILITATION]: '康复',
-      [ServiceType.PSYCHOLOGICAL]: '心理咨询',
-      [ServiceType.NUTRITION]: '营养指导',
-      [ServiceType.FITNESS]: '健身指导',
-      [ServiceType.MASSAGE]: '推拿按摩',
-      [ServiceType.TEACHING]: '技能教学',
-      [ServiceType.REPAIR]: '维修',
-      [ServiceType.OTHER]: '其他',
+      // 生活服务类
+      [ServiceType.HOUSEKEEPING]: '家政保洁',
+      [ServiceType.REPAIR]: '维修安装',
+      [ServiceType.MOVING]: '搬家运输',
+      [ServiceType.DELIVERY]: '跑腿代购',
+      [ServiceType.MEAL_PREP]: '做饭配餐',
+      [ServiceType.PET_CARE]: '宠物照顾',
+      [ServiceType.GARDENING]: '园艺绿化',
+      // 陪护照料类
+      [ServiceType.ESCORT]: '陪诊陪护',
+      [ServiceType.CHILDCARE]: '儿童看护',
+      [ServiceType.ELDERCARE]: '老人照料',
+      [ServiceType.NURSING]: '专业护理',
+      [ServiceType.COMPANION]: '陪伴聊天',
+      // 技能服务类
+      [ServiceType.TUTORING]: '家教辅导',
+      [ServiceType.TRANSLATION]: '翻译服务',
+      [ServiceType.PHOTOGRAPHY]: '摄影拍照',
+      [ServiceType.MAKEUP]: '化妆造型',
+      [ServiceType.DRIVING]: '代驾陪驾',
+      [ServiceType.IT_SUPPORT]: '电脑维护',
+      [ServiceType.PHONE_TEACH]: '手机教学',
+      // 创意设计类
+      [ServiceType.GRAPHIC_DESIGN]: '平面设计',
+      [ServiceType.VIDEO_EDITING]: '视频剪辑',
+      [ServiceType.WRITING]: '文案写作',
+      [ServiceType.HANDICRAFT]: '手工制作',
+      // 教学培训类
+      [ServiceType.FITNESS]: '健身教练',
+      [ServiceType.YOGA]: '瑜伽教学',
+      [ServiceType.DANCE]: '舞蹈教学',
+      [ServiceType.MUSIC]: '音乐教学',
+      [ServiceType.PAINTING]: '绘画教学',
+      [ServiceType.COOKING]: '烹饪教学',
+      // 其他
+      [ServiceType.MASSAGE]: '按摩理疗',
+      [ServiceType.BEAUTY]: '美容美甲',
+      [ServiceType.OTHER]: '其他服务',
     };
     return labels[type] || type;
   };

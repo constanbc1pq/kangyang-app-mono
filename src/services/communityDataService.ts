@@ -159,7 +159,7 @@ const initializeDefaultJobs = (): ServiceJob[] => {
       title: '需要一位护理员陪护老人去医院复查',
       description: '母亲今年68岁，患有高血压，需要去医院复查。希望有经验的护理员陪同就医，协助挂号、取药等。',
       jobType: JobType.CARE,
-      serviceType: ServiceType.ACCOMPANY_DOCTOR,
+      serviceType: ServiceType.ESCORT, // 陪诊陪护
       employerId: 'user_001',
       employerName: '李明',
       employerAvatar: '👨',
@@ -195,7 +195,7 @@ const initializeDefaultJobs = (): ServiceJob[] => {
       title: '寻找专业按摩师上门服务',
       description: '老人腰椎不好，需要专业的按摩理疗。希望按摩师有中医推拿经验，能够上门服务。',
       jobType: JobType.HEALTH,
-      serviceType: ServiceType.MASSAGE,
+      serviceType: ServiceType.MASSAGE, // 按摩理疗
       employerId: 'user_002',
       employerName: '王芳',
       employerAvatar: '👩',
@@ -231,7 +231,7 @@ const initializeDefaultJobs = (): ServiceJob[] => {
       title: '教老人使用智能手机',
       description: '父亲60岁，想学习使用微信、支付宝等常用APP。希望有耐心的老师上门教学。',
       jobType: JobType.EDUCATION,
-      serviceType: ServiceType.PHONE_TEACH,
+      serviceType: ServiceType.PHONE_TEACH, // 手机教学
       employerId: 'user_001',
       employerName: '李明',
       employerAvatar: '👨',
@@ -265,7 +265,7 @@ const initializeDefaultJobs = (): ServiceJob[] => {
       title: '寻找陪聊师傅陪老人聊天',
       description: '母亲独居，比较孤独，希望找一位有经验、健谈的陪聊师傅定期上门聊天，排解孤独。',
       jobType: JobType.LIFE,
-      serviceType: ServiceType.ACCOMPANY_CHAT,
+      serviceType: ServiceType.COMPANION, // 陪伴聊天
       employerId: 'user_003',
       employerName: '赵女士',
       employerAvatar: '👩',
@@ -299,7 +299,7 @@ const initializeDefaultJobs = (): ServiceJob[] => {
       title: '寻找康复理疗师帮助术后康复',
       description: '父亲刚做完膝关节手术，需要专业的康复理疗师指导康复训练。',
       jobType: JobType.HEALTH,
-      serviceType: ServiceType.REHABILITATION,
+      serviceType: ServiceType.NURSING, // 专业护理（含康复）
       employerId: 'user_004',
       employerName: '孙先生',
       employerAvatar: '👨',
@@ -335,7 +335,7 @@ const initializeDefaultJobs = (): ServiceJob[] => {
       title: '寻找营养师制定健康饮食方案',
       description: '老人有糖尿病和高血压，需要专业营养师制定科学的饮食方案，并指导家属配餐。',
       jobType: JobType.HEALTH,
-      serviceType: ServiceType.MEAL_PREP,
+      serviceType: ServiceType.COOKING, // 烹饪教学（含营养配餐指导）
       employerId: 'user_005',
       employerName: '钱女士',
       employerAvatar: '👩',
@@ -2818,6 +2818,10 @@ const initializeDefaultConversations = (): ChatConversation[] => {
   ];
 };
 
+// 数据版本号 - 用于强制更新数据
+const JOBS_DATA_VERSION = '2.0'; // 更新 ServiceType 枚举值
+const JOBS_VERSION_KEY = '@kangyang_community_jobs_version';
+
 /**
  * 初始化所有社区数据
  */
@@ -2830,11 +2834,15 @@ export const initializeCommunityData = async (): Promise<void> => {
     const existingPosts = await AsyncStorage.getItem(STORAGE_KEYS.COMMUNITY_POSTS);
     const existingChats = await AsyncStorage.getItem(STORAGE_KEYS.COMMUNITY_CHATS);
 
-    // 初始化零工需求
-    if (!existingJobs) {
+    // 检查 jobs 数据版本
+    const currentJobsVersion = await AsyncStorage.getItem(JOBS_VERSION_KEY);
+
+    // 初始化零工需求（版本不匹配时也重新初始化）
+    if (!existingJobs || currentJobsVersion !== JOBS_DATA_VERSION) {
       const jobs = initializeDefaultJobs();
       await AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_JOBS, JSON.stringify(jobs));
-      console.log('零工需求数据初始化完成');
+      await AsyncStorage.setItem(JOBS_VERSION_KEY, JOBS_DATA_VERSION);
+      console.log('零工需求数据初始化完成，版本:', JOBS_DATA_VERSION);
     }
 
     // 初始化达人数据 - 检查数量是否需要更新
@@ -3377,6 +3385,7 @@ export const sendQuote = async (
     message: string;
     expertId: string;
     expertName: string;
+    employerName?: string; // 雇主名称
   }
 ): Promise<ChatMessage | null> => {
   try {
@@ -3391,10 +3400,38 @@ export const sendQuote = async (
         price: quoteData.quotedPrice,
         currency: '¥',
         message: quoteData.message,
+        serviceTime: quoteData.serviceTime,
         estimatedDuration: quoteData.duration,
         status: QuoteStatus.PENDING,
+        expertName: quoteData.expertName,
+        employerName: quoteData.employerName,
       },
     });
+
+    // 获取会话信息，找到雇主（对方）的ID和名称
+    const conversationsData = await AsyncStorage.getItem(STORAGE_KEYS.COMMUNITY_CHATS);
+    const conversations: ChatConversation[] = conversationsData ? JSON.parse(conversationsData) : [];
+    const conversation = conversations.find(c => c.id === conversationId);
+
+    if (conversation) {
+      // 确定雇主信息（不是当前发送者的那一方）
+      const employerId = conversation.participant1Id === senderId
+        ? conversation.participant2Id
+        : conversation.participant1Id;
+      const employerName = conversation.participant1Id === senderId
+        ? conversation.participant2Name
+        : conversation.participant1Name;
+
+      // 延迟发送雇主自动回复（模拟真实场景）
+      setTimeout(async () => {
+        await sendMessage(conversationId, {
+          senderId: employerId,
+          senderName: employerName || '雇主',
+          type: MessageType.TEXT,
+          content: `您好，已收到您的报价申请。我会仔细查看您的服务方案，稍后给您回复。感谢您的关注！`,
+        });
+      }, 1500);
+    }
 
     return quoteMessage;
   } catch (error) {

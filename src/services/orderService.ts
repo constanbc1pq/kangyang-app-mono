@@ -295,7 +295,20 @@ export const payOrder = async (
 };
 
 /**
+ * 获取会员等级数值（用于比较）
+ */
+const getMembershipLevelValue = (level: MembershipLevel): number => {
+  const levels = [MembershipLevel.FREE, MembershipLevel.GOLD, MembershipLevel.PLATINUM, MembershipLevel.DIAMOND];
+  return levels.indexOf(level);
+};
+
+/**
  * 处理会员购买 - 更新用户会员等级
+ * 支持四种场景：
+ * 1. new - 新开通（免费用户或会员已过期）
+ * 2. renew - 续费（同等级）
+ * 3. upgrade - 升级（立即生效）
+ * 4. downgrade - 降级预约（当前会员到期后生效）
  */
 const handleMembershipPurchase = async (
   order: Order,
@@ -307,27 +320,112 @@ const handleMembershipPurchase = async (
     const now = new Date();
     const nowISO = now.toISOString();
 
-    // 从订单元数据中获取会员等级
+    // 从订单元数据中获取会员等级和购买类型
     const metadata = order.metadata || order.items[0]?.metadata || {};
-    const membershipLevel = metadata.membershipLevel as MembershipLevel;
+    const targetLevel = metadata.membershipLevel as MembershipLevel;
+    const purchaseType = metadata.purchaseType as 'new' | 'renew' | 'upgrade' | 'downgrade' | undefined;
+    const cycle = (metadata.cycle as 'monthly' | 'quarterly' | 'yearly') || 'yearly';
 
-    if (!membershipLevel) {
+    if (!targetLevel) {
       console.warn('订单中未找到会员等级信息');
       return;
     }
 
-    // 计算会员有效期（1年）
-    const endDate = new Date(now);
-    endDate.setFullYear(endDate.getFullYear() + 1);
+    // 计算周期天数
+    const cycleDays = cycle === 'yearly' ? 365 : cycle === 'quarterly' ? 90 : 30;
+
+    // 判断购买类型（如果订单中没有指定）
+    let actualPurchaseType = purchaseType;
+    if (!actualPurchaseType) {
+      const currentLevel = userData.membership.level;
+      const currentEndDate = userData.membership.endDate ? new Date(userData.membership.endDate) : null;
+      const isExpired = !currentEndDate || currentEndDate <= now;
+
+      if (currentLevel === MembershipLevel.FREE || isExpired) {
+        actualPurchaseType = 'new';
+      } else {
+        const currentLevelValue = getMembershipLevelValue(currentLevel);
+        const targetLevelValue = getMembershipLevelValue(targetLevel);
+        if (targetLevelValue === currentLevelValue) {
+          actualPurchaseType = 'renew';
+        } else if (targetLevelValue > currentLevelValue) {
+          actualPurchaseType = 'upgrade';
+        } else {
+          actualPurchaseType = 'downgrade';
+        }
+      }
+    }
+
+    // 计算新的到期时间
+    let newStartDate: Date;
+    let newEndDate: Date;
+
+    switch (actualPurchaseType) {
+      case 'new':
+      case 'upgrade':
+        // 新开通或升级：从现在开始
+        newStartDate = now;
+        newEndDate = new Date(now.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+        break;
+
+      case 'renew':
+        // 续费：从当前到期时间延长
+        const currentEndDate = userData.membership.endDate ? new Date(userData.membership.endDate) : now;
+        const baseDate = currentEndDate > now ? currentEndDate : now;
+        newStartDate = userData.membership.startDate ? new Date(userData.membership.startDate) : now;
+        newEndDate = new Date(baseDate.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+        break;
+
+      case 'downgrade':
+        // 降级预约：记录预约信息，当前会员到期后生效
+        // 存储预约信息到 pendingMembership
+        userData.membership.pendingMembership = {
+          level: targetLevel,
+          cycle: cycle,
+          startDate: userData.membership.endDate || nowISO,
+          endDate: new Date(
+            (userData.membership.endDate ? new Date(userData.membership.endDate) : now).getTime() +
+            cycleDays * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          purchaseDate: nowISO,
+          orderId: order.id,
+        };
+
+        // 创建购买记录
+        const downgradeRecord: MembershipPurchaseRecord = {
+          id: `purchase_${Date.now()}`,
+          date: nowISO,
+          type: 'renewal', // 预约续费记为 renewal
+          fromLevel: userData.membership.level,
+          toLevel: targetLevel,
+          cycle: cycle,
+          amount: order.totalAmount,
+          paymentMethod: paymentMethod,
+          transactionId: transactionId,
+        };
+        userData.membership.purchaseHistory = [downgradeRecord, ...userData.membership.purchaseHistory];
+
+        await saveUserData(userData);
+        console.log(`✅ 会员降级预约成功: ${targetLevel}，将在 ${userData.membership.endDate} 后生效`);
+        return;
+
+      default:
+        newStartDate = now;
+        newEndDate = new Date(now.getTime() + cycleDays * 24 * 60 * 60 * 1000);
+    }
+
+    // 保存原会员信息（用于升级时保留）
+    const oldLevel = userData.membership.level;
+    const oldEndDate = userData.membership.endDate ? new Date(userData.membership.endDate) : null;
 
     // 创建购买记录
     const purchaseRecord: MembershipPurchaseRecord = {
       id: `purchase_${Date.now()}`,
       date: nowISO,
-      type: userData.membership.level === MembershipLevel.FREE ? 'purchase' : 'upgrade',
-      fromLevel: userData.membership.level,
-      toLevel: membershipLevel,
-      cycle: 'yearly',
+      type: actualPurchaseType === 'new' ? 'purchase' : actualPurchaseType === 'upgrade' ? 'upgrade' : 'renewal',
+      fromLevel: oldLevel !== MembershipLevel.FREE ? oldLevel : undefined,
+      toLevel: targetLevel,
+      cycle: cycle,
       amount: order.totalAmount,
       paymentMethod: paymentMethod,
       transactionId: transactionId,
@@ -336,15 +434,25 @@ const handleMembershipPurchase = async (
     // 更新用户会员信息
     userData.membership = {
       ...userData.membership,
-      level: membershipLevel,
-      startDate: nowISO,
-      endDate: endDate.toISOString(),
-      paymentCycle: 'yearly',
+      level: targetLevel,
+      startDate: newStartDate.toISOString(),
+      endDate: newEndDate.toISOString(),
+      paymentCycle: cycle,
       purchaseHistory: [purchaseRecord, ...userData.membership.purchaseHistory],
     };
 
+    // 如果是升级，保存原会员的剩余时间（高级会员到期后切换回）
+    if (actualPurchaseType === 'upgrade' && oldLevel !== MembershipLevel.FREE) {
+      if (oldEndDate && oldEndDate > now) {
+        userData.membership.previousMembership = {
+          level: oldLevel,
+          endDate: oldEndDate.toISOString(),
+        };
+      }
+    }
+
     await saveUserData(userData);
-    console.log(`✅ 会员升级成功: ${membershipLevel}`);
+    console.log(`✅ 会员${actualPurchaseType === 'new' ? '开通' : actualPurchaseType === 'upgrade' ? '升级' : '续费'}成功: ${targetLevel}，有效期至 ${newEndDate.toISOString()}`);
   } catch (error) {
     console.error('处理会员购买失败:', error);
   }

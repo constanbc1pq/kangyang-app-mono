@@ -72,10 +72,10 @@ export const ChatPage: React.FC<ChatPageProps> = ({
 
   const { basic, titleBar, recipient, message, attachment, call, workflow } = config;
 
-  // 初始化消息
+  // 初始化消息 - 监听 initialMessages 变化
   useEffect(() => {
     initializeMessages();
-  }, []);
+  }, [initialMessages]);
 
   const initializeMessages = async () => {
     let msgs = [...initialMessages];

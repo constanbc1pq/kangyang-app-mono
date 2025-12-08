@@ -340,6 +340,9 @@ export const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
     const isAccepted = quote.status === QuoteStatus.ACCEPTED;
     const isRejected = quote.status === QuoteStatus.REJECTED;
 
+    // 获取报价人名字（优先从 quoteData 获取，其次从 message 获取）
+    const expertName = quote.expertName || message.senderName || '服务达人';
+
     return (
       <View
         padding="$2"
@@ -349,56 +352,140 @@ export const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
         width="100%"
         backgroundColor="$color2"
       >
-        <XStack justifyContent="space-between" alignItems="center" marginBottom="$1.5">
-          <Text fontSize="$4" fontWeight="600" color="$color12">
-            服务报价
-          </Text>
+        {/* 标题行 */}
+        <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+          <XStack gap="$1.5" alignItems="center">
+            <View
+              width={24}
+              height={24}
+              borderRadius={12}
+              backgroundColor={`${primaryColor}15`}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize={12}>💼</Text>
+            </View>
+            <Text fontSize="$4" fontWeight="600" color="$color12">
+              服务报价
+            </Text>
+          </XStack>
           {isAccepted && <CheckCircle size={18} color={successColor} />}
+          {isPending && (
+            <View
+              backgroundColor="$warning"
+              paddingHorizontal="$2"
+              paddingVertical="$0.5"
+              borderRadius="$10"
+            >
+              <Text fontSize={10} color="white" fontWeight="500">
+                待确认
+              </Text>
+            </View>
+          )}
         </XStack>
 
-        <Text fontSize="$3" color="$color10" marginBottom="$1">
-          {quote.jobTitle}
-        </Text>
+        {/* 报价人信息 */}
+        <View
+          backgroundColor="$color4"
+          padding="$2"
+          borderRadius="$3"
+          marginBottom="$2"
+        >
+          <XStack gap="$2" alignItems="center" marginBottom="$1.5">
+            <View
+              width={32}
+              height={32}
+              borderRadius={16}
+              backgroundColor={`${primaryColor}20`}
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize={16}>👷</Text>
+            </View>
+            <YStack flex={1}>
+              <Text fontSize="$3" fontWeight="600" color="$color12">
+                {expertName}
+              </Text>
+              <Text fontSize="$2" color="$color10">
+                向 {quote.employerName || '雇主'} 发送了服务报价
+              </Text>
+            </YStack>
+          </XStack>
 
-        <XStack justifyContent="space-between" alignItems="center" marginBottom="$1.5">
-          <Text fontSize="$5" fontWeight="700" color="$primary">
-            ¥{quote.quotedPrice}
+          {/* 需求标题 */}
+          <Text fontSize="$2" color="$color10" marginBottom="$0.5">
+            服务需求
           </Text>
-          <Text fontSize="$2" color="$color10">
-            预计 {quote.duration}
+          <Text fontSize="$3" color="$color12" fontWeight="500" marginBottom="$2">
+            {quote.jobTitle}
           </Text>
-        </XStack>
 
+          {/* 报价详情 */}
+          <YStack gap="$1.5">
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text fontSize="$2" color="$color10">报价金额</Text>
+              <Text fontSize="$5" fontWeight="700" color="$primary">
+                ¥{quote.quotedPrice}
+              </Text>
+            </XStack>
+
+            {quote.serviceTime && (
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text fontSize="$2" color="$color10">服务时间</Text>
+                <Text fontSize="$3" color="$color12" fontWeight="500">
+                  {quote.serviceTime}
+                </Text>
+              </XStack>
+            )}
+
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text fontSize="$2" color="$color10">预计时长</Text>
+              <Text fontSize="$3" color="$color12" fontWeight="500">
+                {quote.duration}
+              </Text>
+            </XStack>
+          </YStack>
+        </View>
+
+        {/* 附言 */}
         {quote.message && (
-          <Text fontSize="$2" color="$color10" marginBottom="$1.5">
-            {quote.message}
-          </Text>
+          <View marginBottom="$2">
+            <Text fontSize="$2" color="$color10" marginBottom="$0.5">
+              附言
+            </Text>
+            <Text fontSize="$3" color="$color12" lineHeight={20}>
+              "{quote.message}"
+            </Text>
+          </View>
         )}
 
         {/* 报价状态 */}
         {isAccepted && (
           <View
-            backgroundColor="$success"
-            paddingHorizontal="$2"
-            paddingVertical="$1"
-            borderRadius="$10"
-            alignSelf="flex-start"
+            backgroundColor={`${successColor}15`}
+            padding="$2"
+            borderRadius="$3"
+            borderWidth={1}
+            borderColor="$success"
           >
-            <Text fontSize="$2" color="white" fontWeight="500">
-              已接受
-            </Text>
+            <XStack gap="$1.5" alignItems="center">
+              <CheckCircle size={16} color={successColor} />
+              <Text fontSize="$3" color="$success" fontWeight="500">
+                报价已接受，请尽快联系雇主确认服务细节
+              </Text>
+            </XStack>
           </View>
         )}
         {isRejected && (
           <View
-            backgroundColor="$error"
-            paddingHorizontal="$2"
-            paddingVertical="$1"
-            borderRadius="$10"
-            alignSelf="flex-start"
+            backgroundColor={`${theme.error?.val}15`}
+            padding="$2"
+            borderRadius="$3"
+            borderWidth={1}
+            borderColor="$error"
           >
-            <Text fontSize="$2" color="white" fontWeight="500">
-              已拒绝
+            <Text fontSize="$3" color="$error" fontWeight="500">
+              报价已被拒绝
             </Text>
           </View>
         )}
@@ -415,6 +502,8 @@ export const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                 paddingVertical="$2"
                 borderRadius="$10"
                 alignItems="center"
+                borderWidth={1}
+                borderColor="$color5"
               >
                 <Text fontSize="$3" color="$color12" fontWeight="500">
                   拒绝
@@ -432,7 +521,7 @@ export const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({
                 alignItems="center"
               >
                 <Text fontSize="$3" color="white" fontWeight="500">
-                  接受
+                  接受报价
                 </Text>
               </View>
             </Pressable>
