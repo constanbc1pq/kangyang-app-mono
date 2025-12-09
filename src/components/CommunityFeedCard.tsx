@@ -70,7 +70,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     const jobWithDistance = job as ServiceJob & { distance?: string };
 
     return (
-      <Pressable onPress={onPress} delayLongPress={100}>
+      <Pressable onPress={onPress}>
         <View
           backgroundColor="$color2"
           borderRadius="$5"
@@ -193,7 +193,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     const hasImage = item.images && item.images.length > 0;
 
     return (
-      <Pressable onPress={onPress} delayLongPress={100}>
+      <Pressable onPress={onPress}>
         <View
           backgroundColor="$color2"
           borderRadius="$5"
@@ -274,7 +274,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     const postWithDistance = post as CommunityPost & { distance?: string };
 
     return (
-      <Pressable onPress={onPress} delayLongPress={100}>
+      <Pressable onPress={onPress}>
         <View
           backgroundColor="$color2"
           borderRadius="$5"
@@ -389,7 +389,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
     const expertWithDistance = expert as Expert & { distance?: string };
 
     return (
-      <Pressable onPress={onPress} delayLongPress={100}>
+      <Pressable onPress={onPress}>
         <View
           backgroundColor="$color2"
           borderRadius="$5"

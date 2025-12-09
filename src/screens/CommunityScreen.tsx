@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   YStack,
   XStack,
   Text,
   View,
-  ScrollView,
   useTheme,
 } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Plus, FileText, Package, Briefcase, ChevronRight } from 'lucide-react-native';
-import { Pressable, FlatList, RefreshControl, NativeSyntheticEvent, NativeScrollEvent, StyleSheet } from 'react-native';
+import { Pressable, FlatList, RefreshControl, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { BottomSheet, BottomSheetItem } from '@/components/BottomSheet';
 import { BannerSlider, BannerItem } from '@/components/BannerSlider';
@@ -34,6 +33,17 @@ interface CommunityScreenProps {
   navigation: any;
 }
 
+// Tab 配置
+const TABS = [
+  { key: 'recommend', label: '发现' },
+  { key: 'jobs', label: '邻里帮' },
+  { key: 'secondhand', label: '闲物' },
+  { key: 'nearby', label: '附近' },
+  { key: 'expert', label: '达人' },
+] as const;
+
+type TabKey = typeof TABS[number]['key'];
+
 export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   navigation,
 }) => {
@@ -42,12 +52,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   const primaryColor = theme.primary?.val;
   const successColor = theme.success?.val;
   const warningColor = theme.warning?.val;
-  const color10 = theme.color10?.val;
 
-  // 渐变背景颜色：左上浅绿 -> 右下暗紫
+  // 渐变背景颜色
   const gradientColors = ['#d6dece', '#e8e6eb', primaryColor] as const;
 
-  const [activeTab, setActiveTab] = useState('recommend');
+  const [activeTab, setActiveTab] = useState<TabKey>('recommend');
   const [banners, setBanners] = useState<BannerItem[]>([]);
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [jobFeedItems, setJobFeedItems] = useState<FeedItem[]>([]);
@@ -61,37 +70,34 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
   const [page, setPage] = useState(1);
   const [showPublishMenu, setShowPublishMenu] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-  const [scrollKey, setScrollKey] = useState(0); // 用于强制刷新ScrollView
+  const [listKey, setListKey] = useState(0);
   const PAGE_SIZE = 10;
 
-  // 页面重新获得焦点时，强制刷新ScrollView以修复滚动问题
+  // 页面重新获得焦点时刷新
   useFocusEffect(
-    React.useCallback(() => {
-      // 增加key值，强制ScrollView重新渲染
-      setScrollKey(prev => prev + 1);
+    useCallback(() => {
+      setListKey(prev => prev + 1);
     }, [])
   );
 
-  // 加载Banner数据
+  // 初始化加载数据
   useEffect(() => {
     const initializeAndLoadData = async () => {
       try {
-        // 首先初始化社区数据（如果还没有的话）
         await initializeCommunityData();
-
-        // 然后加载各类数据
-        await loadBanners();
-        await loadFeedData();
-        await loadJobFeedData();
-        await loadItemFeedData();
-        await loadNearbyFeedData();
-        await loadExpertFeedData();
-        await loadUnreadMessageCount();
+        await Promise.all([
+          loadBanners(),
+          loadFeedData(),
+          loadJobFeedData(),
+          loadItemFeedData(),
+          loadNearbyFeedData(),
+          loadExpertFeedData(),
+          loadUnreadMessageCount(),
+        ]);
       } catch (error) {
         console.error('初始化社区数据失败:', error);
       }
     };
-
     initializeAndLoadData();
   }, []);
 
@@ -125,7 +131,6 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         setLoadingMore(true);
       }
 
-      // 并行加载各类数据
       const [jobs, items, posts, experts] = await Promise.all([
         getJobs({}),
         getSecondHandItems({}),
@@ -133,7 +138,6 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         getExperts({}),
       ]);
 
-      // 混合所有数据
       const allMixed: FeedItem[] = [
         ...jobs.map((data) => ({ type: 'job' as const, data })),
         ...items.map((data) => ({ type: 'item' as const, data })),
@@ -141,25 +145,18 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         ...experts.map((data) => ({ type: 'expert' as const, data })),
       ];
 
-      // 打乱顺序
       const shuffled = allMixed.sort(() => Math.random() - 0.5);
-
-      // 分页处理
       const startIndex = (pageNum - 1) * PAGE_SIZE;
       const endIndex = startIndex + PAGE_SIZE;
       const paginatedData = shuffled.slice(startIndex, endIndex);
-
-      // 判断是否还有更多数据
       const hasMoreData = endIndex < shuffled.length;
       setHasMore(hasMoreData);
 
-      // 更新数据
       if (pageNum === 1) {
         setFeedItems(paginatedData);
       } else {
         setFeedItems(prev => [...prev, ...paginatedData]);
       }
-
       setPage(pageNum);
     } catch (error) {
       console.error('加载Feed数据失败:', error);
@@ -169,46 +166,38 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     }
   };
 
-  // 加载更多Feed数据
   const loadMoreFeedData = async () => {
-    if (loadingMore || !hasMore) return;
+    if (loadingMore || !hasMore || activeTab !== 'recommend') return;
     await loadFeedData(page + 1);
   };
 
-  // 加载邻里帮Feed数据
   const loadJobFeedData = async () => {
     try {
       const jobs = await getJobs({});
-      const jobFeeds: FeedItem[] = jobs.map((data) => ({ type: 'job' as const, data }));
-      setJobFeedItems(jobFeeds);
+      setJobFeedItems(jobs.map((data) => ({ type: 'job' as const, data })));
     } catch (error) {
       console.error('加载邻里帮数据失败:', error);
     }
   };
 
-  // 加载邻里闲物Feed数据
   const loadItemFeedData = async () => {
     try {
       const items = await getSecondHandItems({});
-      const itemFeeds: FeedItem[] = items.map((data) => ({ type: 'item' as const, data }));
-      setItemFeedItems(itemFeeds);
+      setItemFeedItems(items.map((data) => ({ type: 'item' as const, data })));
     } catch (error) {
       console.error('加载邻里闲物数据失败:', error);
     }
   };
 
-  // 加载达人Feed数据
   const loadExpertFeedData = async () => {
     try {
       const experts = await getExperts({});
-      const expertFeeds: FeedItem[] = experts.map((data) => ({ type: 'expert' as const, data }));
-      setExpertFeedItems(expertFeeds);
+      setExpertFeedItems(experts.map((data) => ({ type: 'expert' as const, data })));
     } catch (error) {
       console.error('加载达人数据失败:', error);
     }
   };
 
-  // 加载附近Feed数据（模拟距离，混合所有类型）
   const loadNearbyFeedData = async () => {
     try {
       const [jobs, items, posts, experts] = await Promise.all([
@@ -218,13 +207,11 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         getExperts({}),
       ]);
 
-      // 模拟添加距离信息（随机0.5-3km）
-      const addDistance = <T extends any>(item: T) => ({
+      const addDistance = <T extends object>(item: T) => ({
         ...item,
-        distance: (Math.random() * 2.5 + 0.5).toFixed(1), // 0.5-3.0km
+        distance: (Math.random() * 2.5 + 0.5).toFixed(1),
       });
 
-      // 混合所有类型，模拟附近内容
       const mixed: FeedItem[] = [
         ...jobs.slice(0, 4).map((data) => ({ type: 'job' as const, data: addDistance(data) })),
         ...items.slice(0, 4).map((data) => ({ type: 'item' as const, data: addDistance(data) })),
@@ -232,10 +219,9 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         ...experts.slice(0, 2).map((data) => ({ type: 'expert' as const, data: addDistance(data) })),
       ];
 
-      // 按距离排序
       const sorted = mixed.sort((a, b) => {
-        const distA = parseFloat(a.data.distance || '999');
-        const distB = parseFloat(b.data.distance || '999');
+        const distA = parseFloat((a.data as any).distance || '999');
+        const distB = parseFloat((b.data as any).distance || '999');
         return distA - distB;
       });
 
@@ -251,7 +237,6 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     setPage(1);
     setHasMore(true);
 
-    // 根据当前Tab刷新对应数据
     switch (activeTab) {
       case 'recommend':
         await loadFeedData(1);
@@ -268,12 +253,27 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       case 'expert':
         await loadExpertFeedData();
         break;
-      default:
-        await loadFeedData();
     }
-
     setRefreshing(false);
   };
+
+  // 根据当前 Tab 获取数据
+  const currentData = useMemo(() => {
+    switch (activeTab) {
+      case 'recommend':
+        return feedItems;
+      case 'jobs':
+        return jobFeedItems;
+      case 'secondhand':
+        return itemFeedItems;
+      case 'nearby':
+        return nearbyFeedItems;
+      case 'expert':
+        return expertFeedItems;
+      default:
+        return feedItems;
+    }
+  }, [activeTab, feedItems, jobFeedItems, itemFeedItems, nearbyFeedItems, expertFeedItems]);
 
   // 处理Banner点击
   const handleBannerPress = (banner: BannerItem) => {
@@ -287,43 +287,27 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
     navigation.navigate(item.route as never, item.params);
   };
 
-  // 打开发布菜单
-  const handleOpenPublishMenu = () => {
-    setShowPublishMenu(true);
-  };
+  // 发布菜单
+  const handleOpenPublishMenu = () => setShowPublishMenu(true);
+  const handleClosePublishMenu = () => setShowPublishMenu(false);
 
-  // 关闭发布菜单
-  const handleClosePublishMenu = () => {
-    setShowPublishMenu(false);
-  };
-
-  // 发布服务需求
   const handlePublishJob = () => {
     setShowPublishMenu(false);
-    // 延迟导航确保modal完全关闭
-    setTimeout(() => {
-      navigation.navigate('JobPublish' as never);
-    }, 100);
+    setTimeout(() => navigation.navigate('JobPublish' as never), 100);
   };
 
-  // 发布闲置物品
   const handlePublishItem = () => {
     setShowPublishMenu(false);
-    setTimeout(() => {
-      navigation.navigate('SecondHandPublish' as never);
-    }, 100);
+    setTimeout(() => navigation.navigate('SecondHandPublish' as never), 100);
   };
 
-  // 发布文章
   const handlePublishPost = () => {
     setShowPublishMenu(false);
-    setTimeout(() => {
-      navigation.navigate('PostPublish' as never);
-    }, 100);
+    setTimeout(() => navigation.navigate('PostPublish' as never), 100);
   };
 
   // 处理Feed卡片点击
-  const handleFeedItemPress = (feedItem: FeedItem) => {
+  const handleFeedItemPress = useCallback((feedItem: FeedItem) => {
     switch (feedItem.type) {
       case 'job':
         navigation.navigate('JobDetail', { jobId: feedItem.data.id });
@@ -338,20 +322,250 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
         navigation.navigate('ExpertDetail', { expertId: feedItem.data.id });
         break;
     }
-  };
+  }, [navigation]);
 
-  // 处理滚动事件（实现上拉加载更多）
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const paddingToBottom = 20;
-
-    // 检测是否接近底部
-    const isCloseToBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - paddingToBottom;
-
-    if (isCloseToBottom && activeTab === 'recommend') {
-      loadMoreFeedData();
+  // 获取 Tab 对应的标题和链接
+  const getTabHeader = () => {
+    switch (activeTab) {
+      case 'jobs':
+        return {
+          title: '邻里帮服务大厅',
+          showLink: true,
+          onPress: () => navigation.navigate('JobList' as never),
+        };
+      case 'secondhand':
+        return {
+          title: '邻里闲物市场',
+          showLink: true,
+          onPress: () => navigation.navigate('SecondHandList' as never),
+        };
+      case 'nearby':
+        return {
+          title: `附近3公里内容 (${nearbyFeedItems.length})`,
+          showLink: false,
+          subtitle: '按距离排序',
+        };
+      case 'expert':
+        return {
+          title: '认证达人',
+          showLink: true,
+          onPress: () => navigation.navigate('ExpertList' as never),
+        };
+      default:
+        return null;
     }
   };
+
+  // 获取空状态配置
+  const getEmptyConfig = () => {
+    switch (activeTab) {
+      case 'recommend':
+        return { emoji: '📭', title: '暂无内容', subtitle: '下拉刷新试试看' };
+      case 'jobs':
+        return { emoji: '🤝', title: '暂无服务需求', subtitle: '下拉刷新或发布第一个需求' };
+      case 'secondhand':
+        return { emoji: '🛒', title: '暂无闲置商品', subtitle: '下拉刷新或发布第一个闲置' };
+      case 'nearby':
+        return { emoji: '📍', title: '暂无附近内容', subtitle: '下拉刷新试试看' };
+      case 'expert':
+        return { emoji: '👨‍💼', title: '暂无达人', subtitle: '下拉刷新试试看' };
+      default:
+        return { emoji: '📭', title: '暂无内容', subtitle: '下拉刷新试试看' };
+    }
+  };
+
+  // 渲染列表头部（Header + Banner + Nav + TabBar）
+  const renderListHeader = () => {
+    const tabHeader = getTabHeader();
+
+    return (
+      <YStack gap="$2">
+        {/* Header */}
+        <View paddingHorizontal="$2.5" paddingTop="$2" paddingBottom="$2">
+          <XStack justifyContent="space-between" alignItems="flex-start">
+            <YStack flex={1} gap="$0.5" marginRight="$2">
+              <Text fontSize="$6" fontWeight="700" color="$color12">
+                邻里互助，温暖生活
+              </Text>
+              <Text fontSize="$2" color="$color10" numberOfLines={1}>
+                九紫生活社区
+              </Text>
+            </YStack>
+            <Pressable onPress={handleOpenPublishMenu}>
+              <View
+                width={40}
+                height={40}
+                borderRadius={20}
+                backgroundColor="white"
+                justifyContent="center"
+                alignItems="center"
+                shadowColor="$color12"
+                shadowOffset={{ width: 0, height: 2 }}
+                shadowOpacity={0.1}
+                shadowRadius={4}
+                elevation={2}
+              >
+                <Plus size={20} color={primaryColor} />
+              </View>
+            </Pressable>
+          </XStack>
+        </View>
+
+        {/* Banner轮播图 */}
+        <BannerSlider banners={banners} onBannerPress={handleBannerPress} />
+
+        {/* 圆形功能导航区 */}
+        <CircleNavigation
+          items={defaultCircleNavItems.map(item =>
+            item.id === 'message'
+              ? { ...item, badge: unreadMessageCount }
+              : item
+          )}
+          onItemPress={handleNavItemPress}
+        />
+
+        {/* Tab切换栏 */}
+        <View paddingHorizontal="$2.5">
+          <XStack
+            backgroundColor="$color4"
+            borderRadius="$10"
+            padding="$1"
+            marginBottom="$2"
+          >
+            {TABS.map(tab => (
+              <Pressable
+                key={tab.key}
+                style={{ flex: 1 }}
+                onPress={() => setActiveTab(tab.key)}
+              >
+                <View
+                  flex={1}
+                  height={36}
+                  backgroundColor={activeTab === tab.key ? primaryColor : 'transparent'}
+                  borderRadius="$10"
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <Text
+                    fontSize="$3"
+                    color={activeTab === tab.key ? 'white' : '$color10'}
+                    fontWeight={activeTab === tab.key ? '600' : '400'}
+                  >
+                    {tab.label}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </XStack>
+        </View>
+
+        {/* Tab 子标题 */}
+        {tabHeader && (
+          <View paddingHorizontal="$2.5">
+            <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+              <Text fontSize="$4" fontWeight="600" color="$color12">
+                {tabHeader.title}
+              </Text>
+              {tabHeader.showLink ? (
+                <Pressable onPress={tabHeader.onPress}>
+                  <XStack alignItems="center" gap="$0.5">
+                    <Text fontSize="$3" color={primaryColor} fontWeight="500">
+                      查看全部
+                    </Text>
+                    <ChevronRight size={14} color={primaryColor} />
+                  </XStack>
+                </Pressable>
+              ) : tabHeader.subtitle ? (
+                <Text fontSize="$3" color="$color10">
+                  {tabHeader.subtitle}
+                </Text>
+              ) : null}
+            </XStack>
+          </View>
+        )}
+      </YStack>
+    );
+  };
+
+  // 渲染空状态
+  const renderEmptyComponent = () => {
+    if (loading && currentData.length === 0) {
+      return (
+        <YStack
+          alignItems="center"
+          paddingVertical="$8"
+          backgroundColor="$color2"
+          borderRadius="$5"
+          marginHorizontal="$2.5"
+        >
+          <Text fontSize="$4" color="$color10">
+            加载中...
+          </Text>
+        </YStack>
+      );
+    }
+
+    const config = getEmptyConfig();
+    return (
+      <YStack
+        alignItems="center"
+        paddingVertical="$8"
+        backgroundColor="$color2"
+        borderRadius="$5"
+        marginHorizontal="$2.5"
+      >
+        <Text fontSize={48} marginBottom="$3">
+          {config.emoji}
+        </Text>
+        <Text fontSize="$5" fontWeight="600" color="$color12" marginBottom="$2">
+          {config.title}
+        </Text>
+        <Text fontSize="$3" color="$color10" textAlign="center">
+          {config.subtitle}
+        </Text>
+      </YStack>
+    );
+  };
+
+  // 渲染列表底部
+  const renderFooterComponent = () => {
+    if (activeTab !== 'recommend') return <View height={100} />;
+
+    if (loadingMore) {
+      return (
+        <View paddingVertical="$2" alignItems="center" marginBottom={80}>
+          <Text fontSize="$3" color="$color10">
+            加载更多...
+          </Text>
+        </View>
+      );
+    }
+
+    if (!hasMore && currentData.length > 0) {
+      return (
+        <View paddingVertical="$2" alignItems="center" marginBottom={80}>
+          <Text fontSize="$3" color="$color10">
+            没有更多内容了
+          </Text>
+        </View>
+      );
+    }
+
+    return <View height={100} />;
+  };
+
+  // 渲染卡片
+  const renderItem = useCallback(({ item }: { item: FeedItem }) => (
+    <View paddingHorizontal="$2.5">
+      <CommunityFeedCard
+        feedItem={item}
+        onPress={() => handleFeedItemPress(item)}
+      />
+    </View>
+  ), [handleFeedItemPress]);
+
+  const keyExtractor = useCallback((item: FeedItem, index: number) =>
+    `${activeTab}-${item.type}-${item.data.id}-${index}`, [activeTab]);
 
   return (
     <LinearGradient
@@ -360,443 +574,30 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
       end={{ x: 1, y: 1 }}
       style={StyleSheet.absoluteFill}
     >
-      <View flex={1}>
-        <ScrollView
-          key={`community-scroll-${scrollKey}`}
-          flex={1}
-          showsVerticalScrollIndicator={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          contentContainerStyle={{ paddingTop: insets.top }}
-        >
-          <YStack gap="$2">
-            {/* Header - 左上角主副标题样式 */}
-            <View paddingHorizontal="$2.5" paddingTop="$2" paddingBottom="$2">
-              <XStack justifyContent="space-between" alignItems="flex-start">
-                <YStack flex={1} gap="$0.5" marginRight="$2">
-                  <Text fontSize="$6" fontWeight="700" color="$color12">
-                    邻里互助，温暖生活
-                  </Text>
-                  <Text fontSize="$2" color="$color10" numberOfLines={1}>
-                    九紫生活社区
-                  </Text>
-                </YStack>
-                {/* 发布按钮 */}
-                <Pressable onPress={handleOpenPublishMenu}>
-                  <View
-                    width={40}
-                    height={40}
-                    borderRadius={20}
-                    backgroundColor="white"
-                    justifyContent="center"
-                    alignItems="center"
-                    shadowColor="$color12"
-                    shadowOffset={{ width: 0, height: 2 }}
-                    shadowOpacity={0.1}
-                    shadowRadius={4}
-                    elevation={2}
-                  >
-                    <Plus size={20} color={primaryColor} />
-                  </View>
-                </Pressable>
-              </XStack>
-            </View>
-
-            {/* Banner轮播图 */}
-            <BannerSlider banners={banners} onBannerPress={handleBannerPress} />
-
-            {/* 圆形功能导航区 */}
-            <CircleNavigation
-              items={defaultCircleNavItems.map(item =>
-                item.id === 'message'
-                  ? { ...item, badge: unreadMessageCount }
-                  : item
-              )}
-              onItemPress={handleNavItemPress}
+      <View flex={1} paddingTop={insets.top}>
+        <FlatList
+          key={`community-list-${listKey}-${activeTab}`}
+          data={currentData}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          ListHeaderComponent={renderListHeader}
+          ListEmptyComponent={renderEmptyComponent}
+          ListFooterComponent={renderFooterComponent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
             />
-
-            {/* Tab切换栏 */}
-            <View paddingHorizontal="$2.5">
-              <XStack
-                backgroundColor="$color4"
-                borderRadius="$10"
-                padding="$1"
-                marginBottom="$2"
-              >
-                {[
-                  { key: 'recommend', label: '发现' },
-                  { key: 'jobs', label: '邻里帮' },
-                  { key: 'secondhand', label: '闲物' },
-                  { key: 'nearby', label: '附近' },
-                  { key: 'expert', label: '达人' },
-                ].map(tab => (
-                  <Pressable
-                    key={tab.key}
-                    style={{ flex: 1 }}
-                    onPress={() => setActiveTab(tab.key)}
-                  >
-                    <View
-                      flex={1}
-                      height={36}
-                      backgroundColor={activeTab === tab.key ? primaryColor : 'transparent'}
-                      borderRadius="$10"
-                      justifyContent="center"
-                      alignItems="center"
-                    >
-                      <Text
-                        fontSize="$3"
-                        color={activeTab === tab.key ? 'white' : '$color10'}
-                        fontWeight={activeTab === tab.key ? '600' : '400'}
-                      >
-                        {tab.label}
-                      </Text>
-                    </View>
-                  </Pressable>
-                ))}
-              </XStack>
-            </View>
-
-            {/* Tab Content */}
-            <View paddingHorizontal="$2.5">
-              {activeTab === 'recommend' && (
-                <View marginBottom="$8">
-                  {loading && feedItems.length === 0 ? (
-                    <YStack
-                      alignItems="center"
-                      paddingVertical="$8"
-                      backgroundColor="$color2"
-                      borderRadius="$5"
-                    >
-                      <Text fontSize="$4" color="$color10">
-                        加载中...
-                      </Text>
-                    </YStack>
-                  ) : feedItems.length === 0 ? (
-                    <YStack
-                      alignItems="center"
-                      paddingVertical="$8"
-                      backgroundColor="$color2"
-                      borderRadius="$5"
-                    >
-                      <Text fontSize={48} marginBottom="$3">
-                        📭
-                      </Text>
-                      <Text
-                        fontSize="$5"
-                        fontWeight="600"
-                        color="$color12"
-                        marginBottom="$2"
-                      >
-                        暂无内容
-                      </Text>
-                      <Text fontSize="$3" color="$color10" textAlign="center">
-                        下拉刷新试试看
-                      </Text>
-                    </YStack>
-                  ) : (
-                    <FlatList
-                      data={feedItems}
-                      renderItem={({ item }) => (
-                        <CommunityFeedCard
-                          feedItem={item}
-                          onPress={() => handleFeedItemPress(item)}
-                        />
-                      )}
-                      keyExtractor={(item, index) => `${item.type}-${item.data.id}-${index}`}
-                      refreshControl={
-                        <RefreshControl
-                          refreshing={refreshing}
-                          onRefresh={handleRefresh}
-                        />
-                      }
-                      onEndReached={loadMoreFeedData}
-                      onEndReachedThreshold={0.5}
-                      ListFooterComponent={
-                        loadingMore ? (
-                          <View paddingVertical="$2" alignItems="center">
-                            <Text fontSize="$3" color="$color10">
-                              加载更多...
-                            </Text>
-                          </View>
-                        ) : !hasMore ? (
-                          <View paddingVertical="$2" alignItems="center">
-                            <Text fontSize="$3" color="$color10">
-                              没有更多内容了
-                            </Text>
-                          </View>
-                        ) : null
-                      }
-                      scrollEnabled={false}
-                      initialNumToRender={5}
-                      maxToRenderPerBatch={5}
-                      windowSize={5}
-                      removeClippedSubviews={true}
-                      updateCellsBatchingPeriod={50}
-                    />
-                  )}
-                </View>
-              )}
-              {activeTab === 'jobs' && (
-                <View marginBottom="$8">
-                  {jobFeedItems.length === 0 ? (
-                    <YStack
-                      alignItems="center"
-                      paddingVertical="$8"
-                      backgroundColor="$color2"
-                      borderRadius="$5"
-                    >
-                      <Text fontSize={48} marginBottom="$3">
-                        🤝
-                      </Text>
-                      <Text
-                        fontSize="$5"
-                        fontWeight="600"
-                        color="$color12"
-                        marginBottom="$2"
-                      >
-                        暂无服务需求
-                      </Text>
-                      <Text fontSize="$3" color="$color10" textAlign="center">
-                        下拉刷新或发布第一个需求
-                      </Text>
-                    </YStack>
-                  ) : (
-                    <>
-                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                        <Text fontSize="$4" fontWeight="600" color="$color12">
-                          邻里帮服务大厅
-                        </Text>
-                        <Pressable onPress={() => navigation.navigate('JobList' as never)}>
-                          <XStack alignItems="center" gap="$0.5">
-                            <Text fontSize="$3" color={primaryColor} fontWeight="500">
-                              查看全部
-                            </Text>
-                            <ChevronRight size={14} color={primaryColor} />
-                          </XStack>
-                        </Pressable>
-                      </XStack>
-                      <FlatList
-                        data={jobFeedItems}
-                        renderItem={({ item }) => (
-                          <CommunityFeedCard
-                            feedItem={item}
-                            onPress={() => handleFeedItemPress(item)}
-                          />
-                        )}
-                        keyExtractor={(item, index) => `job-${item.data.id}-${index}`}
-                        refreshControl={
-                          <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={handleRefresh}
-                          />
-                        }
-                        scrollEnabled={false}
-                        initialNumToRender={5}
-                        maxToRenderPerBatch={5}
-                        windowSize={5}
-                        removeClippedSubviews={true}
-                      />
-                    </>
-                  )}
-                </View>
-              )}
-              {activeTab === 'secondhand' && (
-                <View marginBottom="$8">
-                  {itemFeedItems.length === 0 ? (
-                    <YStack
-                      alignItems="center"
-                      paddingVertical="$8"
-                      backgroundColor="$color2"
-                      borderRadius="$5"
-                    >
-                      <Text fontSize={48} marginBottom="$3">
-                        🛒
-                      </Text>
-                      <Text
-                        fontSize="$5"
-                        fontWeight="600"
-                        color="$color12"
-                        marginBottom="$2"
-                      >
-                        暂无闲置商品
-                      </Text>
-                      <Text fontSize="$3" color="$color10" textAlign="center">
-                        下拉刷新或发布第一个闲置
-                      </Text>
-                    </YStack>
-                  ) : (
-                    <>
-                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                        <Text fontSize="$4" fontWeight="600" color="$color12">
-                          邻里闲物市场
-                        </Text>
-                        <Pressable onPress={() => navigation.navigate('SecondHandList' as never)}>
-                          <XStack alignItems="center" gap="$0.5">
-                            <Text fontSize="$3" color={primaryColor} fontWeight="500">
-                              查看全部
-                            </Text>
-                            <ChevronRight size={14} color={primaryColor} />
-                          </XStack>
-                        </Pressable>
-                      </XStack>
-                      <FlatList
-                        data={itemFeedItems}
-                        renderItem={({ item }) => (
-                          <CommunityFeedCard
-                            feedItem={item}
-                            onPress={() => handleFeedItemPress(item)}
-                          />
-                        )}
-                        keyExtractor={(item, index) => `item-${item.data.id}-${index}`}
-                        refreshControl={
-                          <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={handleRefresh}
-                          />
-                        }
-                        scrollEnabled={false}
-                        initialNumToRender={5}
-                        maxToRenderPerBatch={5}
-                        windowSize={5}
-                        removeClippedSubviews={true}
-                      />
-                    </>
-                  )}
-                </View>
-              )}
-              {activeTab === 'nearby' && (
-                <View marginBottom="$8">
-                  {nearbyFeedItems.length === 0 ? (
-                    <YStack
-                      alignItems="center"
-                      paddingVertical="$8"
-                      backgroundColor="$color2"
-                      borderRadius="$5"
-                    >
-                      <Text fontSize={48} marginBottom="$3">
-                        📍
-                      </Text>
-                      <Text
-                        fontSize="$5"
-                        fontWeight="600"
-                        color="$color12"
-                        marginBottom="$2"
-                      >
-                        暂无附近内容
-                      </Text>
-                      <Text fontSize="$3" color="$color10" textAlign="center">
-                        下拉刷新试试看
-                      </Text>
-                    </YStack>
-                  ) : (
-                    <>
-                      <XStack
-                        justifyContent="space-between"
-                        alignItems="center"
-                        marginBottom="$2"
-                      >
-                        <Text fontSize="$4" fontWeight="600" color="$color12">
-                          附近3公里内容 ({nearbyFeedItems.length})
-                        </Text>
-                        <Text fontSize="$3" color="$color10">
-                          按距离排序
-                        </Text>
-                      </XStack>
-                      <FlatList
-                        data={nearbyFeedItems}
-                        renderItem={({ item }) => (
-                          <CommunityFeedCard
-                            feedItem={item}
-                            onPress={() => handleFeedItemPress(item)}
-                          />
-                        )}
-                        keyExtractor={(item, index) => `nearby-${item.data.id}-${index}`}
-                        refreshControl={
-                          <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={handleRefresh}
-                          />
-                        }
-                        scrollEnabled={false}
-                        initialNumToRender={5}
-                        maxToRenderPerBatch={5}
-                        windowSize={5}
-                        removeClippedSubviews={true}
-                      />
-                    </>
-                  )}
-                </View>
-              )}
-              {activeTab === 'expert' && (
-                <View marginBottom="$8">
-                  {expertFeedItems.length === 0 ? (
-                    <YStack
-                      alignItems="center"
-                      paddingVertical="$8"
-                      backgroundColor="$color2"
-                      borderRadius="$5"
-                    >
-                      <Text fontSize={48} marginBottom="$3">
-                        👨‍💼
-                      </Text>
-                      <Text
-                        fontSize="$5"
-                        fontWeight="600"
-                        color="$color12"
-                        marginBottom="$2"
-                      >
-                        暂无达人
-                      </Text>
-                      <Text fontSize="$3" color="$color10" textAlign="center">
-                        下拉刷新试试看
-                      </Text>
-                    </YStack>
-                  ) : (
-                    <>
-                      <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                        <Text fontSize="$4" fontWeight="600" color="$color12">
-                          认证达人
-                        </Text>
-                        <Pressable onPress={() => navigation.navigate('ExpertList' as never)}>
-                          <XStack alignItems="center" gap="$0.5">
-                            <Text fontSize="$3" color={primaryColor} fontWeight="500">
-                              查看全部
-                            </Text>
-                            <ChevronRight size={14} color={primaryColor} />
-                          </XStack>
-                        </Pressable>
-                      </XStack>
-                      <FlatList
-                        data={expertFeedItems}
-                        renderItem={({ item }) => (
-                          <CommunityFeedCard
-                            feedItem={item}
-                            onPress={() => handleFeedItemPress(item)}
-                          />
-                        )}
-                        keyExtractor={(item, index) => `expert-${item.data.id}-${index}`}
-                        refreshControl={
-                          <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={handleRefresh}
-                          />
-                        }
-                        scrollEnabled={false}
-                        initialNumToRender={5}
-                        maxToRenderPerBatch={5}
-                        windowSize={5}
-                        removeClippedSubviews={true}
-                      />
-                    </>
-                  )}
-                </View>
-              )}
-            </View>
-
-            {/* Bottom padding for safe area */}
-            <View height={20} />
-          </YStack>
-        </ScrollView>
+          }
+          onEndReached={loadMoreFeedData}
+          onEndReachedThreshold={0.5}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={5}
+          removeClippedSubviews={true}
+          contentContainerStyle={{ flexGrow: 1 }}
+        />
 
         {/* 发布菜单 BottomSheet */}
         <BottomSheet
@@ -808,7 +609,6 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
           maxHeight="50%"
         >
           <YStack gap="$2">
-            {/* 发布服务需求 */}
             <BottomSheetItem
               onPress={handlePublishJob}
               left={
@@ -827,7 +627,6 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               subtitle="寻找邻里帮助，发布服务需求"
             />
 
-            {/* 发布闲置物品 */}
             <BottomSheetItem
               onPress={handlePublishItem}
               left={
@@ -846,7 +645,6 @@ export const CommunityScreen: React.FC<CommunityScreenProps> = ({
               subtitle="分享闲置好物，循环利用资源"
             />
 
-            {/* 发布文章 */}
             <BottomSheetItem
               onPress={handlePublishPost}
               left={
