@@ -36,8 +36,12 @@ import {
   Target,
   Zap,
   ShoppingBag,
+  LogOut,
 } from 'lucide-react-native';
 import { Pressable, Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import { logout } from '@/store/slices/authSlice';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '@/constants/app';
 import { getOrders, Order } from '@/services/orderService';
 import { ItemType } from '@/types/commerce';
@@ -47,6 +51,7 @@ import {
   getMembership,
   getTasks,
   getPoints,
+  getUserData,
 } from '@/services/userDataService';
 import { getMyExpertProfile } from '@/services/communityDataService';
 import { FamilyMember } from '@/types/userData';
@@ -110,6 +115,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
 
 export const PersonalCenterScreen: React.FC = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const theme = useTheme();
   const primaryColor = theme.primary?.val;
   const successColor = theme.success?.val;
@@ -121,6 +127,7 @@ export const PersonalCenterScreen: React.FC = () => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // 用户数据
   const [membershipLevel, setMembershipLevel] = useState<MembershipLevel>(MembershipLevel.FREE);
@@ -133,15 +140,26 @@ export const PersonalCenterScreen: React.FC = () => {
   // 达人数据
   const [expertProfile, setExpertProfile] = useState<Expert | null>(null);
 
-  const userProfile = {
-    name: '张健康',
-    age: 45,
+  // 用户档案
+  const [userProfile, setUserProfile] = useState({
+    name: '用户',
+    age: 0,
     phone: '138****8888',
-  };
+  });
 
   // 加载所有数据
   const loadData = async () => {
     try {
+      // 加载用户档案
+      const userData = await getUserData();
+      if (userData.profile) {
+        setUserProfile({
+          name: userData.profile.fullName || userData.profile.surname || '用户',
+          age: userData.profile.age || 0,
+          phone: userData.profile.phone || '138****8888',
+        });
+      }
+
       // 加载会员信息
       const membership = await getMembership();
       setMembershipLevel(membership.level);
@@ -207,6 +225,20 @@ export const PersonalCenterScreen: React.FC = () => {
     } finally {
       setShowDeleteConfirm(false);
       setMemberToDelete(null);
+    }
+  };
+
+  // 注销用户 - 清除所有本地数据
+  const handleLogout = async () => {
+    try {
+      // 清除所有 AsyncStorage 数据
+      await AsyncStorage.clear();
+      // 重置 Redux 状态
+      dispatch(logout());
+    } catch (error) {
+      console.error('注销失败:', error);
+    } finally {
+      setShowLogoutConfirm(false);
     }
   };
 
@@ -351,7 +383,7 @@ export const PersonalCenterScreen: React.FC = () => {
                     <Text fontSize="$6" fontWeight="700" color="white">
                       {userProfile.name}
                     </Text>
-                    <Pressable onPress={() => console.log('编辑资料')}>
+                    <Pressable onPress={() => navigation.navigate('ProfileEdit' as never)}>
                       <Edit size={14} color="rgba(255,255,255,0.8)" />
                     </Pressable>
                   </XStack>
@@ -1052,6 +1084,29 @@ export const PersonalCenterScreen: React.FC = () => {
             )}
           </View>
 
+          {/* 注销用户按钮 */}
+          <View paddingTop="$4">
+            <Pressable onPress={() => setShowLogoutConfirm(true)}>
+              <View
+                backgroundColor="$color2"
+                borderRadius="$5"
+                padding="$2"
+                borderWidth={1}
+                borderColor="$color5"
+              >
+                <XStack gap="$2" alignItems="center" justifyContent="center">
+                  <LogOut size={18} color={errorColor} />
+                  <Text fontSize="$3" color={errorColor} fontWeight="500">
+                    注销用户
+                  </Text>
+                </XStack>
+              </View>
+            </Pressable>
+            <Text fontSize="$2" color="$color10" textAlign="center" marginTop="$2">
+              注销后将清除所有本地数据
+            </Text>
+          </View>
+
           {/* 底部间距 */}
           <View height={20} />
         </YStack>
@@ -1114,6 +1169,72 @@ export const PersonalCenterScreen: React.FC = () => {
                       alignItems="center"
                     >
                       <Text fontSize="$4" color="white" fontWeight="500">删除</Text>
+                    </View>
+                  </Pressable>
+                </XStack>
+              </YStack>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* 注销确认弹窗 */}
+      <Modal
+        visible={showLogoutConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLogoutConfirm(false)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={() => setShowLogoutConfirm(false)}
+        >
+          <Pressable
+            style={{ width: '80%', maxWidth: 400 }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View
+              backgroundColor="$background"
+              borderRadius="$5"
+              padding="$2.5"
+            >
+              <YStack gap="$2">
+                <Text fontSize="$5" fontWeight="700" color={errorColor} textAlign="center">
+                  注销确认
+                </Text>
+                <Text fontSize="$4" color="$color12" textAlign="center">
+                  确定要注销用户吗？
+                </Text>
+                <Text fontSize="$3" color="$color10" textAlign="center">
+                  注销后将清除所有本地数据，包括健康记录、订单信息、家庭成员等，且无法恢复。
+                </Text>
+
+                <XStack gap="$2" marginTop="$2">
+                  <Pressable style={{ flex: 1 }} onPress={() => setShowLogoutConfirm(false)}>
+                    <View
+                      height={44}
+                      borderRadius="$10"
+                      backgroundColor="$color4"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Text fontSize="$4" color="$color10" fontWeight="500">取消</Text>
+                    </View>
+                  </Pressable>
+                  <Pressable style={{ flex: 1 }} onPress={handleLogout}>
+                    <View
+                      height={44}
+                      borderRadius="$10"
+                      backgroundColor={errorColor}
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Text fontSize="$4" color="white" fontWeight="500">确认注销</Text>
                     </View>
                   </Pressable>
                 </XStack>

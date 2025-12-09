@@ -1,10 +1,10 @@
 /**
  * LoginScreen 登录页
  * 遵循 Tamagui 和 CLAUDE.md 页面布局规范
- * 开发测试版本 - 无需登录直接体验
+ * 开发测试版本 - 点击体验进入用户注册页
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   YStack,
   XStack,
@@ -13,22 +13,22 @@ import {
   Theme,
   useTheme,
 } from 'tamagui';
-import { ToastViewport, useToastController } from '@tamagui/toast';
+import { ToastViewport } from '@tamagui/toast';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Heart, Info } from 'lucide-react-native';
 import { Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { SCREEN_NAMES } from '@/constants/app';
 
-import { useDispatch } from 'react-redux';
-import { loginSuccess } from '@/store/slices/authSlice';
-import { setCurrentUser } from '@/store/slices/userSlice';
+interface LoginScreenProps {
+  navigation?: any;
+}
 
-export const LoginScreen: React.FC = () => {
+export const LoginScreen: React.FC<LoginScreenProps> = () => {
   const theme = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
-  const dispatch = useDispatch();
-  const toast = useToastController();
+  const navigation = useNavigation();
 
   // 主题色
   const primaryColor = theme.primary?.val;
@@ -38,43 +38,9 @@ export const LoginScreen: React.FC = () => {
   // 渐变色
   const gradientColors = [primaryColor, accentColor] as [string, string];
 
-  // 直接进入体验
-  const handleEnter = async () => {
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    // 模拟短暂加载
-    setTimeout(() => {
-      // 直接登录成功
-      dispatch(loginSuccess({
-        token: 'demo-token-' + Date.now(),
-        refreshToken: 'demo-refresh-token-' + Date.now(),
-      }));
-
-      // 设置测试用户信息
-      dispatch(setCurrentUser({
-        id: 'demo-user-01',
-        email: 'demo@kangyang.com',
-        name: '体验用户',
-        avatar: undefined,
-        phone: '138****8888',
-        gender: 'male',
-        birthDate: '1980-01-01',
-        height: 170,
-        weight: 65,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
-
-      toast.show('欢迎体验九紫康养！', {
-        duration: 2000,
-        burntOptions: {
-          preset: 'done',
-          haptic: 'success',
-        },
-      });
-    }, 800);
+  // 进入用户注册页
+  const handleEnter = () => {
+    navigation.navigate(SCREEN_NAMES.REGISTER as never);
   };
 
   return (
@@ -147,10 +113,8 @@ export const LoginScreen: React.FC = () => {
                 <YStack gap="$2" marginTop="$2">
                   <Pressable
                     onPress={handleEnter}
-                    disabled={isLoading}
                     style={({ pressed }) => ({
                       transform: [{ scale: pressed ? 0.98 : 1 }],
-                      opacity: isLoading ? 0.7 : 1,
                     })}
                   >
                     <View
@@ -160,7 +124,7 @@ export const LoginScreen: React.FC = () => {
                       alignItems="center"
                     >
                       <Text fontSize="$5" fontWeight="600" color="white">
-                        {isLoading ? '正在进入...' : '立即体验'}
+                        立即体验
                       </Text>
                     </View>
                   </Pressable>

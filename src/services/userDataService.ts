@@ -706,10 +706,25 @@ export const getUserData = async (): Promise<UserData> => {
       const userData = JSON.parse(jsonValue);
       let needsSave = false;
 
-      // 如果旧数据中没有 familyMembers，添加默认值
+      // 如果旧数据中没有 familyMembers，根据用户信息生成
       if (!userData.familyMembers || userData.familyMembers.length === 0) {
         console.log('⚠️ 检测到旧数据格式，正在添加家庭成员数据...');
-        userData.familyMembers = initializeDefaultFamilyMembers();
+        // 根据用户 profile 信息生成家庭成员
+        const profile = userData.profile;
+        if (profile && profile.fullName) {
+          userData.familyMembers = createFamilyMembersForUser({
+            fullName: profile.fullName,
+            surname: profile.surname || profile.fullName.charAt(0),
+            age: profile.age || 45,
+            height: profile.height || 170,
+            weight: profile.weight || 65,
+            gender: profile.gender || 'male',
+            birthDate: profile.birthDate || '1980-01-01',
+          });
+        } else {
+          // 没有用户信息时才使用默认值
+          userData.familyMembers = initializeDefaultFamilyMembers();
+        }
         needsSave = true;
         console.log('✅ 家庭成员数据已添加');
       }
@@ -773,6 +788,414 @@ export const saveUserData = async (userData: UserData): Promise<boolean> => {
     console.error('保存用户数据失败:', error);
     return false;
   }
+};
+
+/**
+ * 用户注册信息接口
+ */
+export interface UserRegistrationInfo {
+  surname: string;
+  givenName: string;
+  age: number;
+  height: number;
+  weight: number;
+  gender?: 'male' | 'female';
+}
+
+/**
+ * 根据用户注册信息创建并保存用户数据
+ * 这是新用户注册时应该调用的方法
+ */
+export const createUserData = async (registrationInfo: UserRegistrationInfo): Promise<UserData> => {
+  const {
+    surname,
+    givenName,
+    age,
+    height,
+    weight,
+    gender = 'male',
+  } = registrationInfo;
+
+  const now = new Date();
+  const nowISO = now.toISOString();
+
+  // 生成用户ID
+  const userId = 'user_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  const fullName = surname + givenName;
+
+  // 根据年龄生成出生日期
+  const currentYear = new Date().getFullYear();
+  const birthYear = currentYear - age;
+  const birthDate = `${birthYear}-01-01`;
+
+  // 根据用户信息动态生成家庭成员
+  const familyMembers = createFamilyMembersForUser({
+    fullName,
+    surname,
+    age,
+    height,
+    weight,
+    gender,
+    birthDate,
+  });
+
+  const userData: UserData = {
+    profile: {
+      userId,
+      surname,
+      fullName,
+      gender,
+      birthDate,
+      age,
+      height,
+      weight,
+      phone: '138****8888',
+      emergencyContact: {
+        name: `${surname}家人`,
+        phone: '139****9999',
+        relationship: '家人',
+      },
+      createdAt: nowISO,
+      updatedAt: nowISO,
+    },
+    devices: initializeDefaultDevices(),
+    healthMetrics: [],
+    medications: [],
+    healthReports: [],
+    consultations: [],
+    lifestyleRecords: [],
+    healthGoals: [],
+    tasks: initializeDefaultTasks(),
+    communityActivities: [],
+    familyMembers,
+    settings: {
+      theme: 'light',
+      language: 'zh-CN',
+      notifications: {
+        medication: true,
+        healthWarning: true,
+        deviceSync: true,
+        community: false,
+      },
+      privacy: {
+        dataSharing: false,
+        aiAnalysis: true,
+      },
+      dataSync: {
+        autoBackup: true,
+        backupFrequency: 'weekly',
+        lastBackup: nowISO,
+      },
+    },
+    membership: DEFAULT_MEMBERSHIP,
+    points: DEFAULT_POINTS,
+    subscriptions: DEFAULT_SUBSCRIPTIONS,
+    version: '1.1.0',
+    lastModified: nowISO,
+  };
+
+  // 保存到 AsyncStorage
+  await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+  console.log('✅ 新用户数据创建成功:', fullName);
+
+  return userData;
+};
+
+/**
+ * 根据用户信息创建家庭成员数据
+ */
+const createFamilyMembersForUser = (userInfo: {
+  fullName: string;
+  surname: string;
+  age: number;
+  height: number;
+  weight: number;
+  gender: 'male' | 'female';
+  birthDate: string;
+}): FamilyMember[] => {
+  const { fullName, surname, age, height, weight, gender, birthDate } = userInfo;
+  const now = new Date();
+  const nowISO = now.toISOString();
+  const today = now.toISOString().split('T')[0];
+
+  const members: FamilyMember[] = [];
+
+  // 本人
+  const selfMember: FamilyMember = {
+    id: 'self',
+    name: fullName,
+    relationship: '本人',
+    gender,
+    birthDate,
+    avatar: gender === 'male' ? '👨' : '👩',
+    healthProfile: {
+      height,
+      weight,
+      age,
+      healthStatus: 'excellent',
+      healthScore: Math.floor(Math.random() * 15) + 80, // 80-95
+      devices: initializeDefaultDevices(),
+      healthMetrics: [],
+      medications: [],
+      healthReports: [],
+      consultations: [],
+      tasks: initializeDefaultTasks(),
+      aiInterpretation: '您的健康数据整体良好，各项指标处于正常范围内。',
+      aiSuggestion: '建议保持规律运动和均衡饮食，注意作息规律',
+      aiInsights: [
+        {
+          id: 'insight-self-1',
+          type: 'positive',
+          title: '健康状况良好',
+          description: '各项基础指标正常，继续保持健康的生活方式！',
+        },
+      ],
+      lastUpdated: nowISO,
+      dataSource: ['1', '2', '4'],
+    },
+    sharedData: {
+      healthMetrics: true,
+      devices: true,
+      reports: true,
+    },
+    createdAt: nowISO,
+    updatedAt: nowISO,
+  };
+  members.push(selfMember);
+
+  // 配偶（30岁以上才添加）
+  if (age >= 30) {
+    const spouseAge = age + (Math.random() > 0.5 ? -2 : 2);
+    const spouseGender = gender === 'male' ? 'female' : 'male';
+    members.push({
+      id: 'spouse',
+      name: '配偶',
+      relationship: '配偶',
+      gender: spouseGender,
+      birthDate: `${new Date().getFullYear() - spouseAge}-01-01`,
+      avatar: spouseGender === 'male' ? '👨' : '👩',
+      healthProfile: {
+        height: spouseGender === 'female' ? 162 : 175,
+        weight: spouseGender === 'female' ? 55 : 72,
+        age: spouseAge,
+        healthStatus: 'good',
+        healthScore: Math.floor(Math.random() * 15) + 75,
+        devices: [],
+        healthMetrics: [],
+        medications: [],
+        healthReports: [],
+        consultations: [],
+        tasks: [],
+        aiInterpretation: '整体健康状况良好。',
+        aiSuggestion: '建议适当增加运动量',
+        aiInsights: [],
+        lastUpdated: nowISO,
+        dataSource: [],
+      },
+      sharedData: {
+        healthMetrics: true,
+        devices: true,
+        reports: true,
+      },
+      createdAt: nowISO,
+      updatedAt: nowISO,
+    });
+  }
+
+  // 父亲（年龄比用户大 25-30 岁，最大85岁）
+  const fatherAge = age + 28;
+  if (fatherAge <= 85 && fatherAge >= 45) {
+    members.push({
+      id: 'father',
+      name: `${surname}爸爸`,
+      relationship: '父亲',
+      gender: 'male',
+      birthDate: `${new Date().getFullYear() - fatherAge}-07-20`,
+      avatar: '👴',
+      healthProfile: {
+        height: height + 2,
+        weight: 70,
+        age: fatherAge,
+        healthStatus: fatherAge > 70 ? 'attention' : 'good',
+        healthScore: Math.floor(Math.random() * 15) + (fatherAge > 70 ? 65 : 75),
+        devices: [
+          {
+            id: 21,
+            name: '智能手环',
+            type: 'smartwatch',
+            status: 'connected',
+            battery: 68,
+            lastSync: '5分钟前',
+            connection: 'bluetooth',
+            model: '华为手环 6',
+            syncType: 'auto',
+            isPinned: true,
+            events: [
+              { id: '21', deviceId: 21, timestamp: `${today}T10:00:00`, type: '心率', value: '76', unit: 'bpm', status: 'normal' },
+              { id: '22', deviceId: 21, timestamp: `${today}T08:00:00`, type: '步数', value: '4823', unit: '步', status: 'normal' },
+            ],
+            createdAt: nowISO,
+            updatedAt: nowISO,
+          },
+        ],
+        healthMetrics: [],
+        medications: [],
+        healthReports: [],
+        consultations: [],
+        tasks: [],
+        aiInterpretation: fatherAge > 70 ? '血压需要关注，建议定期监测。' : '整体健康状况良好，心率平稳。',
+        aiSuggestion: '继续保持每日散步习惯，注意防寒保暖',
+        aiInsights: [
+          {
+            id: 'insight-father-1',
+            type: fatherAge > 70 ? 'warning' : 'positive',
+            title: fatherAge > 70 ? '血压需要关注' : '运动习惯保持良好',
+            description: fatherAge > 70 ? '建议每日监测血压，保持低盐饮食。' : '每日步数稳定，继续保持！',
+          },
+        ],
+        lastUpdated: nowISO,
+        dataSource: ['21'],
+      },
+      sharedData: {
+        healthMetrics: true,
+        devices: true,
+        reports: true,
+      },
+      createdAt: nowISO,
+      updatedAt: nowISO,
+    });
+  }
+
+  // 母亲（年龄比用户大 25-28 岁，最大85岁）
+  const motherAge = age + 26;
+  if (motherAge <= 85 && motherAge >= 43) {
+    members.push({
+      id: 'mother',
+      name: '妈妈',
+      relationship: '母亲',
+      gender: 'female',
+      birthDate: `${new Date().getFullYear() - motherAge}-03-15`,
+      avatar: '👵',
+      healthProfile: {
+        height: 158,
+        weight: 60,
+        age: motherAge,
+        healthStatus: motherAge > 70 ? 'attention' : 'good',
+        healthScore: Math.floor(Math.random() * 15) + (motherAge > 70 ? 68 : 78),
+        devices: [
+          {
+            id: 11,
+            name: '血压计',
+            type: 'blood-pressure',
+            status: 'connected',
+            battery: 75,
+            lastSync: '30分钟前',
+            connection: 'bluetooth',
+            model: '欧姆龙 HEM-7136',
+            syncType: 'manual',
+            isPinned: true,
+            events: [
+              { id: '11', deviceId: 11, timestamp: `${today}T08:30:00`, type: '血压', value: motherAge > 70 ? '145/90' : '125/82', unit: 'mmHg', status: motherAge > 70 ? 'warning' : 'normal' },
+            ],
+            createdAt: nowISO,
+            updatedAt: nowISO,
+          },
+        ],
+        healthMetrics: [],
+        medications: [],
+        healthReports: [],
+        consultations: [],
+        tasks: [],
+        aiInterpretation: motherAge > 70 ? '血压略高，需要注意饮食控制和定期监测。' : '整体健康状况良好。',
+        aiSuggestion: '建议减少盐分摄入，保持每日散步30分钟',
+        aiInsights: [
+          {
+            id: 'insight-mother-1',
+            type: motherAge > 70 ? 'warning' : 'positive',
+            title: motherAge > 70 ? '血压需要关注' : '健康状况良好',
+            description: motherAge > 70 ? '建议减少盐分摄入，如持续偏高请就医。' : '各项指标正常，继续保持！',
+          },
+        ],
+        lastUpdated: nowISO,
+        dataSource: ['11'],
+      },
+      sharedData: {
+        healthMetrics: true,
+        devices: true,
+        reports: true,
+      },
+      createdAt: nowISO,
+      updatedAt: nowISO,
+    });
+  }
+
+  // 子女（如果用户年龄在 35-60 之间，可能有子女）
+  if (age >= 35 && age <= 60) {
+    const childAge = age - 25; // 假设25岁生孩子
+    if (childAge >= 10 && childAge <= 30) {
+      members.push({
+        id: 'child',
+        name: '孩子',
+        relationship: '子女',
+        gender: Math.random() > 0.5 ? 'male' : 'female',
+        birthDate: `${new Date().getFullYear() - childAge}-06-10`,
+        avatar: childAge >= 18 ? (Math.random() > 0.5 ? '👨' : '👩') : '👦',
+        healthProfile: {
+          height: childAge >= 18 ? 170 : 155,
+          weight: childAge >= 18 ? 60 : 45,
+          age: childAge,
+          healthStatus: 'excellent',
+          healthScore: Math.floor(Math.random() * 10) + 88,
+          devices: [
+            {
+              id: 31,
+              name: '智能手环',
+              type: 'smartwatch',
+              status: 'connected',
+              battery: 92,
+              lastSync: '刚刚',
+              connection: 'bluetooth',
+              model: '小米手环 8',
+              syncType: 'auto',
+              isPinned: true,
+              events: [
+                { id: '31', deviceId: 31, timestamp: `${today}T15:00:00`, type: '心率', value: '68', unit: 'bpm', status: 'normal' },
+                { id: '32', deviceId: 31, timestamp: `${today}T12:00:00`, type: '步数', value: '12543', unit: '步', status: 'normal' },
+              ],
+              createdAt: nowISO,
+              updatedAt: nowISO,
+            },
+          ],
+          healthMetrics: [],
+          medications: [],
+          healthReports: [],
+          consultations: [],
+          tasks: [],
+          aiInterpretation: '健康状况优秀，各项指标正常。',
+          aiSuggestion: '保持良好生活习惯，注意学习时的坐姿和用眼卫生',
+          aiInsights: [
+            {
+              id: 'insight-child-1',
+              type: 'positive',
+              title: '运动量充足',
+              description: '每日步数超过10000步，身体素质优秀！',
+            },
+          ],
+          lastUpdated: nowISO,
+          dataSource: ['31'],
+        },
+        sharedData: {
+          healthMetrics: true,
+          devices: true,
+          reports: true,
+        },
+        createdAt: nowISO,
+        updatedAt: nowISO,
+      });
+    }
+  }
+
+  return members;
 };
 
 /**

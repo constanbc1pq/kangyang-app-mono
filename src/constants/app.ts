@@ -124,6 +124,7 @@ export const SCREEN_NAMES = {
 
   // Profile Stack
   PERSONAL_INFO: 'PersonalInfo',
+  PROFILE_EDIT: 'ProfileEdit',
   FAMILY_MANAGEMENT: 'FamilyManagement',
   DEVICE_MANAGEMENT: 'DeviceManagement',
   SETTINGS: 'Settings',

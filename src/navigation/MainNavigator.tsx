@@ -129,6 +129,7 @@ import InsuranceSpecialTopicScreen from '@/screens/InsuranceSpecialTopicScreen';
 import MembershipCenterScreen from '@/screens/MembershipCenterScreen';
 import CustomerServiceChatScreen from '@/screens/CustomerServiceChatScreen';
 import AddFamilyMemberScreen from '@/screens/AddFamilyMemberScreen';
+import ProfileEditScreen from '@/screens/ProfileEditScreen';
 import { ColumnListScreen } from '@/screens/ColumnListScreen';
 import { ContentDetailScreen } from '@/screens/ContentDetailScreen';
 import RankingDetailScreen from '@/screens/RankingDetailScreen';
@@ -727,6 +728,12 @@ export const MainNavigator: React.FC = () => {
       <Stack.Screen
         name="AddFamilyMember"
         component={AddFamilyMemberScreen}
+      />
+
+      {/* 编辑个人信息 - Profile Edit */}
+      <Stack.Screen
+        name="ProfileEdit"
+        component={ProfileEditScreen}
       />
 
       {/* 栏目系统 - Column System */}

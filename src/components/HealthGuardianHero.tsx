@@ -61,6 +61,26 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
   const theme = useTheme();
   const [showFamilySelector, setShowFamilySelector] = useState(false);
 
+  // 根据时间获取问候语
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 9) {
+      return '早安';
+    } else if (hour >= 9 && hour < 12) {
+      return '上午好';
+    } else if (hour >= 12 && hour < 14) {
+      return '中午好';
+    } else if (hour >= 14 && hour < 18) {
+      return '下午好';
+    } else if (hour >= 18 && hour < 22) {
+      return '晚上好';
+    } else {
+      return '夜深了';
+    }
+  };
+
+  const greeting = getGreeting();
+
   // 根据健康评分确定状态和图标 - 使用主题色
   const getHealthStatus = (score: number) => {
     if (score >= 88) {
@@ -154,7 +174,7 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
                 {currentMember?.relationship === '本人' ? (
                   <>
                     <Paragraph size="$3" color="rgba(255,255,255,0.8)">
-                      早安，{userName}
+                      {greeting}，{userName}
                     </Paragraph>
                     <View
                       backgroundColor="rgba(255,255,255,0.2)"

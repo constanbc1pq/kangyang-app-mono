@@ -2,9 +2,9 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SCREEN_NAMES } from '@/constants/app';
 import { LoginScreen } from '@/screens/auth/LoginScreen';
+import { UserRegistrationScreen } from '@/screens/auth/UserRegistrationScreen';
 
 // Placeholder screens - will be created later
-const RegisterScreen: React.FC = () => null;
 const ForgotPasswordScreen: React.FC = () => null;
 
 const Stack = createStackNavigator();
@@ -25,8 +25,8 @@ export const AuthNavigator: React.FC = () => {
       />
       <Stack.Screen
         name={SCREEN_NAMES.REGISTER}
-        component={RegisterScreen}
-        options={{ title: '注册' }}
+        component={UserRegistrationScreen}
+        options={{ title: '用户注册' }}
       />
       <Stack.Screen
         name={SCREEN_NAMES.FORGOT_PASSWORD}
