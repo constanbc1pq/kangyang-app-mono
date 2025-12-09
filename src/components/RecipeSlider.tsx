@@ -12,6 +12,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { YStack, XStack, Text, View, useTheme } from 'tamagui';
 import { Clock, Flame, ChevronRight } from 'lucide-react-native';
@@ -23,7 +24,7 @@ const AUTO_PLAY_INTERVAL = 5000; // 5秒自动播放
 export interface SliderRecipe {
   id: string;
   name: string;
-  image: string;
+  image: ImageSourcePropType;
   cookingTime: number;
   calories: number;
   mealPlanId: string;
@@ -176,7 +177,7 @@ export const RecipeSlider: React.FC<RecipeSliderProps> = ({
                 {/* 图片区域 */}
                 <View height={140} position="relative">
                   <Image
-                    source={{ uri: recipe.image }}
+                    source={recipe.image}
                     style={{
                       width: '100%',
                       height: '100%',

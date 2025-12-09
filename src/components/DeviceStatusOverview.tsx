@@ -47,7 +47,7 @@ export const DeviceStatusOverview: React.FC<DeviceStatusOverviewProps> = ({
       case 'smartwatch':
         return '⌚';
       case 'blood-pressure':
-        return '💉';
+        return '🌡️';
       case 'glucose-meter':
         return '💉';
       case 'scale':

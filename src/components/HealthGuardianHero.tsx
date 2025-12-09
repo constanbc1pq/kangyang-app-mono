@@ -123,7 +123,7 @@ export const HealthGuardianHero: React.FC<HealthGuardianHeroProps> = ({
 
   // 获取渐变色 - 上浅下深（主色调12色阶的偏浅色到主色）
   const gradientColors = [
-    theme.color9?.val,  // 偏浅色
+    theme.color8?.val,  // 偏浅色
     theme.primary?.val, // 主色
   ] as [string, string];
 

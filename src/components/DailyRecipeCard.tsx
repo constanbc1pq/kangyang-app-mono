@@ -76,7 +76,7 @@ export const DailyRecipeCard: React.FC<DailyRecipeCardProps> = ({
         {/* 菜谱图片 */}
         <View height={160} position="relative">
           <Image
-            source={{ uri: recipe.image }}
+            source={recipe.image}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
           />

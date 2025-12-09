@@ -566,7 +566,7 @@ export interface SecondHandItem {
   title: string;
   description: string;
   category: ItemCategory;
-  images: string[]; // 图片列表，第一张为封面
+  images: (string | number)[]; // 图片列表，第一张为封面，支持本地图片(number from require)
 
   // 价格信息
   currentPrice: number;

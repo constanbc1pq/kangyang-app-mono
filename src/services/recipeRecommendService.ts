@@ -10,12 +10,22 @@
 
 import { MembershipLevel } from '@/types/membership';
 import { getMembership } from '@/services/userDataService';
+import { ImageSourcePropType } from 'react-native';
+
+// 本地图片资源
+const RECIPE_IMAGES = {
+  qingzhengluyu: require('../../assets/images/today_tuijian/清蒸鲈鱼.jpg'),
+  fanqiejidantang: require('../../assets/images/today_tuijian/番茄鸡蛋汤.jpg'),
+  yangshengzaliangzhou: require('../../assets/images/today_tuijian/养生杂粮粥.jpg'),
+  shanyaopaigutang: require('../../assets/images/today_tuijian/山药排骨汤.jpg'),
+  suanrongxilanhua: require('../../assets/images/product/suanrong-xilanhua.jpg'),
+};
 
 // 菜谱类型
 export interface Recipe {
   id: string;
   name: string;
-  image: string;
+  image: ImageSourcePropType;
   description: string;
   cookingTime: number; // 分钟
   difficulty: 'easy' | 'medium' | 'hard';
@@ -71,7 +81,7 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe_001',
     name: '清蒸鲈鱼',
-    image: 'https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=400',
+    image: RECIPE_IMAGES.qingzhengluyu,
     description: '低脂高蛋白，适合老年人的清淡美食',
     cookingTime: 25,
     difficulty: 'easy',
@@ -102,7 +112,7 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe_002',
     name: '番茄鸡蛋汤',
-    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400',
+    image: RECIPE_IMAGES.fanqiejidantang,
     description: '开胃暖身，富含维生素C和优质蛋白',
     cookingTime: 15,
     difficulty: 'easy',
@@ -133,7 +143,7 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe_003',
     name: '养生杂粮粥',
-    image: 'https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?w=400',
+    image: RECIPE_IMAGES.yangshengzaliangzhou,
     description: '多种杂粮搭配，富含膳食纤维，有助于稳定血糖',
     cookingTime: 60,
     difficulty: 'easy',
@@ -165,7 +175,7 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe_004',
     name: '蒜蓉西兰花',
-    image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400',
+    image: RECIPE_IMAGES.suanrongxilanhua,
     description: '抗氧化蔬菜之王，保护心血管健康',
     cookingTime: 10,
     difficulty: 'easy',
@@ -195,7 +205,7 @@ const MOCK_RECIPES: Recipe[] = [
   {
     id: 'recipe_005',
     name: '山药排骨汤',
-    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400',
+    image: RECIPE_IMAGES.shanyaopaigutang,
     description: '健脾养胃，补钙强骨，适合秋冬进补',
     cookingTime: 90,
     difficulty: 'medium',
@@ -358,7 +368,7 @@ export const getRecipeById = async (recipeId: string): Promise<Recipe | null> =>
 export interface SliderRecipe {
   id: string;
   name: string;
-  image: string;
+  image: ImageSourcePropType;
   cookingTime: number;
   calories: number;
   mealPlanId: string;

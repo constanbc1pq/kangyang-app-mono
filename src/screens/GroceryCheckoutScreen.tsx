@@ -198,7 +198,7 @@ const GroceryCheckoutScreen: React.FC = () => {
                 <View key={item.id} padding="$2" backgroundColor="$color4" borderRadius="$4">
                   <XStack gap="$2">
                     <Image
-                      source={{ uri: item.image }}
+                      source={typeof item.image === 'string' ? { uri: item.image } : item.image}
                       style={{ width: 56, height: 56, borderRadius: 8 }}
                     />
                     <YStack flex={1} justifyContent="space-between">

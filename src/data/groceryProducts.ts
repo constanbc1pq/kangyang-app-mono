@@ -1,9 +1,25 @@
 // 生鲜商品数据
+import { ImageSourcePropType } from 'react-native';
+
+// 本地商品图片
+const PRODUCT_IMAGES = {
+  xinxiansuannai: require('../../assets/images/product/xinxian-suannai.jpg'),
+  youjixilanhua: require('../../assets/images/product/youji-xilanhua.jpg'),
+  wuchangdaohuaxiang: require('../../assets/images/product/wuchang-daohuaxiang.jpg'),
+  youzhishanbei: require('../../assets/images/product/youzhi-shanbei.jpg'),
+  xiaomaimianfen: require('../../assets/images/product/xiaomai-mianfen.jpg'),
+  shanyaoyimizhou: require('../../assets/images/product/shanyao-yimizhou.jpg'),
+  jingxuanjixiongrou: require('../../assets/images/product/jingxuan-jixiongrou.jpg'),
+  hongzaoguiyuancha: require('../../assets/images/product/hongzao-guiyuancha.jpg'),
+  heizhimahetaofen: require('../../assets/images/product/heizhima-hetaofen.jpg'),
+  youzhizhuliji: require('../../assets/images/product/youzhi-zhuliji.jpg'),
+  tuyadan: require('../../assets/images/product/tu-yadan.jpg'),
+};
 
 export interface GroceryProduct {
   id: number;
   name: string;
-  image: string;
+  image: string | ImageSourcePropType;
   images?: string[];
   price: number;
   originalPrice?: number;
@@ -23,7 +39,7 @@ export const flashSaleProducts: GroceryProduct[] = [
   {
     id: 101,
     name: '有机西兰花',
-    image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400',
+    image: PRODUCT_IMAGES.youjixilanhua,
     images: [
       'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=800',
       'https://images.unsplash.com/photo-1628773822990-202e8e7d2d85?w=800',
@@ -104,7 +120,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 1,
     name: '有机西兰花',
-    image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400',
+    image: PRODUCT_IMAGES.youjixilanhua,
     images: [
       'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=800',
       'https://images.unsplash.com/photo-1628773822990-202e8e7d2d85?w=800',
@@ -251,7 +267,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 16,
     name: '精选鸡胸肉',
-    image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400',
+    image: PRODUCT_IMAGES.jingxuanjixiongrou,
     price: 35.9,
     unit: '500g',
     tag: '新鲜',
@@ -265,7 +281,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 17,
     name: '优质猪里脊',
-    image: 'https://images.unsplash.com/photo-1607623488027-f6876899e3e5?w=400',
+    image: PRODUCT_IMAGES.youzhizhuliji,
     price: 42.9,
     unit: '500g',
     tag: '新鲜',
@@ -277,7 +293,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 18,
     name: '土鸭蛋',
-    image: 'https://images.unsplash.com/photo-1587486937987-cc237a792d13?w=400',
+    image: PRODUCT_IMAGES.tuyadan,
     price: 28.9,
     unit: '8枚',
     tag: '推荐',
@@ -349,7 +365,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 22,
     name: '优质扇贝',
-    image: 'https://images.unsplash.com/photo-1559548331-f9cb98001426?w=400',
+    image: PRODUCT_IMAGES.youzhishanbei,
     price: 48.9,
     unit: '500g',
     tag: '推荐',
@@ -391,7 +407,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 25,
     name: '五常稻花香',
-    image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400',
+    image: PRODUCT_IMAGES.wuchangdaohuaxiang,
     price: 68.9,
     unit: '5kg',
     tag: '推荐',
@@ -405,7 +421,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 26,
     name: '有机面粉',
-    image: 'https://images.unsplash.com/photo-1595855759920-86582396756a?w=400',
+    image: PRODUCT_IMAGES.xiaomaimianfen,
     price: 28.9,
     unit: '2kg',
     tag: '有机',
@@ -459,7 +475,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 4,
     name: '山药薏米粥',
-    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400',
+    image: PRODUCT_IMAGES.shanyaoyimizhou,
     price: 18.8,
     unit: '500g',
     tag: '食疗',
@@ -471,7 +487,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 7,
     name: '黑芝麻核桃粉',
-    image: 'https://images.unsplash.com/photo-1587411768938-f891574e6533?w=400',
+    image: PRODUCT_IMAGES.heizhimahetaofen,
     price: 35.8,
     unit: '500g',
     tag: '食疗',
@@ -485,7 +501,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 29,
     name: '红枣桂圆茶',
-    image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400',
+    image: PRODUCT_IMAGES.hongzaoguiyuancha,
     price: 32.9,
     unit: '300g',
     tag: '补血',
@@ -541,7 +557,7 @@ export const groceryProducts: GroceryProduct[] = [
   {
     id: 33,
     name: '新鲜酸奶',
-    image: 'https://images.unsplash.com/photo-1571212059005-cd3e1fc1ee30?w=400',
+    image: PRODUCT_IMAGES.xinxiansuannai,
     price: 12.9,
     unit: '180ml×6瓶',
     tag: '新鲜',

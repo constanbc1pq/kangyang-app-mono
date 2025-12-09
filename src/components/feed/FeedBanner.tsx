@@ -85,7 +85,7 @@ export const FeedBanner: React.FC<FeedBannerProps> = ({
         height={height}
       >
         <ImageBackground
-          source={{ uri: entry.image }}
+          source={typeof entry.image === 'string' ? { uri: entry.image } : entry.image}
           style={styles.background}
           imageStyle={styles.image}
         >
@@ -165,10 +165,15 @@ export const FeedBanner: React.FC<FeedBannerProps> = ({
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     justifyContent: 'flex-end',
   },
   image: {
+    width: '100%',
+    height: '100%',
     borderRadius: 12,
+    resizeMode: 'cover', // 高度100%，宽度自适应，居中裁剪
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

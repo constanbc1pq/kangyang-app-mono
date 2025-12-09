@@ -39,23 +39,35 @@ import { flashSaleProducts as importedFlashSaleProducts, groceryProducts as impo
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// 分类本地图片
+const CATEGORY_IMAGES = {
+  rouqindan: require('../../assets/images/product/rouqindan.jpg'),
+};
+
+// Banner本地图片
+const BANNER_IMAGES = {
+  xinxianshucai: require('../../assets/images/product/xinxian-shucai-banner.jpeg'),
+  shiliaoyangsheng: require('../../assets/images/product/shiliao-yangsheng-banner.jpg'),
+  haixiantehui: require('../../assets/images/product/haixian-tehui-banner.jpg'),
+};
+
 // Banner数据
 const banners = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800',
+    image: BANNER_IMAGES.xinxianshucai,
     title: '新鲜蔬菜每日直送',
     subtitle: '产地直采 当日送达',
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800',
+    image: BANNER_IMAGES.shiliaoyangsheng,
     title: '食疗养生专区',
     subtitle: '中医配方 科学养生',
   },
   {
     id: 3,
-    image: 'https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=800',
+    image: BANNER_IMAGES.haixiantehui,
     title: '海鲜水产特惠',
     subtitle: '活鲜直达 品质保证',
   },
@@ -66,7 +78,7 @@ const categories = [
   { id: 'all', name: '全部', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=100' },
   { id: 'vegetables', name: '蔬菜', image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100' },
   { id: 'fruits', name: '水果', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=100' },
-  { id: 'meat', name: '肉禽蛋', image: 'https://images.unsplash.com/photo-1607623488027-f6876899e3e5?w=100' },
+  { id: 'meat', name: '肉禽蛋', image: CATEGORY_IMAGES.rouqindan },
   { id: 'seafood', name: '海鲜', image: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=100' },
   { id: 'grain', name: '粮油', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=100' },
   { id: 'therapy', name: '食疗', image: 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=100' },
@@ -318,7 +330,7 @@ export const DeliveryServiceScreen: React.FC = () => {
               {banners.map((banner) => (
                 <View key={banner.id} width={SCREEN_WIDTH}>
                   <Image
-                    source={{ uri: banner.image }}
+                    source={typeof banner.image === 'string' ? { uri: banner.image } : banner.image}
                     style={{ width: SCREEN_WIDTH, height: 160 }}
                     resizeMode="cover"
                   />
@@ -387,7 +399,7 @@ export const DeliveryServiceScreen: React.FC = () => {
                     overflow="hidden"
                   >
                     <Image
-                      source={{ uri: category.image }}
+                      source={typeof category.image === 'string' ? { uri: category.image } : category.image}
                       style={{ width: 60, height: 60 }}
                       resizeMode="cover"
                     />
@@ -443,7 +455,7 @@ export const DeliveryServiceScreen: React.FC = () => {
                 >
                   <View marginBottom="$2">
                     <Image
-                      source={{ uri: product.image }}
+                      source={typeof product.image === 'string' ? { uri: product.image } : product.image}
                       style={{ width: '100%', height: 96, borderRadius: 8 }}
                       resizeMode="cover"
                     />
@@ -553,7 +565,7 @@ export const DeliveryServiceScreen: React.FC = () => {
                 <XStack gap="$2" alignItems="center">
                   <View width={28} height={28} borderRadius={14} overflow="hidden">
                     <Image
-                      source={{ uri: group.category.image }}
+                      source={typeof group.category.image === 'string' ? { uri: group.category.image } : group.category.image}
                       style={{ width: 28, height: 28 }}
                       resizeMode="cover"
                     />
@@ -588,7 +600,7 @@ export const DeliveryServiceScreen: React.FC = () => {
                     <TouchableOpacity onPress={() => handleProductClick(product.id)}>
                       <View>
                         <Image
-                          source={{ uri: product.image }}
+                          source={typeof product.image === 'string' ? { uri: product.image } : product.image}
                           style={{ width: '100%', height: 120 }}
                           resizeMode="cover"
                         />
@@ -894,7 +906,7 @@ export const DeliveryServiceScreen: React.FC = () => {
                   <XStack gap="$2">
                     <TouchableOpacity onPress={() => handleProductClick(product.id)}>
                       <Image
-                        source={{ uri: product.image }}
+                        source={typeof product.image === 'string' ? { uri: product.image } : product.image}
                         style={{ width: 72, height: 72, borderRadius: 8 }}
                       />
                     </TouchableOpacity>

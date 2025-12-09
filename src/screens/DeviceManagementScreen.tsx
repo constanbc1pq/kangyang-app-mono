@@ -25,6 +25,8 @@ import {
   Edit,
   Camera,
   Upload,
+  Droplet,
+  FlaskConical,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDeviceLimit } from '@/hooks/useMembershipBenefit';
@@ -153,7 +155,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
       case 'smartwatch':
         return <Watch size={24} color={primaryColor} />;
       case 'blood-pressure':
-        return <Heart size={24} color={primaryColor} />;
+        return <Thermometer size={24} color={primaryColor} />;
       case 'glucose-meter':
         return <Activity size={24} color={primaryColor} />;
       case 'scale':
@@ -161,7 +163,7 @@ export const DeviceManagementScreen: React.FC<DeviceManagementScreenProps> = ({ 
       case 'thermometer':
         return <Thermometer size={24} color={primaryColor} />;
       case 'smart-toilet':
-        return <Activity size={24} color={primaryColor} />;
+        return <Text fontSize={24}>🚽</Text>;
       default:
         return <Activity size={24} color={primaryColor} />;
     }

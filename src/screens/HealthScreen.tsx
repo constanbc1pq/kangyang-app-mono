@@ -226,7 +226,7 @@ export const HealthScreen: React.FC = () => {
           device: {
             id: device.id.toString(),
             name: device.name,
-            icon: "💉",
+            icon: "🌡️",
             lastSync: device.lastSync,
             status: device.status,
           },

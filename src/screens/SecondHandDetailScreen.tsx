@@ -213,7 +213,7 @@ export const SecondHandDetailScreen: React.FC<SecondHandDetailScreenProps> = ({
               >
                 {!imageErrors[index] ? (
                   <Image
-                    source={{ uri: imageUrl }}
+                    source={typeof imageUrl === 'string' ? { uri: imageUrl } : imageUrl}
                     width="100%"
                     height={IMAGE_HEIGHT}
                     resizeMode="contain"

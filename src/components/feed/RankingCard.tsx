@@ -124,7 +124,7 @@ export const RankingCard: React.FC<RankingCardProps> = ({
           <RankBadge rank={item.rank} />
 
           {/* 图片 */}
-          <Image source={{ uri: item.image }} style={styles.productImage} />
+          <Image source={typeof item.image === 'string' ? { uri: item.image } : item.image} style={styles.productImage} />
 
           {/* 信息 */}
           <YStack flex={1} gap="$0.5">
@@ -307,7 +307,7 @@ export const RankingCard: React.FC<RankingCardProps> = ({
         {/* 商家图片 */}
         <View position="relative">
           <Image
-            source={{ uri: item.image }}
+            source={typeof item.image === 'string' ? { uri: item.image } : item.image}
             style={styles.merchantImage}
           />
           {item.isOpen !== undefined && (

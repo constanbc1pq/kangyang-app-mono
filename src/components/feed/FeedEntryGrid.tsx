@@ -48,7 +48,7 @@ export const FeedEntryGrid: React.FC<FeedEntryGridProps> = ({
               >
                 {/* 图片 */}
                 <Image
-                  source={{ uri: entry.image }}
+                  source={typeof entry.image === 'string' ? { uri: entry.image } : entry.image}
                   style={styles.image}
                   resizeMode="cover"
                 />

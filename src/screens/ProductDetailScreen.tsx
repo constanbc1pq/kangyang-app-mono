@@ -83,7 +83,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
       },
       {
         icon: Truck,
-        title: '次日达',
+        title: '当日达',
         desc: '冷链配送 新鲜到家',
       },
       {
@@ -160,7 +160,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
       },
       {
         question: '配送时间和范围？',
-        answer: '深圳市内各区域支持次日达。每天下午5点前下单，次日上午送达。偏远区域配送时间可能延长1-2天。',
+        answer: '深圳市内各区域支持当日达。其他地区每天下午5点前下单，次日上午送达。偏远区域配送时间可能延长1-2天。',
       },
     ];
 
@@ -245,7 +245,7 @@ export const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ route 
               {product.images.map((image, index) => (
                 <Image
                   key={index}
-                  source={{ uri: image }}
+                  source={typeof image === 'string' ? { uri: image } : image}
                   style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH }}
                   resizeMode="cover"
                 />

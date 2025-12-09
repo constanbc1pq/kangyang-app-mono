@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ScrollView, Dimensions, Pressable, Image, StyleSheet } from 'react-native';
+import { View, ScrollView, Dimensions, Pressable, Image, StyleSheet, ImageSourcePropType } from 'react-native';
 import { XStack, Text } from 'tamagui';
 import { COLORS } from '@/constants/app';
 
@@ -9,7 +9,7 @@ const AUTO_PLAY_INTERVAL = 3000; // 3秒自动切换
 
 export interface BannerItem {
   id: string;
-  image: string;
+  image: string | ImageSourcePropType;
   title?: string;
   link?: string;
   linkType?: 'job' | 'secondhand' | 'expert' | 'article' | 'external';
@@ -129,7 +129,7 @@ export const BannerSlider: React.FC<BannerSliderProps> = ({
               {/* 真实图片 */}
               <Image
                 key={banner.id}
-                source={{ uri: banner.image }}
+                source={typeof banner.image === 'string' ? { uri: banner.image } : banner.image}
                 style={styles.bannerImage}
                 resizeMode="cover"
               />

@@ -68,7 +68,6 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
   // 渲染服务需求卡片（邻里帮）
   const renderJobCard = (job: ServiceJob) => {
     const jobWithDistance = job as ServiceJob & { distance?: string };
-    const hasImage = job.images && job.images.length > 0;
 
     return (
       <Pressable onPress={onPress} delayLongPress={100}>
@@ -80,24 +79,46 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
           borderWidth={1}
           borderColor="$color5"
         >
-          {/* 封面图 */}
-          {hasImage && (
-            <View style={{ width: '100%', height: 160 }}>
-              <Image
-                source={{ uri: job.images![0] }}
-                style={styles.coverImage}
-                resizeMode="cover"
-              />
-              {/* 紧急标签 */}
-              {job.isUrgent && renderBadge('紧急', errorColor, 'left')}
-              {/* 高佣金标签 */}
-              {job.isHighReward && renderBadge('高佣金', warningColor, 'right')}
-              {/* 距离标签 */}
-              {jobWithDistance.distance && renderBadge(`${jobWithDistance.distance}km`, primaryColor, 'right', true)}
-            </View>
-          )}
-
           <View padding="$2">
+            {/* 顶部标签行 */}
+            <XStack gap="$1.5" marginBottom="$1.5">
+              {job.isUrgent && (
+                <View
+                  backgroundColor={errorColor}
+                  paddingHorizontal="$2"
+                  paddingVertical="$0.5"
+                  borderRadius="$10"
+                >
+                  <Text fontSize={10} color="white" fontWeight="500">
+                    紧急
+                  </Text>
+                </View>
+              )}
+              {job.isHighReward && (
+                <View
+                  backgroundColor={warningColor}
+                  paddingHorizontal="$2"
+                  paddingVertical="$0.5"
+                  borderRadius="$10"
+                >
+                  <Text fontSize={10} color="white" fontWeight="500">
+                    高佣金
+                  </Text>
+                </View>
+              )}
+              {jobWithDistance.distance && (
+                <View
+                  backgroundColor={primaryColor}
+                  paddingHorizontal="$2"
+                  paddingVertical="$0.5"
+                  borderRadius="$10"
+                >
+                  <Text fontSize={10} color="white" fontWeight="500">
+                    {jobWithDistance.distance}km
+                  </Text>
+                </View>
+              )}
+            </XStack>
             {/* 标题 */}
             <Text
               fontSize="$4"
@@ -185,7 +206,7 @@ export const CommunityFeedCard: React.FC<CommunityFeedCardProps> = ({
           {hasImage && (
             <View style={{ width: '100%', height: 180 }}>
               <Image
-                source={{ uri: item.images![0] }}
+                source={typeof item.images![0] === 'string' ? { uri: item.images![0] } : item.images![0]}
                 style={styles.coverImage}
                 resizeMode="cover"
               />

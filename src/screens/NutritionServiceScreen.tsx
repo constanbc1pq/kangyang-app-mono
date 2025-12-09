@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Pressable, TouchableOpacity, ImageBackground, Image } from 'react-native';
+import { ScrollView, Pressable, TouchableOpacity, ImageBackground, Image, ImageSourcePropType } from 'react-native';
 import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
+
+// 本地图片资源
+const NUTRITION_IMAGES = {
+  banner: require('../../assets/images/product/zhuanye-yingyang-peican.jpg'),
+  junhengyingyang: require('../../assets/images/product/junheng-yingyang-taocan.png'),
+  laonianyangsheng: require('../../assets/images/product/laonian-yangsheng-taocan.jpg'),
+  zunxiangsichu: require('../../assets/images/product/zunxiang-sichu-taocan.jpg'),
+};
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // 路由参数类型
@@ -33,7 +41,7 @@ interface MealPlan {
   calories: number;
   description: string;
   features: string[];
-  image: string;
+  image: string | ImageSourcePropType;
   rating: number;
   reviewCount: number;
   salesCount: number;
@@ -113,7 +121,7 @@ const NutritionServiceScreen: React.FC = () => {
       calories: 1800,
       description: '科学配比，营养全面',
       features: ['三餐配送', '营养师定制', '每日更新菜单'],
-      image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80',
+      image: NUTRITION_IMAGES.junhengyingyang,
       rating: 4.8,
       reviewCount: 1256,
       salesCount: 5432,
@@ -147,7 +155,7 @@ const NutritionServiceScreen: React.FC = () => {
       calories: 1600,
       description: '软糯易消化，温补养生',
       features: ['软糯食材', '温补配方', '低盐低脂'],
-      image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&q=80',
+      image: NUTRITION_IMAGES.laonianyangsheng,
       rating: 4.9,
       reviewCount: 985,
       salesCount: 3821,
@@ -215,7 +223,7 @@ const NutritionServiceScreen: React.FC = () => {
       calories: 2000,
       description: '米其林大厨定制，尊享品质',
       features: ['米其林主厨', '有机食材', '一对一营养师', '24小时服务', '免费试吃'],
-      image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80',
+      image: NUTRITION_IMAGES.zunxiangsichu,
       rating: 5.0,
       reviewCount: 328,
       salesCount: 1256,
@@ -273,7 +281,7 @@ const NutritionServiceScreen: React.FC = () => {
           {/* Hero Section - 真实图片背景 */}
           <View borderRadius="$5" overflow="hidden" height={160}>
             <ImageBackground
-              source={{ uri: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80' }}
+              source={NUTRITION_IMAGES.banner}
               style={{ flex: 1 }}
               imageStyle={{ borderRadius: 16 }}
             >
@@ -367,7 +375,7 @@ const NutritionServiceScreen: React.FC = () => {
                       {/* 图片区域 - 真实食物照片 */}
                       <View height={80} position="relative">
                         <Image
-                          source={{ uri: plan.image }}
+                          source={typeof plan.image === 'string' ? { uri: plan.image } : plan.image}
                           style={{ width: '100%', height: '100%' }}
                           resizeMode="cover"
                         />
@@ -426,7 +434,7 @@ const NutritionServiceScreen: React.FC = () => {
                       {/* 图片区域 - 真实食物照片 */}
                       <View height={80} position="relative">
                         <Image
-                          source={{ uri: plan.image }}
+                          source={typeof plan.image === 'string' ? { uri: plan.image } : plan.image}
                           style={{ width: '100%', height: '100%' }}
                           resizeMode="cover"
                         />
@@ -475,7 +483,7 @@ const NutritionServiceScreen: React.FC = () => {
               <XStack gap="$3" alignItems="center">
                 <View width={72} height={72} borderRadius="$4" overflow="hidden">
                   <Image
-                    source={{ uri: selectedPlan.image }}
+                    source={typeof selectedPlan.image === 'string' ? { uri: selectedPlan.image } : selectedPlan.image}
                     style={{ width: 72, height: 72 }}
                     resizeMode="cover"
                   />

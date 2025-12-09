@@ -82,7 +82,7 @@ export const SecondHandCard: React.FC<SecondHandCardProps> = ({ item, onPress })
           {/* 商品图片 */}
           {imageUrl && !imageError ? (
             <Image
-              source={{ uri: imageUrl }}
+              source={typeof imageUrl === 'string' ? { uri: imageUrl } : imageUrl}
               width="100%"
               height="100%"
               resizeMode="cover"

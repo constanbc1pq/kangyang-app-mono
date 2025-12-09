@@ -24,7 +24,7 @@ export interface FeedEntry {
   type: FeedEntryType;
   title: string;
   subtitle?: string;
-  image: string;
+  image: string | number; // string for URL, number for local require()
   badge?: string;              // 角标文字 "本周主题" "限时" "热门"
   targetType: TargetType;
   targetId: string;

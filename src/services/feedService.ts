@@ -19,6 +19,15 @@ import { getColumnData } from './columnService';
 import { getDoctors } from './privateDoctorService';
 import { groceryProducts, flashSaleProducts, GroceryProduct } from '@/data/groceryProducts';
 
+// 本地图片资源
+const FEED_IMAGES = {
+  daxuejinbuji: require('../../assets/images/product/daxue-jinbuji.jpg'),
+  nuandongtanggeng: require('../../assets/images/product/nuandong-tanggeng.jpg'),
+  dongjihuxinke: require('../../assets/images/product/dongji-huxinke.jpg'),
+  jujiazhaohushouce: require('../../assets/images/product/jujia-zhaohu-shouce.jpg'),
+  yinfabaozhangjihua: require('../../assets/images/product/yinfa-baozhang-jihua.jpg'),
+};
+
 // ==================== Mock数据 ====================
 
 /**
@@ -31,7 +40,7 @@ const MOCK_FEED_ENTRIES: FeedEntry[] = [
     type: 'banner',
     title: '大雪进补季',
     subtitle: '顺时而食，温暖过冬',
-    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800',
+    image: FEED_IMAGES.daxuejinbuji,
     badge: '本周主题',
     targetType: 'theme',
     targetId: 'theme-daxue',
@@ -43,7 +52,7 @@ const MOCK_FEED_ENTRIES: FeedEntry[] = [
     type: 'card',
     title: '暖冬汤羹',
     subtitle: '12款家常暖汤',
-    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400',
+    image: FEED_IMAGES.nuandongtanggeng,
     targetType: 'column',
     targetId: 'dining-hall',
     order: 2,
@@ -53,7 +62,7 @@ const MOCK_FEED_ENTRIES: FeedEntry[] = [
     type: 'card',
     title: '冬季护心课',
     subtitle: '陈医生主讲',
-    image: 'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=400',
+    image: FEED_IMAGES.dongjihuxinke,
     targetType: 'column',
     targetId: 'famous-doctor',
     order: 3,
@@ -63,7 +72,7 @@ const MOCK_FEED_ENTRIES: FeedEntry[] = [
     type: 'card',
     title: '居家照护手册',
     subtitle: '冬季护理要点',
-    image: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=400',
+    image: FEED_IMAGES.jujiazhaohushouce,
     targetType: 'column',
     targetId: 'care-academy',
     order: 4,
@@ -73,7 +82,7 @@ const MOCK_FEED_ENTRIES: FeedEntry[] = [
     type: 'card',
     title: '银发保障计划',
     subtitle: '健康保障规划',
-    image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400',
+    image: FEED_IMAGES.yinfabaozhangjihua,
     targetType: 'column',
     targetId: 'worry-free',
     order: 5,
