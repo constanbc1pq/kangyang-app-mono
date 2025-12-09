@@ -4183,7 +4183,7 @@ export const getBanners = async (): Promise<BannerItem[]> => {
     {
       id: 'banner_002',
       image: COMMUNITY_BANNER_IMAGES.linlixianwu,
-      title: '邻里闲物 - 健康设备共享',
+      title: '邻里闲物 - 闲置好物交换',
       linkType: 'secondhand',
       link: 'SecondHandList',
     },

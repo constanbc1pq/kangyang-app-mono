@@ -13,6 +13,7 @@ import {
   TextInput,
   Dimensions,
   Modal,
+  useWindowDimensions,
 } from 'react-native';
 import { View, Text, YStack, XStack, useTheme } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -95,10 +96,14 @@ export const DeliveryServiceScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
   const primaryColor = theme.primary?.val;
   const errorColor = theme.error?.val;
   const color10 = theme.color10?.val;
   const bannerScrollRef = useRef<RNScrollView>(null);
+
+  // 计算商品卡片宽度：容器padding 16*2 + gap 8 = 40，每行2个
+  const productCardWidth = (windowWidth - 40) / 2;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -586,17 +591,20 @@ export const DeliveryServiceScreen: React.FC = () => {
                 )}
               </XStack>
 
-              <XStack flexWrap="wrap" gap="$2">
+              <XStack flexWrap="wrap">
                 {group.items.map((product) => (
                   <View
                     key={product.id}
-                    width="48%"
-                    backgroundColor="$color2"
-                    borderRadius="$5"
-                    borderWidth={1}
-                    borderColor="$color5"
-                    overflow="hidden"
+                    width="50%"
+                    padding="$1"
                   >
+                    <View
+                      backgroundColor="$color2"
+                      borderRadius="$5"
+                      borderWidth={1}
+                      borderColor="$color5"
+                      overflow="hidden"
+                    >
                     <TouchableOpacity onPress={() => handleProductClick(product.id)}>
                       <View>
                         <Image
@@ -685,6 +693,7 @@ export const DeliveryServiceScreen: React.FC = () => {
                         </TouchableOpacity>
                       )}
                     </YStack>
+                    </View>
                   </View>
                 ))}
               </XStack>
